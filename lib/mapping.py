@@ -14,6 +14,7 @@ def addElevtoHeader(xyz, header):
     headerXYZData.rename({'LATITUDE_y':'LATITUDE', 'LONGITUDE_y':'LONGITUDE'}, axis=1, inplace=True)
     return headerXYZData
 
+
 def readWCS(wcs_url):
 
     #wcs_url = r"https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_DEM_30M/ImageServer/WCSServer?request=GetCapabilities&service=WCS"
@@ -25,22 +26,9 @@ def readWCS(wcs_url):
     # Get list of coverages
     print(my_wcs.contents.keys())
 
-    # Get geo-bounding boxes and native CRS
-    #my_wcs.contents['AverageChlorophyllScaled'].boundingboxes
-
-    # Get axis labels
-    #my_wcs.contents['AverageChlorophyllScaled'].grid.axislabels
-
-    # Get dimension
-    #my_wcs.contents['AverageChlorophyllScaled'].grid.dimension
-
-    # Get grid lower and upper bounds
-    #my_wcs.contents['AverageChlorophyllScaled'].grid.lowlimits
-
-    #my_wcs.contents['AverageChlorophyllScaled'].grid.highlimits
-
-    #my_wcs.contents['AverageChlorophyllScaled'].grid.offsetvectors
-
-    # For coverage with time axis get the date time values
-    #my_wcs.contents['AverageChlorophyllScaled'].timepositions
+    #minLat = 39.991998
+    #maxLat = 40.248993
+    #minlon = -88.493952
+    #maxLon = -88.079875
+    #(testWCS.getCoverage())
     return my_wcs
