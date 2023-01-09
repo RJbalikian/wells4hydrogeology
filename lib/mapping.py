@@ -20,7 +20,7 @@ def readWCS(wcs_url):
 
     # Create coverage object
     my_wcs = WebCoverageService(wcs_url,
-                                version='2.0.1')
+                                version='1.1.2')
 
     # Get list of coverages
     print(my_wcs.contents.keys())
