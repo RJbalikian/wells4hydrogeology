@@ -16,11 +16,11 @@ def addElevtoHeader(xyz, header):
 
 def readWCS():
 
-    wcs_url = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_DEM_30M/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
+    wcs_url = r"https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_DEM_30M/ImageServer/WCSServer?request=GetCapabilities&service=WCS"
 
     # Create coverage object
     my_wcs = WebCoverageService(wcs_url,
-                                 version='2.0.1')
+                                version='2.0.1')
 
     # Get list of coverages
     print(my_wcs.contents.keys())
