@@ -7,8 +7,8 @@ import os
 def getCurrentDate():
     todayDate = datetime.date.today()
     todayDateStr = str(todayDate)
-    print(todayDateStr)
-    return todayDate
+    dateSuffix = '_'+todayDateStr
+    return todayDate, dateSuffix
 
 def findMostRecentFiles(dir='../res', globPattern='*'):
     todayDate = datetime.date.today()

@@ -4,11 +4,10 @@ Using well descriptions from database, create data to be used for groundwater hy
 ## master_notebook contains an interactive jupyter notebook with all the steps for running the main body of the script
 
 ## lib folder contains all scripts with functions used
-- setupFiles: functions for setting up filepaths, variables, etc.
 - readData: functions for reading in various files
+- mapping: functions for mapping or performing geospatial analysis
 - cleanData: functions for cleaning the data
 - classify: functions for classifying the data
-- mapping: functions for mapping or performing geospatial analysis
 
 ## res folder contains all the files that are read in/used by the scripts
 - ISGS_HEADER_yyyy-mm-dd.TXT: tabular data exported from ISGS oracle database containing "header" information (i.e., metadata) about all the wells
