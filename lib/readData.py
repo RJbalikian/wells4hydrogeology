@@ -4,6 +4,7 @@ import pathlib
 import datetime
 import os
 import json
+repoDir = pathlib.Path(os.getcwd())
 
 def getCurrentDate():
     todayDate = datetime.date.today()
@@ -11,7 +12,7 @@ def getCurrentDate():
     dateSuffix = '_'+todayDateStr
     return todayDate, dateSuffix
 
-def findMostRecentFiles(dir='../res', globPattern='*'):
+def findMostRecentFiles(dir=str(repoDir)+'/res', globPattern='*'):
     todayDate = datetime.date.today()
     todayDateStr = str(todayDate)
 
@@ -31,7 +32,7 @@ def findMostRecentFiles(dir='../res', globPattern='*'):
     print('Most Recent version of this file is : '+mostRecentFile.name)
     return mostRecentFile
 
-def filesSetup(db_dir='../res', proc_dir='../out'):
+def filesSetup(db_dir=str(repoDir)+'/res', proc_dir=str(repoDir)+'/out'):
     #Define  filepath variables to be used later for reading/writing files
 
     #rawDirStr = '\\\\isgs-sinkhole\\geophysics\\Balikian\\ISWS_HydroGeo\\RawWellData_OracleDatabase\\TxtData\\'
@@ -113,7 +114,7 @@ def readDataTypeDict(file=''):
     return jsDict
 
 #Define the datatypes for a dataframe
-def defineDataTypes(dfIN, dtypes='', dtypeDir='../res/', dtypeFile=''):
+def defineDataTypes(dfIN, dtypes='', dtypeDir=str(repoDir)+'/res/', dtypeFile=''):
     df = dfIN.copy()
     
     if dtypeFile != '':
@@ -124,7 +125,7 @@ def defineDataTypes(dfIN, dtypes='', dtypeDir='../res/', dtypeFile=''):
         df.iloc[:,i] = dfIN.iloc[:,i].astype(dtypes[dfIN.iloc[:,i].name])
     return df
 
-def searchTermFilePaths(dictdir='../res/', specStartPattern='*SearchTerms-Specific*', startGlobPattern = '*SearchTerms-Start*'):
+def searchTermFilePaths(dictdir=str(repoDir)+'/res/', specStartPattern='*SearchTerms-Specific*', startGlobPattern = '*SearchTerms-Start*'):
     #Read in dictionary files for downhole data
 
     #specTermsFile = "SearchTerms-Specific_BedrockOrNo_2022-09.csv" #Specific matches
@@ -135,7 +136,7 @@ def searchTermFilePaths(dictdir='../res/', specStartPattern='*SearchTerms-Specif
     
     return specTermsPATH, startTermsPATH
 
-def readSearchTerms(specfile, startfile, dictdir='../res/'):
+def readSearchTerms(specfile, startfile, dictdir=str(repoDir)+'/res/'):
     #Read files into pandas dataframes
     specTerms = pd.read_csv(specfile, index_col='ID')
     startTerms = pd.read_csv(startfile, index_col='ID')
