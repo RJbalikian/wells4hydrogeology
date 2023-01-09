@@ -20,7 +20,8 @@ def findMostRecentFiles(dir='../res', globPattern='*'):
     fileDates = []
     for f in files: #Get the file dates from their file modification times
         fileDates.append(np.datetime64(datetime.datetime.fromtimestamp(os.path.getmtime(f))))
-    globInd = np.argmin(np.datetime64(todayDateStr)- np.array(fileDates)) #Find the index of the most recent file
+    print(np.array(fileDates))
+    globInd = np.argmin(np.datetime64(todayDateStr) - np.array(fileDates)) #Find the index of the most recent file
 
     #Iterate through glob/files again (need to recreate glob)
     files = pathlib.Path(dir).rglob(globPattern)
