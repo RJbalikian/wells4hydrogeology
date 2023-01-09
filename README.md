@@ -17,4 +17,4 @@ Using well descriptions from database, create data to be used for groundwater hy
 
 ## doc folder contains documentation 
 
-##out folder contains outputs from script runs
+## out folder contains outputs from script runs
