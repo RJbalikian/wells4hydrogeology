@@ -20,7 +20,6 @@ def findMostRecentFiles(dir='../res', globPattern='*'):
     fileDates = []
     for f in files: #Get the file dates from their file modification times
         fileDates.append(np.datetime64(datetime.datetime.fromtimestamp(os.path.getmtime(f))))
-    print(np.array(fileDates))
     globInd = np.argmin(np.datetime64(todayDateStr) - np.array(fileDates)) #Find the index of the most recent file
 
     #Iterate through glob/files again (need to recreate glob)
@@ -45,9 +44,9 @@ def filesSetup(db_dir='../res', proc_dir='../out'):
     headerDataFILE = findMostRecentFiles(db_dir, '*ISGS_HEADER*.txt')
     xyzInFILE = findMostRecentFiles(db_dir, '*xyzData*')
 
-    downholeDataPATH = pathlib.path(downholeDataFILE)
-    headerDataPATH = pathlib.path(headerDataFILE)
-    xyzInPATH = pathlib.path(xyzInFILE)
+    downholeDataPATH = pathlib.Path(downholeDataFILE)
+    headerDataPATH = pathlib.Path(headerDataFILE)
+    xyzInPATH = pathlib.Path(xyzInFILE)
 
     encodeType="latin-1"
 
@@ -117,7 +116,7 @@ def readDataTypeDict(dir='../res/', file=''):
 def defineDataTypes(dfIN, dtypes='', dtypeDir='../res/', dtypeFile=''):
     df = dfIN.copy()
     
-    if dtypeFile is not '':
+    if dtypeFile != '':
         dtypes = readDataTypeDict (dir=dtypeDir, file=dtypeFile)   
     
     for i in range(0, np.shape(df)[1]):
