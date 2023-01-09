@@ -102,8 +102,8 @@ def readXYZData(rawdir='', xyzfile=''):
     
 #    return downholeData, headerData
 
-def readDataTypeDict(dir='../res/', file=''):
-    with open(dir+file, 'r') as f:
+def readDataTypeDict(file=''):
+    with open(file, 'r') as f:
         data= f.read()
 
     jsDict = json.loads(data)
@@ -117,7 +117,8 @@ def defineDataTypes(dfIN, dtypes='', dtypeDir='../res/', dtypeFile=''):
     df = dfIN.copy()
     
     if dtypeFile != '':
-        dtypes = readDataTypeDict (dir=dtypeDir, file=dtypeFile)   
+        dtypeFilePATH = pathlib.Path(dtypeDir+dtypeFile)
+        dtypes = readDataTypeDict(file=dtypeFilePATH)   
     
     for i in range(0, np.shape(df)[1]):
         df.iloc[:,i] = dfIN.iloc[:,i].astype(dtypes[dfIN.iloc[:,i].name])
