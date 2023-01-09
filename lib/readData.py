@@ -3,6 +3,7 @@ import numpy as np
 import pathlib
 import datetime
 import os
+import json
 
 def getCurrentDate():
     todayDate = datetime.date.today()
@@ -91,9 +92,65 @@ def readXYZData(rawdir='../res', xyzfile=''):
     
     return xyzDataIN
 
+#Only keep 'essential' columns to decrease size of dataframes/speed up processing
+def essentialCols(downholedata, headerdata):
+    downhole_keepCols = ["API_NUMBER","TABLE_NAME","FORMATION","THICKNESS","TOP","BOTTOM"]
+    headers_keepCols = ['API_NUMBER',"TOTAL_DEPTH","SECTION","TWP","TDIR","RNG","RDIR","MERIDIAN","QUARTERS","ELEVATION","ELEVREF","COUNTY_CODE","LATITUDE","LONGITUDE","ELEVSOURCE"]
+    
+    downholeData = downholedata[downhole_keepCols]
+    headerData = headerdata[headers_keepCols]
+    
+    return downholeData, headerData
+
+def readDataTypeDict(dir='../res/', file=''):
+
+    with open(dir+file) as f:
+        dtDict = f.read() 
+        
+    return dtDict
+
+#Define the datatypes for a dataframe
 def defineDataTypes(dfIN, dtypes):
     df = dfIN.copy()
     
     for i in range(0, np.shape(df)[1]):
         df.iloc[:,i] = dfIN.iloc[:,i].astype(dtypes[dfIN.iloc[:,i].name])
     return df
+
+def searchTermFilePaths(dictdir='../res/', specStartPattern='*SearchTerms-Specific*', startGlobPattern = '*SearchTerms-Start*'):
+    #Read in dictionary files for downhole data
+
+    #specTermsFile = "SearchTerms-Specific_BedrockOrNo_2022-09.csv" #Specific matches
+    #startTermsFile = "SearchTerms-Start_BedrockOrNo.csv" #Wildcard matches for the start of the description
+    
+    specTermsPATH = findMostRecentFiles(dictdir, specStartPattern)
+    startTermsPATH = findMostRecentFiles(dictdir, startGlobPattern)
+    
+    return specTermsPATH, startTermsPATH
+
+def readSearchTerms(specfile, startfile, dictdir='../res/'):
+    #Read files into pandas dataframes
+    specTerms = pd.read_csv(specfile, index_col='ID')
+    startTerms = pd.read_csv(startfile, index_col='ID')
+
+    #Rename important columns
+    specTerms.rename(columns={'SearchTerm':'FORMATION', 'InterpUpdate':'INTERPRETATION'}, inplace=True)
+    specTerms['CLASS_FLAG'] = 1
+    startTerms.rename(columns={'StartTerm':'FORMATION', 'InterpUpdate':'INTERPRETATION'}, inplace=True)
+    startTerms['CLASS_FLAG'] = 4
+
+    #Recast all columns to datatypes of headerData to defined types
+    specTermsDtypes = {'FORMATION':str,'INTERPRETATION':str, 'CLASS_FLAG':np.uint8}
+    startTermsDtypes = {'FORMATION':str,'INTERPRETATION':str, 'CLASS_FLAG':np.uint8}
+
+    for i in range(0, np.shape(specTerms)[1]):
+        specTerms.iloc[:,i] = specTerms.iloc[:,i].astype(specTermsDtypes[specTerms.iloc[:,i].name])
+        startTerms.iloc[:,i] = startTerms.iloc[:,i].astype(startTermsDtypes[startTerms.iloc[:,i].name])
+    
+    #Delete duplicate definitions
+    specTerms.drop_duplicates(subset='FORMATION',inplace=True) #Apparently, there are some duplicate definitions, which need to be deleted first
+    startTerms.drop_duplicates(subset='FORMATION',inplace=True) #Apparently, there are some duplicate definitions, which need to be deleted first
+    specTerms.reset_index(inplace=True, drop=True)
+    startTerms.reset_index(inplace=True, drop=True)
+    
+    return specTerms, startTerms

@@ -1,0 +1,9 @@
+{'ID':np.uint32, 
+    "API_NUMBER":np.uint64,
+    "TABLE_NAME":str,
+    "WHO":str,
+    "INTERPRET_DATE":str,
+    "FORMATION":str,
+    "THICKNESS":np.float64,
+    "TOP":np.float64,
+    "BOTTOM":np.float64}
