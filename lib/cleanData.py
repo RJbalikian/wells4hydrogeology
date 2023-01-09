@@ -22,8 +22,8 @@ def removeNonlocatedData(downholeData, headerData):
 def removenotopo(df, printouts=False):
     before = df.shape[0]
     
-    df['ELEV_FT'].replace('',np.nan,inplace=True)
-    df.dropna(subset=['ELEV_FT'],inplace=True)
+    df['ELEV_FT'].replace('', np.nan,inplace=True)
+    df.dropna(subset=['ELEV_FT'], inplace=True)
     
     after = df.shape[0]
 
@@ -31,6 +31,7 @@ def removenotopo(df, printouts=False):
         print("Number of rows before dropping those without surface elevation information: "+str(before))
         print("Number of rows after dropping those without surface elevation information: "+str(after))
         print('Well records deleted: '+str(before-after))
+    return df
 
 #This function drops all records in the downholedata with no depth information (either top or bottom depth of well interval)
 def dropnodepth(df, printouts=False):
