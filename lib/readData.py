@@ -103,15 +103,21 @@ def essentialCols(downholedata, headerdata):
     return downholeData, headerData
 
 def readDataTypeDict(dir='../res/', file=''):
+    with open(dir+file, 'r') as f:
+        data= f.read()
 
-    with open(dir+file) as f:
-        dtDict = f.read() 
+    jsDict = json.loads(data)
+    for k in jsDict.keys():
+        jsDict[k] = getattr(np, jsDict[k])
         
-    return dtDict
+    return jsDict
 
 #Define the datatypes for a dataframe
-def defineDataTypes(dfIN, dtypes):
+def defineDataTypes(dfIN, dtypes='', dtypeDir='../res/', dtypeFile=''):
     df = dfIN.copy()
+    
+    if dtypeFile is not '':
+        dtypes = readDataTypeDict (dir=dtypeDir, file=dtypeFile)   
     
     for i in range(0, np.shape(df)[1]):
         df.iloc[:,i] = dfIN.iloc[:,i].astype(dtypes[dfIN.iloc[:,i].name])
