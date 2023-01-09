@@ -15,4 +15,6 @@ Using well descriptions from database, create data to be used for groundwater hy
 - ISGS_DOWNHOLE_DATA_yyyy-mm-dd.TXT: tabular data exported from ISGS oracle database containing geologic information about wells in the state
 - xyzData_yyyy-mm-dd.csv: most recent update of statewide wells with API, Latitude, Longitude, and surface elevation extracted from statewide lidar topography
 
-## doc folder contains documentation and outputs from script runs
+## doc folder contains documentation 
+
+##out folder contains outputs from script runs
