@@ -43,4 +43,4 @@ def readWCS(wcs_url):
 
     # For coverage with time axis get the date time values
     #my_wcs.contents['AverageChlorophyllScaled'].timepositions
-    return
+    return my_wcs
