@@ -60,15 +60,15 @@ def filesSetup(db_dir='../res', proc_dir='../out'):
     #headerDataDTYPES = {'ID':np.uint32,'API_NUMBER':np.uint64,"TDFORMATION":str,"PRODFORM":str,"TOTAL_DEPTH":np.float64,"SECTION":np.float64,"TWP":np.float64,"TDIR":str,"RNG":np.float64,"RDIR":str,"MERIDIAN":np.float64,"FARM_NAME":str,"NSFOOT":np.float64,"NSDIR":str,"EWFOOT":np.float64,"EWDIR":str,"QUARTERS":str,"ELEVATION":np.float64,"ELEVREF":str,"COMP_DATE":str,"STATUS":str,"FARM_NUM":str,"COUNTY_CODE":np.float64,"PERMIT_NUMBER":str,"COMPANY_NAME":str,"COMPANY_CODE":str,"PERMIT_DATE":str,"CORNER":str,"LATITUDE":np.float64,"LONGITUDE":np.float64,"ENTERED_BY":str,"UPDDATE":str,"ELEVSOURCE":str, "ELEV_FT":np.float64}
     return downholeDataPATH, headerDataPATH, xyzInPATH
 
-def readRawTxtData(rawdir='../res', downholefile='', headerfile='', encoding='latin-1'):
+def readRawTxtData(rawdir='', downholefile='', headerfile='', encoding='latin-1'):
     
     headers_useCols = ['API_NUMBER',"TOTAL_DEPTH","SECTION","TWP","TDIR","RNG","RDIR","MERIDIAN","QUARTERS","ELEVATION","ELEVREF","COUNTY_CODE","LATITUDE","LONGITUDE","ELEVSOURCE"]
     downhole_useCols = ["API_NUMBER","TABLE_NAME","FORMATION","THICKNESS","TOP","BOTTOM"]
     
     encodeType=encoding
     
-    downholeDataIN = pd.read_csv(rawdir+downholefile, sep=',', header='infer', encoding=encodeType, usecols=downhole_useCols)
-    headerDataIN = pd.read_csv(rawdir+headerfile, sep=',', header='infer', encoding=encodeType, usecols=headers_useCols)
+    downholeDataIN = pd.read_csv(rawdir+str(downholefile), sep=',', header='infer', encoding=encodeType, usecols=downhole_useCols)
+    headerDataIN = pd.read_csv(rawdir+str(headerfile), sep=',', header='infer', encoding=encodeType, usecols=headers_useCols)
         
     downholeDataIN = downholeDataIN.dropna(subset=['API_NUMBER']) #Drop data with no API
     
