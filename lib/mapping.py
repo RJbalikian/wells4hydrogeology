@@ -14,9 +14,9 @@ def addElevtoHeader(xyz, header):
     headerXYZData.rename({'LATITUDE_y':'LATITUDE', 'LONGITUDE_y':'LONGITUDE'}, axis=1, inplace=True)
     return headerXYZData
 
-def readWCS():
+def readWCS(wcs_url):
 
-    wcs_url = r"https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_DEM_30M/ImageServer/WCSServer?request=GetCapabilities&service=WCS"
+    #wcs_url = r"https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_DEM_30M/ImageServer/WCSServer?request=GetCapabilities&service=WCS"
 
     # Create coverage object
     my_wcs = WebCoverageService(wcs_url,
