@@ -86,3 +86,20 @@ def export_toBeDefined(df, procdir):
 def fillUnclassified(df):
     df['CLASS_FLAG'].fillna(0, inplace=True)
     return df
+
+def mergeLithologies(downholedata, targinterps):
+    downholeData_targ = pd.merge(downholedata, targinterps.set_index('INTERPRETATION'), right_on='INTERPRETATION',left_on='INTERPRETATION', how='left')
+    downholeData = downholeData_targ.copy()
+    downholeData['TARGET'].replace('DoNotUse', value=-1, inplace=True)
+    downholeData['TARGET'].fillna(value=-2, inplace=True)
+    downholeData['TARGET'].astype(np.int8)
+    return downholeData
+
+def getUniqueWells(df, wellidCol='API_NUMBER'):
+    #Get Unique well APIs
+    uniqueWells = df[wellidCol].unique()
+    wellsDF = pd.DataFrame(uniqueWells)
+    print('Number of unique wells in downholeData: '+str(wellsDF.shape[0]))
+    wellsDF.columns = ['UNIQUE_API']
+    
+    return wellsDF

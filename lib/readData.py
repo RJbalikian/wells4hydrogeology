@@ -162,3 +162,10 @@ def readSearchTerms(specfile, startfile, dictdir=str(repoDir)+'/res/'):
     startTerms.reset_index(inplace=True, drop=True)
     
     return specTerms, startTerms
+
+def readLithologies(lithoDir=str(repoDir)+'/res/', lithFile='Lithology_Interp_FineCoarse.csv'):
+    #dictDir = "\\\\isgs-sinkhole\\geophysics\\Balikian\\ISWS_HydroGeo\\WellDataAutoClassification\\SupportingDocs\\"
+    lithFPath = pathlib.Path(lithoDir+lithFile)
+    targetInterpDF = pd.read_csv(lithFPath)
+    targetInterpDF.rename(columns={'LITHOLOGY':'INTERPRETATION', 'CODE':'TARGET'}, inplace=True)
+    return targetInterpDF
