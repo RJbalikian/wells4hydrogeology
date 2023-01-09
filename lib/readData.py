@@ -86,21 +86,21 @@ def readRawTxtData(rawdir='', downholefile='', headerfile='', encoding='latin-1'
     return headerDataIN, downholeDataIN
 
 #Read file with xyz data
-def readXYZData(rawdir='../res', xyzfile=''):
+def readXYZData(rawdir='', xyzfile=''):
     xyzDTypes = {'ID':np.uint32,'API_NUMBER':np.uint64,'LATITUDE':np.float64,'LONGITUDE':np.float64,'ELEV_FT':np.float64}
-    xyzDataIN = pd.read_csv(rawdir+xyzfile, sep=',', header='infer', dtype=xyzDTypes, index_col='ID')
+    xyzDataIN = pd.read_csv(rawdir+str(xyzfile), sep=',', header='infer', dtype=xyzDTypes, index_col='ID')
     
     return xyzDataIN
 
 #Only keep 'essential' columns to decrease size of dataframes/speed up processing
-def essentialCols(downholedata, headerdata):
-    downhole_keepCols = ["API_NUMBER","TABLE_NAME","FORMATION","THICKNESS","TOP","BOTTOM"]
-    headers_keepCols = ['API_NUMBER',"TOTAL_DEPTH","SECTION","TWP","TDIR","RNG","RDIR","MERIDIAN","QUARTERS","ELEVATION","ELEVREF","COUNTY_CODE","LATITUDE","LONGITUDE","ELEVSOURCE"]
+#def essentialCols(downholedata, headerdata):
+#    downhole_keepCols = ["API_NUMBER","TABLE_NAME","FORMATION","THICKNESS","TOP","BOTTOM"]
+#    headers_keepCols = ['API_NUMBER',"TOTAL_DEPTH","SECTION","TWP","TDIR","RNG","RDIR","MERIDIAN","QUARTERS","ELEVATION","ELEVREF","COUNTY_CODE","LATITUDE","LONGITUDE","ELEVSOURCE"]
     
-    downholeData = downholedata[downhole_keepCols]
-    headerData = headerdata[headers_keepCols]
+#    downholeData = downholedata[downhole_keepCols]
+#    headerData = headerdata[headers_keepCols]
     
-    return downholeData, headerData
+#    return downholeData, headerData
 
 def readDataTypeDict(dir='../res/', file=''):
     with open(dir+file, 'r') as f:
