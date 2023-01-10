@@ -4,7 +4,7 @@ import pandas as pd
 #This function removes all data from the downholeData table where there is no location information (in the headerData table). This includes elevation info too
 def removeNonlocatedData(downholeData, headerData):
     before = downholeData.shape[0] #Extract length of data before this process
-    
+
     #Create Merged dataset only with data where wells exist in both databases (i.e., well has data and location info)
     df = pd.merge(downholeData, headerData.set_index('API_NUMBER'), on='API_NUMBER', how='left', indicator='Exist')
     df['Existbool'] = np.where(df['Exist'] == 'both', True, False)
@@ -15,6 +15,7 @@ def removeNonlocatedData(downholeData, headerData):
     downholeData = df[keepCols].copy()
     after = downholeData.shape[0]
     print(str(before-after)+' records removed without location information.')
+    print(str(downholeData.shape[0])+' wells remain from '+str(downholeData['API_NUMBER'].unique().shape[0])+' located wells in study area.')
     return downholeData
 
 #Function to remove headerData without surface topography information

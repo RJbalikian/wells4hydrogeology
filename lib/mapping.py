@@ -4,11 +4,36 @@ import geopandas as gpd
 import pandas as pd
 import numpy as np
 from owslib.wcs import WebCoverageService
-import shapefile
+from shapely.geometry import Point
 
-def rastertoPoints_extract(raster, points):
-    
-    return points
+def readStudyArea(studyareapath):
+    studyAreaIN = gpd.read_file(studyareapath)
+    saExtent = studyAreaIN.total_bounds
+    return studyAreaIN, saExtent
+
+def coords2Geometry(df, xCol='LONGITUDE', yCol='LATITUDE', zCol='ELEV_FT', crs='EPSG:4269', useZ=False):
+    ptCRS=crs
+
+    y = df[yCol]
+    x = df[xCol]
+    z = df[zCol]
+
+    #coords = pd.concat([y, x], axis=1)
+    if useZ:
+        df["GEOMETRY"] = gpd.points_from_xy(y, x, z=z, crs=ptCRS)
+    else:
+        df["GEOMETRY"] = gpd.points_from_xy(y, x, crs=ptCRS)
+        
+    gdf = gpd.GeoDataFrame(df, crs=ptCRS)
+    return gdf
+
+def clipPts2StudyArea():
+
+    return
+
+def rastertoPoints_extract(raster, ptDF, xCol='LONGITUDE', yCol='LATITUDE', newColName='Sampled'):
+    ptDF[newColName] = raster.sel(x=ptDF[xCol],y=ptDF[yCol], method='nearest')
+    return ptDF
 
 def addElevtoHeader(xyz, header):
     headerXYZData = header.merge(xyz, how='left', on='API_NUMBER')
@@ -35,18 +60,16 @@ def readWCS(wcs_url):
     #(testWCS.getCoverage())
     return my_wcs
 
-def readStudyArea(studyareapath):
-    studyAreaIN = shapefile.Reader(studyareapath)
-    saExtent = studyAreaIN.bbox
-    return studyAreaIN, saExtent
-
-def readModelGrid(saExtent, gridpath, nodataval, readGrid=True, node_bySpace=False, ):
+def readModelGrid(studyArea, gridpath, nodataval=0, readGrid=True, node_bySpace=False, clip2SA=True):
+    
+    saExtent = studyArea.total_bounds
     readGrid = True
     node_bySpace = False #False means by number of nodes
 
     if readGrid:
         modelGridIN = rxr.open_rasterio(gridpath)
-        modelGrid = modelGridIN.sel(x=slice(saExtent[0], saExtent[2]), y=slice(saExtent[3], saExtent[1])).sel(band=1)
+        if clip2SA:
+            modelGrid = modelGridIN.sel(x=slice(saExtent[0], saExtent[2]), y=slice(saExtent[1], saExtent[3])).sel(band=1)
         noDataMod = modelGrid.attrs['_FillValue'] #Extract from dataset itself
         modelGrid = modelGrid.where(modelGrid > noDataMod)   #Replace no data values with NaNs
     else:
