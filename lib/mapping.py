@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 from owslib.wcs import WebCoverageService
 from shapely.geometry import Point
+import datetime
 
 def readStudyArea(studyareapath):
     studyAreaIN = gpd.read_file(studyareapath)
@@ -27,8 +28,28 @@ def coords2Geometry(df, xCol='LONGITUDE', yCol='LATITUDE', zCol='ELEV_FT', crs='
     gdf = gpd.GeoDataFrame(df, crs=ptCRS)
     return gdf
 
-def rastertoPoints_extract(raster, ptDF, xCol='LONGITUDE', yCol='LATITUDE', newColName='Sampled'):
-    ptDF[newColName] = raster.sel(x=ptDF[xCol],y=ptDF[yCol], method='nearest')
+def rastertoPoints_sample(raster, ptDF, xCol='LONGITUDE', yCol='LATITUDE', newColName='Sampled', printouts=True):
+    if printouts:
+        nowTime = datetime.datetime.now()
+        endTime = nowTime+datetime.timedelta(minutes=14)
+        print("Sampling process should be done by {:d}:{:02d}".format(endTime.hour, endTime.minute))
+
+    if 'geometry' in ptDF.columns:
+        if xCol=='LONGITUDE' and yCol=='LATITUDE':
+            ptDF['LONGITUDE_PROJ'] = ptDF['geometry'].x
+            ptDF['LATITUDE_PROJ'] = ptDF['geometry'].y
+            xData = ptDF['LONGITUDE_PROJ']
+            yData = ptDF['LATITUDE_PROJ']
+    else:
+        xData = ptDF['LONGITUDE']
+        yData = ptDF['LATITUDE']
+
+    sampleList = []
+    for p in range(ptDF.shape[0]):
+        sampleList.append(raster.sel(x=xData[p], y=yData[p], method='nearest').values[0])
+
+    sampleDF = pd.DataFrame(sampleList, columns=[newColName])
+    ptDF[newColName] = sampleDF[newColName]
     return ptDF
 
 def addElevtoHeader(xyz, header):
@@ -38,23 +59,39 @@ def addElevtoHeader(xyz, header):
     return headerXYZData
 
 
-def readWCS(wcs_url):
+def readWCS(wcs_url, studyArea):
 
-    #wcs_url = r"https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_DEM_30M/ImageServer/WCSServer?request=GetCapabilities&service=WCS"
+    #30m DEM
+    #wcs_url = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_DEM_30M/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
+    #lidar url:
+    #wcs_url = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
 
-    # Create coverage object
-    my_wcs = WebCoverageService(wcs_url,
-                                version='1.1.2')
+    #Create coverage object
+    my_wcs = WebCoverageService(wcs_url, version='1.0.0') 
+    #names = [k for k in my_wcs.contents.keys()]
+    #print(names)
+    data = my_wcs.contents['IL_Statewide_Lidar_DEM']
 
-    # Get list of coverages
-    print(my_wcs.contents.keys())
+    bbox = studyArea.total_bounds #Study area extent
 
+    response = my_wcs.getCoverage(
+        identifier='IL_Statewide_Lidar_DEM', 
+        crs='EPSG:3857',#'urn:ogc:def:crs:EPSG::26716',
+        bbox=bbox,
+        #resx=100, resy=100, 
+        width = 500, height=500,
+        format='GeoTIFF')
+    
+    with open('surfElev.tif', 'wb') as file:
+        file.write(response.read())
+
+    wcsData_rxr =  rxr.open_rasterio('surfElev.tif')
     #minLat = 39.991998
     #maxLat = 40.248993
     #minlon = -88.493952
     #maxLon = -88.079875
     #(testWCS.getCoverage())
-    return my_wcs
+    return wcsData_rxr
 
 def readModelGrid(studyArea, gridpath, nodataval=0, readGrid=True, node_bySpace=False, clip2SA=True):
     
