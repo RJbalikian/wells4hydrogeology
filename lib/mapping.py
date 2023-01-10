@@ -20,16 +20,12 @@ def coords2Geometry(df, xCol='LONGITUDE', yCol='LATITUDE', zCol='ELEV_FT', crs='
 
     #coords = pd.concat([y, x], axis=1)
     if useZ:
-        df["GEOMETRY"] = gpd.points_from_xy(y, x, z=z, crs=ptCRS)
+        df["geometry"] = gpd.points_from_xy(y, x, z=z, crs=ptCRS)
     else:
-        df["GEOMETRY"] = gpd.points_from_xy(y, x, crs=ptCRS)
+        df["geometry"] = gpd.points_from_xy(y, x, crs=ptCRS)
         
     gdf = gpd.GeoDataFrame(df, crs=ptCRS)
     return gdf
-
-def clipPts2StudyArea():
-
-    return
 
 def rastertoPoints_extract(raster, ptDF, xCol='LONGITUDE', yCol='LATITUDE', newColName='Sampled'):
     ptDF[newColName] = raster.sel(x=ptDF[xCol],y=ptDF[yCol], method='nearest')
@@ -130,7 +126,7 @@ def readSurfaceGrid(surfaceelevpath, nodataval=0):
     surfaceElevGridIN = rxr.open_rasterio(surfaceelevpath)
     
     try:
-        noDataBed = surfaceElevGridIN.attrs['_FillValue'] #Extract from dataset itself
+        noDataSurf = surfaceElevGridIN.attrs['_FillValue'] #Extract from dataset itself
     except:
         if noDataSurf < -1000:
             noDataSurf = -1000
