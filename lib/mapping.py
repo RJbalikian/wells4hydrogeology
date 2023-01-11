@@ -6,6 +6,8 @@ import numpy as np
 from owslib.wcs import WebCoverageService
 from shapely.geometry import Point
 import datetime
+from urllib.request import urlopen
+from rasterio import MemoryFile
 
 def readStudyArea(studyareapath):
     studyAreaIN = gpd.read_file(studyareapath)
@@ -58,39 +60,95 @@ def addElevtoHeader(xyz, header):
     headerXYZData.rename({'LATITUDE_y':'LATITUDE', 'LONGITUDE_y':'LONGITUDE'}, axis=1, inplace=True)
     return headerXYZData
 
-
-def readWCS(wcs_url, studyArea):
+lidarURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
+def readWCS(studyArea, wcs_url=lidarURL):
 
     #30m DEM
     #wcs_url = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_DEM_30M/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
     #lidar url:
-    #wcs_url = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
+    #lidarURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
+
+    #studyAreaPath = r"\\isgs-sinkhole.ad.uillinois.edu\geophysics\Balikian\ISWS_HydroGeo\WellDataAutoClassification\SampleData\ESL_StudyArea_5mi.shp"
+    #studyArea = gpd.read_file(studyAreaPath)
+    
+    studyArea = studyArea.to_crs(data.boundingboxes[0]['nativeSrs'])
+    saBBox = studyArea.total_bounds
+
+    res_x=1
+    res_y=1
+    width_in = ''
+    height_in= ''
 
     #Create coverage object
     my_wcs = WebCoverageService(wcs_url, version='1.0.0') 
     #names = [k for k in my_wcs.contents.keys()]
     #print(names)
-    data = my_wcs.contents['IL_Statewide_Lidar_DEM']
+    dataID = 'IL_Statewide_Lidar_DEM'
 
-    bbox = studyArea.total_bounds #Study area extent
+    data = my_wcs.contents[dataID]
 
+    dBBox = data.boundingboxes
+
+    #In case study area bounding box goes outside data bounding box, use data bounding box values
+    newBBox = []
+    for i,c in enumerate(dBBox[0]['bbox']):
+        if i == 0 or i==2:
+            if saBBox[i] < c:
+                newBBox.append(saBBox[i])
+            else:
+                newBBox.append(c)
+        else:
+            if saBBox[i] > c:
+                newBBox.append(saBBox[i])
+            else:
+                newBBox.append(c)
+
+    #Recalculate resolution if it is too fine to read in
+    #Start by getting the area of the study area bounding box
+    saWidth = saBBox[2]-saBBox[0]
+    saHeight = saBBox[3]-saBBox[1]
+    saBBoxAreaM = saWidth*saHeight
+    saBBoxAreaKM = saBBoxAreaM/(1000*1000) #Area in km^2
+
+    if saBBoxAreaM/(res_x*res_y) > (4100*15000)*0.457194: #What I think might be the max download size?
+        print("Resolution inputs overriden, file request too large.")
+        res_x=str(round(saWidth/2500, 2))
+
+        width_in  = str(int(saWidth/float(res_x )))
+        height_in = str(int(saHeight/float(res_x)))
+        
+        res_y=str(round(saHeight/height_in, 2))
+
+        print('New resolution is: '+res_x+'m_x X '+res_y+'m_y' )
+        print('Dataset size: '+width_in+' pixels_x X '+height_in+' pixels_y')
+
+    bBox = tuple(newBBox)
+    bBox_str = str(tuple(newBBox)[1:-1]).replace(' ','')
+    dataCRS = 'EPSG:3857'
+
+    #Format WCS request using owslib
     response = my_wcs.getCoverage(
-        identifier='IL_Statewide_Lidar_DEM', 
-        crs='EPSG:3857',#'urn:ogc:def:crs:EPSG::26716',
-        bbox=bbox,
-        #resx=100, resy=100, 
-        width = 500, height=500,
+        identifier=my_wcs[dataID].id, 
+        crs=dataCRS,#'urn:ogc:def:crs:EPSG::26716',
+        bbox=bBox,
+        resx=res_x, 
+        resy=res_y,
+        timeout=60,
+        #width = width_in, height=height_in,
         format='GeoTIFF')
-    
-    with open('surfElev.tif', 'wb') as file:
-        file.write(response.read())
+    response
 
-    wcsData_rxr =  rxr.open_rasterio('surfElev.tif')
-    #minLat = 39.991998
-    #maxLat = 40.248993
-    #minlon = -88.493952
-    #maxLon = -88.079875
-    #(testWCS.getCoverage())
+    #If I can figure out url, this might be better?
+    #baseURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/'+dataID+'/ImageServer/WCSServer'
+    #addonRequestURL = '?request=GetCoverage&service=WCS&bbox='+bBox_str+'&srs='+dataCRS+'&format=GeoTIFF'+'&WIDTH='+width_in+'&HEIGHT='+height_in+')'
+    #reqURL = baseURL+addonRequestURL
+    #wcsData_rxr =  rxr.open_rasterio(dataset)
+
+
+    with MemoryFile(response) as memfile:
+        with memfile.open() as dataset:
+            wcsData_rxr =  rxr.open_rasterio(dataset)
+
     return wcsData_rxr
 
 def readModelGrid(studyArea, gridpath, nodataval=0, readGrid=True, node_bySpace=False, clip2SA=True):
