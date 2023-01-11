@@ -181,11 +181,12 @@ def readModelGrid(studyArea, gridpath, nodataval=0, readGrid=True, node_bySpace=
             modelGrid = clipGrid2StudyArea(studyArea=studyArea, grid=modelGridIN, studyAreacrs=studyAreacrs, gridcrs=gridcrs)
         
         try:
-            noDataMod = modelGrid.attrs['_FillValue'] #Extract from dataset itsel
+            noDataVal = modelGrid.attrs['_FillValue'] #Extract from dataset itsel
         except:
-            noDataMod = -5000000
+            noDataVal = -5000000
+        print(noDataVal)
+        modelGrid = modelGrid.where(modelGrid != noDataVal)   #Replace no data values with NaNs
         
-        modelGrid = modelGrid.where(modelGrid != noDataMod)   #Replace no data values with NaNs
     else:
         spatRefDict = {'crs_wkt': 'PROJCS["Clarke_1866_Lambert_Conformal_Conic",GEOGCS["NAD27",DATUM["North_American_Datum_1927",SPHEROID["Clarke 1866",6378206.4,294.978698199999,AUTHORITY["EPSG","7008"]],AUTHORITY["EPSG","6267"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4267"]],PROJECTION["Lambert_Conformal_Conic_2SP"],PARAMETER["latitude_of_origin",33],PARAMETER["central_meridian",-89.5],PARAMETER["standard_parallel_1",33],PARAMETER["standard_parallel_2",45],PARAMETER["false_easting",2999994],PARAMETER["false_northing",0],UNIT["US survey foot",0.304800609601219,AUTHORITY["EPSG","9003"]],AXIS["Easting",EAST],AXIS["Northing",NORTH]]',
             'semi_major_axis': 6378206.4,
