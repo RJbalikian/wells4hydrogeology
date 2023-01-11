@@ -158,7 +158,8 @@ def clipGrid2StudyArea(studyArea, grid, studyAreacrs='', gridcrs=''):
         subtext = grid.spatial_ref.crs_wkt[-20:]
         starInd = subtext.find('EPSG')
         gridcrs = subtext[starInd:-2].replace('"','').replace(',',':')   
-    
+        print(gridcrs)
+        
     if str(studyArea.crs)!= gridcrs:
         studyAreaUnproject = studyArea.copy()
         studyArea = studyArea.to_crs(gridcrs)   
