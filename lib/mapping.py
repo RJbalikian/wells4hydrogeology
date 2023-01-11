@@ -20,15 +20,15 @@ def readStudyArea(studyareapath):
 def coords2Geometry(df, xCol='LONGITUDE', yCol='LATITUDE', zCol='ELEV_FT', crs='EPSG:4269', useZ=False):
     ptCRS=crs
 
-    y = df[yCol].to_numpy()
     x = df[xCol].to_numpy()
+    y = df[yCol].to_numpy()
     z = df[zCol].to_numpy()
 
     #coords = pd.concat([y, x], axis=1)
     if useZ:
-        df["geometry"] = gpd.points_from_xy(y, x, z=z, crs=ptCRS)
+        df["geometry"] = gpd.points_from_xy(x, y, z=z, crs=ptCRS)
     else:
-        df["geometry"] = gpd.points_from_xy(y, x, crs=ptCRS)
+        df["geometry"] = gpd.points_from_xy(x, y, crs=ptCRS)
         
     gdf = gpd.GeoDataFrame(df, crs=ptCRS)
     return gdf
