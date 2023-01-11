@@ -9,6 +9,9 @@ import datetime
 from urllib.request import urlopen
 from rasterio import MemoryFile
 
+lidarURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
+
+
 def readStudyArea(studyareapath):
     studyAreaIN = gpd.read_file(studyareapath)
     saExtent = studyAreaIN.total_bounds
@@ -60,8 +63,7 @@ def addElevtoHeader(xyz, header):
     headerXYZData.rename({'LATITUDE_y':'LATITUDE', 'LONGITUDE_y':'LONGITUDE'}, axis=1, inplace=True)
     return headerXYZData
 
-lidarURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
-def readWCS(studyArea, wcs_url=lidarURL):
+def readWCS(studyArea, wcs_url=lidarURL, res_x=30, res_y=30):
 
     #30m DEM
     #wcs_url = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_DEM_30M/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
@@ -74,8 +76,6 @@ def readWCS(studyArea, wcs_url=lidarURL):
     studyArea = studyArea.to_crs(data.boundingboxes[0]['nativeSrs'])
     saBBox = studyArea.total_bounds
 
-    res_x=1
-    res_y=1
     width_in = ''
     height_in= ''
 
@@ -84,9 +84,7 @@ def readWCS(studyArea, wcs_url=lidarURL):
     #names = [k for k in my_wcs.contents.keys()]
     #print(names)
     dataID = 'IL_Statewide_Lidar_DEM'
-
     data = my_wcs.contents[dataID]
-
     dBBox = data.boundingboxes
 
     #In case study area bounding box goes outside data bounding box, use data bounding box values
@@ -217,22 +215,25 @@ def readModelGrid(studyArea, gridpath, nodataval=0, readGrid=True, node_bySpace=
 
     return modelGrid
 
-def readSurfaceGrid(surfaceelevpath, nodataval=0):
-    surfaceElevGridIN = rxr.open_rasterio(surfaceelevpath)
-    
-    try:
-        noDataSurf = surfaceElevGridIN.attrs['_FillValue'] #Extract from dataset itself
-    except:
-        if noDataSurf < -1000:
-            noDataSurf = -1000
-        elif noDataSurf > 50000:
-            noDataSurf = 50000
-        else:
-            noDataSurf = nodataval #apply no data value
+def readSurfaceGrid(surfaceelevpath='', nodataval=0, useWCS=False, studyArea=''):
+    if useWCS:
+        surfaceElevGridIN = readWCS(studyArea, wcs_url=lidarURL)
+    else:
+        surfaceElevGridIN = rxr.open_rasterio(surfaceelevpath)
         
-    surfaceElevGridIN = surfaceElevGridIN.where(surfaceElevGridIN != noDataSurf)  #Replace no data values with NaNs
-    
-    return
+        try:
+            noDataSurf = surfaceElevGridIN.attrs['_FillValue'] #Extract from dataset itself
+        except:
+            if noDataSurf < -1000:
+                noDataSurf = -1000
+            elif noDataSurf > 50000:
+                noDataSurf = 50000
+            else:
+                noDataSurf = nodataval #apply no data value
+            
+        surfaceElevGridIN = surfaceElevGridIN.where(surfaceElevGridIN != noDataSurf)  #Replace no data values with NaNs
+        
+    return surfaceElevGridIN
 
 def readBedrockGrid(bedrockelevpath, nodataval=0):
     bedrockElevGridIN = rxr.open_rasterio(bedrockelevpath)
