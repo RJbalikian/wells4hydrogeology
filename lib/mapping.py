@@ -149,18 +149,36 @@ def readWCS(studyArea, wcs_url=lidarURL, res_x=30, res_y=30):
 
     return wcsData_rxr
 
-def readModelGrid(studyArea, gridpath, nodataval=0, readGrid=True, node_bySpace=False, clip2SA=True):
-    
-    saExtent = studyArea.total_bounds
+def readModelGrid(studyArea, gridpath, nodataval=0, readGrid=True, node_bySpace=False, clip2SA=True, studyAreacrs='', gridcrs=''):
+     
     readGrid = True
     node_bySpace = False #False means by number of nodes
-
     if readGrid:
-        modelGridIN = rxr.open_rasterio(gridpath)
+        modelGridIN = rxr.open_rasterio(gridpath)   
+        
         if clip2SA:
+            if studyAreacrs=='':
+                studyAreacrs=studyArea.crs
+
+            if gridcrs=='':
+                #Get EPSG of model grid
+                subtext = modelGridIN.spatial_ref.crs_wkt[-20:]
+                starInd = subtext.find('EPSG')
+                gridcrs = subtext[starInd:-2].replace('"','').replace(',',':')   
+            
+            if str(studyArea.crs)!= gridcrs:
+                studyAreaUnproject = studyArea.copy()
+                studyArea = studyArea.to_crs(gridcrs)   
+                
+            saExtent = studyArea.total_bounds
             modelGrid = modelGridIN.sel(x=slice(saExtent[0], saExtent[2]), y=slice(saExtent[1], saExtent[3])).sel(band=1)
-        noDataMod = modelGrid.attrs['_FillValue'] #Extract from dataset itself
-        modelGrid = modelGrid.where(modelGrid > noDataMod)   #Replace no data values with NaNs
+        
+        try:
+            noDataMod = modelGrid.attrs['_FillValue'] #Extract from dataset itsel
+        except:
+            noDataMod = -5000000
+        
+        modelGrid = modelGrid.where(modelGrid != noDataMod)   #Replace no data values with NaNs
     else:
         spatRefDict = {'crs_wkt': 'PROJCS["Clarke_1866_Lambert_Conformal_Conic",GEOGCS["NAD27",DATUM["North_American_Datum_1927",SPHEROID["Clarke 1866",6378206.4,294.978698199999,AUTHORITY["EPSG","7008"]],AUTHORITY["EPSG","6267"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4267"]],PROJECTION["Lambert_Conformal_Conic_2SP"],PARAMETER["latitude_of_origin",33],PARAMETER["central_meridian",-89.5],PARAMETER["standard_parallel_1",33],PARAMETER["standard_parallel_2",45],PARAMETER["false_easting",2999994],PARAMETER["false_northing",0],UNIT["US survey foot",0.304800609601219,AUTHORITY["EPSG","9003"]],AXIS["Easting",EAST],AXIS["Northing",NORTH]]',
             'semi_major_axis': 6378206.4,
