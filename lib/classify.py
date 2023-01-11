@@ -22,16 +22,21 @@ def specificDefine(df, specterms, printouts=False):
     
     return df_Interps
 
-def splitDefined(df):
+def splitDefined(df, printouts=False):
     classifedDF= df[df['CLASS_FLAG'].notna()] #Already-classifed data
     searchDF = df[df['CLASS_FLAG'].isna()] #Unclassified data
+    
+    if printouts:
+        print(str(searchDF.shape[0])+' records unclassified; isolated into searchDF.')
+    
     return classifedDF, searchDF
 
 #Classify downhole data by the initial substring
 def startDefine(df, starterms, printouts=False):
     if printouts:
+        estTime = df.shape[0]/3054409 * 6 #It took about 6 minutes to classify data with entire dataframe. This estimates the fraction of that it will take
         nowTime = datetime.datetime.now()
-        endTime = nowTime+datetime.timedelta(minutes=6)
+        endTime = nowTime+datetime.timedelta(minutes=estTime)
         print("Start Term process should be done by {:d}:{:02d}".format(endTime.hour, endTime.minute))
 
     for i,s in enumerate(starterms['FORMATION']):
@@ -57,33 +62,29 @@ def depthDefine(dfIN, thresh=550, printouts=False):
     df['BEDROCK_FLAG'].mask(df['TOP']>thresh, True, inplace=True)
 
     if printouts:
-        prevClass = dfIN['CLASS_FLAG'].value_counts().sum()
         print(df['CLASS_FLAG'].value_counts())
         print('test')
-        brDepthClass = df['CLASS_FLAG'].value_counts()[3]
+        brDepthClass = df['CLASS_FLAG'].value_counts()[3.0]
         total = dfIN.shape[0]
 
-        newPercClass = round((brDepthClass/(total-prevClass))*100, 2)
-
-        print("Records classified deeper than "+str(thresh)+ "' :" + str(brDepthClass))
-        print("Records classified deeper than "+str(thresh)+"', as a percentage of remaining unclassified records: " + str(newPercClass)+"%")
-        print("Total bedrock records classified: " + str(prevClass+brDepthClass))
-        print("This is now a total of "+str(round((prevClass+brDepthClass)*100/dfIN.shape[0],2))+"% of the data classified.")
+        print("Records classified as bedrock that were deeper than "+str(thresh)+ "': " + str(brDepthClass))
+        print("This represents "+str(round((brDepthClass)*100/total,2))+"% of the unclassified data in this dataframe.")
+        
     return df
 
 #Output data that still needs to be defined
-def export_toBeDefined(df, procdir):
+def export_toBeDefined(df, outdir):
     #Get directory path correct
-    if procdir[-1] != '/' or procdir[-1] != '\\':
-        procdir = procdir+'/'
-    procdir.replace('\\','/')
+    if outdir[-1] != '/' or outdir[-1] != '\\':
+        outdir = outdir+'/'
+    outdir.replace('\\','/')
     
     todayDate = datetime.date.today()
     todayDateStr = str(todayDate)
     searchDF = df[df['CLASS_FLAG'].isna()]
     
     stillNeededDF=searchDF['FORMATION'].value_counts()
-    stillNeededDF.to_csv(procdir+'Stillneed2BeDefined_'+todayDateStr+'.csv')
+    stillNeededDF.to_csv(outdir+'Stillneed2BeDefined_'+todayDateStr+'.csv')
 
 def fillUnclassified(df):
     df['CLASS_FLAG'].fillna(0, inplace=True)

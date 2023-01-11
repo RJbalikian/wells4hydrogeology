@@ -29,9 +29,10 @@ def removenotopo(df, printouts=False):
     after = df.shape[0]
 
     if printouts:
+        print('Well records removed: '+str(before-after))
         print("Number of rows before dropping those without surface elevation information: "+str(before))
         print("Number of rows after dropping those without surface elevation information: "+str(after))
-        print('Well records deleted: '+str(before-after))
+        
     return df
 
 #This function drops all records in the downholedata with no depth information (either top or bottom depth of well interval)
