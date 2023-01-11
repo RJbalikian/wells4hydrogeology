@@ -59,6 +59,7 @@ def depthDefine(dfIN, thresh=550, printouts=False):
     if printouts:
         prevClass = dfIN['CLASS_FLAG'].value_counts().sum()
         print(df['CLASS_FLAG'].value_counts())
+        print('test')
         brDepthClass = df['CLASS_FLAG'].value_counts()[3]
         total = dfIN.shape[0]
 
