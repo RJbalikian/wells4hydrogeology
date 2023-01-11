@@ -20,9 +20,9 @@ def readStudyArea(studyareapath):
 def coords2Geometry(df, xCol='LONGITUDE', yCol='LATITUDE', zCol='ELEV_FT', crs='EPSG:4269', useZ=False):
     ptCRS=crs
 
-    y = df[yCol]
-    x = df[xCol]
-    z = df[zCol]
+    y = df[yCol].to_numpy()
+    x = df[xCol].to_numpy()
+    z = df[zCol].to_numpy()
 
     #coords = pd.concat([y, x], axis=1)
     if useZ:
