@@ -149,29 +149,35 @@ def readWCS(studyArea, wcs_url=lidarURL, res_x=30, res_y=30):
 
     return wcsData_rxr
 
+def clipGrid2StudyArea(studyArea, grid, studyAreacrs='', gridcrs=''):
+    if studyAreacrs=='':
+        studyAreacrs=studyArea.crs
+
+    if gridcrs=='':
+        #Get EPSG of model grid
+        subtext = grid.spatial_ref.crs_wkt[-20:]
+        starInd = subtext.find('EPSG')
+        gridcrs = subtext[starInd:-2].replace('"','').replace(',',':')   
+    
+    if str(studyArea.crs)!= gridcrs:
+        studyAreaUnproject = studyArea.copy()
+        studyArea = studyArea.to_crs(gridcrs)   
+        
+    saExtent = studyArea.total_bounds
+    
+    grid = grid.sel(x=slice(saExtent[0], saExtent[2]), y=slice(saExtent[1], saExtent[3])).sel(band=1)    
+    return grid
+
 def readModelGrid(studyArea, gridpath, nodataval=0, readGrid=True, node_bySpace=False, clip2SA=True, studyAreacrs='', gridcrs=''):
      
     readGrid = True
     node_bySpace = False #False means by number of nodes
+    
     if readGrid:
         modelGridIN = rxr.open_rasterio(gridpath)   
-        
-        if clip2SA:
-            if studyAreacrs=='':
-                studyAreacrs=studyArea.crs
 
-            if gridcrs=='':
-                #Get EPSG of model grid
-                subtext = modelGridIN.spatial_ref.crs_wkt[-20:]
-                starInd = subtext.find('EPSG')
-                gridcrs = subtext[starInd:-2].replace('"','').replace(',',':')   
-            
-            if str(studyArea.crs)!= gridcrs:
-                studyAreaUnproject = studyArea.copy()
-                studyArea = studyArea.to_crs(gridcrs)   
-                
-            saExtent = studyArea.total_bounds
-            modelGrid = modelGridIN.sel(x=slice(saExtent[0], saExtent[2]), y=slice(saExtent[1], saExtent[3])).sel(band=1)
+        if clip2SA:
+            modelGrid = clipGrid2StudyArea(studyArea=studyArea, grid=modelGridIN, studyAreacrs=studyAreacrs, gridcrs=gridcrs)
         
         try:
             noDataMod = modelGrid.attrs['_FillValue'] #Extract from dataset itsel
@@ -233,28 +239,34 @@ def readModelGrid(studyArea, gridpath, nodataval=0, readGrid=True, node_bySpace=
 
     return modelGrid
 
-def readSurfaceGrid(surfaceelevpath='', nodataval=0, useWCS=False, studyArea=''):
+def readSurfaceGrid(surfaceelevpath='', nodataval=0, useWCS=False, studyArea='', clip2SA=True,  studyAreacrs='', gridcrs=''):
     if useWCS:
         surfaceElevGridIN = readWCS(studyArea, wcs_url=lidarURL)
     else:
         surfaceElevGridIN = rxr.open_rasterio(surfaceelevpath)
+
+    if clip2SA:
+        surfaceElevGridIN = clipGrid2StudyArea(studyArea=studyArea, grid=surfaceElevGridIN, studyAreacrs=studyAreacrs, gridcrs=gridcrs)
         
-        try:
-            noDataSurf = surfaceElevGridIN.attrs['_FillValue'] #Extract from dataset itself
-        except:
-            if noDataSurf < -1000:
-                noDataSurf = -1000
-            elif noDataSurf > 50000:
-                noDataSurf = 50000
-            else:
-                noDataSurf = nodataval #apply no data value
+    try:
+        noDataSurf = surfaceElevGridIN.attrs['_FillValue'] #Extract from dataset itself
+    except:
+        if noDataSurf < -1000:
+            noDataSurf = -1000
+        elif noDataSurf > 50000:
+            noDataSurf = 50000
+        else:
+            noDataSurf = nodataval #apply no data value
             
         surfaceElevGridIN = surfaceElevGridIN.where(surfaceElevGridIN != noDataSurf)  #Replace no data values with NaNs
         
     return surfaceElevGridIN
 
-def readBedrockGrid(bedrockelevpath, nodataval=0):
+def readBedrockGrid(bedrockelevpath, nodataval=0, studyArea='', clip2SA=True,  studyAreacrs='', gridcrs=''):
     bedrockElevGridIN = rxr.open_rasterio(bedrockelevpath)
+
+    if clip2SA:
+        bedrockElevGridIN = clipGrid2StudyArea(studyArea=studyArea, grid=bedrockElevGridIN, studyAreacrs=studyAreacrs, gridcrs=gridcrs)
     
     try:
         noDataBed = bedrockElevGridIN.attrs['_FillValue'] #Extract from dataset itself
@@ -269,33 +281,44 @@ def readBedrockGrid(bedrockelevpath, nodataval=0):
     bedrockElevGridIN = bedrockElevGridIN.where(bedrockElevGridIN != noDataBed)   #Replace no data values with NaNs
     return bedrockElevGridIN
 
-def alignRasters(bedrockgrid, surfacegrid, modelgrid, nodataval=0):
-    surfaceGridAlign = surfacegrid.rio.reproject_match(modelgrid)
-    bedrockGridAlign = bedrockgrid.rio.reproject_match(modelgrid)
+def alignRasters(unalignedGrids=[], modelgrid='', nodataval=0):
+    
+    if unalignedGrids is list:
+        alignedGrids=[]
+        for g in unalignedGrids:
+            alignedGrid = g.rio.reproject_match(modelgrid)
+            #bedrockGridAlign = bedrockgrid.rio.reproject_match(modelgrid)
 
-    try:
-        noDataBed = bedrockGridAlign.attrs['_FillValue'] #Extract from dataset itself
-    except:
-        if noDataBed < -1000:
-            noDataBed = -1000
-        elif noDataBed > 50000:
-            noDataBed = 50000
-        else:
-            noDataBed = nodataval #apply no data value    
+            try:
+                noDataVal = alignedGrid.attrs['_FillValue'] #Extract from dataset itself
+            except:
+                if noDataVal < -1000:
+                    noDataVal = -1000
+                elif noDataVal > 50000:
+                    noDataVal = 50000
+                else:
+                    noDataVal = nodataval #apply no data value    
             
-    try:
-        noDataBed = surfaceGridAlign.attrs['_FillValue'] #Extract from dataset itself
-    except:
-        if noDataSurf < -1000:
-            noDataSurf = -1000
-        elif noDataSurf > 50000:
-            noDataSurf = 50000
-        else:
-            noDataSurf = nodataval #apply no data value
+            alignedGrid = alignedGrid.where(alignedGrid < noDataVal)  #Replace no data values with NaNs
             
-    surfaceElevGrid = surfaceElevGrid.where(surfaceElevGrid < noDataSurf)  #Replace no data values with NaNs
-    bedrockElevGrid = bedrockElevGrid.where(bedrockElevGrid > noDataBed)   #Replace no data values with NaNs
-    return bedrockGridAlign, surfaceGridAlign
+            alignedGrids.append(alignedGrid)
+    else:
+        alignedGrid = unalignedGrids.rio.reproject_match(modelgrid)
+        #bedrockGridAlign = bedrockgrid.rio.reproject_match(modelgrid)
+
+        try:
+            noDataVal = alignedGrid.attrs['_FillValue'] #Extract from dataset itself
+        except:
+            if noDataVal < -1000:
+                noDataVal = -1000
+            elif noDataVal > 50000:
+                noDataVal = 50000
+            else:
+                noDataVal = nodataval #apply no data value    
+        
+        alignedGrids = alignedGrid.where(alignedGrid < noDataVal)  #Replace no data values with NaNs
+                    
+    return alignedGrids
 
 def getDriftThick(surface, bedrock, noLayers=9, plotData=True):
     driftThick = surface - bedrock
