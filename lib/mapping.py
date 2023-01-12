@@ -295,7 +295,6 @@ def alignRasters(unalignedGrids, modelgrid='', nodataval=0):
     if type(unalignedGrids) is list:
         alignedGrids=[]
         for g in unalignedGrids:
-            print(g)
             alignedGrid = g.rio.reproject_match(modelgrid)
             #bedrockGridAlign = bedrockgrid.rio.reproject_match(modelgrid)
 
@@ -330,9 +329,9 @@ def alignRasters(unalignedGrids, modelgrid='', nodataval=0):
                     
     return alignedGrids
 
-def getDriftThick(surface, bedrock, noLayers=9, plotData=True):
+def getDriftThick(surface, bedrock, noLayers=9, plotData=False):
     driftThick = surface - bedrock
-    driftThick.data = np.clip(driftThick.data, 0, np.max(driftThick.data))
+    driftThick.data = driftThick.clip(0,max=None,keep_attrs=True)
     if plotData:
         driftThick.plot()
         
