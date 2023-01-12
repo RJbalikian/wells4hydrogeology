@@ -202,7 +202,7 @@ def readModelGrid(studyArea, gridpath, nodataval=0, readGrid=True, node_bySpace=
         except:
             noDataVal = -5000000
 
-        modelGrid = modelGrid.where(modelGrid != noDataVal)   #Replace no data values with NaNs
+        modelGrid = modelGrid.where(modelGrid != noDataVal, other=np.nan)   #Replace no data values with NaNs
         
     else:
         spatRefDict = {'crs_wkt': 'PROJCS["Clarke_1866_Lambert_Conformal_Conic",GEOGCS["NAD27",DATUM["North_American_Datum_1927",SPHEROID["Clarke 1866",6378206.4,294.978698199999,AUTHORITY["EPSG","7008"]],AUTHORITY["EPSG","6267"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4267"]],PROJECTION["Lambert_Conformal_Conic_2SP"],PARAMETER["latitude_of_origin",33],PARAMETER["central_meridian",-89.5],PARAMETER["standard_parallel_1",33],PARAMETER["standard_parallel_2",45],PARAMETER["false_easting",2999994],PARAMETER["false_northing",0],UNIT["US survey foot",0.304800609601219,AUTHORITY["EPSG","9003"]],AXIS["Easting",EAST],AXIS["Northing",NORTH]]',
@@ -272,7 +272,7 @@ def readSurfaceGrid(surfaceelevpath='', nodataval=0, useWCS=False, studyArea='',
     except:
         pass
             
-        surfaceElevGridIN = surfaceElevGridIN.where(surfaceElevGridIN != nodataval)  #Replace no data values with NaNs
+        surfaceElevGridIN = surfaceElevGridIN.where(surfaceElevGridIN != nodataval, other=np.nan)  #Replace no data values with NaNs
         
     return surfaceElevGridIN
 
@@ -287,7 +287,7 @@ def readBedrockGrid(bedrockelevpath, nodataval=0, studyArea='', clip2SA=True,  s
     except:
         pass
 
-    bedrockElevGridIN = bedrockElevGridIN.where(bedrockElevGridIN != noDataBed)   #Replace no data values with NaNs
+    bedrockElevGridIN = bedrockElevGridIN.where(bedrockElevGridIN != noDataBed, other=np.nan)   #Replace no data values with NaNs
     return bedrockElevGridIN
 
 def alignRasters(unalignedGrids, modelgrid='', nodataval=0):
@@ -313,8 +313,8 @@ def alignRasters(unalignedGrids, modelgrid='', nodataval=0):
         except:
             pass
 
-        alignedGrids = alignedGrid.where(alignedGrid != noDataVal, alignedGrid, np.nan)  #Replace no data values with NaNs
-                    
+        alignedGrids = alignedGrid.where(alignedGrid != noDataVal, other=np.nan)  #Replace no data values with NaNs
+        
     return alignedGrids
 
 def getDriftThick(surface, bedrock, noLayers=9, plotData=False):
@@ -324,7 +324,17 @@ def getDriftThick(surface, bedrock, noLayers=9, plotData=False):
     driftThick = driftThick.clip(0,max=5000,keep_attrs=True)
     if plotData:
         driftThick.plot()
-        
+
+    try:
+        noDataVal = driftThick.attrs['_FillValue'] #Extract from dataset itself
+    except:
+        noDataVal = 100001
+    
+
+
+    driftThick = driftThick.where(driftThick <100000, other=np.nan)  #Replace no data values with NaNs
+    driftThick = driftThick.where(driftThick >-100000, other=np.nan)  #Replace no data values with NaNs
+
     layerThick = driftThick/noLayers
     
     xr.set_options(keep_attrs='default')
