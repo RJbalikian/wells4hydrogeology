@@ -158,15 +158,34 @@ def clipGrid2StudyArea(studyArea, grid, studyAreacrs='', gridcrs=''):
         subtext = grid.spatial_ref.crs_wkt[-20:]
         starInd = subtext.find('EPSG')
         gridcrs = subtext[starInd:-2].replace('"','').replace(',',':')   
-        print(gridcrs)
-        
-    if str(studyArea.crs)!= gridcrs:
+        #print(gridcrs)
+    
+    if studyAreacrs != gridcrs:
         studyAreaUnproject = studyArea.copy()
         studyArea = studyArea.to_crs(gridcrs)   
-        
+    else:
+        studyArea = studyArea
+
     saExtent = studyArea.total_bounds
-    
-    grid = grid.sel(x=slice(saExtent[0], saExtent[2]), y=slice(saExtent[1], saExtent[3])).sel(band=1)    
+
+    if grid['y'][-1].values - grid['y'][0].values > 0:
+        miny=saExtent[1]
+        maxy=saExtent[3]
+    else:
+        miny=saExtent[3]
+        maxy=saExtent[1]        
+        
+    if grid['x'][-1].values - grid['x'][0].values > 0:
+        minx=saExtent[0]
+        maxx=saExtent[2]
+    else:
+        minx=saExtent[2]
+        maxx=saExtent[0]
+
+
+    #print(saExtent)
+    grid = grid.sel(x=slice(minx, maxx), y=slice(miny, maxy)).sel(band=1)     
+
     return grid
 
 def readModelGrid(studyArea, gridpath, nodataval=0, readGrid=True, node_bySpace=False, clip2SA=True, studyAreacrs='', gridcrs=''):
