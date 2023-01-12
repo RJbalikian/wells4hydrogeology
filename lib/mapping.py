@@ -296,42 +296,30 @@ def alignRasters(unalignedGrids, modelgrid='', nodataval=0):
         alignedGrids=[]
         for g in unalignedGrids:
             alignedGrid = g.rio.reproject_match(modelgrid)
-            #bedrockGridAlign = bedrockgrid.rio.reproject_match(modelgrid)
 
             try:
-                noDataVal = alignedGrid.attrs['_FillValue'] #Extract from dataset itself
+                nodataval = alignedGrid.attrs['_FillValue'] #Extract from dataset itself
             except:
-                if noDataVal < -1000:
-                    noDataVal = -1000
-                elif noDataVal > 50000:
-                    noDataVal = 50000
-                else:
-                    noDataVal = nodataval #apply no data value    
+                pass
             
-            alignedGrid = alignedGrid.where(alignedGrid < noDataVal)  #Replace no data values with NaNs
+            alignedGrid = alignedGrid.where(alignedGrid != nodataval)  #Replace no data values with NaNs
             
             alignedGrids.append(alignedGrid)
     else:
         alignedGrid = unalignedGrids.rio.reproject_match(modelgrid)
-        #bedrockGridAlign = bedrockgrid.rio.reproject_match(modelgrid)
 
         try:
             noDataVal = alignedGrid.attrs['_FillValue'] #Extract from dataset itself
         except:
-            if noDataVal < -1000:
-                noDataVal = -1000
-            elif noDataVal > 50000:
-                noDataVal = 50000
-            else:
-                noDataVal = nodataval #apply no data value    
+            pass
         
-        alignedGrids = alignedGrid.where(alignedGrid < noDataVal)  #Replace no data values with NaNs
+        alignedGrids = alignedGrid.where(alignedGrid != noDataVal)  #Replace no data values with NaNs
                     
     return alignedGrids
 
 def getDriftThick(surface, bedrock, noLayers=9, plotData=False):
     driftThick = surface - bedrock
-    driftThick.data = driftThick.clip(0,max=None,keep_attrs=True)
+    driftThick = driftThick.clip(0,max=None,keep_attrs=True)
     if plotData:
         driftThick.plot()
         
