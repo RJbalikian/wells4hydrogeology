@@ -173,7 +173,6 @@ def readLithologies(lithoDir='', lithFile=''):
     
     lithFPath = pathlib.Path(lithoDir+lithFile)
     lithoDF = pd.read_csv(lithFPath, usecols=['LITHOLOGY', 'CODE'])
-    lithoDF['CODE'] = lithoDF['CODE'].where(lithoDF['CODE']=='1', other=0).astype(int)
     lithoDF.rename(columns={'LITHOLOGY':'INTERPRETATION', 'CODE':'TARGET'}, inplace=True)
 
     return lithoDF
