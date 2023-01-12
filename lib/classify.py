@@ -95,7 +95,7 @@ def mergeLithologies(downholedata, targinterps, targetClass='bool'):
     
     #by default, use the boolean input 
     if targetClass=='bool':
-        targinterps['CODE'] = targinterps['CODE'].where(targinterps['CODE']=='1', other='0').astype(int)
+        targinterps['TARGET'] = targinterps['TARGET'].where(targinterps['TARGET']=='1', other='0').astype(int)
     else:
         targinterps['TARGET'].replace('DoNotUse', value=-1, inplace=True)
         targinterps['TARGET'].fillna(value=-2, inplace=True)
