@@ -36,8 +36,9 @@ def coords2Geometry(df, xCol='LONGITUDE', yCol='LATITUDE', zCol='ELEV_FT', crs='
 def rastertoPoints_sample(raster, ptDF, xCol='LONGITUDE', yCol='LATITUDE', newColName='Sampled', printouts=True):
     if printouts:
         nowTime = datetime.datetime.now()
-        endTime = nowTime+datetime.timedelta(minutes=14)
-        print("Sampling process should be done by {:d}:{:02d}".format(endTime.hour, endTime.minute))
+        expectMin = (ptDF.shape[0]/3054409) * 14
+        endTime = nowTime+datetime.timedelta(minutes=expectMin)
+        print(newColName+ "sampling should be done by {:d}:{:02d}".format(endTime.hour, endTime.minute))
 
     if 'geometry' in ptDF.columns and str(ptDF.crs)!='EPSG:26715' and str(ptDF.crs)!='EPSG:26716':
         if xCol=='LONGITUDE' and yCol=='LATITUDE':
