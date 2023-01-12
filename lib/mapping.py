@@ -184,6 +184,7 @@ def readModelGrid(studyArea, gridpath, nodataval=0, readGrid=True, node_bySpace=
             noDataVal = modelGrid.attrs['_FillValue'] #Extract from dataset itsel
         except:
             noDataVal = -5000000
+        print(modelGrid)
         print(noDataVal)
         modelGrid = modelGrid.where(modelGrid != noDataVal)   #Replace no data values with NaNs
         
