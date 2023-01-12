@@ -33,6 +33,15 @@ def coords2Geometry(df, xCol='LONGITUDE', yCol='LATITUDE', zCol='ELEV_FT', crs='
     gdf = gpd.GeoDataFrame(df, crs=ptCRS)
     return gdf
 
+def clipHeader2StudyArea(studyarea, headerdata, headerCRS='EPSG:4269'):
+    studyArea_4269 = studyarea.to_crs(headerCRS).copy()
+    
+    headerDataClip = gpd.clip(headerdata, studyArea_4269) #Data from table is in EPSG:4269, easier to just project study area to ensure data fit
+    
+    headerDataClip.reset_index(inplace=True, drop=True) #Reset index
+    
+    return headerDataClip
+
 def rastertoPoints_sample(raster, ptDF, xCol='LONGITUDE', yCol='LATITUDE', newColName='Sampled', printouts=True):  
     if printouts:
         nowTime = datetime.datetime.now()
