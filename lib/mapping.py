@@ -33,22 +33,22 @@ def coords2Geometry(df, xCol='LONGITUDE', yCol='LATITUDE', zCol='ELEV_FT', crs='
     gdf = gpd.GeoDataFrame(df, crs=ptCRS)
     return gdf
 
-def rastertoPoints_sample(raster, ptDF, xCol='LONGITUDE', yCol='LATITUDE', newColName='Sampled', printouts=True):
+def rastertoPoints_sample(raster, ptDF, xCol='LONGITUDE', yCol='LATITUDE', newColName='Sampled', printouts=True):  
     if printouts:
         nowTime = datetime.datetime.now()
         expectMin = (ptDF.shape[0]/3054409) * 14
         endTime = nowTime+datetime.timedelta(minutes=expectMin)
-        print(newColName+ "sampling should be done by {:d}:{:02d}".format(endTime.hour, endTime.minute))
+        print(newColName+ " sampling should be done by {:d}:{:02d}".format(endTime.hour, endTime.minute))
 
-    if 'geometry' in ptDF.columns and str(ptDF.crs)!='EPSG:26715' and str(ptDF.crs)!='EPSG:26716':
-        if xCol=='LONGITUDE' and yCol=='LATITUDE':
-            ptDF['LONGITUDE_PROJ'] = ptDF['geometry'].x
-            ptDF['LATITUDE_PROJ'] = ptDF['geometry'].y
-            xData = ptDF['LONGITUDE_PROJ']
-            yData = ptDF['LATITUDE_PROJ']
-    else:
-        xData = ptDF['LONGITUDE']
-        yData = ptDF['LATITUDE']
+    #Project points to raster CRS
+    rastercrsWKT=raster.spatial_ref.crs_wkt
+    ptDF = ptDF.to_crs(rastercrsWKT)
+
+    if xCol=='LONGITUDE' and yCol=='LATITUDE':
+        ptDF['LONGITUDE_PROJ'] = ptDF['geometry'].x
+        ptDF['LATITUDE_PROJ'] = ptDF['geometry'].y
+        xData = ptDF['LONGITUDE_PROJ']
+        yData = ptDF['LATITUDE_PROJ']
 
     sampleList = []
     for p in range(ptDF.shape[0]):
