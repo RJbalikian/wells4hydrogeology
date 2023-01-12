@@ -290,7 +290,7 @@ def readBedrockGrid(bedrockelevpath, nodataval=0, studyArea='', clip2SA=True,  s
     bedrockElevGridIN = bedrockElevGridIN.where(bedrockElevGridIN != noDataBed)   #Replace no data values with NaNs
     return bedrockElevGridIN
 
-def alignRasters(unalignedGrids=[], modelgrid='', nodataval=0):
+def alignRasters(unalignedGrids, modelgrid='', nodataval=0):
     print(unalignedGrids)
     if unalignedGrids is list:
         alignedGrids=[]
