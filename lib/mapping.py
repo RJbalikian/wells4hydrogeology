@@ -312,18 +312,22 @@ def alignRasters(unalignedGrids, modelgrid='', nodataval=0):
             noDataVal = alignedGrid.attrs['_FillValue'] #Extract from dataset itself
         except:
             pass
-        
-        alignedGrids = alignedGrid.where(alignedGrid != noDataVal)  #Replace no data values with NaNs
+
+        alignedGrids = alignedGrid.where(alignedGrid != noDataVal, alignedGrid, np.nan)  #Replace no data values with NaNs
                     
     return alignedGrids
 
 def getDriftThick(surface, bedrock, noLayers=9, plotData=False):
+    xr.set_options(keep_attrs=True)
+
     driftThick = surface - bedrock
-    driftThick = driftThick.clip(0,max=None,keep_attrs=True)
+    driftThick = driftThick.clip(0,max=5000,keep_attrs=True)
     if plotData:
         driftThick.plot()
         
     layerThick = driftThick/noLayers
     
+    xr.set_options(keep_attrs='default')
+
     return driftThick, layerThick
     
