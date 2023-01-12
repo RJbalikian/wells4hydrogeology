@@ -291,8 +291,8 @@ def readBedrockGrid(bedrockelevpath, nodataval=0, studyArea='', clip2SA=True,  s
     return bedrockElevGridIN
 
 def alignRasters(unalignedGrids, modelgrid='', nodataval=0):
-    print(unalignedGrids)
-    if unalignedGrids is list:
+    
+    if type(unalignedGrids) is list:
         alignedGrids=[]
         for g in unalignedGrids:
             print(g)
