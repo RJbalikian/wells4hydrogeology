@@ -182,8 +182,6 @@ def clipGrid2StudyArea(studyArea, grid, studyAreacrs='', gridcrs=''):
         minx=saExtent[2]
         maxx=saExtent[0]
 
-
-    #print(saExtent)
     grid = grid.sel(x=slice(minx, maxx), y=slice(miny, maxy)).sel(band=1)     
 
     return grid
@@ -203,8 +201,7 @@ def readModelGrid(studyArea, gridpath, nodataval=0, readGrid=True, node_bySpace=
             noDataVal = modelGrid.attrs['_FillValue'] #Extract from dataset itsel
         except:
             noDataVal = -5000000
-        print(modelGrid)
-        print(noDataVal)
+
         modelGrid = modelGrid.where(modelGrid != noDataVal)   #Replace no data values with NaNs
         
     else:
@@ -271,16 +268,11 @@ def readSurfaceGrid(surfaceelevpath='', nodataval=0, useWCS=False, studyArea='',
         surfaceElevGridIN = clipGrid2StudyArea(studyArea=studyArea, grid=surfaceElevGridIN, studyAreacrs=studyAreacrs, gridcrs=gridcrs)
         
     try:
-        noDataSurf = surfaceElevGridIN.attrs['_FillValue'] #Extract from dataset itself
+        nodataval = surfaceElevGridIN.attrs['_FillValue'] #Extract from dataset itself
     except:
-        if noDataSurf < -1000:
-            noDataSurf = -1000
-        elif noDataSurf > 50000:
-            noDataSurf = 50000
-        else:
-            noDataSurf = nodataval #apply no data value
+        pass
             
-        surfaceElevGridIN = surfaceElevGridIN.where(surfaceElevGridIN != noDataSurf)  #Replace no data values with NaNs
+        surfaceElevGridIN = surfaceElevGridIN.where(surfaceElevGridIN != nodataval)  #Replace no data values with NaNs
         
     return surfaceElevGridIN
 
@@ -293,12 +285,7 @@ def readBedrockGrid(bedrockelevpath, nodataval=0, studyArea='', clip2SA=True,  s
     try:
         noDataBed = bedrockElevGridIN.attrs['_FillValue'] #Extract from dataset itself
     except:
-        if noDataBed < -1000:
-            noDataBed = -1000
-        elif noDataBed > 50000:
-            noDataBed = 50000
-        else:
-            noDataBed = nodataval #apply no data value
+        pass
 
     bedrockElevGridIN = bedrockElevGridIN.where(bedrockElevGridIN != noDataBed)   #Replace no data values with NaNs
     return bedrockElevGridIN
