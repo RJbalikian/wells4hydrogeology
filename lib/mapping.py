@@ -39,7 +39,7 @@ def rastertoPoints_sample(raster, ptDF, xCol='LONGITUDE', yCol='LATITUDE', newCo
         endTime = nowTime+datetime.timedelta(minutes=14)
         print("Sampling process should be done by {:d}:{:02d}".format(endTime.hour, endTime.minute))
 
-    if 'geometry' in ptDF.columns:
+    if 'geometry' in ptDF.columns and str(ptDF.crs)!='EPSG:26715' and str(ptDF.crs)!='EPSG:26716':
         if xCol=='LONGITUDE' and yCol=='LATITUDE':
             ptDF['LONGITUDE_PROJ'] = ptDF['geometry'].x
             ptDF['LATITUDE_PROJ'] = ptDF['geometry'].y
@@ -51,7 +51,7 @@ def rastertoPoints_sample(raster, ptDF, xCol='LONGITUDE', yCol='LATITUDE', newCo
 
     sampleList = []
     for p in range(ptDF.shape[0]):
-        sampleList.append(raster.sel(x=xData[p], y=yData[p], method='nearest').values[0])
+        sampleList.append(raster.sel(x=xData[p], y=yData[p], method='nearest').values[()])
 
     sampleDF = pd.DataFrame(sampleList, columns=[newColName])
     ptDF[newColName] = sampleDF[newColName]
