@@ -90,13 +90,20 @@ def fillUnclassified(df):
     df['CLASS_FLAG'].fillna(0, inplace=True)
     return df
 
-def mergeLithologies(downholedata, targinterps):
+def mergeLithologies(downholedata, targinterps, targetClass='bool'):
+    #downholeData = downholedata.copy()
+    
+    #by default, use the boolean input 
+    if targetClass=='bool':
+        targinterps['CODE'] = targinterps['CODE'].where(targinterps['CODE']=='1', other='0').astype(int)
+    else:
+        targinterps['TARGET'].replace('DoNotUse', value=-1, inplace=True)
+        targinterps['TARGET'].fillna(value=-2, inplace=True)
+        targinterps['TARGET'].astype(np.int8)
+
     downholeData_targ = pd.merge(downholedata, targinterps.set_index('INTERPRETATION'), right_on='INTERPRETATION',left_on='INTERPRETATION', how='left')
-    downholeData = downholeData_targ.copy()
-    downholeData['TARGET'].replace('DoNotUse', value=-1, inplace=True)
-    downholeData['TARGET'].fillna(value=-2, inplace=True)
-    downholeData['TARGET'].astype(np.int8)
-    return downholeData
+    
+    return downholeData_targ
 
 def getUniqueWells(df, wellidCol='API_NUMBER'):
     #Get Unique well APIs
