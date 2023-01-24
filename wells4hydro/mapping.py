@@ -12,7 +12,7 @@ from rasterio import MemoryFile
 lidarURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
 
 
-def readStudyArea(studyareapath):
+def readStudyArea(studyareapath, crs=''):
     studyAreaIN = gpd.read_file(studyareapath)
     saExtent = studyAreaIN.total_bounds
     return studyAreaIN, saExtent
