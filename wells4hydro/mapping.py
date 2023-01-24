@@ -11,7 +11,6 @@ from rasterio import MemoryFile
 
 lidarURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
 
-
 def readStudyArea(studyareapath, crs=''):
     studyAreaIN = gpd.read_file(studyareapath)
     saExtent = studyAreaIN.total_bounds
@@ -75,6 +74,8 @@ def addElevtoHeader(xyz, header):
 
 def readWCS(studyArea, wcs_url=lidarURL, res_x=30, res_y=30):
 
+    #Drawn largely from: https://git.wur.nl/isric/soilgrids/soilgrids.notebooks/-/blob/master/01-WCS-basics.ipynb
+    
     #30m DEM
     #wcs_url = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_DEM_30M/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
     #lidar url:
@@ -83,9 +84,6 @@ def readWCS(studyArea, wcs_url=lidarURL, res_x=30, res_y=30):
     #studyAreaPath = r"\\isgs-sinkhole.ad.uillinois.edu\geophysics\Balikian\ISWS_HydroGeo\WellDataAutoClassification\SampleData\ESL_StudyArea_5mi.shp"
     #studyArea = gpd.read_file(studyAreaPath)
     
-    studyArea = studyArea.to_crs(data.boundingboxes[0]['nativeSrs'])
-    saBBox = studyArea.total_bounds
-
     width_in = ''
     height_in= ''
 
@@ -95,8 +93,11 @@ def readWCS(studyArea, wcs_url=lidarURL, res_x=30, res_y=30):
     #print(names)
     dataID = 'IL_Statewide_Lidar_DEM'
     data = my_wcs.contents[dataID]
-    dBBox = data.boundingboxes
-
+    dBBox = data.boundingboxes #Is this an error?
+    
+    studyArea = studyArea.to_crs(data.boundingboxes[0]['nativeSrs'])
+    saBBox = studyArea.total_bounds
+    
     #In case study area bounding box goes outside data bounding box, use data bounding box values
     newBBox = []
     for i,c in enumerate(dBBox[0]['bbox']):
@@ -150,8 +151,7 @@ def readWCS(studyArea, wcs_url=lidarURL, res_x=30, res_y=30):
     #baseURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/'+dataID+'/ImageServer/WCSServer'
     #addonRequestURL = '?request=GetCoverage&service=WCS&bbox='+bBox_str+'&srs='+dataCRS+'&format=GeoTIFF'+'&WIDTH='+width_in+'&HEIGHT='+height_in+')'
     #reqURL = baseURL+addonRequestURL
-    #wcsData_rxr =  rxr.open_rasterio(dataset)
-
+    #wcsData_rxr =  rxr.open_rasterio(reqURL)
 
     with MemoryFile(response) as memfile:
         with memfile.open() as dataset:

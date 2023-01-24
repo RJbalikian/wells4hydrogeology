@@ -85,6 +85,7 @@ def export_toBeDefined(df, outdir):
     
     stillNeededDF=searchDF['FORMATION'].value_counts()
     stillNeededDF.to_csv(outdir+'Stillneed2BeDefined_'+todayDateStr+'.csv')
+    return stillNeededDF
 
 def fillUnclassified(df):
     df['CLASS_FLAG'].fillna(0, inplace=True)
