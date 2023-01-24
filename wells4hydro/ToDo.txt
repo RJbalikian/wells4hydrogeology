@@ -1,4 +1,5 @@
 - Update WCS(/WMS?) to get finer data (figure out what is going on) - Joe
 - Use elevations instead of depths for well records - Riley
 - Python database access/download - Riley
+- Update documentation - Riley
 - Where to calculate surface elevation (before or after resampling?) (My gut is before)
