@@ -12,7 +12,7 @@ def getCurrentDate():
     dateSuffix = '_'+todayDateStr
     return todayDate, dateSuffix
 
-def findMostRecentFiles(dir=str(repoDir)+'/res', globPattern='*'):
+def findMostRecentFiles(dir=str(repoDir)+'/resources', globPattern='*'):
     todayDate = datetime.date.today()
     todayDateStr = str(todayDate)
 
@@ -32,7 +32,7 @@ def findMostRecentFiles(dir=str(repoDir)+'/res', globPattern='*'):
     print('Most Recent version of this file is : '+mostRecentFile.name)
     return mostRecentFile
 
-def filesSetup(db_dir=str(repoDir)+'/res', proc_dir=str(repoDir)+'/out'):
+def filesSetup(db_dir=str(repoDir)+'/resources', proc_dir=str(repoDir)+'/out'):
     #Define  filepath variables to be used later for reading/writing files
 
     #rawDirStr = '\\\\isgs-sinkhole\\geophysics\\Balikian\\ISWS_HydroGeo\\RawWellData_OracleDatabase\\TxtData\\'
@@ -62,7 +62,7 @@ def filesSetup(db_dir=str(repoDir)+'/res', proc_dir=str(repoDir)+'/out'):
     return downholeDataPATH, headerDataPATH, xyzInPATH
 
 def readRawTxtData(rawdir='', downholefile='', headerfile='', encoding='latin-1'):
-    
+       
     headers_useCols = ['API_NUMBER',"TOTAL_DEPTH","SECTION","TWP","TDIR","RNG","RDIR","MERIDIAN","QUARTERS","ELEVATION","ELEVREF","COUNTY_CODE","LATITUDE","LONGITUDE","ELEVSOURCE"]
     downhole_useCols = ["API_NUMBER","TABLE_NAME","FORMATION","THICKNESS","TOP","BOTTOM"]
     
@@ -114,7 +114,7 @@ def readDataTypeDict(file=''):
     return jsDict
 
 #Define the datatypes for a dataframe
-def defineDataTypes(dfIN, dtypes='', dtypeDir=str(repoDir)+'/res/', dtypeFile=''):
+def defineDataTypes(dfIN, dtypes='', dtypeDir=str(repoDir)+'/resources/', dtypeFile=''):
     df = dfIN.copy()
     
     if dtypeFile != '':
@@ -125,7 +125,7 @@ def defineDataTypes(dfIN, dtypes='', dtypeDir=str(repoDir)+'/res/', dtypeFile=''
         df.iloc[:,i] = dfIN.iloc[:,i].astype(dtypes[dfIN.iloc[:,i].name])
     return df
 
-def searchTermFilePaths(dictdir=str(repoDir)+'/res/', specStartPattern='*SearchTerms-Specific*', startGlobPattern = '*SearchTerms-Start*'):
+def searchTermFilePaths(dictdir=str(repoDir)+'/resources/', specStartPattern='*SearchTerms-Specific*', startGlobPattern = '*SearchTerms-Start*'):
     #Read in dictionary files for downhole data
 
     #specTermsFile = "SearchTerms-Specific_BedrockOrNo_2022-09.csv" #Specific matches
@@ -136,7 +136,7 @@ def searchTermFilePaths(dictdir=str(repoDir)+'/res/', specStartPattern='*SearchT
     
     return specTermsPATH, startTermsPATH
 
-def readSearchTerms(specfile, startfile, dictdir=str(repoDir)+'/res/'):
+def readSearchTerms(specfile, startfile, dictdir=str(repoDir)+'/resources/'):
     #Read files into pandas dataframes
     specTerms = pd.read_csv(specfile, index_col='ID')
     startTerms = pd.read_csv(startfile, index_col='ID')
@@ -166,7 +166,7 @@ def readSearchTerms(specfile, startfile, dictdir=str(repoDir)+'/res/'):
 def readLithologies(lithoDir='', lithFile=''):
     #dictDir = "\\\\isgs-sinkhole\\geophysics\\Balikian\\ISWS_HydroGeo\\WellDataAutoClassification\\SupportingDocs\\"
     if lithoDir =='':
-        lithoDir=str(repoDir)+'/res/'
+        lithoDir=str(repoDir)+'/resources/'
 
     if lithFile=='':
         lithFile='Lithology_Interp_FineCoarse.csv'

@@ -14,7 +14,7 @@ import datetime
 #Define records with full search term
 def specificDefine(df, specterms, printouts=False):
     df_Interps = pd.merge(df, specterms.set_index('FORMATION'), on='FORMATION',how='left')
-    df_Interps['BEDROCK_FLAG'] = df_Interps['INTERPRETATION'] == 'BEDROCK'
+    df_Interps['BEDROCK_FLAG'] = df_Interps['INTERPRETATION'] == 'BEDROCK' #Does this need to happen here?
     
     if printouts:
         print("Records Classified with full search term: "+str(int(df_Interps['CLASS_FLAG'].sum())))
