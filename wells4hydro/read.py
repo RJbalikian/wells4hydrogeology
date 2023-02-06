@@ -6,7 +6,18 @@ import os
 import json
 repoDir = pathlib.Path(os.getcwd())
 
+# Gets the current date for use with in code
 def getCurrentDate():
+    """ Gets the current date to help with finding the most recent file
+        ---------------------
+        Parameters:
+            None
+
+        ---------------------
+        Returns:
+            todayDate   : datetime object with today's date
+            dateSuffix  : str to use for naming output files
+    """
     todayDate = datetime.date.today()
     todayDateStr = str(todayDate)
     dateSuffix = '_'+todayDateStr
