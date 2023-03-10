@@ -166,7 +166,7 @@ def readWCS(studyArea, wcs_url=lidarURL, res_x=30, res_y=30):
 
     return wcsData_rxr
 
-def readWMS(wms_url=lidarURL, bounding_box, res_x=30, res_y=30, size_x=512, size_y=512):
+def readWMS(study_area, layer_name, wms_url=lidarURL, res_x=30, res_y=30, size_x=512, size_y=512):
     from owslib.wms import WebMapService
     # Define WMS endpoint URL
     wms_url = wms_url
