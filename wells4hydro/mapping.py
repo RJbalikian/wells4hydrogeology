@@ -9,6 +9,13 @@ import datetime
 from urllib.request import urlopen
 from rasterio import MemoryFile
 
+
+import rasterio
+from rasterio.plot import show
+import matplotlib.pyplot as plt
+import rioxarray
+from rasterio.enums import Resampling
+
 lidarURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
 
 def readStudyArea(studyareapath, crs=''):
@@ -158,6 +165,28 @@ def readWCS(studyArea, wcs_url=lidarURL, res_x=30, res_y=30):
             wcsData_rxr =  rxr.open_rasterio(dataset)
 
     return wcsData_rxr
+
+def readWMS(wms_url=lidarURL, bounding_box, res_x=30, res_y=30, size_x=512, size_y=512):
+    from owslib.wms import WebMapService
+    # Define WMS endpoint URL
+    wms_url = wms_url
+    # Create WMS connection object
+    wms = WebMapService(wms_url)
+    # Print available layers
+    print(wms.contents)
+    # Select desired layer 
+    layer = layer_name
+    #get the wms
+    img = wms.getmap(layers=[layer], srs='EPSG:3857', bbox=[-9889002.615500,5134541.069716,-9737541.607038,5239029.627400], size=(size_x, size_y), format='image/tiff', transparent=True, timeout=60)
+    #with open('statewide_test.tiff', 'wb') as f:
+    #    f.write(img.read())
+
+    #Save wms in memory to a raster dataset
+    with MemoryFile(img) as memfile:
+        with memfile.open() as dataset:
+            wmsData_rxr = rxr.open_rasterio(dataset)
+
+    return wmsData_rxr
 
 def clipGrid2StudyArea(studyArea, grid, studyAreacrs='', gridcrs=''):
     if studyAreacrs=='':
