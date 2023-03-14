@@ -1,0 +1,104 @@
+#__init__.py
+"""This module contains all the functions needed for getting 9 layers of geology"""
+
+import w4h
+
+from w4h import classify, clean, export, layers, mapping, read
+
+
+from w4h.classify import (specificDefine, 
+                          splitDefined, 
+                          startDefine, 
+                          remergeData, 
+                          depthDefine, 
+                          export_toBeDefined, 
+                          fillUnclassified, 
+                          mergeLithologies, 
+                          getUniqueWells)
+
+
+from w4h.clean import (removeNonlocatedData, 
+                       removenotopo, 
+                       dropnodepth, 
+                       dropbaddepth, 
+                       dropnoformation)
+
+from w4h.export import (exportDataframe)
+
+from w4h.layers import (get_layer_depths,
+                        mergeTables, 
+                        layer_target_thick, 
+                        layer_interp)
+
+from w4h.mapping import (readStudyArea, 
+                         coords2Geometry, 
+                         clipHeader2StudyArea, 
+                         rastertoPoints_sample, 
+                         addElevtoHeader, 
+                         readWCS, 
+                         clipGrid2StudyArea,
+                         read_model_grid,
+                         read_grid,
+                         alignRasters,
+                         get_drift_thick)
+
+from w4h.read import (getCurrentDate,
+                      findMostRecentFiles,
+                      filesSetup,
+                      readRawTxtData,
+                      readXYZData,
+                      readDataTypeDict,
+                      defineDataTypes,
+                      searchTermFilePaths,
+                      readSearchTerms,
+                      readLithologies)
+
+__all__=('w4h',
+        'classify', 
+         'clean', 
+         'export', 
+         'layers',
+         'mapping',
+         'read',
+        'specificDefine', 
+        'splitDefined', 
+        'startDefine', 
+        'remergeData', 
+        'depthDefine', 
+        'export_toBeDefined', 
+        'fillUnclassified', 
+        'mergeLithologies', 
+        'getUniqueWells',
+         'removeNonlocatedData', 
+         'removenotopo', 
+         'dropnodepth', 
+         'dropbaddepth', 
+         'dropnoformation',
+        'exportDataframe',
+         'get_layer_depths',
+         'mergeTables', 
+         'layer_target_thick', 
+         'layer_interp',
+        'readStudyArea', 
+        'coords2Geometry', 
+        'clipHeader2StudyArea', 
+        'rastertoPoints_sample', 
+        'addElevtoHeader', 
+        'readWCS', 
+        'clipGrid2StudyArea',
+        'read_model_grid',
+        'read_grid',
+        'alignRasters',
+        'get_drift_thick',
+         'getCurrentDate',
+         'findMostRecentFiles',
+         'filesSetup',
+         'readRawTxtData',
+         'readXYZData',
+         'readDataTypeDict',
+         'defineDataTypes',
+         'searchTermFilePaths',
+         'readSearchTerms',
+         'readLithologies')
+
+__author__='Riley Balikian, Joe Franke'

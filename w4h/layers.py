@@ -19,8 +19,26 @@ def mergeTables(leftTable, rightTable, leftCols='', rightCols='', onCol='API_NUM
     
     return mergedTable
 
+def get_layer_depths(well_metadata, no_layers=9):
+    for layer in range(0, no_layers): #For each layer
+        #Make column names
+        depthColName  = 'DEPTH_FT_LAYER'+str(layer+1)
+        #depthMcolName = 'Depth_M_LAYER'+str(layer) 
+
+        #Calculate depth to each layer at each well, in feet and meters
+        well_metadata[depthColName]  = well_metadata['LAYER_THICK_FT'] * layer
+        #headerData[depthMcolName] = headerData[depthColName] * 0.3048
+
+    for layer in range(0, no_layers): #For each layer
+        elevColName = 'ELEV_FT_LAYER'+str(layer+1)
+        #elevMColName = 'ELEV_M_LAYER'+str(layer)
+            
+        well_metadata[elevColName]  = well_metadata['SURFACE_ELEV_FT'] - well_metadata['LAYER_THICK_FT'] * layer
+        #headerData[elevMColName]  = headerData['SURFACE_ELEV_M'] - headerData['LAYER_THICK_M'] * layer
+    return well_metadata
+
 #Function to export the result of thickness of target sediments in each layer
-def LayerTargetThick(df, layer=1):
+def layer_target_thick(df, layer=1):
     #Generate Column names based on (looped) integers
     topCol = 'DEPTH_FT_LAYER'+str(layer)
     if layer != 9: #For all layers except the bottom layer....
@@ -70,3 +88,33 @@ def LayerTargetThick(df, layer=1):
     res_df = res_df[['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'TOP', 'BOTTOM','SURFACE_ELEV_FT', topCol,botCol,'LAYER_THICK_FT','TARG_THICK', 'TARG_THICK_PER', 'LAYER']].copy() #Format dataframe for output
     
     return res, res_df
+
+def layer_interp(points, grid, kind, layers, **kwargs):
+    """Function to interpolate wells to model grid
+
+    Parameters
+    ----------
+    points : _type_
+        _description_
+    grid : _type_
+        _description_
+    kind : _type_
+        _description_
+    layers : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
+    nnList = ['nearest', 'nn', 'nearest neighbor', 'nearestneighbor','neighbor', 'n']
+    linList = ['linear', 'lin', 'l']
+    ctList = ['clough tocher', 'clough', 'cloughtocher', 'ct', c]
+    rbfList = ['rbf', 'radial basis', 'radial basis function', 'r', 'radial']
+    #k-nearest neighbors from scikit-learn?
+    #kriging? (from pykrige or maybe also from scikit-learn)
+    
+    if kind in nnList:
+        pass
+    return interp_data

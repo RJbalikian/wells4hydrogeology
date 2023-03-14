@@ -191,24 +191,52 @@ def clipGrid2StudyArea(studyArea, grid, studyAreacrs='', gridcrs=''):
     else:
         minx=saExtent[2]
         maxx=saExtent[0]
-
+    print(saExtent)
     grid = grid.sel(x=slice(minx, maxx), y=slice(miny, maxy)).sel(band=1)     
 
     return grid
 
-def readModelGrid(studyArea, gridpath, nodataval=0, readGrid=True, node_bySpace=False, clip2SA=True, studyAreacrs='', gridcrs=''):
-     
-    readGrid = True
+def read_model_grid(studyArea, gridpath, nodataval=0, read_grid=True, node_bySpace=False, clip2SA=True, studyAreacrs=None, gridcrs=None):
+    """_summary_
+
+    Parameters
+    ----------
+    studyArea : _type_
+        _description_
+    gridpath : _type_
+        _description_
+    nodataval : int, optional
+        _description_, by default 0
+    readGrid : bool, optional
+        _description_, by default True
+    node_bySpace : bool, optional
+        _description_, by default False
+    clip2SA : bool, optional
+        _description_, by default True
+    studyAreacrs : str, optional
+        _description_, by default ''
+    gridcrs : str, optional
+        _description_, by default ''
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
+    read_grid = True
     node_bySpace = False #False means by number of nodes
     
-    if readGrid:
+    if read_grid:
         modelGridIN = rxr.open_rasterio(gridpath)   
 
         if clip2SA:
+            if gridcrs is None:
+                gridcrs=modelGridIN.spatial_ref.crs_wkt
+            if studyAreacrs is None:
+                studyAreacrs=studyArea.crs
             modelGrid = clipGrid2StudyArea(studyArea=studyArea, grid=modelGridIN, studyAreacrs=studyAreacrs, gridcrs=gridcrs)
-        
         try:
-            noDataVal = modelGrid.attrs['_FillValue'] #Extract from dataset itsel
+            noDataVal = float(modelGrid.attrs['_FillValue']) #Extract from dataset itsel
         except:
             noDataVal = -5000000
 
@@ -270,39 +298,45 @@ def readModelGrid(studyArea, gridpath, nodataval=0, readGrid=True, node_bySpace=
 
     return modelGrid
 
-def readSurfaceGrid(surfaceelevpath='', nodataval=0, useWCS=False, studyArea='', clip2SA=True,  studyAreacrs='', gridcrs=''):
-    if useWCS:
-        surfaceElevGridIN = readWCS(studyArea, wcs_url=lidarURL)
+def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, studyArea='', clip2SA=True,  studyAreacrs=None, gridcrs=None, **kwargs):
+    if grid_type=='model':
+        if 'read_grid' in list(kwargs.keys()):
+            rgrid = kwargs['read_grid']
+        else:
+            rgrid=True
+        gridIN = read_model_grid(studyArea, gridpath=datapath, nodataval=0, read_grid=rgrid, clip2SA=clip2SA, studyAreacrs=studyAreacrs, gridcrs=gridcrs)
     else:
-        surfaceElevGridIN = rxr.open_rasterio(surfaceelevpath)
-
-    if clip2SA:
-        surfaceElevGridIN = clipGrid2StudyArea(studyArea=studyArea, grid=surfaceElevGridIN, studyAreacrs=studyAreacrs, gridcrs=gridcrs)
-        
-    try:
-        nodataval = surfaceElevGridIN.attrs['_FillValue'] #Extract from dataset itself
-    except:
-        pass
+        if use_service==False:
+            gridIN = rxr.open_rasterio(datapath)
+        elif use_service.lower()=='wcs':
+            gridIN = readWCS(studyArea, wcs_url=lidarURL)
+        elif use_service.lower()=='wms':
+            pass
+            print("WMS service not yet supported, reading from datapath")
+            gridIN = rxr.open_rasterio(datapath)
             
-        surfaceElevGridIN = surfaceElevGridIN.where(surfaceElevGridIN != nodataval, other=np.nan)  #Replace no data values with NaNs
+        if clip2SA:
+            if gridcrs is None:
+                gridcrs=gridIN.spatial_ref.crs_wkt
+            if studyAreacrs is None:
+                studyAreacrs=studyArea.crs
+            studyArea = studyArea.to_crs(gridcrs)
+            studyAreacrs=studyArea.crs
+
+            print(gridcrs)
+            print(studyAreacrs)
+            gridIN = clipGrid2StudyArea(studyArea=studyArea, grid=gridIN, studyAreacrs=studyAreacrs, gridcrs=gridcrs)
+            print(gridIN)
+        try:
+            nodataval = gridIN.attrs['_FillValue'] #Extract from dataset itself
+        except:
+            pass
+                
+        gridIN = gridIN.where(gridIN != nodataval, other=np.nan)  #Replace no data values with NaNs
         
-    return surfaceElevGridIN
+    return gridIN
 
-def readBedrockGrid(bedrockelevpath, nodataval=0, studyArea='', clip2SA=True,  studyAreacrs='', gridcrs=''):
-    bedrockElevGridIN = rxr.open_rasterio(bedrockelevpath)
-
-    if clip2SA:
-        bedrockElevGridIN = clipGrid2StudyArea(studyArea=studyArea, grid=bedrockElevGridIN, studyAreacrs=studyAreacrs, gridcrs=gridcrs)
-    
-    try:
-        noDataBed = bedrockElevGridIN.attrs['_FillValue'] #Extract from dataset itself
-    except:
-        pass
-
-    bedrockElevGridIN = bedrockElevGridIN.where(bedrockElevGridIN != noDataBed, other=np.nan)   #Replace no data values with NaNs
-    return bedrockElevGridIN
-
-def alignRasters(unalignedGrids, modelgrid='', nodataval=0):
+def alignRasters(unalignedGrids, modelgrid, nodataval=0):
     
     if type(unalignedGrids) is list:
         alignedGrids=[]
@@ -329,7 +363,7 @@ def alignRasters(unalignedGrids, modelgrid='', nodataval=0):
         
     return alignedGrids
 
-def getDriftThick(surface, bedrock, noLayers=9, plotData=False):
+def get_drift_thick(surface, bedrock, noLayers=9, plotData=False):
     xr.set_options(keep_attrs=True)
 
     driftThick = surface - bedrock

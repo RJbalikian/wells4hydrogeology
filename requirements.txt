@@ -1,5 +1,6 @@
 rioxarray
 geopandas
+owslib
 matplotlib
 scipy
 shapely
