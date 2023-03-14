@@ -3,7 +3,5 @@ geopandas
 owslib
 matplotlib
 scipy
-shapely
-xarray
 pandas
 numpy

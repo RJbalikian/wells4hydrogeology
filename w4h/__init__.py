@@ -1,8 +1,6 @@
 #__init__.py
 """This module contains all the functions needed for getting 9 layers of geology"""
 
-import w4h
-
 from w4h import classify, clean, export, layers, mapping, read
 
 
@@ -47,13 +45,14 @@ from w4h.read import (getCurrentDate,
                       filesSetup,
                       readRawTxtData,
                       readXYZData,
-                      readDataTypeDict,
+                      get_resource_path,
+                      read_dict,
                       defineDataTypes,
                       searchTermFilePaths,
                       readSearchTerms,
                       readLithologies)
 
-__all__=('w4h',
+__all__=(
         'classify', 
          'clean', 
          'export', 
@@ -95,7 +94,8 @@ __all__=('w4h',
          'filesSetup',
          'readRawTxtData',
          'readXYZData',
-         'readDataTypeDict',
+         'get_resource_path',
+         'read_dict',
          'defineDataTypes',
          'searchTermFilePaths',
          'readSearchTerms',

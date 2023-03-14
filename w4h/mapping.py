@@ -1,3 +1,9 @@
+import datetime
+import json
+import pathlib
+import os
+
+
 import rioxarray as rxr
 import xarray as xr
 import geopandas as gpd
@@ -5,9 +11,10 @@ import pandas as pd
 import numpy as np
 from owslib.wcs import WebCoverageService
 from shapely.geometry import Point
-import datetime
 from urllib.request import urlopen
 from rasterio import MemoryFile
+
+import w4h
 
 lidarURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
 
@@ -51,18 +58,22 @@ def rastertoPoints_sample(raster, ptDF, xCol='LONGITUDE', yCol='LATITUDE', newCo
     #Project points to raster CRS
     rastercrsWKT=raster.spatial_ref.crs_wkt
     ptDF = ptDF.to_crs(rastercrsWKT)
-
-    if xCol=='LONGITUDE' and yCol=='LATITUDE':
-        ptDF['LONGITUDE_PROJ'] = ptDF['geometry'].x
-        ptDF['LATITUDE_PROJ'] = ptDF['geometry'].y
-        xData = ptDF['LONGITUDE_PROJ']
-        yData = ptDF['LATITUDE_PROJ']
-
-    sampleList = []
-    for p in range(ptDF.shape[0]):
-        sampleList.append(raster.sel(x=xData[p], y=yData[p], method='nearest').values[()])
-
-    sampleDF = pd.DataFrame(sampleList, columns=[newColName])
+    #if xCol=='LONGITUDE' and yCol=='LATITUDE':
+    xCOLOUT = xCol+'_PROJ'
+    yCOLOUT = yCol+'_PROJ'
+    ptDF[xCOLOUT] = ptDF['geometry'].x
+    ptDF[yCOLOUT] = ptDF['geometry'].y
+    xData = np.array(ptDF[xCOLOUT].values)
+    yData = np.array(ptDF[yCOLOUT].values)
+    sampleArr=raster.sel(x=xData, y=yData, method='nearest').values
+    #print(type(raster))
+    #sampleList = []
+    #for p in range(ptDF.shape[0]):
+    #    xpt = xData[p]
+    #    ypt = yData[p]
+    print(sampleArr.shape)
+    print(sampleArr)
+    sampleDF = pd.DataFrame(sampleArr, columns=[newColName])
     ptDF[newColName] = sampleDF[newColName]
     return ptDF
 
@@ -191,10 +202,10 @@ def clipGrid2StudyArea(studyArea, grid, studyAreacrs='', gridcrs=''):
     else:
         minx=saExtent[2]
         maxx=saExtent[0]
-    print(saExtent)
     grid = grid.sel(x=slice(minx, maxx), y=slice(miny, maxy)).sel(band=1)     
 
     return grid
+
 
 def read_model_grid(studyArea, gridpath, nodataval=0, read_grid=True, node_bySpace=False, clip2SA=True, studyAreacrs=None, gridcrs=None):
     """_summary_
@@ -227,13 +238,24 @@ def read_model_grid(studyArea, gridpath, nodataval=0, read_grid=True, node_bySpa
     node_bySpace = False #False means by number of nodes
     
     if read_grid:
-        modelGridIN = rxr.open_rasterio(gridpath)   
+        modelGridIN = rxr.open_rasterio(gridpath)
 
-        if clip2SA:
-            if gridcrs is None:
+        file = w4h.get_resource_path('isws_crs.txt')
+        iswsCRS = w4h.read_dict(file, keytype=None)
+
+        if gridcrs is None:
+            try:
                 gridcrs=modelGridIN.spatial_ref.crs_wkt
+            except:
+                modelGridIN.rio.write_crs(iswsCRS)
+        elif gridcrs.lower()=='isws':
+            modelGridIN.rio.write_crs(iswsCRS)
+        
+        if clip2SA:                
             if studyAreacrs is None:
                 studyAreacrs=studyArea.crs
+            studyArea = studyArea.to_crs(gridcrs)
+            studyAreacrs=studyArea.crs            
             modelGrid = clipGrid2StudyArea(studyArea=studyArea, grid=modelGridIN, studyAreacrs=studyAreacrs, gridcrs=gridcrs)
         try:
             noDataVal = float(modelGrid.attrs['_FillValue']) #Extract from dataset itsel
@@ -241,7 +263,7 @@ def read_model_grid(studyArea, gridpath, nodataval=0, read_grid=True, node_bySpa
             noDataVal = -5000000
 
         modelGrid = modelGrid.where(modelGrid != noDataVal, other=np.nan)   #Replace no data values with NaNs
-        
+        modelGrid.rio.reproject(iswsCRS, inplace=True)
     else:
         spatRefDict = {'crs_wkt': 'PROJCS["Clarke_1866_Lambert_Conformal_Conic",GEOGCS["NAD27",DATUM["North_American_Datum_1927",SPHEROID["Clarke 1866",6378206.4,294.978698199999,AUTHORITY["EPSG","7008"]],AUTHORITY["EPSG","6267"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4267"]],PROJECTION["Lambert_Conformal_Conic_2SP"],PARAMETER["latitude_of_origin",33],PARAMETER["central_meridian",-89.5],PARAMETER["standard_parallel_1",33],PARAMETER["standard_parallel_2",45],PARAMETER["false_easting",2999994],PARAMETER["false_northing",0],UNIT["US survey foot",0.304800609601219,AUTHORITY["EPSG","9003"]],AXIS["Easting",EAST],AXIS["Northing",NORTH]]',
             'semi_major_axis': 6378206.4,
@@ -293,9 +315,9 @@ def read_model_grid(studyArea, gridpath, nodataval=0, read_grid=True, node_bySpa
         
         modelGrid = xr.DataArray(data=zz,coords=coords,attrs={'_FillValue':3.402823466e+38}, dims=dims)
         modelGrid.spatial_ref.attrs['spatial_ref'] = {}
-        for k in spatRefDict:
-            modelGrid.spatial_ref.attrs[k] = spatRefDict[k]
-
+        if gridcrs is None or gridcrs=='isws' or gridcrs=='ISWS':
+            for k in spatRefDict:
+                modelGrid.spatial_ref.attrs[k] = spatRefDict[k]
     return modelGrid
 
 def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, studyArea='', clip2SA=True,  studyAreacrs=None, gridcrs=None, **kwargs):
@@ -317,23 +339,28 @@ def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, st
             
         if clip2SA:
             if gridcrs is None:
-                gridcrs=gridIN.spatial_ref.crs_wkt
+                try:
+                    gridcrs=gridIN.spatial_ref.crs_wkt
+                except:
+                    iswsCRS = w4h.read_dict(r'../resources/isws_crs')
+                    gridIN.rio.write_crs(iswsCRS)
+            elif gridcrs.lower()=='isws':
+                iswsCRS = w4h.read_dict(r'../resources/isws_crs')
+                gridIN.rio.write_crs(iswsCRS)
+                
             if studyAreacrs is None:
                 studyAreacrs=studyArea.crs
             studyArea = studyArea.to_crs(gridcrs)
             studyAreacrs=studyArea.crs
-
-            print(gridcrs)
-            print(studyAreacrs)
+            
             gridIN = clipGrid2StudyArea(studyArea=studyArea, grid=gridIN, studyAreacrs=studyAreacrs, gridcrs=gridcrs)
-            print(gridIN)
         try:
             nodataval = gridIN.attrs['_FillValue'] #Extract from dataset itself
         except:
             pass
                 
         gridIN = gridIN.where(gridIN != nodataval, other=np.nan)  #Replace no data values with NaNs
-        
+
     return gridIN
 
 def alignRasters(unalignedGrids, modelgrid, nodataval=0):
