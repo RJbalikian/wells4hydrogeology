@@ -24,7 +24,7 @@ from w4h.clean import (removeNonlocatedData,
 from w4h.export import (exportDataframe)
 
 from w4h.layers import (get_layer_depths,
-                        mergeTables, 
+                        merge_tables, 
                         layer_target_thick, 
                         layer_interp)
 
@@ -75,7 +75,7 @@ __all__=(
          'dropnoformation',
         'exportDataframe',
          'get_layer_depths',
-         'mergeTables', 
+         'merge_tables', 
          'layer_target_thick', 
          'layer_interp',
         'read_study_area', 
