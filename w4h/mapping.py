@@ -18,10 +18,26 @@ import w4h
 
 lidarURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
 
-def readStudyArea(studyareapath, crs=''):
+#Read study area shapefile (or other file) into geopandas
+def read_study_area(studyareapath, crs=''):
+    """Read study area geospatial file into geopandas
+
+    Parameters
+    ----------
+    studyareapath : str or pathlib.Path
+        Filepath to any geospatial file readable by geopandas. 
+        Polygon is best, but may work with other types if extent is correct.
+    crs : str, tuple, dict, optional
+        CRS designation readable by geopandas/pyproj
+
+    Returns
+    -------
+    studyAreaIN : geopandas dataframe
+        Geopandas dataframe with polygon geometry.
+    """
     studyAreaIN = gpd.read_file(studyareapath)
-    saExtent = studyAreaIN.total_bounds
-    return studyAreaIN, saExtent
+    return studyAreaIN
+
 
 def coords2Geometry(df, xCol='LONGITUDE', yCol='LATITUDE', zCol='ELEV_FT', crs='EPSG:4269', useZ=False):
     ptCRS=crs
@@ -48,7 +64,31 @@ def clipHeader2StudyArea(studyarea, headerdata, headerCRS='EPSG:4269'):
     
     return headerDataClip
 
-def rastertoPoints_sample(raster, ptDF, xCol='LONGITUDE', yCol='LATITUDE', newColName='Sampled', printouts=True):  
+def sample_raster_points(raster, ptDF, xCol='LONGITUDE', yCol='LATITUDE', newColName='SAMPLED', printouts=True):  
+    """Sample raster values to points from geopandas geodataframe.
+
+    Parameters
+    ----------
+    raster : rioxarray data array
+        Raster containing values to be sampled.
+    ptDF : geopandas.geodataframe
+        Geopandas dataframe with geometry column containing point values to sample.
+    xCol : str, default='LONGITUDE'
+        Column containing name for x-column, by default 'LONGITUDE.'
+        This is used to output (potentially) reprojected point coordinates so as not to overwrite the original.
+    yCol : str, default='LATITUDE'
+        Column containing name for y-column, by default 'LATITUDE.'
+        This is used to output (potentially) reprojected point coordinates so as not to overwrite the original.    newColName : str, optional
+    newColName : str, default='SAMPLED'
+        Name for name of new column containing points sampled from the raster, by default 'SAMPLED'.
+    printouts : bool, default=True
+        Whether to send to print() information about progress of function, by default True.
+
+    Returns
+    -------
+    ptDF : geopandas.geodataframe
+        Same as ptDF, but with sampled values and potentially with reprojected coordinates.
+    """
     if printouts:
         nowTime = datetime.datetime.now()
         expectMin = (ptDF.shape[0]/3054409) * 14
@@ -66,13 +106,7 @@ def rastertoPoints_sample(raster, ptDF, xCol='LONGITUDE', yCol='LATITUDE', newCo
     xData = np.array(ptDF[xCOLOUT].values)
     yData = np.array(ptDF[yCOLOUT].values)
     sampleArr=raster.sel(x=xData, y=yData, method='nearest').values
-    #print(type(raster))
-    #sampleList = []
-    #for p in range(ptDF.shape[0]):
-    #    xpt = xData[p]
-    #    ypt = yData[p]
-    print(sampleArr.shape)
-    print(sampleArr)
+    sampleArr = np.diag(sampleArr)
     sampleDF = pd.DataFrame(sampleArr, columns=[newColName])
     ptDF[newColName] = sampleDF[newColName]
     return ptDF
