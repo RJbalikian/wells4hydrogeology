@@ -53,7 +53,7 @@ def get_layer_depths(well_metadata, no_layers=9):
     return well_metadata
 
 #Function to export the result of thickness of target sediments in each layer
-def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_prefix='', use_depth=False):
+def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_prefix='', depth_top_col='TOP', depth_bot_col='BOTTOM'):
     """Function to calculate thickness of target material in each layer at each well point
 
     Parameters
@@ -75,22 +75,17 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
     res_df or res : geopandas.geodataframe
         Geopandas geodataframe containing only important information needed for next stage of analysis.
     """
-    df['TOP_ELEV_FT'] = df['SURFACE_ELEV_FT'] - df['TOP']
-    df['BOT_ELEV_FT'] = df['SURFACE_ELEV_FT'] - df['BOTTOM']
+    df['TOP_ELEV_FT'] = df['SURFACE_ELEV_FT'] - df[depth_top_col]
+    df['BOT_ELEV_FT'] = df['SURFACE_ELEV_FT'] - df[depth_bot_col]
 
     layerList = range(1,layers+1)
     res_list = []
     resdf_list = []
     #Generate Column names based on (looped) integers
     for layer in layerList:
-        if use_depth:
-            zStr = 'DEPTH'
-            zColT = 'TOP'
-            zColB = 'BOTTOM'
-        else:
-            zStr = 'ELEV'
-            zColT = 'TOP_ELEV_FT'
-            zColB = 'BOT_ELEV_FT'
+        zStr = 'ELEV'
+        zColT = 'TOP_ELEV_FT'
+        zColB = 'BOT_ELEV_FT'
         topCol = zStr+'_FT_LAYER'+str(layer)
         if layer != 9: #For all layers except the bottom layer....
             botCol = zStr+'_FT_LAYER'+str(layer+1) #use the layer below it to 
@@ -104,37 +99,36 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
             #Category 4: well interval begins and ends on either side of model layer (model layer is contained within well layer)
 
         #records1 = intervals that go through the top of the layer and bottom is within layer
-        records1 = df.loc[(df[zColT] <= df[topCol]) & #Top of the well is above or equal to the top of the layer
-                        (df[zColB] < df[botCol]) & #Bottom of the well is above (shallower depth) the top of the layer
-                        (df[zColB] >= df[topCol]) & #Bottom is below the top of the layer
-                        (df[zColB] >= df[zColT])].copy() #Bottom is deeper than top (should already be the case)
-        records1['TARG_THICK'] = pd.DataFrame(np.round((records1.loc[:,topCol]-records1.loc[: , zColB]) * records1['TARGET'],3)).copy() #Multiply "target" (1 or 0) by length within layer            
-
+        records1 = df.loc[(df[zColT] >= df[topCol]) & #Top of the well is above or equal to the top of the layer
+                        (df[zColB] <= df[topCol]) & # & #Bottom is below the top of the layer
+                        (df[zColB] <= df[zColT])].copy() #Bottom is deeper than top (should already be the case)
+        records1['TARG_THICK_FT'] = pd.DataFrame(np.round((records1.loc[:,topCol]-records1.loc[: , zColB]) * records1['TARGET'],3)).copy() #Multiply "target" (1 or 0) by length within layer            
+        
         #records2 = entire interval is within layer
-        records2 = df.loc[(df[zColT] >= df[topCol]) & #Top of the well is lower than top of the layer (deeper depth)
-                    (df[zColB] <= df[botCol]) & #Bottom of the well is above bottom of the layer (shallower depth)
-                    (df[zColB] >= df[zColT])].copy() #Bottom ofthe well is deeper than top (should already be the case)
-        records2['TARG_THICK'] = pd.DataFrame(np.round((records2.loc[: , zColT] - records2.loc[: , zColB]) * records2['TARGET'],3)).copy()
+        records2 = df.loc[(df[zColT] <= df[topCol]) & #Top of the well is lower than top of the layer 
+                    (df[zColB] >= df[botCol]) & #Bottom of the well is above bottom of the layer 
+                    (df[zColB] <= df[zColT])].copy() #Bottom ofthe well is deeper than or equal to top (should already be the case)
+        records2['TARG_THICK_FT'] = pd.DataFrame(np.round((records2.loc[: , zColT] - records2.loc[: , zColB]) * records2['TARGET'],3)).copy()
 
         #records3 = intervals with top within layer and bottom of interval going through bottom of layer
-        records3 = df.loc[(df[zColT] < df[botCol]) & #Top of the well is above (smaller depth) than bottom of layer
-                    (df[zColB] > df[botCol]) & #Bottom of the well is below (deeper depth) than bottom of layer
-                    (df[zColT] >= df[topCol]) & #Top of well is below (deeper depth) than top of layer
-                    (df[zColB] >= df[zColT])].copy() #Bottom is deeper than top (should already be the case)
-        records3['TARG_THICK'] = pd.DataFrame(np.round((records3.loc[: , zColT] - (records3.loc[:,botCol]))*records3['TARGET'],3)).copy()
+        records3 = df.loc[(df[zColT] > df[botCol]) & #Top of the well is above bottom of layer
+                    (df[zColB] < df[botCol]) & #Bottom of the well is below bottom of layer
+                    (df[zColT] <= df[topCol]) & #Top of well is below top of layer
+                    (df[zColB] <= df[zColT])].copy() #Bottom is deeper than top (should already be the case)
+        records3['TARG_THICK_FT'] = pd.DataFrame(np.round((records3.loc[: , zColT] - (records3.loc[:,botCol]))*records3['TARGET'],3)).copy()
 
         #records4 = interval goes through entire layer
-        records4 = df.loc[(df[zColT] <= df[topCol]) & #Top of well is above (shallower depth) than top of layer
-                    (df[zColB] > df[botCol]) & #Bottom of well is below (deeper depth) than bottom of layer
-                    (df[zColB] >= df[zColT])].copy() #Bottom of well is below (deeper depth) than top of well
-        records4['TARG_THICK'] = pd.DataFrame(np.round((records4.loc[: , topCol]-records4.loc[: , botCol]) * records4['TARGET'],3)).copy()
+        records4 = df.loc[(df[zColT] >= df[topCol]) & #Top of well is above top of layer
+                    (df[zColB] < df[botCol]) & #Bottom of well is below bottom of layer
+                    (df[zColB] <= df[zColT])].copy() #Bottom of well is below top of well
+        records4['TARG_THICK_FT'] = pd.DataFrame(np.round((records4.loc[: , topCol]-records4.loc[: , botCol]) * records4['TARGET'],3)).copy()
         
         #Put the four calculated record categories back together into single dataframe
         res = pd.concat([records1, records2, records3, records4])
 
         #The sign may be reversed if using depth rather than elevation
-        if (res['TARG_THICK'] < 0).all():
-            res['TARG_THICK'] = res['TARG_THICK'] * -1
+        if (res['TARG_THICK_FT'] < 0).all():
+            res['TARG_THICK_FT'] = res['TARG_THICK_FT'] * -1
 
         #Get geometrys for each unique API/well
         res_df = res.groupby(by=['API_NUMBER','LATITUDE','LONGITUDE'], as_index=False).sum(numeric_only=True)#Calculate thickness for each well interval in the layer indicated (e.g., if there are two well intervals from same well in one model layer)
@@ -142,9 +136,9 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
         geomCol = res.loc[uniqInd, 'geometry']
         geomCol = pd.DataFrame(geomCol[~geomCol.index.duplicated(keep='first')]).reset_index()
         
-        res_df['TARG_THICK_PER'] = pd.DataFrame(np.round(res_df['TARG_THICK']/res_df['LAYER_THICK_FT'],3)) #Calculate thickness as percent of total layer thickness
+        res_df['TARG_THICK_PER'] = pd.DataFrame(np.round(res_df['TARG_THICK_FT']/res_df['LAYER_THICK_FT'],3)) #Calculate thickness as percent of total layer thickness
         res_df["LAYER"] = layer #Just to have as part of the output file, include the present layer in the file itself as a separate column
-        res_df = res_df[['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'LATITUDE_PROJ', 'LONGITUDE_PROJ','TOP', 'BOTTOM', 'TOP_ELEV_FT', 'BOT_ELEV_FT', 'SURFACE_ELEV_FT', topCol, botCol,'LAYER_THICK_FT','TARG_THICK', 'TARG_THICK_PER', 'LAYER']].copy() #Format dataframe for output
+        res_df = res_df[['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'LATITUDE_PROJ', 'LONGITUDE_PROJ','TOP', 'BOTTOM', 'TOP_ELEV_FT', 'BOT_ELEV_FT', 'SURFACE_ELEV_FT', topCol, botCol,'LAYER_THICK_FT','TARG_THICK_FT', 'TARG_THICK_PER', 'LAYER']].copy() #Format dataframe for output
         res_df = gpd.GeoDataFrame(res_df, geometry=geomCol.loc[:,'geometry'])
         resdf_list.append(res_df)
         res_list.append(res)
