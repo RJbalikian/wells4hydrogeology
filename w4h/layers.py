@@ -129,6 +129,10 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
         #The sign may be reversed if using depth rather than elevation
         if (res['TARG_THICK_FT'] < 0).all():
             res['TARG_THICK_FT'] = res['TARG_THICK_FT'] * -1
+        
+        #Cannot have negative thicknesses
+        res['TARG_THICK_FT'].clip(lower=0, inplace=True)
+        res['LAYER_THICK_FT'].clip(lower=0, inplace=True)
 
         #Get geometrys for each unique API/well
         res_df = res.groupby(by=['API_NUMBER','LATITUDE','LONGITUDE'], as_index=False).sum(numeric_only=True)#Calculate thickness for each well interval in the layer indicated (e.g., if there are two well intervals from same well in one model layer)
@@ -136,7 +140,10 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
         geomCol = res.loc[uniqInd, 'geometry']
         geomCol = pd.DataFrame(geomCol[~geomCol.index.duplicated(keep='first')]).reset_index()
         
-        res_df['TARG_THICK_PER'] = pd.DataFrame(np.round(res_df['TARG_THICK_FT']/res_df['LAYER_THICK_FT'],3)) #Calculate thickness as percent of total layer thickness
+
+        res_df['TARG_THICK_PER'] =  pd.DataFrame(np.round(res_df['TARG_THICK_FT']/res_df['LAYER_THICK_FT'],3)) #Calculate thickness as percent of total layer thickness
+        res_df['TARG_THICK_PER'] = res_df['TARG_THICK_PER'].where(res_df['TARG_THICK_PER']!=np.inf, other=0) 
+
         res_df["LAYER"] = layer #Just to have as part of the output file, include the present layer in the file itself as a separate column
         res_df = res_df[['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'LATITUDE_PROJ', 'LONGITUDE_PROJ','TOP', 'BOTTOM', 'TOP_ELEV_FT', 'BOT_ELEV_FT', 'SURFACE_ELEV_FT', topCol, botCol,'LAYER_THICK_FT','TARG_THICK_FT', 'TARG_THICK_PER', 'LAYER']].copy() #Format dataframe for output
         res_df = gpd.GeoDataFrame(res_df, geometry=geomCol.loc[:,'geometry'])
