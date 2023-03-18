@@ -182,6 +182,7 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
     else:
         return resdf_list
 
+
 #Interpolate layers to model grid
 def layer_interp(points, grid, layers=None, method='nearest', lin_kind='cubic', export_dir=None, targetcol='TARG_THICK_PER', lyrcol='LAYER', make_dim=True, xcol=None, ycol=None, xcoord='x', ycoord='y', **kwargs):
     """Function to interpolate wells to model grid
@@ -306,18 +307,30 @@ def layer_interp(points, grid, layers=None, method='nearest', lin_kind='cubic', 
         print('Completed interpolation for Layer '+str(lyr).zfill(zFillDigs))
 
     if make_dim:
-        interp_dataset = xr.concat(daList, dim='Layers', coords='minimal', compat='override',combine_attrs='override')    
+        interp_dataset = xr.concat(daList, dim='Layer', coords='minimal', compat='override',combine_attrs='override')    
+        interp_dataset = interp_dataset.assign_coords({'Layer':list(range(1, layers+1))})
     else:
         interp_dataset = xr.Dataset(daDict)
 
-    common_attrs = {}
-    for i, (var_name, data_array) in enumerate(interp_dataset.data_vars.items()):
-        if i == 0:
-            common_attrs = data_array.attrs
-        else:
-            common_attrs = {k: v for k, v in common_attrs.items() if k in data_array.attrs and data_array.attrs[k] == v}
-    interp_dataset.attrs.update(common_attrs)
-
-    #Add surface and bedrock grids as variable?
+        common_attrs = {}
+        for i, (var_name, data_array) in enumerate(interp_dataset.data_vars.items()):
+            if i == 0:
+                common_attrs = data_array.attrs
+            else:
+                common_attrs = {k: v for k, v in common_attrs.items() if k in data_array.attrs and data_array.attrs[k] == v}
+        interp_dataset.attrs.update(common_attrs)
 
     return interp_dataset
+
+#Optional, combine dataset
+def combine_dataset(layer_dataset, surface_elev, bedrock_elev, layer_thick):
+    
+    daDict = {}
+    daDict['Layers'] = layer_dataset
+    daDict['Surface_Elev'] = surface_elev
+    daDict['Bedrock_Elev'] = bedrock_elev
+    daDict['Layer_Thickness'] = layer_thick
+
+    combined_dataset = xr.Dataset(daDict)
+
+    return combined_dataset
