@@ -182,7 +182,7 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
         return resdf_list
 
 #Interpolate layers to model grid
-def layer_interp(points, grid, method='nearest', lin_kind='cubic', export_dir=None, targetcol='TARG_THICK_PER', lyrcol='LAYER', xcol=None, ycol=None, xcoord='x', ycoord='y', **kwargs):
+def layer_interp(points, grid, layers=None, method='nearest', lin_kind='cubic', export_dir=None, targetcol='TARG_THICK_PER', lyrcol='LAYER', xcol=None, ycol=None, xcoord='x', ycoord='y', **kwargs):
     """Function to interpolate wells to model grid
 
     Parameters
@@ -202,66 +202,105 @@ def layer_interp(points, grid, method='nearest', lin_kind='cubic', export_dir=No
         _description_
     """
     nnList = ['nearest', 'nearest neighbor', 'nearestneighbor','neighbor',  'nn','n']
-    splineList = ['interp2d', 'interp', 'spline', 'spl', 'sp', 's']
-    linList = ['linear', 'lin', 'l']
+    splineList = ['interp2d', 'interp2', 'interp', 'spline', 'spl', 'sp', 's']
     linKindList = ['linear', 'cubic', 'quintic']
+    linList = ['linear', 'lin', 'l']
     ctList = ['clough tocher', 'clough', 'cloughtocher', 'ct', 'c']
     rbfList = ['rbf', 'radial basis', 'radial basis function', 'r', 'radial']
     #k-nearest neighbors from scikit-learn?
     #kriging? (from pykrige or maybe also from scikit-learn)
     
-    if xcol is None:
-        dataX = points['geometry'].x
-    else:
-        dataX = points[xcol]
+        
+    X = np.round(grid[xcoord].values, 3)# #Extract xcoords from grid
+    Y = np.round(grid[ycoord].values, 3)# #Extract ycoords from grid
     
-    if ycol is None:
-        dataY = points['geometry'].y
-    else:
-        dataY = points[ycol]
+    if layers is None and (type(points) is list or type(points) is dict):
+        layers = len(points)
 
-    layer = points[lyrcol]        
-    interpVal = points[targetcol]
+    if len(points) != layers:
+        print('You have specified a different number of layers than what is iterable in the points argument. This may not work properly.')
 
-    X = grid[xcoord].values #Extract xcoords from grid
-    Y = grid[ycoord].values #Extract ycoords from grid
-
-    if method.lower() in nnList:
-        X, Y = np.meshgrid(X, Y) #2D Grid for interpolation
-        interp = interpolate.NearestNDInterpolator(list(zip(dataX, dataY)), interpVal, **kwargs)
-        Z = interp(X, Y)
-    elif method.lower() in linList:
-        X, Y = np.meshgrid(X, Y) #2D Grid for interpolation
-        interp = interpolate.LinearNDInterpolator(list(zip(dataX, dataY)), interpVal, **kwargs)
-        Z = interp(X, Y)
-    elif method.lower() in ctList:
-        X, Y = np.meshgrid(X, Y) #2D Grid for interpolation
-        interp = interpolate.CloughTocher2DInterpolator(list(zip(dataX, dataY)), interpVal, **kwargs)
-        Z = interp(X, Y)    
-    elif method.lower() in rbfList:
-        dataXY=  np.column_stack((dataX, dataY))
-        interp = interpolate.RBFInterpolator(dataXY, interpVal, **kwargs)
-        print("Radial Basis Function does not work well with many well-based datasets. Consider instead specifying 'nearest', 'linear', 'spline', or 'clough tocher' for interpolation method.")
-        Z = interp(np.column_stack((X.ravel(), Y.ravel()))).reshape(X.shape)
-    elif method.lower() in splineList:
-        if lin_kind.lower() in linKindList:
-            interp = interpolate.interp2d(dataX, dataY, interpVal, kind=lin_kind, **kwargs)
+    daDict = {}
+    for lyr in range(1, layers+1):
+        if type(points) is list or type(points) is dict:
+            pts = points[lyr-1]
+            dataX = pts
         else:
-            X, Y = np.meshgrid(X, Y) #2D Grid for interpolation
-            print("Specified kind of interpolation (lin_kind={}) not recognized, using 'cubic'.".format(lin_kind))
-            interp = interpolate.interp2d(list(zip(dataX, dataY)), interpVal, kwargs, kind='cubic', **kwargs)
-        Z = interp(X, Y)
-    else:
-        print('Specified interpolation method not recognized, using nearest neighbor.')
-        interp = interpolate.NearestNDInterpolator(list(zip(dataX, dataY)), interpVal, **kwargs)
-        Z = interp(X, Y)
-    
+            pts = points
 
-    interp_grid = xr.DataArray( #Create new datarray with new data values, but everything else the same
-                data=Z,
-                dims=grid.dims,
-                coords=grid.coords,
-                attrs=grid.attrs)
-    #interp_grid=interp_grid.interpolate_na(dim=x)
+        if xcol is None:
+            dataX = pts['geometry'].x
+        else:
+            dataX = pts[xcol]
+        
+        if ycol is None:
+            dataY = pts['geometry'].y
+        else:
+            dataY = pts[ycol]
 
-    return interp_grid
+        #layer = pts[lyrcol]        
+        interpVal = pts[targetcol]
+        pdinterp = pd.DataFrame(interpVal)
+        if method.lower() in nnList:
+            X, Y = np.meshgrid(X, Y, sparse=True) #2D Grid for interpolation
+            dataPoints = np.array(list(zip(dataX, dataY)))
+            interp = interpolate.NearestNDInterpolator(dataPoints, interpVal, **kwargs)
+            Z = interp(X, Y)
+        elif method.lower() in linList:
+            X, Y = np.meshgrid(X, Y, sparse=True) #2D Grid for interpolation
+            interp = interpolate.LinearNDInterpolator(list(zip(dataX, dataY)), interpVal, **kwargs)
+            Z = interp(X, Y)
+        elif method.lower() in ctList:
+            X, Y = np.meshgrid(X, Y, sparse=True) #2D Grid for interpolation
+            if 'tol' not in kwargs:
+                kwargs['tol'] = 1e10
+            interp = interpolate.CloughTocher2DInterpolator(list(zip(dataX, dataY)), interpVal, **kwargs)
+            Z = interp(X, Y) 
+        elif method.lower() in rbfList:
+            dataXY=  np.column_stack((dataX, dataY))
+            interp = interpolate.RBFInterpolator(dataXY, interpVal, **kwargs)
+            print("Radial Basis Function does not work well with many well-based datasets. Consider instead specifying 'nearest', 'linear', 'spline', or 'clough tocher' for interpolation method.")
+            Z = interp(np.column_stack((X.ravel(), Y.ravel()))).reshape(X.shape)
+        elif method.lower() in splineList:
+            Z = interpolate.bisplrep(dataX, dataY, interpVal, **kwargs)
+                #interp = interpolate.interp2d(dataX, dataY, interpVal, kind=lin_kind, **kwargs)
+                #Z = interp(X, Y)
+        else:
+            print('Specified interpolation method not recognized, using nearest neighbor.')
+            X, Y = np.meshgrid(X, Y, sparse=True) #2D Grid for interpolation
+            interp = interpolate.NearestNDInterpolator(list(zip(dataX, dataY)), interpVal, **kwargs)
+            Z = interp(X, Y)
+
+        #global ZTest
+        #ZTest = Z
+
+        interp_grid = xr.DataArray( #Create new datarray with new data values, but everything else the same
+                    data=Z,
+                    dims=grid.dims,
+                    coords=grid.coords)
+
+        interp_grid = interp_grid.clip(min=0, max=1, keep_attrs=True)
+        del Z
+        del dataX
+        del dataY
+        del interpVal
+        del interp
+
+        #interp_grid=interp_grid.interpolate_na(dim=x)
+        zFillDigs = len(str(layers))
+        daDict['Layer'+str(lyr).zfill(zFillDigs)] = interp_grid
+        del interp_grid
+
+        print('Completed interpolation for Layer '+str(lyr).zfill(zFillDigs))
+    interp_dataset = xr.Dataset(daDict)
+
+    print('Done with interpolation, getting global attrs')
+    common_attrs = {}
+    for i, (var_name, data_array) in enumerate(interp_dataset.data_vars.items()):
+        if i == 0:
+            common_attrs = data_array.attrs
+        else:
+            common_attrs = {k: v for k, v in common_attrs.items() if k in data_array.attrs and data_array.attrs[k] == v}
+    interp_dataset.attrs.update(common_attrs)
+
+    return interp_dataset
