@@ -317,13 +317,16 @@ def readWMS(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:None', wms_url=li
 
     saWidth = saBBox[2]-saBBox[0]
     saHeight = saBBox[3]-saBBox[1]    
-    
+    print('Done with bbx')
     #get the wms
+    print(saBBox)
     if clip_to_studyarea:
         img = wms.getmap(layers=[layer], srs=srs, bbox=saBBox, size=(size_x, size_y), format=format, transparent=True, timeout=60)        
     else:
         img = wms.getmap(layers=[layer], srs=srs, bbox=bbox, size=(size_x, size_y), format=format, transparent=True, timeout=60)
-    #with open('statewide_test.tiff', 'wb') as f:
+    print('Done with getmap')
+
+    #with open('statewide_test.tiff', 'wb') as f: 
     #    f.write(img.read())
     #Save wms in memory to a raster dataset
     with MemoryFile(img) as memfile:
