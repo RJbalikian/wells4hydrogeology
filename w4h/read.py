@@ -6,7 +6,18 @@ import os
 import json
 repoDir = pathlib.Path(os.getcwd())
 
+# Gets the current date for use with in code
 def getCurrentDate():
+    """ Gets the current date to help with finding the most recent file
+        ---------------------
+        Parameters:
+            None
+
+        ---------------------
+        Returns:
+            todayDate   : datetime object with today's date
+            dateSuffix  : str to use for naming output files
+    """
     todayDate = datetime.date.today()
     todayDateStr = str(todayDate)
     dateSuffix = '_'+todayDateStr
@@ -103,14 +114,23 @@ def readXYZData(rawdir='', xyzfile=''):
     
 #    return downholeData, headerData
 
-def readDataTypeDict(file=''):
+#Get filepath of resource in resource folder
+def get_resource_path(res):
+    repoPath = pathlib.Path(__file__).parent.parent
+    repoPathStr = str(repoPath).replace('\\', '/').replace('\\'[0], '/')
+    resource = repoPathStr+'/resources/'+res
+    return resource
+
+#Read dictionary file into dictionary variable
+def read_dict(file='', keytype='np'):
     with open(file, 'r') as f:
         data= f.read()
 
     jsDict = json.loads(data)
-    for k in jsDict.keys():
-        jsDict[k] = getattr(np, jsDict[k])
-        
+    if keytype=='np':
+        for k in jsDict.keys():
+            jsDict[k] = getattr(np, jsDict[k])
+    
     return jsDict
 
 #Define the datatypes for a dataframe
@@ -119,7 +139,7 @@ def defineDataTypes(dfIN, dtypes='', dtypeDir=str(repoDir)+'/resources/', dtypeF
     
     if dtypeFile != '':
         dtypeFilePATH = pathlib.Path(dtypeDir+dtypeFile)
-        dtypes = readDataTypeDict(file=dtypeFilePATH)   
+        dtypes = read_dict(file=dtypeFilePATH)   
     
     for i in range(0, np.shape(df)[1]):
         df.iloc[:,i] = dfIN.iloc[:,i].astype(dtypes[dfIN.iloc[:,i].name])

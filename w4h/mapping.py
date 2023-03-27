@@ -1,3 +1,9 @@
+import datetime
+import json
+import pathlib
+import os
+
+
 import rioxarray as rxr
 import xarray as xr
 import geopandas as gpd
@@ -5,37 +11,33 @@ import pandas as pd
 import numpy as np
 from owslib.wcs import WebCoverageService
 from shapely.geometry import Point
-import datetime
 from urllib.request import urlopen
 from rasterio import MemoryFile
 
-
-import rasterio
-from rasterio.plot import show
-import matplotlib.pyplot as plt
-import rioxarray
-from rasterio.enums import Resampling
+import w4h
 
 lidarURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
 
-def readStudyArea(studyareapath, crs=''):
-    '''
-    
-    Reads in the study area polygon and finds its extent
+#Read study area shapefile (or other file) into geopandas
+def read_study_area(studyareapath, crs=''):
+    """Read study area geospatial file into geopandas
 
-            Parameters:
-                    studyareapath (str): inputs the path to the study area file
-                    crs (str): inputs coordinate reference system for the study area
+    Parameters
+    ----------
+    studyareapath : str or pathlib.Path
+        Filepath to any geospatial file readable by geopandas. 
+        Polygon is best, but may work with other types if extent is correct.
+    crs : str, tuple, dict, optional
+        CRS designation readable by geopandas/pyproj
 
-            Returns:
-                    studyAreaIN (geopandas dataframe): Contains the study area polygon
-                    saExtent (array): Contains the values for the study area extent
-
-    
-    '''
+    Returns
+    -------
+    studyAreaIN : geopandas dataframe
+        Geopandas dataframe with polygon geometry.
+    """
     studyAreaIN = gpd.read_file(studyareapath)
-    saExtent = studyAreaIN.total_bounds
-    return studyAreaIN, saExtent
+    return studyAreaIN
+
 
 def coords2Geometry(df, xCol='LONGITUDE', yCol='LATITUDE', zCol='ELEV_FT', crs='EPSG:4269', useZ=False):
     '''
@@ -92,7 +94,31 @@ def clipHeader2StudyArea(studyarea, headerdata, headerCRS='EPSG:4269'):
     
     return headerDataClip
 
-def rastertoPoints_sample(raster, ptDF, xCol='LONGITUDE', yCol='LATITUDE', newColName='Sampled', printouts=True):  
+def sample_raster_points(raster, ptDF, xCol='LONGITUDE', yCol='LATITUDE', newColName='SAMPLED', printouts=True):  
+    """Sample raster values to points from geopandas geodataframe.
+
+    Parameters
+    ----------
+    raster : rioxarray data array
+        Raster containing values to be sampled.
+    ptDF : geopandas.geodataframe
+        Geopandas dataframe with geometry column containing point values to sample.
+    xCol : str, default='LONGITUDE'
+        Column containing name for x-column, by default 'LONGITUDE.'
+        This is used to output (potentially) reprojected point coordinates so as not to overwrite the original.
+    yCol : str, default='LATITUDE'
+        Column containing name for y-column, by default 'LATITUDE.'
+        This is used to output (potentially) reprojected point coordinates so as not to overwrite the original.    newColName : str, optional
+    newColName : str, default='SAMPLED'
+        Name for name of new column containing points sampled from the raster, by default 'SAMPLED'.
+    printouts : bool, default=True
+        Whether to send to print() information about progress of function, by default True.
+
+    Returns
+    -------
+    ptDF : geopandas.geodataframe
+        Same as ptDF, but with sampled values and potentially with reprojected coordinates.
+    """
     if printouts:
         nowTime = datetime.datetime.now()
         expectMin = (ptDF.shape[0]/3054409) * 14
@@ -102,18 +128,16 @@ def rastertoPoints_sample(raster, ptDF, xCol='LONGITUDE', yCol='LATITUDE', newCo
     #Project points to raster CRS
     rastercrsWKT=raster.spatial_ref.crs_wkt
     ptDF = ptDF.to_crs(rastercrsWKT)
-
-    if xCol=='LONGITUDE' and yCol=='LATITUDE':
-        ptDF['LONGITUDE_PROJ'] = ptDF['geometry'].x
-        ptDF['LATITUDE_PROJ'] = ptDF['geometry'].y
-        xData = ptDF['LONGITUDE_PROJ']
-        yData = ptDF['LATITUDE_PROJ']
-
-    sampleList = []
-    for p in range(ptDF.shape[0]):
-        sampleList.append(raster.sel(x=xData[p], y=yData[p], method='nearest').values[()])
-
-    sampleDF = pd.DataFrame(sampleList, columns=[newColName])
+    #if xCol=='LONGITUDE' and yCol=='LATITUDE':
+    xCOLOUT = xCol+'_PROJ'
+    yCOLOUT = yCol+'_PROJ'
+    ptDF[xCOLOUT] = ptDF['geometry'].x
+    ptDF[yCOLOUT] = ptDF['geometry'].y
+    xData = np.array(ptDF[xCOLOUT].values)
+    yData = np.array(ptDF[yCOLOUT].values)
+    sampleArr=raster.sel(x=xData, y=yData, method='nearest').values
+    sampleArr = np.diag(sampleArr)
+    sampleDF = pd.DataFrame(sampleArr, columns=[newColName])
     ptDF[newColName] = sampleDF[newColName]
     return ptDF
 
@@ -319,48 +343,68 @@ def clipGrid2StudyArea(studyArea, grid, studyAreacrs='', gridcrs=''):
     else:
         minx=saExtent[2]
         maxx=saExtent[0]
-
     grid = grid.sel(x=slice(minx, maxx), y=slice(miny, maxy)).sel(band=1)     
 
     return grid
 
-def readModelGrid(studyArea, gridpath, nodataval=0, readGrid=True, node_bySpace=False, clip2SA=True, studyAreacrs='', gridcrs=''):
-    '''
-    
-    Reads in model grid containing custom crs data as xarray data array.
 
-            Parameters:
-                    studyArea (geopandas dataframe): Inputs study area polygon
-                    gridpath (str): inputs file path to model grid file
-                    nodataval (int): inputs desire value for spots with no data
-                    readGrid (bool): inputs whether to read grid or create grid
-                    node_bySpace (bool): 
-                    clip2SA (bool): inputs whether to clip grid to study area
-                    studyAreacrs (str): inputs crs for study area
-                    gridcrs (str): inputs crs for grid
-            
-            Returns:
-                    modelGrid (xarray dataarray): Contains model grid
+def read_model_grid(studyArea, gridpath, nodataval=0, read_grid=True, node_bySpace=False, clip2SA=True, studyAreacrs=None, gridcrs=None):
+    """_summary_
 
-    
-    '''
+    Parameters
+    ----------
+    studyArea : _type_
+        _description_
+    gridpath : _type_
+        _description_
+    nodataval : int, optional
+        _description_, by default 0
+    readGrid : bool, optional
+        _description_, by default True
+    node_bySpace : bool, optional
+        _description_, by default False
+    clip2SA : bool, optional
+        _description_, by default True
+    studyAreacrs : str, optional
+        _description_, by default ''
+    gridcrs : str, optional
+        _description_, by default ''
 
-    readGrid = True
+    Returns
+    -------
+    _type_
+        _description_
+    """
+    read_grid = True
     node_bySpace = False #False means by number of nodes
     
-    if readGrid:
-        modelGridIN = rxr.open_rasterio(gridpath)   
+    if read_grid:
+        modelGridIN = rxr.open_rasterio(gridpath)
 
-        if clip2SA:
-            modelGrid = clipGrid2StudyArea(studyArea=studyArea, grid=modelGridIN, studyAreacrs=studyAreacrs, gridcrs=gridcrs)
+        file = w4h.get_resource_path('isws_crs.txt')
+        iswsCRS = w4h.read_dict(file, keytype=None)
+
+        if gridcrs is None:
+            try:
+                gridcrs=modelGridIN.spatial_ref.crs_wkt
+            except:
+                modelGridIN.rio.write_crs(iswsCRS)
+        elif gridcrs.lower()=='isws':
+            modelGridIN.rio.write_crs(iswsCRS)
         
+        if clip2SA:                
+            if studyAreacrs is None:
+                studyAreacrs=studyArea.crs
+            studyArea = studyArea.to_crs(gridcrs)
+            studyAreacrs=studyArea.crs            
+            modelGrid = clipGrid2StudyArea(studyArea=studyArea, grid=modelGridIN, studyAreacrs=studyAreacrs, gridcrs=gridcrs)
         try:
-            noDataVal = modelGrid.attrs['_FillValue'] #Extract from dataset itsel
+            noDataVal = float(modelGrid.attrs['_FillValue']) #Extract from dataset itsel
         except:
             noDataVal = -5000000
 
         modelGrid = modelGrid.where(modelGrid != noDataVal, other=np.nan)   #Replace no data values with NaNs
-        
+        modelGrid.rio.reproject(iswsCRS, inplace=True)
     else:
         spatRefDict = {'crs_wkt': 'PROJCS["Clarke_1866_Lambert_Conformal_Conic",GEOGCS["NAD27",DATUM["North_American_Datum_1927",SPHEROID["Clarke 1866",6378206.4,294.978698199999,AUTHORITY["EPSG","7008"]],AUTHORITY["EPSG","6267"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4267"]],PROJECTION["Lambert_Conformal_Conic_2SP"],PARAMETER["latitude_of_origin",33],PARAMETER["central_meridian",-89.5],PARAMETER["standard_parallel_1",33],PARAMETER["standard_parallel_2",45],PARAMETER["false_easting",2999994],PARAMETER["false_northing",0],UNIT["US survey foot",0.304800609601219,AUTHORITY["EPSG","9003"]],AXIS["Easting",EAST],AXIS["Northing",NORTH]]',
             'semi_major_axis': 6378206.4,
@@ -412,50 +456,55 @@ def readModelGrid(studyArea, gridpath, nodataval=0, readGrid=True, node_bySpace=
         
         modelGrid = xr.DataArray(data=zz,coords=coords,attrs={'_FillValue':3.402823466e+38}, dims=dims)
         modelGrid.spatial_ref.attrs['spatial_ref'] = {}
-        for k in spatRefDict:
-            modelGrid.spatial_ref.attrs[k] = spatRefDict[k]
-
+        if gridcrs is None or gridcrs=='isws' or gridcrs=='ISWS':
+            for k in spatRefDict:
+                modelGrid.spatial_ref.attrs[k] = spatRefDict[k]
     return modelGrid
 
-def readSurfaceGrid(surfaceelevpath='', nodataval=0, useWCS=False, studyArea='', clip2SA=True,  studyAreacrs='', gridcrs=''):
-    '''
-    
-    
-    
-    '''
-    
-    if useWCS:
-        surfaceElevGridIN = readWCS(studyArea, wcs_url=lidarURL)
+def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, studyArea='', clip2SA=True,  studyAreacrs=None, gridcrs=None, **kwargs):
+    if grid_type=='model':
+        if 'read_grid' in list(kwargs.keys()):
+            rgrid = kwargs['read_grid']
+        else:
+            rgrid=True
+        gridIN = read_model_grid(studyArea, gridpath=datapath, nodataval=0, read_grid=rgrid, clip2SA=clip2SA, studyAreacrs=studyAreacrs, gridcrs=gridcrs)
     else:
-        surfaceElevGridIN = rxr.open_rasterio(surfaceelevpath)
-
-    if clip2SA:
-        surfaceElevGridIN = clipGrid2StudyArea(studyArea=studyArea, grid=surfaceElevGridIN, studyAreacrs=studyAreacrs, gridcrs=gridcrs)
-        
-    try:
-        nodataval = surfaceElevGridIN.attrs['_FillValue'] #Extract from dataset itself
-    except:
-        pass
+        if use_service==False:
+            gridIN = rxr.open_rasterio(datapath)
+        elif use_service.lower()=='wcs':
+            gridIN = readWCS(studyArea, wcs_url=lidarURL)
+        elif use_service.lower()=='wms':
+            pass
+            print("WMS service not yet supported, reading from datapath")
+            gridIN = rxr.open_rasterio(datapath)
             
-        surfaceElevGridIN = surfaceElevGridIN.where(surfaceElevGridIN != nodataval, other=np.nan)  #Replace no data values with NaNs
-        
-    return surfaceElevGridIN
+        if clip2SA:
+            if gridcrs is None:
+                try:
+                    gridcrs=gridIN.spatial_ref.crs_wkt
+                except:
+                    iswsCRS = w4h.read_dict(r'../resources/isws_crs')
+                    gridIN.rio.write_crs(iswsCRS)
+            elif gridcrs.lower()=='isws':
+                iswsCRS = w4h.read_dict(r'../resources/isws_crs')
+                gridIN.rio.write_crs(iswsCRS)
+                
+            if studyAreacrs is None:
+                studyAreacrs=studyArea.crs
+            studyArea = studyArea.to_crs(gridcrs)
+            studyAreacrs=studyArea.crs
+            
+            gridIN = clipGrid2StudyArea(studyArea=studyArea, grid=gridIN, studyAreacrs=studyAreacrs, gridcrs=gridcrs)
+        try:
+            nodataval = gridIN.attrs['_FillValue'] #Extract from dataset itself
+        except:
+            pass
+                
+        gridIN = gridIN.where(gridIN != nodataval, other=np.nan)  #Replace no data values with NaNs
 
-def readBedrockGrid(bedrockelevpath, nodataval=0, studyArea='', clip2SA=True,  studyAreacrs='', gridcrs=''):
-    bedrockElevGridIN = rxr.open_rasterio(bedrockelevpath)
+    return gridIN
 
-    if clip2SA:
-        bedrockElevGridIN = clipGrid2StudyArea(studyArea=studyArea, grid=bedrockElevGridIN, studyAreacrs=studyAreacrs, gridcrs=gridcrs)
-    
-    try:
-        noDataBed = bedrockElevGridIN.attrs['_FillValue'] #Extract from dataset itself
-    except:
-        pass
-
-    bedrockElevGridIN = bedrockElevGridIN.where(bedrockElevGridIN != noDataBed, other=np.nan)   #Replace no data values with NaNs
-    return bedrockElevGridIN
-
-def alignRasters(unalignedGrids, modelgrid='', nodataval=0):
+def alignRasters(unalignedGrids, modelgrid, nodataval=0):
     
     if type(unalignedGrids) is list:
         alignedGrids=[]
@@ -482,7 +531,7 @@ def alignRasters(unalignedGrids, modelgrid='', nodataval=0):
         
     return alignedGrids
 
-def getDriftThick(surface, bedrock, noLayers=9, plotData=False):
+def get_drift_thick(surface, bedrock, noLayers=9, plotData=False):
     '''
     
     Finds the distance from surface to bedrock and then divides by number of layers to get layer thickness.
