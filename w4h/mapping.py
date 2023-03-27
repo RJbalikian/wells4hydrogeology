@@ -261,7 +261,7 @@ def readWCS(studyArea, wcs_url=lidarURL, res_x=30, res_y=30):
 
     return wcsData_rxr
 
-def readWMS(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:None', wms_url=lidarURL, srs='EPSG:3857', clip_to_studyarea=True, bbox=[-9889002.615500,5134541.069716,-9737541.607038,5239029.627400],res_x=30, res_y=30, size_x=512, size_y=512, format='image/tiff'):
+def readWMS(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:Color Ramp', wms_url=lidarURL, srs='EPSG:3857', clip_to_studyarea=True, bbox=[-9889002.615500,5134541.069716,-9737541.607038,5239029.627400],size_x=256, size_y=256, format='image/tiff'):
     '''
     Reads a WebMapService from a url and returns a rioxarray dataset containing it.
 
@@ -288,13 +288,12 @@ def readWMS(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:None', wms_url=li
     layer = layer_name
     
     data = wms.contents#[layer]
-    print(data['0'].__dict__)
+    #print(data['0'].__dict__)
     studyArea_proj = study_area.to_crs(srs)
     saBBox = studyArea_proj.total_bounds
     
     if layer == 'IL_Statewide_Lidar_DEM_WGS:None':
         dBBox = data['0'].boundingBox #Is this an error?
-        print(dBBox)
 
         gpdDict = {'Label': ['Surf Data Box'], 'geometry': [shapely.geometry.Polygon(((dBBox[0], dBBox[1]), (dBBox[0], dBBox[3]), (dBBox[2], dBBox[3]), (dBBox[2], dBBox[1]), (dBBox[0], dBBox[1])))]}
         dBBoxGDF = gpd.GeoDataFrame(gpdDict, crs=dBBox[4])
@@ -317,24 +316,18 @@ def readWMS(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:None', wms_url=li
 
     saWidth = saBBox[2]-saBBox[0]
     saHeight = saBBox[3]-saBBox[1]    
-    print('Done with bbx')
     #get the wms
-    print(saBBox)
     if clip_to_studyarea:
-        img = wms.getmap(layers=[layer], srs=srs, bbox=saBBox, size=(size_x, size_y), format=format, transparent=True, timeout=60)        
+        img = wms.getmap(layers=[layer], srs=srs, bbox=saBBox, size=(size_x, size_y), format=format, transparent=True)        
     else:
-        img = wms.getmap(layers=[layer], srs=srs, bbox=bbox, size=(size_x, size_y), format=format, transparent=True, timeout=60)
-    print('Done with getmap')
+        img = wms.getmap(layers=[layer], srs=srs, bbox=bbox, size=(size_x, size_y), format=format, transparent=True)
 
-    #with open('statewide_test.tiff', 'wb') as f: 
-    #    f.write(img.read())
+
     #Save wms in memory to a raster dataset
     with MemoryFile(img) as memfile:
         with memfile.open() as dataset:
             wmsData_rxr = rxr.open_rasterio(dataset)
-
-    #if clip_to_studyarea:
-    #    wmsData_rxr = wmsData_rxr.sel(x=slice(saBBox[0], saBBox[2]), y=slice(saBBox[3], saBBox[1]))#.sel(band=1)
+    wmsData_rxr = wmsData_rxr.astype(np.half)
 
     return wmsData_rxr
 
