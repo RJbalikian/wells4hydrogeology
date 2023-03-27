@@ -40,6 +40,23 @@ def read_study_area(studyareapath, crs=''):
 
 
 def coords2Geometry(df, xCol='LONGITUDE', yCol='LATITUDE', zCol='ELEV_FT', crs='EPSG:4269', useZ=False):
+    '''
+    
+    Adds geometry to points with xy coordinates in the specified coordinate reference system.
+
+            Parameters:
+                    df (pandas dataframe): a Pandas dataframe containing points
+                    xCol (str): Name of column holding x coordinate data in df
+                    yCol (str): Name of column holding y coordinate data in df
+                    zCol (str): Name of column holding z coordinate data in df
+                    crs (str): Name of crs used for geometry
+                    useZ (bool): Whether to use z column in calculation
+
+            Returns:
+                    gdf (geopandas dataframe): Geopandas dataframe with points and their geometry values
+
+    '''
+
     ptCRS=crs
 
     x = df[xCol].to_numpy()
@@ -56,6 +73,19 @@ def coords2Geometry(df, xCol='LONGITUDE', yCol='LATITUDE', zCol='ELEV_FT', crs='
     return gdf
 
 def clipHeader2StudyArea(studyarea, headerdata, headerCRS='EPSG:4269'):
+    '''
+    
+    Clips dataframe to only include things within study area.
+
+            Parameters:
+                    studyarea (geopandas dataframe): Inputs study area polygon
+                    headerdata (geopandas dataframe): Inputs point data
+                    headerCRS (str): Inputs crs to project study area to
+            
+            Returns:
+                    headerDataClip (geopandas dataframe): Contains only points within the study area
+    
+    '''
     studyArea_4269 = studyarea.to_crs(headerCRS).copy()
     
     headerDataClip = gpd.clip(headerdata, studyArea_4269) #Data from table is in EPSG:4269, easier to just project study area to ensure data fit
@@ -112,13 +142,39 @@ def sample_raster_points(raster, ptDF, xCol='LONGITUDE', yCol='LATITUDE', newCol
     return ptDF
 
 def addElevtoHeader(xyz, header):
+    '''
+    
+    Adds elevation to header data file.
+
+            Parameters:
+                    xyz (pandas dataframe): Contains elevation for the points
+                    header (pandas dataframe): Header data file
+                
+            Returns:
+                    headerXYZData (pandas dataframe): Header dataset merged to get elevation values
+    
+    '''
     headerXYZData = header.merge(xyz, how='left', on='API_NUMBER')
     headerXYZData.drop(['LATITUDE_x', 'LONGITUDE_x'], axis=1, inplace=True)
     headerXYZData.rename({'LATITUDE_y':'LATITUDE', 'LONGITUDE_y':'LONGITUDE'}, axis=1, inplace=True)
     return headerXYZData
 
 def readWCS(studyArea, wcs_url=lidarURL, res_x=30, res_y=30):
+    '''
+    
+    Reads a WebCoverageService from a url and returns a rioxarray dataset containing it.
 
+            Parameters:
+                    studyArea (list): A list of integers representing a bounding box
+                    wcs_url (str): A string representing the url for the WCS
+                    res_x (int): An integer to set resolution for x axis
+                    res_y (int): An integer to set resolution for y axis
+            
+            Returns:
+                    wcsData_rxr (xarray dataarray): A xarray dataarray holding the image from the WebCoverageService
+
+
+    '''
     #Drawn largely from: https://git.wur.nl/isric/soilgrids/soilgrids.notebooks/-/blob/master/01-WCS-basics.ipynb
     
     #30m DEM
@@ -204,7 +260,58 @@ def readWCS(studyArea, wcs_url=lidarURL, res_x=30, res_y=30):
 
     return wcsData_rxr
 
+def readWMS(study_area, layer_name, wms_url=lidarURL, res_x=30, res_y=30, size_x=512, size_y=512):
+    '''
+    Reads a WebMapService from a url and returns a rioxarray dataset containing it.
+
+            Parameters:
+                    study_area (list): A list of integers representing a bounding box
+                    layer_name (str): A string representing the layer name in the WMS
+                    wms_url (str): A string representing the url for the WMS
+                    res_x (int): An integer to set resolution for x axis
+                    res_y (int): An integer to set resolution for y axis
+                    size_x (int): An integer to set width of result
+                    size_y (int): An integer to set height of result
+            
+            Returns:
+                    wmsData_rxr (xarray dataarray): A xarray dataarray holding the image from the WebMapService
+    '''
+    from owslib.wms import WebMapService
+    # Define WMS endpoint URL
+    wms_url = wms_url
+    # Create WMS connection object
+    wms = WebMapService(wms_url)
+    # Print available layers
+    print(wms.contents)
+    # Select desired layer 
+    layer = layer_name
+    #get the wms
+    img = wms.getmap(layers=[layer], srs='EPSG:3857', bbox=[-9889002.615500,5134541.069716,-9737541.607038,5239029.627400], size=(size_x, size_y), format='image/tiff', transparent=True, timeout=60)
+    #with open('statewide_test.tiff', 'wb') as f:
+    #    f.write(img.read())
+    #Save wms in memory to a raster dataset
+    with MemoryFile(img) as memfile:
+        with memfile.open() as dataset:
+            wmsData_rxr = rxr.open_rasterio(dataset)
+
+    return wmsData_rxr
+
 def clipGrid2StudyArea(studyArea, grid, studyAreacrs='', gridcrs=''):
+    '''
+    
+    Clips grid to study area.
+
+            Parameters:
+                    studyArea (geopandas dataframe): inputs study area polygon
+                    grid (xarray dataarray): inputs grid array
+                    studyAreacrs (str): inputs the coordinate reference system for the study area
+                    gridcrs (str): inputs the coordinate reference system for the grid
+            
+            Returns:
+                    grid (xarray dataarray): returns xarray containing grid clipped only to area within study area
+
+    '''
+    
     if studyAreacrs=='':
         studyAreacrs=studyArea.crs
 
@@ -425,6 +532,21 @@ def alignRasters(unalignedGrids, modelgrid, nodataval=0):
     return alignedGrids
 
 def get_drift_thick(surface, bedrock, noLayers=9, plotData=False):
+    '''
+    
+    Finds the distance from surface to bedrock and then divides by number of layers to get layer thickness.
+
+            Parameters:
+                    surface (rioxarray dataarray): array holding surface elevation
+                    bedrock (rioxarray dataarray): array holding bedrock elevation
+                    noLayers (int): number of layers needed to calculate thickness for
+                    plotData (bool): tells function to either plot the data or not
+
+            Returns:
+                    driftThick (rioxarray dataarray): Contains data array containing depth to bedrock at each point
+                    layerThick (rioxarray dataarray): Contains data array with layer thickness at each point
+    
+    '''
     xr.set_options(keep_attrs=True)
 
     driftThick = surface - bedrock
