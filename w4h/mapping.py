@@ -9,6 +9,7 @@ import xarray as xr
 import geopandas as gpd
 import pandas as pd
 import numpy as np
+import shapely
 from owslib.wcs import WebCoverageService
 from shapely.geometry import Point
 from urllib.request import urlopen
@@ -260,7 +261,7 @@ def readWCS(studyArea, wcs_url=lidarURL, res_x=30, res_y=30):
 
     return wcsData_rxr
 
-def readWMS(study_area, layer_name, wms_url=lidarURL, res_x=30, res_y=30, size_x=512, size_y=512):
+def readWMS(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:None', wms_url=lidarURL, srs='EPSG:3857', clip_to_studyarea=True, bbox=[-9889002.615500,5134541.069716,-9737541.607038,5239029.627400],res_x=30, res_y=30, size_x=512, size_y=512, format='image/tiff'):
     '''
     Reads a WebMapService from a url and returns a rioxarray dataset containing it.
 
@@ -282,17 +283,54 @@ def readWMS(study_area, layer_name, wms_url=lidarURL, res_x=30, res_y=30, size_x
     # Create WMS connection object
     wms = WebMapService(wms_url)
     # Print available layers
-    print(wms.contents)
+    #print(wms.contents)
     # Select desired layer 
     layer = layer_name
+    
+    data = wms.contents#[layer]
+    print(data['0'].__dict__)
+    studyArea_proj = study_area.to_crs(srs)
+    saBBox = studyArea_proj.total_bounds
+    
+    if layer == 'IL_Statewide_Lidar_DEM_WGS:None':
+        dBBox = data['0'].boundingBox #Is this an error?
+        print(dBBox)
+        gpdDict = {'Data': [], 'geometry': [shapely.geometry.POLYGON((dBBox[0], dBBox[1]), (dBBox[0], dBBox[3]), (dBBox[2], dBBox[3]), (dBBox[2], dBBox[1]), (dBBox[0], dBBox[1]))],  'crs':dBBox[4]}
+        dBBoxGDF = gpd.GeoDataFrame(gpdDict)
+        dBBoxGDF.to_crs(srs)
+        #In case study area bounding box goes outside data bounding box, use data bounding box values
+        newBBox = []
+        for i,c in enumerate(dBBox):
+            if type(c) is str:
+                
+            elif i == 0 or i==2:
+                if saBBox[i] < c:
+                    newBBox.append(saBBox[i])
+                else:
+                    newBBox.append(c)
+            else:
+                if saBBox[i] > c:
+                    newBBox.append(saBBox[i])
+                else:
+                    newBBox.append(c)
+
+    saWidth = saBBox[2]-saBBox[0]
+    saHeight = saBBox[3]-saBBox[1]    
+    
     #get the wms
-    img = wms.getmap(layers=[layer], srs='EPSG:3857', bbox=[-9889002.615500,5134541.069716,-9737541.607038,5239029.627400], size=(size_x, size_y), format='image/tiff', transparent=True, timeout=60)
+    if clip_to_studyarea:
+        img = wms.getmap(layers=[layer], srs=srs, bbox=saBBox, size=(size_x, size_y), format=format, transparent=True, timeout=60)        
+    else:
+        img = wms.getmap(layers=[layer], srs=srs, bbox=bbox, size=(size_x, size_y), format=format, transparent=True, timeout=60)
     #with open('statewide_test.tiff', 'wb') as f:
     #    f.write(img.read())
     #Save wms in memory to a raster dataset
     with MemoryFile(img) as memfile:
         with memfile.open() as dataset:
             wmsData_rxr = rxr.open_rasterio(dataset)
+
+    #if clip_to_studyarea:
+    #    wmsData_rxr = wmsData_rxr.sel(x=slice(saBBox[0], saBBox[2]), y=slice(saBBox[3], saBBox[1]))#.sel(band=1)
 
     return wmsData_rxr
 
