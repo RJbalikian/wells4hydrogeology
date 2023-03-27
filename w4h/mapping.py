@@ -295,14 +295,15 @@ def readWMS(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:None', wms_url=li
     if layer == 'IL_Statewide_Lidar_DEM_WGS:None':
         dBBox = data['0'].boundingBox #Is this an error?
         print(dBBox)
-        gpdDict = {'Data': [], 'geometry': [shapely.geometry.POLYGON((dBBox[0], dBBox[1]), (dBBox[0], dBBox[3]), (dBBox[2], dBBox[3]), (dBBox[2], dBBox[1]), (dBBox[0], dBBox[1]))],  'crs':dBBox[4]}
-        dBBoxGDF = gpd.GeoDataFrame(gpdDict)
+
+        gpdDict = {'Label': ['Surf Data Box'], 'geometry': [shapely.geometry.Polygon(((dBBox[0], dBBox[1]), (dBBox[0], dBBox[3]), (dBBox[2], dBBox[3]), (dBBox[2], dBBox[1]), (dBBox[0], dBBox[1])))]}
+        dBBoxGDF = gpd.GeoDataFrame(gpdDict, crs=dBBox[4])
         dBBoxGDF.to_crs(srs)
         #In case study area bounding box goes outside data bounding box, use data bounding box values
         newBBox = []
         for i,c in enumerate(dBBox):
             if type(c) is str:
-                
+                pass
             elif i == 0 or i==2:
                 if saBBox[i] < c:
                     newBBox.append(saBBox[i])
