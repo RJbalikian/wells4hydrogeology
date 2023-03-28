@@ -50,7 +50,7 @@ from w4h.read import (getCurrentDate,
                       read_dict,
                       defineDataTypes,
                       searchTermFilePaths,
-                      readSearchTerms,
+                      read_dictionary_terms,
                       readLithologies)
 
 __all__=(
@@ -100,7 +100,7 @@ __all__=(
          'read_dict',
          'defineDataTypes',
          'searchTermFilePaths',
-         'readSearchTerms',
+         'read_dictionary_terms',
          'readLithologies')
 
 __author__='Riley Balikian, Joe Franke'

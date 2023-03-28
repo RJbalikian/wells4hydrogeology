@@ -156,7 +156,7 @@ def searchTermFilePaths(dictdir=str(repoDir)+'/resources/', specStartPattern='*S
     
     return specTermsPATH, startTermsPATH
 
-def read_dictionary_terms(dict_file, cols, dictionary_type='custom'):
+def read_dictionary_terms(dict_file, cols=None, col_types=None, dictionary_type=None, class_flag=1, rem_extra_cols=True):
     #Read files into pandas dataframes
     dict_terms = []
     if type(dict_file) is list:
@@ -165,33 +165,60 @@ def read_dictionary_terms(dict_file, cols, dictionary_type='custom'):
             if 'ID' in dict_terms.columns:
                 dict_terms.set_index('ID', drop=True, inplace=True)
     else:
-        dict_terms.append(pd.read_csv(f))
-        if 'ID' in dict_terms.columns:
-            dict_terms.set_index('ID', drop=True, inplace=True)
+        dict_terms.append(pd.read_csv(dict_file))
+        if 'ID' in dict_terms[-1].columns:
+            dict_terms[-1].set_index('ID', drop=True, inplace=True)
+        dict_file = [dict_file]
 
     #Rename important columns
-    for d in dict_terms:
-        if 'SearchTerm' in d.columns:
-            dict_terms.rename(columns={'SearchTerm':'FORMATION'}, inplace=True)
-            dict_terms['CLASS_FLAG'] = 1
-        if 'InterpUpdate' in d.columns:
-            dict_terms.rename(columns={'InterpUpdate':'INTERPRETATION'}, inplace=True)
-            dict_terms['CLASS_FLAG'] = 4
-
+    searchTermList = ['searchterm', 'search', 'exact']
+    startTermList = ['startterm', 'start', 'startswith']
+                
     #Recast all columns to datatypes of headerData to defined types
-    specTermsDtypes = {'FORMATION':str,'INTERPRETATION':str, 'CLASS_FLAG':np.uint8}
-    startTermsDtypes = {'FORMATION':str,'INTERPRETATION':str, 'CLASS_FLAG':np.uint8}
+    dict_termDtypes = {'FORMATION':str,'INTERPRETATION':str, 'CLASS_FLAG':np.uint8}
 
-    for i in range(0, np.shape(specTerms)[1]):
-        specTerms.iloc[:,i] = specTerms.iloc[:,i].astype(specTermsDtypes[specTerms.iloc[:,i].name])
-        startTerms.iloc[:,i] = startTerms.iloc[:,i].astype(startTermsDtypes[startTerms.iloc[:,i].name])
+    if dictionary_type is None:
+        dictionary_type=''
+
+    for i, d in enumerate(dict_terms):
+        if dictionary_type.lower() in searchTermList or (dictionary_type=='' and 'spec' in str(dict_file[i]).lower()):
+            d['CLASS_FLAG'] = 1
+        elif dictionary_type.lower() in startTermList or (dictionary_type=='' and 'start' in str(dict_file[i]).lower()):
+            d['CLASS_FLAG'] = 4 #Start term classification flag
+        else:
+            d['CLASS_FLAG'] = class_flag #Custom classification flag, defined as argument
+            #1=specific match,2 (not defined), 3: bedrock classification for obvious bedrock, 4: Wildcard/start term
+
+        if cols is None:
+            if 'SearchTerm' in d.columns:
+                d.rename(columns={'SearchTerm':'FORMATION'}, inplace=True)
+            if 'StartTerm' in d.columns:
+                d.rename(columns={'StartTerm':'FORMATION'}, inplace=True)        
+            if 'InterpUpdate' in d.columns:
+                d.rename(columns={'InterpUpdate':'INTERPRETATION'}, inplace=True)
+        else:
+            for k in list(cols.keys()):
+                d.rename(columns={k:cols[k]}, inplace=True)
+        if col_types is None:
+            pass
+        else:
+            for k in list(col_types.keys()):
+                d.rename(columns={k:col_types[k]}, inplace=True)
     
-    #Delete duplicate definitions
-    specTerms.drop_duplicates(subset='FORMATION',inplace=True) #Apparently, there are some duplicate definitions, which need to be deleted first
-    startTerms.drop_duplicates(subset='FORMATION',inplace=True) #Apparently, there are some duplicate definitions, which need to be deleted first
-    specTerms.reset_index(inplace=True, drop=True)
-    startTerms.reset_index(inplace=True, drop=True)
+        for i in range(0, np.shape(d)[1]):
+            if d.iloc[:,i].name in list(dict_termDtypes.keys()):
+                d.iloc[:,i] = d.iloc[:,i].astype(dict_termDtypes[d.iloc[:,i].name])
     
+        #Delete duplicate definitions
+        d.drop_duplicates(subset='FORMATION',inplace=True) #Apparently, there are some duplicate definitions, which need to be deleted first
+        d.reset_index(inplace=True, drop=True)
+
+    if len(dict_terms)==1:
+        dict_terms = dict_terms[0]
+    
+    if rem_extra_cols:
+        dict_terms = dict_terms[['FORMATION', 'INTERPRETATION', 'CLASS_FLAG']]
+
     return dict_terms
 
 def readLithologies(lithoDir='', lithFile=''):
