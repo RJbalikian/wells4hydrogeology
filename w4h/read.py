@@ -156,16 +156,27 @@ def searchTermFilePaths(dictdir=str(repoDir)+'/resources/', specStartPattern='*S
     
     return specTermsPATH, startTermsPATH
 
-def readSearchTerms(specfile, startfile, dictdir=str(repoDir)+'/resources/'):
+def read_dictionary_terms(dict_file, cols, dictionary_type='custom'):
     #Read files into pandas dataframes
-    specTerms = pd.read_csv(specfile, index_col='ID')
-    startTerms = pd.read_csv(startfile, index_col='ID')
+    dict_terms = []
+    if type(dict_file) is list:
+        for f in dict_file:
+            dict_terms.append(pd.read_csv(f))
+            if 'ID' in dict_terms.columns:
+                dict_terms.set_index('ID', drop=True, inplace=True)
+    else:
+        dict_terms.append(pd.read_csv(f))
+        if 'ID' in dict_terms.columns:
+            dict_terms.set_index('ID', drop=True, inplace=True)
 
     #Rename important columns
-    specTerms.rename(columns={'SearchTerm':'FORMATION', 'InterpUpdate':'INTERPRETATION'}, inplace=True)
-    specTerms['CLASS_FLAG'] = 1
-    startTerms.rename(columns={'StartTerm':'FORMATION', 'InterpUpdate':'INTERPRETATION'}, inplace=True)
-    startTerms['CLASS_FLAG'] = 4
+    for d in dict_terms:
+        if 'SearchTerm' in d.columns:
+            dict_terms.rename(columns={'SearchTerm':'FORMATION'}, inplace=True)
+            dict_terms['CLASS_FLAG'] = 1
+        if 'InterpUpdate' in d.columns:
+            dict_terms.rename(columns={'InterpUpdate':'INTERPRETATION'}, inplace=True)
+            dict_terms['CLASS_FLAG'] = 4
 
     #Recast all columns to datatypes of headerData to defined types
     specTermsDtypes = {'FORMATION':str,'INTERPRETATION':str, 'CLASS_FLAG':np.uint8}
@@ -181,7 +192,7 @@ def readSearchTerms(specfile, startfile, dictdir=str(repoDir)+'/resources/'):
     specTerms.reset_index(inplace=True, drop=True)
     startTerms.reset_index(inplace=True, drop=True)
     
-    return specTerms, startTerms
+    return dict_terms
 
 def readLithologies(lithoDir='', lithFile=''):
     #dictDir = "\\\\isgs-sinkhole\\geophysics\\Balikian\\ISWS_HydroGeo\\WellDataAutoClassification\\SupportingDocs\\"
