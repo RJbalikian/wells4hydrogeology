@@ -261,7 +261,7 @@ def readWCS(studyArea, wcs_url=lidarURL, res_x=30, res_y=30):
 
     return wcsData_rxr
 
-def readWMS(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:Color Ramp', wms_url=lidarURL, srs='EPSG:3857', clip_to_studyarea=True, bbox=[-9889002.615500,5134541.069716,-9737541.607038,5239029.627400],size_x=256, size_y=256, format='image/tiff'):
+def readWMS(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:None', wms_url=lidarURL, srs='EPSG:3857', clip_to_studyarea=True, bbox=[-9889002.615500,5134541.069716,-9737541.607038,5239029.627400],size_x=256, size_y=256, format='image/tiff'):
     '''
     Reads a WebMapService from a url and returns a rioxarray dataset containing it.
 
@@ -496,7 +496,8 @@ def read_model_grid(studyArea, gridpath, nodataval=0, read_grid=True, node_bySpa
                 modelGrid.spatial_ref.attrs[k] = spatRefDict[k]
     return modelGrid
 
-def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, studyArea='', clip2SA=True,  studyAreacrs=None, gridcrs=None, **kwargs):
+
+def read_grid(datapath, grid_type='model', nodataval=0, use_service=None, studyArea='', clip2SA=True,  studyAreacrs=None, gridcrs=None, **kwargs):
     if grid_type=='model':
         if 'read_grid' in list(kwargs.keys()):
             rgrid = kwargs['read_grid']
@@ -504,14 +505,12 @@ def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, st
             rgrid=True
         gridIN = read_model_grid(studyArea, gridpath=datapath, nodataval=0, read_grid=rgrid, clip2SA=clip2SA, studyAreacrs=studyAreacrs, gridcrs=gridcrs)
     else:
-        if use_service==False:
+        if use_service is None:
             gridIN = rxr.open_rasterio(datapath)
         elif use_service.lower()=='wcs':
-            gridIN = readWCS(studyArea, wcs_url=lidarURL)
+            gridIN = readWCS(studyArea, wcs_url=lidarURL, **kwargs)
         elif use_service.lower()=='wms':
-            pass
-            print("WMS service not yet supported, reading from datapath")
-            gridIN = rxr.open_rasterio(datapath)
+            gridIN = readWMS(studyArea, wms_url=lidarURL, **kwargs)
             
         if clip2SA:
             if gridcrs is None:
