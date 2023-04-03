@@ -160,7 +160,7 @@ def addElevtoHeader(xyz, header):
     headerXYZData.rename({'LATITUDE_y':'LATITUDE', 'LONGITUDE_y':'LONGITUDE'}, axis=1, inplace=True)
     return headerXYZData
 
-def readWCS(studyArea, wcs_url=lidarURL, res_x=30, res_y=30):
+def readWCS(studyArea, wcs_url=lidarURL, res_x=30, res_y=30, **kwargs):
     '''
     
     Reads a WebCoverageService from a url and returns a rioxarray dataset containing it.
@@ -185,6 +185,13 @@ def readWCS(studyArea, wcs_url=lidarURL, res_x=30, res_y=30):
 
     #studyAreaPath = r"\\isgs-sinkhole.ad.uillinois.edu\geophysics\Balikian\ISWS_HydroGeo\WellDataAutoClassification\SampleData\ESL_StudyArea_5mi.shp"
     #studyArea = gpd.read_file(studyAreaPath)
+
+    if 'wcs_url' in kwargs:
+        wcs_url = kwargs['wcs_url']
+    if 'res_x' in kwargs:
+        res_x = kwargs['res_x']
+    if 'res_y' in kwargs:
+        res_y = kwargs['res_y']
     
     width_in = ''
     height_in= ''
@@ -261,7 +268,7 @@ def readWCS(studyArea, wcs_url=lidarURL, res_x=30, res_y=30):
 
     return wcsData_rxr
 
-def readWMS(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:Color Ramp', wms_url=lidarURL, srs='EPSG:3857', clip_to_studyarea=True, bbox=[-9889002.615500,5134541.069716,-9737541.607038,5239029.627400],size_x=256, size_y=256, format='image/tiff'):
+def readWMS(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:None', wms_url=lidarURL, srs='EPSG:3857', clip_to_studyarea=True, bbox=[-9889002.615500,5134541.069716,-9737541.607038,5239029.627400],res_x=30, res_y=30, size_x=512, size_y=512, format='image/tiff', **kwargs):
     '''
     Reads a WebMapService from a url and returns a rioxarray dataset containing it.
 
@@ -279,21 +286,33 @@ def readWMS(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:Color Ramp', wms_
     '''
     from owslib.wms import WebMapService
     # Define WMS endpoint URL
-    wms_url = wms_url
+    if 'wms_url' in kwargs:
+        wms_url = kwargs['wms_url']
+    else:
+        wms_url = wms_url
     # Create WMS connection object
     wms = WebMapService(wms_url)
     # Print available layers
     #print(wms.contents)
-    # Select desired layer 
-    layer = layer_name
+    # Select desired layer
+    if 'layer_name' in kwargs:
+        layer = kwargs['layer_name']
+    else:
+        layer = layer_name
     
     data = wms.contents#[layer]
-    #print(data['0'].__dict__)
-    studyArea_proj = study_area.to_crs(srs)
-    saBBox = studyArea_proj.total_bounds
+    print(data['0'].__dict__)
+    if 'srs' in kwargs:
+        studyArea_proj = study_area.to_crs(kwargs['srs'])
+        saBBox = studyArea_proj.total_bounds
+    else:
+        studyArea_proj = study_area.to_crs(srs)
     
+    saBBox = studyArea_proj.total_bounds
+
     if layer == 'IL_Statewide_Lidar_DEM_WGS:None':
         dBBox = data['0'].boundingBox #Is this an error?
+        print(dBBox)
 
         gpdDict = {'Label': ['Surf Data Box'], 'geometry': [shapely.geometry.Polygon(((dBBox[0], dBBox[1]), (dBBox[0], dBBox[3]), (dBBox[2], dBBox[3]), (dBBox[2], dBBox[1]), (dBBox[0], dBBox[1])))]}
         dBBoxGDF = gpd.GeoDataFrame(gpdDict, crs=dBBox[4])
@@ -316,18 +335,34 @@ def readWMS(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:Color Ramp', wms_
 
     saWidth = saBBox[2]-saBBox[0]
     saHeight = saBBox[3]-saBBox[1]    
+    print('Done with bbx')
+    # Check kwargs for rest of parameters
+    if 'size_x' in kwargs:
+        size_x = kwargs['size_x']
+    if 'size_y' in kwargs:
+        size_y = kwargs['size_y']
+    if 'format' in kwargs:
+        format = kwargs['format']
+    if 'clip_to_studyarea' in kwargs:
+        clip_to_studyarea = kwargs['clip_to_studyarea']
     #get the wms
+    print(saBBox)
+
     if clip_to_studyarea:
-        img = wms.getmap(layers=[layer], srs=srs, bbox=saBBox, size=(size_x, size_y), format=format, transparent=True)        
+        img = wms.getmap(layers=[layer], srs=srs, bbox=saBBox, size=(size_x, size_y), format=format, transparent=True, timeout=60)        
     else:
-        img = wms.getmap(layers=[layer], srs=srs, bbox=bbox, size=(size_x, size_y), format=format, transparent=True)
+        img = wms.getmap(layers=[layer], srs=srs, bbox=bbox, size=(size_x, size_y), format=format, transparent=True, timeout=60)
+    print('Done with getmap')
 
-
+    #with open('statewide_test.tiff', 'wb') as f: 
+    #    f.write(img.read())
     #Save wms in memory to a raster dataset
     with MemoryFile(img) as memfile:
         with memfile.open() as dataset:
             wmsData_rxr = rxr.open_rasterio(dataset)
-    wmsData_rxr = wmsData_rxr.astype(np.half)
+
+    #if clip_to_studyarea:
+    #    wmsData_rxr = wmsData_rxr.sel(x=slice(saBBox[0], saBBox[2]), y=slice(saBBox[3], saBBox[1]))#.sel(band=1)
 
     return wmsData_rxr
 
@@ -507,11 +542,10 @@ def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, st
         if use_service==False:
             gridIN = rxr.open_rasterio(datapath)
         elif use_service.lower()=='wcs':
-            gridIN = readWCS(studyArea, wcs_url=lidarURL)
+            gridIN = readWCS(studyArea, wcs_url=lidarURL, **kwargs)
         elif use_service.lower()=='wms':
             pass
-            print("WMS service not yet supported, reading from datapath")
-            gridIN = rxr.open_rasterio(datapath)
+            gridIN = readWMS(studyArea, wcs_url=lidarURL, **kwargs)
             
         if clip2SA:
             if gridcrs is None:
