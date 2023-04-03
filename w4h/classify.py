@@ -13,9 +13,23 @@ import datetime
 
 #Define records with full search term
 def specificDefine(df, specterms, printouts=False):
-    df_Interps = pd.merge(df, specterms.set_index('FORMATION'), on='FORMATION',how='left')
-    df_Interps['BEDROCK_FLAG'] = df_Interps['INTERPRETATION'] == 'BEDROCK' #Does this need to happen here?
+    df['FORMATION'] = df['FORMATION'].astype(str)
+    specterms['FORMATION'] = specterms['FORMATION'].astype(str)
+
+    print(df.FORMATION)
+    df.FORMATION = df.FORMATION.str.casefold()
+    specterms['FORMATION'] = specterms['FORMATION'].str.casefold()
+    #df['FORMATION'] = df['FORMATION'].str.strip(['.,:?\t\s'])
+    #specterms['FORMATION'] = specterms['FORMATION'].str.strip(['.,:?\t\s'])
+
+    print(df.FORMATION)
+    specterms.drop_duplicates(subset='FORMATION',keep='last', inplace=True)
+    specterms.reset_index(drop=True, inplace=True)
     
+    df_Interps = pd.merge(df, specterms.set_index('FORMATION'), on='FORMATION',how='left')
+    df_Interps['BEDROCK_FLAG'] = df_Interps['INTERPRETATION'] == 'BEDROCK'
+    
+    print(df_Interps.FORMATION)
     if printouts:
         print("Records Classified with full search term: "+str(int(df_Interps['CLASS_FLAG'].sum())))
         print("Records Classified with full search term: "+str(round((df_Interps['CLASS_FLAG'].sum()/df_Interps.shape[0])*100,2))+"% of data")
@@ -42,7 +56,7 @@ def startDefine(df, starterms, printouts=False):
     for i,s in enumerate(starterms['FORMATION']):
         df['CLASS_FLAG'].where(~df['FORMATION'].str.startswith(s,na=False),4,inplace=True)
         df['INTERPRETATION'].where(~df['FORMATION'].str.startswith(s,na=False),starterms.loc[i,'INTERPRETATION'],inplace=True)
-    df['BEDROCK_FLAG'] = df["INTERPRETATION"] == 'BEDROCK'
+    df['BEDROCK_FLAG'].loc[df["INTERPRETATION"] == 'BEDROCK']
     
     if printouts:
         print("Records classified with start search term: "+str(int(df['CLASS_FLAG'].count())))
