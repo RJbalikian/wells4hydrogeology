@@ -184,7 +184,7 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
 
 
 #Interpolate layers to model grid
-def layer_interp(points, grid, layers=None, method='nearest', lin_kind='cubic', export_dir=None, targetcol='TARG_THICK_PER', lyrcol='LAYER', make_dim=True, xcol=None, ycol=None, xcoord='x', ycoord='y', **kwargs):
+def layer_interp(points, grid, layers=None, method='nearest', return_type='dataarray', lin_kind='cubic', export_dir=None, targetcol='TARG_THICK_PER', lyrcol='LAYER', xcol=None, ycol=None, xcoord='x', ycoord='y', **kwargs):
     """Function to interpolate wells to model grid
 
     Parameters
@@ -223,7 +223,6 @@ def layer_interp(points, grid, layers=None, method='nearest', lin_kind='cubic', 
         print('You have specified a different number of layers than what is iterable in the points argument. This may not work properly.')
 
     daDict = {}
-    daList = []
     for lyr in range(1, layers+1):
         if type(points) is list or type(points) is dict:
             pts = points[lyr-1]
@@ -249,36 +248,30 @@ def layer_interp(points, grid, layers=None, method='nearest', lin_kind='cubic', 
             dataPoints = np.array(list(zip(dataX, dataY)))
             interp = interpolate.NearestNDInterpolator(dataPoints, interpVal, **kwargs)
             Z = interp(X, Y)
-            interpType = 'Nearest Neighbor'
         elif method.lower() in linList:
             X, Y = np.meshgrid(X, Y, sparse=True) #2D Grid for interpolation
             interp = interpolate.LinearNDInterpolator(list(zip(dataX, dataY)), interpVal, **kwargs)
             Z = interp(X, Y)
-            interpType = 'Linear'
         elif method.lower() in ctList:
             X, Y = np.meshgrid(X, Y, sparse=True) #2D Grid for interpolation
             if 'tol' not in kwargs:
                 kwargs['tol'] = 1e10
             interp = interpolate.CloughTocher2DInterpolator(list(zip(dataX, dataY)), interpVal, **kwargs)
             Z = interp(X, Y) 
-            interpType = 'Clough-Tocher'
         elif method.lower() in rbfList:
             dataXY=  np.column_stack((dataX, dataY))
             interp = interpolate.RBFInterpolator(dataXY, interpVal, **kwargs)
             print("Radial Basis Function does not work well with many well-based datasets. Consider instead specifying 'nearest', 'linear', 'spline', or 'clough tocher' for interpolation method.")
             Z = interp(np.column_stack((X.ravel(), Y.ravel()))).reshape(X.shape)
-            interpType = 'Radial Basis Function'
         elif method.lower() in splineList:
             Z = interpolate.bisplrep(dataX, dataY, interpVal, **kwargs)
                 #interp = interpolate.interp2d(dataX, dataY, interpVal, kind=lin_kind, **kwargs)
                 #Z = interp(X, Y)
-            interpType = 'Bivariate Spline'
         else:
             print('Specified interpolation method not recognized, using nearest neighbor.')
             X, Y = np.meshgrid(X, Y, sparse=True) #2D Grid for interpolation
             interp = interpolate.NearestNDInterpolator(list(zip(dataX, dataY)), interpVal, **kwargs)
             Z = interp(X, Y)
-            interpType = 'Nearest Neighbor'
 
         #global ZTest
         #ZTest = Z
@@ -287,10 +280,8 @@ def layer_interp(points, grid, layers=None, method='nearest', lin_kind='cubic', 
                     data=Z,
                     dims=grid.dims,
                     coords=grid.coords)
-        
-        interp_grid.attrs['Interpolation Type'] = interpType
-        interp_grid = interp_grid.clip(min=0, max=1, keep_attrs=True)
 
+        interp_grid = interp_grid.clip(min=0, max=1, keep_attrs=True)
         del Z
         del dataX
         del dataY
@@ -299,28 +290,26 @@ def layer_interp(points, grid, layers=None, method='nearest', lin_kind='cubic', 
 
         #interp_grid=interp_grid.interpolate_na(dim=x)
         zFillDigs = len(str(layers))
-        if make_dim:
-            daList.append(interp_grid)
-        else:
-            daDict['Layer'+str(lyr).zfill(zFillDigs)] = interp_grid
+        daDict['Layer'+str(lyr).zfill(zFillDigs)] = interp_grid
         del interp_grid
         print('Completed interpolation for Layer '+str(lyr).zfill(zFillDigs))
 
-    if make_dim:
-        interp_dataset = xr.concat(daList, dim='Layer', coords='minimal', compat='override',combine_attrs='override')    
-        interp_dataset = interp_dataset.assign_coords({'Layer':list(range(1, layers+1))})
+    dataAList = ['dataarray', 'da', 'a', 'array']
+    if return_type.lower() in dataAList:
+        interp_data = xr.concat(daDict.values(), dim='Layer')
     else:
-        interp_dataset = xr.Dataset(daDict)
+        interp_data = xr.Dataset(daDict)
 
+        print('Done with interpolation, getting global attrs')
         common_attrs = {}
-        for i, (var_name, data_array) in enumerate(interp_dataset.data_vars.items()):
+        for i, (var_name, data_array) in enumerate(interp_data.data_vars.items()):
             if i == 0:
                 common_attrs = data_array.attrs
             else:
                 common_attrs = {k: v for k, v in common_attrs.items() if k in data_array.attrs and data_array.attrs[k] == v}
-        interp_dataset.attrs.update(common_attrs)
+        interp_data.attrs.update(common_attrs)
 
-    return interp_dataset
+    return interp_data
 
 #Optional, combine dataset
 def combine_dataset(layer_dataset, surface_elev, bedrock_elev, layer_thick):

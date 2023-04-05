@@ -71,16 +71,16 @@ def remergeData(classifieddf, searchdf):
     return remergeDF
 
 def depthDefine(dfIN, thresh=550, printouts=False):
-    df = dfIN
+    df = dfIN.copy()
     df['CLASS_FLAG'].mask(df['TOP']>thresh, 3 ,inplace=True) #Add a Classification Flag of 3 (bedrock b/c it's deepter than 550') to all records where the top of the interval is >550'
     df['BEDROCK_FLAG'].mask(df['TOP']>thresh, True, inplace=True)
 
     if printouts:
-        print(df['CLASS_FLAG'].value_counts())
-        print('test')
-        brDepthClass = df['CLASS_FLAG'].value_counts()[3.0]
+        if df.CLASS_FLAG.notnull().sum() == 0:
+            brDepthClass = 0
+        else:
+            brDepthClass = df['CLASS_FLAG'].value_counts()[3.0]
         total = dfIN.shape[0]
-
         print("Records classified as bedrock that were deeper than "+str(thresh)+ "': " + str(brDepthClass))
         print("This represents "+str(round((brDepthClass)*100/total,2))+"% of the unclassified data in this dataframe.")
         
