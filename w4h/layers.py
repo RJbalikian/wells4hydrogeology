@@ -134,7 +134,8 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
         #Cannot have negative thicknesses
         res['TARG_THICK_FT'].clip(lower=0, inplace=True)
         res['LAYER_THICK_FT'].clip(lower=0, inplace=True)
-
+        
+        print(res.columns)
         #Get geometrys for each unique API/well
         res_df = res.groupby(by=['API_NUMBER','LATITUDE','LONGITUDE'], as_index=False).sum(numeric_only=True)#Calculate thickness for each well interval in the layer indicated (e.g., if there are two well intervals from same well in one model layer)
         uniqInd = pd.DataFrame([v.values[0] for k, v in res.groupby('API_NUMBER').groups.items()]).loc[:,0]

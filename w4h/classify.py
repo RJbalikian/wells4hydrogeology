@@ -122,7 +122,7 @@ def mergeLithologies(downholedata, targinterps, targetClass='bool'):
     
     return downholeData_targ
 
-def getUniqueWells(df, wellidCol='API_NUMBER'):
+def get_unique_wells(df, wellidCol='API_NUMBER'):
     #Get Unique well APIs
     uniqueWells = df[wellidCol].unique()
     wellsDF = pd.DataFrame(uniqueWells)
@@ -130,3 +130,12 @@ def getUniqueWells(df, wellidCol='API_NUMBER'):
     wellsDF.columns = ['UNIQUE_API']
     
     return wellsDF
+
+def sort_dataframe(df, sort_cols=['API_NUMBER','TOP'], remove_nans=True):
+    
+    #Sort columns for better processing later
+    df_sorted = df.sort_values(sort_cols)
+    df_sorted.reset_index(inplace=True, drop=True)
+    if remove_nans:
+        df_sorted = df_sorted[pd.notna(df_sorted["INTERPRETATION"])]
+    return df_sorted

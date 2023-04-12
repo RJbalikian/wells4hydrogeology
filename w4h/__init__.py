@@ -3,7 +3,6 @@
 
 from w4h import classify, clean, export, layers, mapping, read
 
-
 from w4h.classify import (specificDefine, 
                           splitDefined, 
                           startDefine, 
@@ -12,8 +11,8 @@ from w4h.classify import (specificDefine,
                           export_toBeDefined, 
                           fillUnclassified, 
                           mergeLithologies, 
-                          getUniqueWells)
-
+                          get_unique_wells,
+                          sort_dataframe)
 
 from w4h.clean import (removeNonlocatedData, 
                        removenotopo, 
@@ -21,12 +20,14 @@ from w4h.clean import (removeNonlocatedData,
                        dropbaddepth, 
                        dropnoformation)
 
-from w4h.export import (exportDataframe)
+from w4h.export import (export_dataframe,
+                        export_grids)
 
 from w4h.layers import (get_layer_depths,
                         merge_tables, 
                         layer_target_thick, 
-                        layer_interp)
+                        layer_interp,
+                        combine_dataset)
 
 from w4h.mapping import (read_study_area, 
                          coords2Geometry, 
@@ -68,17 +69,20 @@ __all__=(
         'export_toBeDefined', 
         'fillUnclassified', 
         'mergeLithologies', 
-        'getUniqueWells',
+        'get_unique_wells',
+        'sort_dataframe',
          'removeNonlocatedData', 
          'removenotopo', 
          'dropnodepth', 
          'dropbaddepth', 
          'dropnoformation',
-        'exportDataframe',
+        'export_dataframe',
+        'export_grids',
          'get_layer_depths',
          'merge_tables', 
          'layer_target_thick', 
          'layer_interp',
+         'combine_dataset',
         'read_study_area', 
         'coords2Geometry', 
         'clipHeader2StudyArea', 
@@ -103,4 +107,4 @@ __all__=(
          'read_dictionary_terms',
          'readLithologies')
 
-__author__='Riley Balikian, Joe Franke'
+__author__='Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski'
