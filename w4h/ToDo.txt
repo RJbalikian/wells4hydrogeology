@@ -1,3 +1,3 @@
-- Use elevations instead of depths for well records - Riley
-- Python database access/download - Riley
+
 - Update documentation - Riley
+- Python database access/download - Riley
