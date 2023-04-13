@@ -20,7 +20,7 @@ def export_dataframe(df, procdir, filename, date_stamp=True):
     """
 
     if date_stamp:
-        todayDate = datetime.date.now()
+        todayDate = datetime.date.today()
         todayDateStr = '_'+str(todayDate)
     else:
         todayDateStr=''
@@ -85,7 +85,7 @@ def export_grids(grid_data, out_path, filetype='tif', variable_sep=False, date_s
     
     #Format datestamp, if desired in output filename
     if date_stamp:
-        todayDate = datetime.date.now()
+        todayDate = datetime.date.today()
         todayDateStr = '_'+str(todayDate)
     else:
         todayDateStr=''
