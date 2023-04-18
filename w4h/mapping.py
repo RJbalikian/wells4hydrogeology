@@ -95,14 +95,14 @@ def clipHeader2StudyArea(studyarea, headerdata, headerCRS='EPSG:4269'):
     
     return headerDataClip
 
-def sample_raster_points(raster, ptDF, xCol='LONGITUDE', yCol='LATITUDE', newColName='SAMPLED', printouts=True):  
+def sample_raster_points(raster, points_df, xCol='LONGITUDE', yCol='LATITUDE', newColName='SAMPLED', printouts=True):  
     """Sample raster values to points from geopandas geodataframe.
 
     Parameters
     ----------
     raster : rioxarray data array
         Raster containing values to be sampled.
-    ptDF : geopandas.geodataframe
+    points_df : geopandas.geodataframe
         Geopandas dataframe with geometry column containing point values to sample.
     xCol : str, default='LONGITUDE'
         Column containing name for x-column, by default 'LONGITUDE.'
@@ -117,30 +117,30 @@ def sample_raster_points(raster, ptDF, xCol='LONGITUDE', yCol='LATITUDE', newCol
 
     Returns
     -------
-    ptDF : geopandas.geodataframe
-        Same as ptDF, but with sampled values and potentially with reprojected coordinates.
+    points_df : geopandas.geodataframe
+        Same as points_df, but with sampled values and potentially with reprojected coordinates.
     """
     if printouts:
         nowTime = datetime.datetime.now()
-        expectMin = (ptDF.shape[0]/3054409) * 14
+        expectMin = (points_df.shape[0]/3054409) * 14
         endTime = nowTime+datetime.timedelta(minutes=expectMin)
         print(newColName+ " sampling should be done by {:d}:{:02d}".format(endTime.hour, endTime.minute))
 
     #Project points to raster CRS
     rastercrsWKT=raster.spatial_ref.crs_wkt
-    ptDF = ptDF.to_crs(rastercrsWKT)
+    points_df = points_df.to_crs(rastercrsWKT)
     #if xCol=='LONGITUDE' and yCol=='LATITUDE':
     xCOLOUT = xCol+'_PROJ'
     yCOLOUT = yCol+'_PROJ'
-    ptDF[xCOLOUT] = ptDF['geometry'].x
-    ptDF[yCOLOUT] = ptDF['geometry'].y
-    xData = np.array(ptDF[xCOLOUT].values)
-    yData = np.array(ptDF[yCOLOUT].values)
+    points_df[xCOLOUT] = points_df['geometry'].x
+    points_df[yCOLOUT] = points_df['geometry'].y
+    xData = np.array(points_df[xCOLOUT].values)
+    yData = np.array(points_df[yCOLOUT].values)
     sampleArr=raster.sel(x=xData, y=yData, method='nearest').values
     sampleArr = np.diag(sampleArr)
     sampleDF = pd.DataFrame(sampleArr, columns=[newColName])
-    ptDF[newColName] = sampleDF[newColName]
-    return ptDF
+    points_df[newColName] = sampleDF[newColName]
+    return points_df
 
 def addElevtoHeader(xyz, header):
     '''

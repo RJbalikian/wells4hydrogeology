@@ -46,7 +46,7 @@ def export_dataframe(df, procdir, filename, date_stamp=True):
             print('Exported '+fname+todayDateStr+'.csv')
 
 #Export (rio)xarray dataarrays and datasets
-def export_grids(grid_data, out_path, filetype='tif', variable_sep=False, date_stamp=True):
+def export_grids(grid_data, out_path, file_id='',filetype='tif', variable_sep=True, date_stamp=True):
     """Function to export grids to files.
 
     Parameters
@@ -55,6 +55,8 @@ def export_grids(grid_data, out_path, filetype='tif', variable_sep=False, date_s
         Dataset or dataarray to be exported
     out_path : str or pathlib.Path object
         Output location for data export. If variable_sep=True, this should be a directory. Otherwise, this should also include the filename. The file extension should not be included here.
+    file_id : str, optional
+        If specified, will add this after 'LayerXX' or 'AllLayers' in the filename, just before datestamp, if used. Example filename for file_id='Coarse': Layer1_Coarse_2023-04-18.tif.
     filetype : str, optional
         Output filetype. Can either be pickle or any file extension supported by rioxarray.rio.to_raster(). Can either include period or not., by default 'tif'
     variable_sep : bool, optional
@@ -72,13 +74,33 @@ def export_grids(grid_data, out_path, filetype='tif', variable_sep=False, date_s
     #Format output filepath
     if type(out_path) is str or isinstance(out_path, pathlib.PurePath):
         if isinstance(out_path, pathlib.PurePath):
-            if out_path.parent.exists()==False:
-                print('Directory does not exist. Please enter a different value for the out_path parameter.')
-                return
-        out_path = str(out_path)
-        out_path = out_path.replace('\\', '/').replace('\\'[-1], '/')
-        if out_path[-1] != '/':
-            out_path = out_path + '/'
+            pass
+        else:
+            out_path = pathlib.Path(out_path)
+        if out_path.parent.exists()==False:
+            print('Directory does not exist. Please enter a different value for the out_path parameter.')
+            return        
+
+        if out_path.is_dir():
+            if isinstance(grid_data, xr.DataArray):
+                if variable_sep:
+                    lyrs = grid_data.coords['Layer'].values
+                    filenames = []
+                    for l in lyrs:
+                        filenames.append('Layer'+str(l))
+                else:
+                    filenames = ['AllLayers']
+            if isinstance(grid_data, xr.Dataset):
+                if variable_sep:
+                    filenames = []
+                    for var in grid_data:
+                        filenames.append(var)
+                else:
+                    filenames = ['AllLayers']    
+        else:
+            filenames = [out_path.stem]
+            out_path = out_path.parent
+
     else:
         print('Please input string or pathlib object for out_path parameters')
         return
@@ -96,30 +118,47 @@ def export_grids(grid_data, out_path, filetype='tif', variable_sep=False, date_s
     else:
         filetype = '.' + filetype
 
-    outPath = out_path+todayDateStr+filetype
+    if file_id != '':
+        file_id = '_'+file_id
+
+    out_path = out_path.as_posix()+'/'
+    outPaths = []
+    for f in filenames:
+        outPaths.append(out_path+f+file_id+todayDateStr+filetype)
 
     #Do export
     if filetype.lower() in pickleList:
         import pickle
-        try:
-            with open(outPath, 'wb') as f:
-                pickle.dump(grid_data, f)
-        except:
-            print('An error occured during export.')
-            print(outPath, 'could not be exported as a pickle object.')
-            print('Try again using different parameters.')
+        for op in outPaths:
+            try:
+                with open(op, 'wb') as f:
+                    pickle.dump(grid_data, f)
+            except:
+                print('An error occured during export.')
+                print(op, 'could not be exported as a pickle object.')
+                print('Try again using different parameters.')
     else:
         import rioxarray as rxr
         try:
-            if variable_sep and isinstance(grid_data, xr.Dataset):
-                for var in grid_data.data_vars:
-                    outPath = out_path+var+todayDateStr+filetype
-                    grid_data[var].rio.to_raster(outPath)
+            if isinstance(grid_data, xr.Dataset):
+                if variable_sep:
+                    for i, var in enumerate(grid_data.data_vars):
+                        grid_data[var].rio.to_raster(outPaths[i])
+                else:
+                    grid_data.rio.to_raster(outPaths[0])
+            elif isinstance(grid_data, xr.DataArray):
+                if variable_sep:
+                    lyrs = grid_data.coords['Layer'].values
+                    for i, l in enumerate(lyrs):
+                        out_grid = grid_data.sel(Layer = l).copy()
+                        out_grid.rio.to_raster(outPaths[i])
+                else:
+                    grid_data.rio.to_raster(outPaths[0])
             else:
-                grid_data.rio.to_raster(outPath)
+                grid_data.rio.to_raster(outPaths[0])
         except:
             print('An error occured during export.')
-            print('{} could not be exported as a {} file.'.format(outPath, filetype))
+            print('{} could not be exported as {} file.'.format(outPaths, filetype))
             print('Try again using different parameters.')
 
     return

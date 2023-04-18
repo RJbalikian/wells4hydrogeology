@@ -144,7 +144,6 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
         res['TARG_THICK_FT'].clip(lower=0, inplace=True)
         res['LAYER_THICK_FT'].clip(lower=0, inplace=True)
         
-        print(res.columns)
         #Get geometrys for each unique API/well
         res_df = res.groupby(by=['API_NUMBER','LATITUDE','LONGITUDE'], as_index=False).sum(numeric_only=True)#Calculate thickness for each well interval in the layer indicated (e.g., if there are two well intervals from same well in one model layer)
         uniqInd = pd.DataFrame([v.values[0] for k, v in res.groupby('API_NUMBER').groups.items()]).loc[:,0]
@@ -290,8 +289,14 @@ def layer_interp(points, grid, layers=None, method='nearest', return_type='dataa
                     data=Z,
                     dims=grid.dims,
                     coords=grid.coords)
-
+        
+        if 'band' in interp_grid.coords:
+            interp_grid = interp_grid.drop_vars('band')
         interp_grid = interp_grid.clip(min=0, max=1, keep_attrs=True)
+
+        interp_grid = interp_grid.expand_dims(dim='Layer')
+        interp_grid = interp_grid.assign_coords(Layer=[lyr])
+
         del Z
         del dataX
         del dataY
@@ -307,9 +312,9 @@ def layer_interp(points, grid, layers=None, method='nearest', return_type='dataa
     dataAList = ['dataarray', 'da', 'a', 'array']
     if return_type.lower() in dataAList:
         interp_data = xr.concat(daDict.values(), dim='Layer')
+        interp_data = interp_data.assign_coords(Layer=np.arange(1,10))
     else:
         interp_data = xr.Dataset(daDict)
-
         print('Done with interpolation, getting global attrs')
         common_attrs = {}
         for i, (var_name, data_array) in enumerate(interp_data.data_vars.items()):
