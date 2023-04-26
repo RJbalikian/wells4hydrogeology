@@ -11,6 +11,32 @@ from shapely.geometry import Point
 from scipy import interpolate
 
 def merge_tables(data_df, header_df, data_cols=None, header_cols=None, on='API_NUMBER', how='inner', auto_pick_cols=False, drop_duplicate_cols=True):
+    """Functino to merge tables, intended for merging metadata table with data table
+
+    Parameters
+    ----------
+    data_df : pandas.DataFrame
+        "Left" dataframe, intended for this purpose to be dataframe with main data, but can be anything
+    header_df : pandas.DataFrame
+        "Right" dataframe, intended for this purpose to be dataframe with metadata, but can be anything
+    data_cols : list, optional
+        List of strings of column names, for columns to be included after join from "left" table (data table). If None, all columns are kept, by default None
+    header_cols : list, optional
+        List of strings of columns names, for columns to be included in merged table after merge from "right" table (metadata). If None, all columns are kept, by default None
+    on : str, optional
+        Column name to use for joining. Both tables need to have the same column name for this function, by default 'API_NUMBER'
+    how : str, optional
+        See the how parameter of pd.merge, by default 'inner'
+    auto_pick_cols : bool, optional
+        Whether to autopick the columns from the metadata table. If True, the following column names are kept:['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'BEDROCK_ELEV_FT', 'SURFACE_ELEV_FT', 'BEDROCK_DEPTH_FT', 'LAYER_THICK_FT'], by default False
+    drop_duplicate_cols : bool, optional
+        If True, drops duplicate columns from the tables so that columns do not get renamed upon merge, by default True
+
+    Returns
+    -------
+    mergedTable : pandas.DataFrame
+        Merged dataframe
+    """
     if auto_pick_cols:
         header_cols = ['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'BEDROCK_ELEV_FT', 'SURFACE_ELEV_FT', 'BEDROCK_DEPTH_FT', 'LAYER_THICK_FT']
         for c in header_df.columns:
@@ -194,24 +220,7 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
 
 #Interpolate layers to model grid
 def layer_interp(points, grid, layers=None, method='nearest', return_type='dataarray', lin_kind='cubic', export_dir=None, targetcol='TARG_THICK_PER', lyrcol='LAYER', xcol=None, ycol=None, xcoord='x', ycoord='y', **kwargs):
-    """Function to interpolate wells to model grid
 
-    Parameters
-    ----------
-    points : _type_
-        _description_
-    grid : _type_
-        _description_
-    kind : _type_
-        _description_
-    layers : _type_
-        _description_
-
-    Returns
-    -------
-    _type_
-        _description_
-    """
     nnList = ['nearest', 'nearest neighbor', 'nearestneighbor','neighbor',  'nn','n']
     splineList = ['interp2d', 'interp2', 'interp', 'spline', 'spl', 'sp', 's']
     linKindList = ['linear', 'cubic', 'quintic']
