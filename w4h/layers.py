@@ -10,7 +10,35 @@ import numpy as np
 from shapely.geometry import Point
 from scipy import interpolate
 
+import w4h
+
 def merge_tables(data_df, header_df, data_cols=None, header_cols=None, on='API_NUMBER', how='inner', auto_pick_cols=False, drop_duplicate_cols=True):
+    """Function to merge tables, intended for merging metadata table with data table
+
+    Parameters
+    ----------
+    data_df : pandas.DataFrame
+        "Left" dataframe, intended for this purpose to be dataframe with main data, but can be anything
+    header_df : pandas.DataFrame
+        "Right" dataframe, intended for this purpose to be dataframe with metadata, but can be anything
+    data_cols : list, optional
+        List of strings of column names, for columns to be included after join from "left" table (data table). If None, all columns are kept, by default None
+    header_cols : list, optional
+        List of strings of columns names, for columns to be included in merged table after merge from "right" table (metadata). If None, all columns are kept, by default None
+    on : str, optional
+        Column name to use for joining. Both tables need to have the same column name for this function, by default 'API_NUMBER'
+    how : str, optional
+        See the how parameter of pd.merge, by default 'inner'
+    auto_pick_cols : bool, optional
+        Whether to autopick the columns from the metadata table. If True, the following column names are kept:['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'BEDROCK_ELEV_FT', 'SURFACE_ELEV_FT', 'BEDROCK_DEPTH_FT', 'LAYER_THICK_FT'], by default False
+    drop_duplicate_cols : bool, optional
+        If True, drops duplicate columns from the tables so that columns do not get renamed upon merge, by default True
+
+    Returns
+    -------
+    mergedTable : pandas.DataFrame
+        Merged dataframe
+    """
     if auto_pick_cols:
         header_cols = ['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'BEDROCK_ELEV_FT', 'SURFACE_ELEV_FT', 'BEDROCK_DEPTH_FT', 'LAYER_THICK_FT']
         for c in header_df.columns:
@@ -45,6 +73,20 @@ def merge_tables(data_df, header_df, data_cols=None, header_cols=None, on='API_N
     return mergedTable
 
 def get_layer_depths(well_metadata, no_layers=9):
+    """Function to calculate depths and elevations of each model layer at each well based on surface elevation, bedrock elevation, and number of layers/layer thickness
+
+    Parameters
+    ----------
+    well_metadata : pandas.DataFrame
+        Dataframe containing well metdata
+    no_layers : int, default=9
+        Number of layers. This should correlate with get_drift_thick() input parameter, if drift thickness was calculated using that function, by default 9.
+
+    Returns
+    -------
+    pandas.Dataframe
+        Dataframe containing new columns for depth to layers and elevation of layers.
+    """
     for layer in range(0, no_layers): #For each layer
         #Make column names
         depthColName  = 'DEPTH_FT_LAYER'+str(layer+1)
@@ -78,7 +120,11 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
     export_dir : str or pathlib.Path, default=None
         If str or pathlib.Path, should be directory to which to export dataframes built in function.
     outfile_prefix : str, default=''
-        Only used if export_dir is set. Will be used at the start of the exported filenames.
+        Only used if export_dir is set. Will be used at the start of the exported filenames
+    depth_top_col : str, default='TOP'
+        Name of column containing data for depth to top of described well intervals
+    depth_bot_col : str, default='BOTTOM'
+        Name of column containing data for depth to bottom of described well intervals
 
     Returns
     -------
@@ -193,28 +239,47 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
 
 
 #Interpolate layers to model grid
-def layer_interp(points, grid, layers=None, method='nearest', return_type='dataarray', lin_kind='cubic', export_dir=None, targetcol='TARG_THICK_PER', lyrcol='LAYER', xcol=None, ycol=None, xcoord='x', ycoord='y', **kwargs):
-    """Function to interpolate wells to model grid
+def layer_interp(points, grid, layers=None, method='nearest', return_type='dataarray', export_dir=None, targetcol='TARG_THICK_PER', lyrcol='LAYER', xcol=None, ycol=None, xcoord='x', ycoord='y', **kwargs):
+    """Function to interpolate results, going from points to grid data. Uses scipy.interpolate module.
 
     Parameters
     ----------
-    points : _type_
-        _description_
-    grid : _type_
-        _description_
-    kind : _type_
-        _description_
-    layers : _type_
-        _description_
+    points : list
+        List containing pandas dataframes or geopandas geoadataframes containing the point data. Should be resDF_list output from layer_target_thick().
+    grid : xr.DataArray or xr.Dataset
+        Xarray dataarray with the coordinates/spatial reference of the output grid to interpolate to
+    layers : int, default=None
+        Number of layers for interpolation. If None, uses the length ofthe points list to determine number of layers. By default None.
+    method : str, {'nearest', 'interp2d','linear', 'cloughtocher', 'radial basis function'}
+        Type of interpolation to use. See scipy.interpolate N-D scattered. Values can be any of the following (also shown in "kind" column of N-D scattered section of table here: https://docs.scipy.org/doc/scipy/tutorial/interpolate.html). By default 'nearest'
+    return_type : str, {'dataarray', 'dataset'}
+        Type of xarray object to return, either xr.DataArray or xr.Dataset, by default 'dataarray.'
+    export_dir : str or pathlib.Path, default=None
+        Export directory for interpolated grids, using w4h.export_grids(). If None, does not export, by default None.
+    targetcol : str, default = 'TARG_THICK_PER'
+        Name of column in points containing data to be interpolated, by default 'TARG_THICK_PER'.
+    lyrcol : str, default = 'Layer'
+        Name of column containing layer number. Not currently used, by default 'LAYER'
+    xcol : str, default = 'None'
+        Name of column containing x coordinates. If None, will look for 'geometry' column, as in a geopandas.GeoDataframe. By default None
+    ycol : str, default = 'None'
+        Name of column containing y coordinates. If None, will look for 'geometry' column, as in a geopandas.GeoDataframe. By default None
+    xcoord : str, default='x'
+        Name of x coordinate in grid, used to extract x values of grid, by default 'x'
+    ycoord : str, default='y'
+        Name of y coordinate in grid, used to extract x values of grid, by default 'y'
+    **kwargs
+        Keyword arguments to be read directly into whichever scipy.interpolate function is designated by the method parameter.
 
     Returns
     -------
-    _type_
-        _description_
+    interp_data : xr.DataArray or xr.Dataset, depending on return_type
+        By default, returns an xr.DataArray object with the layers added as a new dimension called Layer. Can also specify return_type='dataset' to return an xr.Dataset with each layer as a separate variable.
     """
+
+
     nnList = ['nearest', 'nearest neighbor', 'nearestneighbor','neighbor',  'nn','n']
     splineList = ['interp2d', 'interp2', 'interp', 'spline', 'spl', 'sp', 's']
-    linKindList = ['linear', 'cubic', 'quintic']
     linList = ['linear', 'lin', 'l']
     ctList = ['clough tocher', 'clough', 'cloughtocher', 'ct', 'c']
     rbfList = ['rbf', 'radial basis', 'radial basis function', 'r', 'radial']
@@ -240,18 +305,25 @@ def layer_interp(points, grid, layers=None, method='nearest', return_type='dataa
             pts = points
 
         if xcol is None:
-            dataX = pts['geometry'].x
+            if 'geometry' in pts.columns:
+                dataX = pts['geometry'].x
+            else:
+                print('xcol not specified and geometry column not detected (points is not/does not contain geopandas.GeoDataFrame)' )
+                return
         else:
             dataX = pts[xcol]
         
         if ycol is None:
-            dataY = pts['geometry'].y
+            if 'geometry' in pts.columns:
+                dataY = pts['geometry'].y
+            else:
+                print('ycol not specified and geometry column not detected (points is not/does not contain geopandas.GeoDataFrame)' )
+                return
         else:
             dataY = pts[ycol]
 
         #layer = pts[lyrcol]        
         interpVal = pts[targetcol]
-        pdinterp = pd.DataFrame(interpVal)
         if method.lower() in nnList:
             X, Y = np.meshgrid(X, Y, sparse=True) #2D Grid for interpolation
             dataPoints = np.array(list(zip(dataX, dataY)))
@@ -310,10 +382,11 @@ def layer_interp(points, grid, layers=None, method='nearest', return_type='dataa
         print('Completed interpolation for Layer '+str(lyr).zfill(zFillDigs))
 
     dataAList = ['dataarray', 'da', 'a', 'array']
+    dataSList = ['dataset', 'ds', 'set']
     if return_type.lower() in dataAList:
         interp_data = xr.concat(daDict.values(), dim='Layer')
         interp_data = interp_data.assign_coords(Layer=np.arange(1,10))
-    else:
+    elif return_type.lower() in dataSList:
         interp_data = xr.Dataset(daDict)
         print('Done with interpolation, getting global attrs')
         common_attrs = {}
@@ -323,11 +396,38 @@ def layer_interp(points, grid, layers=None, method='nearest', return_type='dataa
             else:
                 common_attrs = {k: v for k, v in common_attrs.items() if k in data_array.attrs and data_array.attrs[k] == v}
         interp_data.attrs.update(common_attrs)
+    else:
+        print("{} is not a valid input for return_type. Please set return_type to either 'dataarray' or 'dataset'".format(return_type))
+        return
+
+    if export_dir is None:
+        pass
+    else:
+        w4h.export_grids(grid_data=interp_data, out_path=export_dir, file_id='',filetype='tif', variable_sep=True, date_stamp=True)
+        print('Exported to {}'.format(export_dir))
 
     return interp_data
 
 #Optional, combine dataset
 def combine_dataset(layer_dataset, surface_elev, bedrock_elev, layer_thick):
+    """Function to combine xarray datasets or datarrays into a single xr.Dataset. Useful to add surface, bedrock, layer thick, and layer datasets all into one variable, for pickling, for example.
+
+    Parameters
+    ----------
+    layer_dataset : xr.DataArray 
+        DataArray contining all the interpolated layer information.
+    surface_elev : xr.DataArray
+        DataArray containing surface elevation data
+    bedrock_elev : xr.DataArray
+        DataArray containing bedrock elevation data
+    layer_thick : xr.DataArray
+        DataArray containing the layer thickness at each point in the model grid
+
+    Returns
+    -------
+    xr.Dataset
+        Dataset with all input arrays set to different variables within the dataset.
+    """
     
     daDict = {}
     daDict['Layers'] = layer_dataset
