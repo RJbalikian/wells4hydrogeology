@@ -14,13 +14,13 @@ Required inputs include:
 
 ## master_notebook contains an interactive jupyter notebook with all the steps for running the main body of the script
 
-## lib folder contains all scripts with functions used
+## w4h folder contains all scripts with functions used
 - readData: functions for reading in various files
 - mapping: functions for mapping or performing geospatial analysis
 - cleanData: functions for cleaning the data
 - classify: functions for classifying the data
 
-## res folder contains all the files that are read in/used by the scripts
+## resources folder contains all the files that are read in/used by the scripts
 - ISGS_HEADER_yyyy-mm-dd.TXT: tabular data exported from ISGS oracle database containing "header" information (i.e., metadata) about all the wells
 - ISGS_DOWNHOLE_DATA_yyyy-mm-dd.TXT: tabular data exported from ISGS oracle database containing geologic information about wells in the state
 - xyzData_yyyy-mm-dd.csv: most recent update of statewide wells with API, Latitude, Longitude, and surface elevation extracted from statewide lidar topography
