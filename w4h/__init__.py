@@ -14,11 +14,11 @@ from w4h.classify import (specific_define,
                           get_unique_wells,
                           sort_dataframe)
 
-from w4h.clean import (removeNonlocatedData, 
-                       removenotopo, 
-                       dropnodepth, 
-                       dropbaddepth, 
-                       dropnoformation)
+from w4h.clean import (remove_nonlocated, 
+                       remove_no_topo, 
+                       drop_no_depth, 
+                       drop_bad_depth, 
+                       drop_no_formation)
 
 from w4h.export import (export_dataframe,
                         export_grids)
@@ -71,11 +71,11 @@ __all__=(
         'merge_lithologies', 
         'get_unique_wells',
         'sort_dataframe',
-         'removeNonlocatedData', 
-         'removenotopo', 
-         'dropnodepth', 
-         'dropbaddepth', 
-         'dropnoformation',
+         'remove_nonlocated', 
+         'remove_no_topo', 
+         'drop_no_depth', 
+         'drop_bad_depth', 
+         'drop_no_formation',
         'export_dataframe',
         'export_grids',
          'get_layer_depths',
