@@ -42,17 +42,16 @@ from w4h.mapping import (read_study_area,
                          alignRasters,
                          get_drift_thick)
 
-from w4h.read import (getCurrentDate,
-                      findMostRecentFiles,
-                      filesSetup,
-                      readRawTxtData,
-                      readXYZData,
-                      get_resource_path,
+from w4h.read import (get_current_date,
+                      get_most_recent,
+                      file_setup,
+                      read_raw_txt,
+                      read_xyz,
                       read_dict,
-                      defineDataTypes,
-                      searchTermFilePaths,
+                      define_dtypes,
+                      get_search_terms,
                       read_dictionary_terms,
-                      readLithologies)
+                      read_lithologies)
 
 __all__=(
         'classify', 
@@ -95,16 +94,15 @@ __all__=(
         'read_grid',
         'alignRasters',
         'get_drift_thick',
-         'getCurrentDate',
-         'findMostRecentFiles',
-         'filesSetup',
-         'readRawTxtData',
-         'readXYZData',
-         'get_resource_path',
+         'get_current_date',
+         'get_most_recent',
+         'file_setup',
+         'read_raw_txt',
+         'read_xyz',
          'read_dict',
-         'defineDataTypes',
-         'searchTermFilePaths',
+         'define_dtypes',
+         'get_search_terms',
          'read_dictionary_terms',
-         'readLithologies')
+         'read_lithologies')
 
 __author__='Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski'
