@@ -1,7 +1,7 @@
 #__init__.py
 """This module contains all the functions needed for getting 9 layers of geology"""
 
-from w4h import classify, clean, export, layers, mapping, read
+#from w4h import classify, clean, export, layers, mapping, read
 
 from w4h.classify import (specific_define, 
                           split_defined, 
@@ -54,12 +54,6 @@ from w4h.read import (get_current_date,
                       read_lithologies)
 
 __all__=(
-        'classify', 
-         'clean', 
-         'export', 
-         'layers',
-         'mapping',
-         'read',
         'specific_define', 
         'split_defined', 
         'start_define', 
