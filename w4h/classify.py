@@ -1,7 +1,10 @@
+import datetime
+import logging
+
 import pandas as pd
 import numpy as np
-import datetime
 
+from w4h import logger
 #The following flags are used to mark the classification method:
 #- 0: Not classified
 #- 1: Specific Search Term Match
@@ -12,7 +15,8 @@ import datetime
 #- Top of well?
 
 #Define records with full search term
-def specific_define(df, terms_df, description_col='FORMATION', terms_col='FORMATION', verbose=False):
+@logger
+def specific_define(df, terms_df, description_col='FORMATION', terms_col='FORMATION', verbose=False, log=False):
     """Function to classify terms that have been specifically defined in the terms_df.
 
     Parameters
@@ -59,7 +63,8 @@ def specific_define(df, terms_df, description_col='FORMATION', terms_col='FORMAT
 
     return df_Interps
 
-def split_defined(df, classification_col='CLASS_FLAG', verbose=False):
+@logger
+def split_defined(df, classification_col='CLASS_FLAG', verbose=False, log=False):
     """Function to split dataframe with well descriptions into two dataframes based on whether a row has been classified.
 
     Parameters
@@ -70,6 +75,8 @@ def split_defined(df, classification_col='CLASS_FLAG', verbose=False):
         Name of column containing the classification flag, by default 'CLASS_FLAG'
     verbose : bool, default = False
         Whether to print results, by default False
+    log : bool, default = False
+        Whether to log results to log file
 
     Returns
     -------
@@ -85,7 +92,8 @@ def split_defined(df, classification_col='CLASS_FLAG', verbose=False):
     return classifedDF, searchDF
 
 #Classify downhole data by the initial substring
-def start_define(df, terms_df, description_col='FORMATION', terms_col='FORMATION', verbose=False):
+@logger
+def start_define(df, terms_df, description_col='FORMATION', terms_col='FORMATION', verbose=False, log=True):
     """Function to classify descriptions according to starting substring. 
 
     Parameters
@@ -100,6 +108,8 @@ def start_define(df, terms_df, description_col='FORMATION', terms_col='FORMATION
         Name of column in terms_df containing startswith substring to match with description_col, by default 'FORMATION'
     verbose : bool, default = False
         Whether to print out results, by default False
+    log : bool, default = True
+        Whether to log results to log file
 
     Returns
     -------
@@ -146,7 +156,8 @@ def remerge_data(classifieddf, searchdf):
     return remergeDF
 
 #Define well intervals by depth
-def depth_define(dfIN, top_col='TOP', thresh=550.0, verbose=False):
+@logger
+def depth_define(dfIN, top_col='TOP', thresh=550.0, verbose=False, log=True):
     """Function to define all intervals lower than thresh as bedrock
 
     Parameters
@@ -159,6 +170,8 @@ def depth_define(dfIN, top_col='TOP', thresh=550.0, verbose=False):
         Depth (in units used in dfIN['top_col']) below which all intervals will be classified as bedrock, by default 550.0.
     verbose : bool, default = False
         Whether to print results, by default False
+    log : bool, default = True
+        Whether to log results to log file
 
     Returns
     -------
@@ -272,7 +285,8 @@ def merge_lithologies(df, targinterps_df, target_col='TARGET', target_class='boo
     return df_targ
 
 #Function to get unique wells
-def get_unique_wells(df, wellid_col='API_NUMBER'):
+@logger
+def get_unique_wells(df, wellid_col='API_NUMBER', verbose=False, log=False):
     """Gets unique wells as a dataframe based on a given column name.
 
     Parameters
@@ -281,6 +295,8 @@ def get_unique_wells(df, wellid_col='API_NUMBER'):
         Dataframe containing all wells and/or well intervals of interest
     wellid_col : str, default="API_NUMBER"
         Name of column in df containing a unique identifier for each well, by default 'API_NUMBER'. .unique() will be run on this column to get the unique values.
+    log : bool, default = False
+        Whether to log results to log file
 
     Returns
     -------
@@ -290,7 +306,8 @@ def get_unique_wells(df, wellid_col='API_NUMBER'):
     #Get Unique well APIs
     uniqueWells = df[wellid_col].unique()
     wellsDF = pd.DataFrame(uniqueWells)
-    print('Number of unique wells in downholeData: '+str(wellsDF.shape[0]))
+    if verbose:
+        print('Number of unique wells in downholeData: '+str(wellsDF.shape[0]))
     wellsDF.columns = ['UNIQUE_ID']
     
     return wellsDF

@@ -6,6 +6,8 @@ import os
 import json
 repoDir = pathlib.Path(os.getcwd())
 
+from w4h import logger
+
 # Gets the current date for use with in code
 def get_current_date():
     """ Gets the current date to help with finding the most recent file
@@ -62,7 +64,8 @@ def get_most_recent(dir=str(repoDir)+'/resources', glob_pattern='*', verbose=Tru
     return mostRecentFile
 
 #Function to setup files of interest
-def file_setup(db_dir, metadata_dir=None, xyz_dir=None, data_pattern='*ISGS_DOWNHOLE_DATA*.txt', metadata_pattern='*ISGS_HEADER*.txt', xyz_pattern= '*xyzData*', verbose=False):
+@logger
+def file_setup(db_dir, metadata_dir=None, xyz_dir=None, data_pattern='*ISGS_DOWNHOLE_DATA*.txt', metadata_pattern='*ISGS_HEADER*.txt', xyz_pattern= '*xyzData*', out_dir=None, verbose=False, log=True):
     """Function to setup files, assuming data, metadata, and elevation/location are in separate files (there should be one "key"/identifying column consistent across all files to join/merge them later)
 
     This function may not be useful if files are organized differently than this structure. If that is the case, it is recommended to use the get_most_recent() function for each individual file needed.
@@ -83,11 +86,13 @@ def file_setup(db_dir, metadata_dir=None, xyz_dir=None, data_pattern='*ISGS_DOWN
         Pattern used by pathlib.glob() to get the most recent elevation/location file, by default '*xyzData*'
     verbose : bool, default = False
         Whether to print name of files to terminal, by default True
+    log : bool, default = True
+        Whether to log inputs and outputs to log file.
 
     Returns
     -------
-    _type_
-        _description_
+    tuple
+        Tuple with (well_data, metadata, xyz_location_data)
     """
     #Define  filepath variables to be used later for reading/writing files
     raw_directory = pathlib.Path(db_dir)
@@ -121,7 +126,8 @@ def file_setup(db_dir, metadata_dir=None, xyz_dir=None, data_pattern='*ISGS_DOWN
     return downholeDataPATH, headerDataPATH, xyzInPATH
 
 #Read raw data by text
-def read_raw_txt(raw_dir, data_filename, metadata_filename, data_cols=None, metadata_cols=None, x_col='LONGITUDE', ycol='LATITUDE', id_col='API_NUMBER', encoding='latin-1', verbose=False):
+@logger
+def read_raw_txt(raw_dir, data_filename, metadata_filename, data_cols=None, metadata_cols=None, x_col='LONGITUDE', ycol='LATITUDE', id_col='API_NUMBER', encoding='latin-1', verbose=False, log=False):
     """Easy function to read raw .txt files output from (for example), an Access database
 
     Parameters
@@ -146,6 +152,8 @@ def read_raw_txt(raw_dir, data_filename, metadata_filename, data_cols=None, meta
         Encoding of the data in the input files, by default 'latin-1'
     verbose : bool, default = False
         Whether to print the number of rows in the input columns, by default False
+    log : bool, default = False
+        Whether to log inputs and outputs to log file.
 
     Returns
     -------
@@ -186,7 +194,8 @@ def read_raw_txt(raw_dir, data_filename, metadata_filename, data_cols=None, meta
     return downholeDataIN, headerDataIN
 
 #Read file with xyz data
-def read_xyz(rawdir, xyzfile, dtypes=None, verbose=False):
+@logger
+def read_xyz(rawdir, xyzfile, dtypes=None, verbose=False, log=False):
     """Function to read file containing xyz data (elevation/location)
 
     Parameters
@@ -199,6 +208,8 @@ def read_xyz(rawdir, xyzfile, dtypes=None, verbose=False):
         Dictionary containing the datatypes for the columns int he xyz file. If None, {'ID':np.uint32,'API_NUMBER':np.uint64,'LATITUDE':np.float64,'LONGITUDE':np.float64,'ELEV_FT':np.float64}, by default None
     verbose : bool, default = False
         Whether to print the number of xyz records to the terminal, by default False
+    log : bool, default = False
+        Whether to log inputs and outputs to log file.
 
     Returns
     -------
@@ -262,7 +273,8 @@ def read_dict(file, keytype='np'):
     return jsDict
 
 #Define the datatypes for a dataframe
-def define_dtypes(df, dtypes=None, dtype_file=None, dtype_dir=str(repoDir)+'/resources/'):
+@logger
+def define_dtypes(df, dtypes=None, dtype_file=None, dtype_dir=str(repoDir)+'/resources/', log=False):
     """Function to define datatypes of a dataframe, especially with file-indicated dyptes
 
     Parameters
@@ -275,6 +287,8 @@ def define_dtypes(df, dtypes=None, dtype_file=None, dtype_dir=str(repoDir)+'/res
         Filename of file containing datatypes (txt file in dictionary format). If None, dtypes must be defined, by default None.
     dtype_dir : str or pathlib.Path obejct, default = str(repoDir)+'/resources/'
         Directory containing dtype_file, by default 
+    log : bool, default = False
+        Whether to log inputs and outputs to log file.
 
     Returns
     -------
@@ -303,7 +317,8 @@ def define_dtypes(df, dtypes=None, dtype_file=None, dtype_dir=str(repoDir)+'/res
     return dfout
 
 #Define the search term filepaths
-def get_search_terms(spec_dir=str(repoDir)+'/resources/', specStartPattern='*SearchTerms-Specific*', start_dir=None, startGlobPattern = '*SearchTerms-Start*'):
+@logger
+def get_search_terms(spec_dir=str(repoDir)+'/resources/', specStartPattern='*SearchTerms-Specific*', start_dir=None, startGlobPattern = '*SearchTerms-Start*', log=True):
     """Read in dictionary files for downhole data
 
     Parameters
@@ -316,6 +331,8 @@ def get_search_terms(spec_dir=str(repoDir)+'/resources/', specStartPattern='*Sea
         Directory where the file containing the start search terms is located, by default None
     startGlobPattern : str, optional
         Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default '*SearchTerms-Start*'
+    log : bool, default = True
+        Whether to log inputs and outputs to log file.        
 
     Returns
     -------
@@ -335,7 +352,8 @@ def get_search_terms(spec_dir=str(repoDir)+'/resources/', specStartPattern='*Sea
     return specTermsPath, startTermsPath
 
 #Read files into pandas dataframes
-def read_dictionary_terms(dict_file, cols=None, col_types=None, dictionary_type=None, class_flag=1, rem_extra_cols=True):
+@logger
+def read_dictionary_terms(dict_file, cols=None, col_types=None, dictionary_type=None, class_flag=1, rem_extra_cols=True, log=True):
     """Function to read dictionary terms from file into pandas dataframe
 
     Parameters
@@ -355,6 +373,8 @@ def read_dictionary_terms(dict_file, cols=None, col_types=None, dictionary_type=
         Classification flag to be used if dictionary_type is None and cannot be otherwise determined, by default 1
     rem_extra_cols : bool, default = True
         Whether to remove the extra columns from the input file after it is read in as a pandas dataframe, by default True
+    log : bool, default = False
+        Whether to log inputs and outputs to log file.
 
     Returns
     -------
@@ -428,7 +448,8 @@ def read_dictionary_terms(dict_file, cols=None, col_types=None, dictionary_type=
     return dict_terms
 
 #Function to read lithology file into pandas dataframe
-def read_lithologies(litho_dir=None, lith_file=None, interp_col='LITHOLOGY', target_col='CODE', use_cols=None):
+@logger
+def read_lithologies(litho_dir=None, lith_file=None, interp_col='LITHOLOGY', target_col='CODE', use_cols=None, log=True):
     """Function to read lithology file into pandas dataframe
 
     Parameters
@@ -443,6 +464,9 @@ def read_lithologies(litho_dir=None, lith_file=None, interp_col='LITHOLOGY', tar
         Column to be used as target code
     use_cols : list, default = None
         Which columns to use when reading in dataframe. If None, defaults to ['LITHOLOGY', 'CODE'].
+    log : bool, default = True
+        Whether to log inputs and outputs to log file.
+
     Returns
     -------
     pandas.DataFrame

@@ -71,6 +71,8 @@ from w4h.read import (get_current_date,
                       read_dictionary_terms,
                       read_lithologies)
 
+from w4h.utilities import(logger)
+
 __all__=(
         'specific_define', 
         'split_defined', 
@@ -115,6 +117,7 @@ __all__=(
          'define_dtypes',
          'get_search_terms',
          'read_dictionary_terms',
-         'read_lithologies')
+         'read_lithologies',
+        'logger')
 
 __author__='Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski'

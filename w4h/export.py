@@ -3,8 +3,11 @@ import datetime
 import pathlib
 import xarray as xr
 
-#Export data 
-def export_dataframe(df, procdir, filename, date_stamp=True):
+from w4h import logger
+
+#Export data
+@logger
+def export_dataframe(df, procdir, filename, date_stamp=True, log=True):
     """Function to export dataframes
 
     Parameters
@@ -17,6 +20,8 @@ def export_dataframe(df, procdir, filename, date_stamp=True):
         Filename(s) of output files
     date_stamp : bool, default=True
         Whether to include a datestamp in the filename. If true, file ends with _yyyy-mm-dd.csv of current date, by default True.
+    log : bool, default = True
+        Whether to log inputs and outputs to log file.        
     """
 
     if date_stamp:
@@ -46,7 +51,8 @@ def export_dataframe(df, procdir, filename, date_stamp=True):
             print('Exported '+fname+todayDateStr+'.csv')
 
 #Export (rio)xarray dataarrays and datasets
-def export_grids(grid_data, out_path, file_id='',filetype='tif', variable_sep=True, date_stamp=True):
+@logger
+def export_grids(grid_data, out_path, file_id='',filetype='tif', variable_sep=True, date_stamp=True, log=True):
     """Function to export grids to files.
 
     Parameters
@@ -63,6 +69,8 @@ def export_grids(grid_data, out_path, file_id='',filetype='tif', variable_sep=Tr
         If grid_data is an xarray Dataset, this will export each variable in the dataset as a separate file, including the variable name in the filename, by default False
     date_stamp : bool, optional
         Whether to include a date stamp in the file name., by default True
+    log : bool, default = True
+        Whether to log inputs and outputs to log file.        
     """
 
     #Initialize lists to determine which filetype will be used for export

@@ -1,8 +1,11 @@
 import numpy as np
 import pandas as pd
 
+from w4h import logger
+
 #This function removes all data from the downholeData table where there is no location information (in the headerData table). This includes elevation info too
-def remove_nonlocated(data_DF, metadata_DF, verbose=False):
+@logger
+def remove_nonlocated(data_DF, metadata_DF, verbose=False, log=True):
     """Function to remove wells and well intervals where there is no location information
 
     Parameters
@@ -11,6 +14,8 @@ def remove_nonlocated(data_DF, metadata_DF, verbose=False):
         Pandas dataframe containing well descriptions
     metadata_DF : pandas.DataFrame
         Pandas dataframe containing metadata, including well locations (e.g., Latitude/Longitude)
+    log : bool, default = True
+        Whether to log inputs and outputs to log file.
 
     Returns
     -------
@@ -35,7 +40,8 @@ def remove_nonlocated(data_DF, metadata_DF, verbose=False):
 
 #Function to remove data (intended for headerData) without surface topography information
 ##THIS ASSUMES AND SHOULD ONLY BE RUN AFTER ALL DESIRED SURFACE TOPO DATASETS HAVE BEEN MERGED/ADDED
-def remove_no_topo(df, elev_column='ELEV_FT', no_data_val='', verbose=False):
+@logger
+def remove_no_topo(df, elev_column='ELEV_FT', no_data_val='', verbose=False, log=True):
     """Function to remove wells that do not have topography data (needed for layer selection later).
 
     This function is intended to be run on the metadata table after elevations have attempted to been added.
@@ -44,8 +50,14 @@ def remove_no_topo(df, elev_column='ELEV_FT', no_data_val='', verbose=False):
     ----------
     df : pandas.DataFrame
         Pandas dataframe containing elevation information.
+    elev_column : str
+        Name of elevation column
+    no_data_val : any
+        Value in dataset that indicates no data is present (replaced with np.nan)
     verbose : bool, optional
         Whether to print outputs, by default True
+    log : bool, default = True
+        Whether to log inputs and outputs to log file.
 
     Returns
     -------
@@ -66,7 +78,30 @@ def remove_no_topo(df, elev_column='ELEV_FT', no_data_val='', verbose=False):
     return df
 
 #This function drops all records in the downholedata with no depth information (either top or bottom depth of well interval)
-def drop_no_depth(df, top_col='TOP', bottom_col='BOTTOM', no_data_val='', verbose=False):
+@logger
+def drop_no_depth(df, top_col='TOP', bottom_col='BOTTOM', no_data_val='', verbose=False, log=True):
+    """Function to drop well intervals with no depth information
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe containing well descriptions
+    top_col : str, optional
+        Name of column containing information on the top of the well intervals, by default 'TOP'
+    bottom_col : str, optional
+        Name of column containing information on the bottom of the well intervals, by default 'BOTTOM'
+    no_data_val : any, optional
+        No data value in the input data, used by this function to indicate that depth data is not there, to be replaced by np.nan, by default ''
+    verbose : bool, optional
+        Whether to print results to console, by default False
+    log : bool, optional
+        Whether to log results to log file, by default True
+
+    Returns
+    -------
+    df : pandas.DataFrame
+        Dataframe with depths dropped
+    """
     #Replace empty cells in top and bottom columns with nan
     df[top_col] = df[top_col].replace(no_data_val, np.nan)
     df[bottom_col] = df[bottom_col].replace(no_data_val, np.nan)
@@ -87,7 +122,8 @@ def drop_no_depth(df, top_col='TOP', bottom_col='BOTTOM', no_data_val='', verbos
     return df
 
 #This function drops all records in downholeData with bad depth information (where the bottom of a record is nearer to the surface than the top)
-def drop_bad_depth(df, top_col='TOP', bottom_col='BOTTOM', depth_type='depth', verbose=False):
+@logger
+def drop_bad_depth(df, top_col='TOP', bottom_col='BOTTOM', depth_type='depth', verbose=False, log=True):
     """Function to remove all records in the dataframe with well interpretations where the depth information is bad (i.e., where the bottom of the record is neerer to the surface than the top)
 
     Parameters
@@ -102,6 +138,8 @@ def drop_bad_depth(df, top_col='TOP', bottom_col='BOTTOM', depth_type='depth', v
         Whether the table is organized by depth or elevation. If depth, the top column will have smaller values than the bottom column. If elevation, the top column will have higher values than the bottom column, by default 'depth'
     verbose : bool, default = False
         Whether to print results to the terminal, by default False
+    log : bool, optional
+        Whether to log results to log file, by default True
 
     Returns
     -------
@@ -124,7 +162,8 @@ def drop_bad_depth(df, top_col='TOP', bottom_col='BOTTOM', depth_type='depth', v
     return df
 
 #This function drops all records in downholeData with no formation in formation in the description field
-def drop_no_formation(df, description_col='FORMATION', no_data_val='', verbose=False):
+@logger
+def drop_no_formation(df, description_col='FORMATION', no_data_val='', verbose=False, log=True):
     """Function that drops all records in the dataframe containing the well descriptions where no description is given.
 
     Parameters
@@ -137,7 +176,9 @@ def drop_no_formation(df, description_col='FORMATION', no_data_val='', verbose=F
         The value expected if the column is empty or there is no data. These will be replaced by np.nan before being removed, by default ''
     verbose : bool, optional
         Whether to print the results of this step to the terminal, by default False
-
+    log : bool, optional
+        Whether to log results to log file, by default True
+        
     Returns
     -------
     pandas.DataFrame

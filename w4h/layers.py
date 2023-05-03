@@ -11,8 +11,11 @@ from shapely.geometry import Point
 from scipy import interpolate
 
 import w4h
+from w4h import logger
 
-def merge_tables(data_df, header_df, data_cols=None, header_cols=None, on='API_NUMBER', how='inner', auto_pick_cols=False, drop_duplicate_cols=True):
+#Function to Merge tables
+@logger
+def merge_tables(data_df, header_df, data_cols=None, header_cols=None, on='API_NUMBER', how='inner', auto_pick_cols=False, drop_duplicate_cols=True, log=False):
     """Function to merge tables, intended for merging metadata table with data table
 
     Parameters
@@ -33,6 +36,8 @@ def merge_tables(data_df, header_df, data_cols=None, header_cols=None, on='API_N
         Whether to autopick the columns from the metadata table. If True, the following column names are kept:['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'BEDROCK_ELEV_FT', 'SURFACE_ELEV_FT', 'BEDROCK_DEPTH_FT', 'LAYER_THICK_FT'], by default False
     drop_duplicate_cols : bool, optional
         If True, drops duplicate columns from the tables so that columns do not get renamed upon merge, by default True
+    log : bool, default = False
+        Whether to log inputs and outputs to log file.
 
     Returns
     -------
@@ -72,7 +77,9 @@ def merge_tables(data_df, header_df, data_cols=None, header_cols=None, on='API_N
     mergedTable = pd.merge(left=leftTable_join, right=rightTable_join, how=how, on=on)
     return mergedTable
 
-def get_layer_depths(well_metadata, no_layers=9):
+#Get layer depths of each layer, based on precalculated layer thickness
+@logger
+def get_layer_depths(well_metadata, no_layers=9, log=False):
     """Function to calculate depths and elevations of each model layer at each well based on surface elevation, bedrock elevation, and number of layers/layer thickness
 
     Parameters
@@ -81,6 +88,8 @@ def get_layer_depths(well_metadata, no_layers=9):
         Dataframe containing well metdata
     no_layers : int, default=9
         Number of layers. This should correlate with get_drift_thick() input parameter, if drift thickness was calculated using that function, by default 9.
+    log : bool, default = False
+        Whether to log inputs and outputs to log file.
 
     Returns
     -------
@@ -105,7 +114,8 @@ def get_layer_depths(well_metadata, no_layers=9):
     return well_metadata
 
 #Function to export the result of thickness of target sediments in each layer
-def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_prefix='', depth_top_col='TOP', depth_bot_col='BOTTOM'):
+@logger
+def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_prefix='', depth_top_col='TOP', depth_bot_col='BOTTOM', log=True):
     """Function to calculate thickness of target material in each layer at each well point
 
     Parameters
@@ -125,7 +135,9 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
         Name of column containing data for depth to top of described well intervals
     depth_bot_col : str, default='BOTTOM'
         Name of column containing data for depth to bottom of described well intervals
-
+    log : bool, default = True
+        Whether to log inputs and outputs to log file.
+    
     Returns
     -------
     res_df or res : geopandas.geodataframe
@@ -239,7 +251,8 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
 
 
 #Interpolate layers to model grid
-def layer_interp(points, grid, layers=None, method='nearest', return_type='dataarray', export_dir=None, targetcol='TARG_THICK_PER', lyrcol='LAYER', xcol=None, ycol=None, xcoord='x', ycoord='y', **kwargs):
+@logger
+def layer_interp(points, grid, layers=None, method='nearest', return_type='dataarray', export_dir=None, targetcol='TARG_THICK_PER', lyrcol='LAYER', xcol=None, ycol=None, xcoord='x', ycoord='y', log=True, **kwargs):
     """Function to interpolate results, going from points to grid data. Uses scipy.interpolate module.
 
     Parameters
@@ -268,6 +281,8 @@ def layer_interp(points, grid, layers=None, method='nearest', return_type='dataa
         Name of x coordinate in grid, used to extract x values of grid, by default 'x'
     ycoord : str, default='y'
         Name of y coordinate in grid, used to extract x values of grid, by default 'y'
+    log : bool, default = True
+        Whether to log inputs and outputs to log file.
     **kwargs
         Keyword arguments to be read directly into whichever scipy.interpolate function is designated by the method parameter.
 
@@ -409,7 +424,8 @@ def layer_interp(points, grid, layers=None, method='nearest', return_type='dataa
     return interp_data
 
 #Optional, combine dataset
-def combine_dataset(layer_dataset, surface_elev, bedrock_elev, layer_thick):
+@logger
+def combine_dataset(layer_dataset, surface_elev, bedrock_elev, layer_thick, log=False):
     """Function to combine xarray datasets or datarrays into a single xr.Dataset. Useful to add surface, bedrock, layer thick, and layer datasets all into one variable, for pickling, for example.
 
     Parameters
@@ -422,6 +438,8 @@ def combine_dataset(layer_dataset, surface_elev, bedrock_elev, layer_thick):
         DataArray containing bedrock elevation data
     layer_thick : xr.DataArray
         DataArray containing the layer thickness at each point in the model grid
+    log : bool, default = False
+        Whether to log inputs and outputs to log file.
 
     Returns
     -------
