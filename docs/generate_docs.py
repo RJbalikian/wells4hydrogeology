@@ -27,7 +27,11 @@ src_path = pathlib.Path('./w4h')
 trg_path = src_path.parent # gets the parent of the folder 
 
 for each_file in src_path.glob('*.*'): # grabs all files
-    each_file.rename(trg_path.joinpath(each_file.name)) # moves to parent folder.
+    destFilePath = trg_path.joinpath(each_file.name)
+    if destFilePath.is_file():
+        os.remove(destFilePath)
+    each_file.rename(destFilePath) # moves to parent folder.
+        
 
 os.rmdir('./w4h')
 

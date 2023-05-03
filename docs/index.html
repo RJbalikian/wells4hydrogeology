@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>w4h API documentation</title>
-<meta name="description" content="This module contains all the functions needed for getting 9 layers of geology" />
+<meta name="description" content="The Wells 4 Hydrogeology (w4h) Python package is a package designed jointly by the Illinois State Geological Survey and Illinois State Water Survey …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,13 +22,43 @@
 <h1 class="title">Package <code>w4h</code></h1>
 </header>
 <section id="section-intro">
-<p>This module contains all the functions needed for getting 9 layers of geology</p>
+<p>The Wells 4 Hydrogeology (w4h) Python package is a package designed jointly by the Illinois State Geological Survey and Illinois State Water Survey.</p>
+<p>It is designed to read in geology data from wells and create a layered, gridded hydrogeologic model of a study region, all within a python environment, automating and performing tasks often carried out in a dedicated GIS software.</p>
+<p>The w4h package contains all the functions needed for getting N layers of a hydrogeology grid.
+Though the source code is split into separate modules, all functions are designed to be accessed directly from the w4h module (example: w4h.read_study_area())</p>
+<p>The w4h module is designed to be flexible and customizable, allowing various kinds of data to be read in, with many different kinds of initial structures.</p>
+<p>The w4h module has the following dependencies:
+- numpy
+- pandas
+- rioxarray (and therefore xarray)
+- geopandas
+- matplotlib
+- scipy
+- owslib</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">#__init__.py
-&#34;&#34;&#34;This module contains all the functions needed for getting 9 layers of geology&#34;&#34;&#34;
+&#34;&#34;&#34;The Wells 4 Hydrogeology (w4h) Python package is a package designed jointly by the Illinois State Geological Survey and Illinois State Water Survey.
+
+It is designed to read in geology data from wells and create a layered, gridded hydrogeologic model of a study region, all within a python environment, automating and performing tasks often carried out in a dedicated GIS software.
+
+The w4h package contains all the functions needed for getting N layers of a hydrogeology grid. 
+Though the source code is split into separate modules, all functions are designed to be accessed directly from the w4h module (example: w4h.read_study_area())
+
+The w4h module is designed to be flexible and customizable, allowing various kinds of data to be read in, with many different kinds of initial structures.
+
+The w4h module has the following dependencies:
+- numpy
+- pandas
+- rioxarray (and therefore xarray)
+- geopandas
+- matplotlib
+- scipy
+- owslib
+
+&#34;&#34;&#34;
 
 #from w4h import classify, clean, export, layers, mapping, read
 
