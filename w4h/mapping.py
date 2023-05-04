@@ -41,22 +41,29 @@ def read_study_area(studyareapath, crs=''):
 
 
 def coords2Geometry(df, xCol='LONGITUDE', yCol='LATITUDE', zCol='ELEV_FT', crs='EPSG:4269', useZ=False):
-    '''
-    
-    Adds geometry to points with xy coordinates in the specified coordinate reference system.
+    """Adds geometry to points with xy coordinates in the specified coordinate reference system.
 
-            Parameters:
-                    df (pandas dataframe): a Pandas dataframe containing points
-                    xCol (str): Name of column holding x coordinate data in df
-                    yCol (str): Name of column holding y coordinate data in df
-                    zCol (str): Name of column holding z coordinate data in df
-                    crs (str): Name of crs used for geometry
-                    useZ (bool): Whether to use z column in calculation
+    Parameters
+    ----------
+    df : pandas.Dataframe
+        a Pandas dataframe containing points
+    xCol : str, default='LONGITUDE'
+        Name of column holding x coordinate data in df
+    yCol : str, default='LATITUDE'
+        Name of column holding y coordinate data in df
+    zCol : str, default='ELEV_FT'
+        Name of column holding z coordinate data in df
+    crs : str, default='EPSG:4269
+        Name of crs used for geometry
+    useZ : bool, default=False
+        Whether to use z column in calculation
 
-            Returns:
-                    gdf (geopandas dataframe): Geopandas dataframe with points and their geometry values
+    Returns
+    -------
+    gdf : geopandas.GeoDataFrame
+        Geopandas dataframe with points and their geometry values
 
-    '''
+    """
 
     ptCRS=crs
 
@@ -74,19 +81,22 @@ def coords2Geometry(df, xCol='LONGITUDE', yCol='LATITUDE', zCol='ELEV_FT', crs='
     return gdf
 
 def clipHeader2StudyArea(studyarea, headerdata, headerCRS='EPSG:4269'):
-    '''
-    
-    Clips dataframe to only include things within study area.
+    """Clips dataframe to only include things within study area.
 
-            Parameters:
-                    studyarea (geopandas dataframe): Inputs study area polygon
-                    headerdata (geopandas dataframe): Inputs point data
-                    headerCRS (str): Inputs crs to project study area to
-            
-            Returns:
-                    headerDataClip (geopandas dataframe): Contains only points within the study area
+    Parameters
+    ----------
+            studyarea : geopandas.GeoDataFrame
+                Inputs study area polygon
+            headerdata : geopandas.GeoDataFrame
+                Inputs point data
+            headerCRS : str, default='EPSG:4269'
+                Inputs crs to project study area to
     
-    '''
+    Returns:
+            headerDataClip : geopandas.GeoDataFrame
+                Contains only points within the study area
+    
+    """
     studyArea_4269 = studyarea.to_crs(headerCRS).copy()
     
     headerDataClip = gpd.clip(headerdata, studyArea_4269) #Data from table is in EPSG:4269, easier to just project study area to ensure data fit
@@ -143,39 +153,47 @@ def sample_raster_points(raster, points_df, xCol='LONGITUDE', yCol='LATITUDE', n
     return points_df
 
 def addElevtoHeader(xyz, header):
-    '''
-    
-    Adds elevation to header data file.
+    """Adds elevation to header data file.
 
-            Parameters:
-                    xyz (pandas dataframe): Contains elevation for the points
-                    header (pandas dataframe): Header data file
-                
-            Returns:
-                    headerXYZData (pandas dataframe): Header dataset merged to get elevation values
-    
-    '''
+    Parameters
+    ----------
+    xyz : pandas.Dataframe
+        Contains elevation for the points
+    header : pandas dataframe
+        Header data file
+
+    Returns
+    -------
+    headerXYZData : pandas.Dataframe
+        Header dataset merged to get elevation values
+
+    """
     headerXYZData = header.merge(xyz, how='left', on='API_NUMBER')
     headerXYZData.drop(['LATITUDE_x', 'LONGITUDE_x'], axis=1, inplace=True)
     headerXYZData.rename({'LATITUDE_y':'LATITUDE', 'LONGITUDE_y':'LONGITUDE'}, axis=1, inplace=True)
     return headerXYZData
 
 def readWCS(studyArea, wcs_url=lidarURL, res_x=30, res_y=30, **kwargs):
-    '''
+    """Reads a WebCoverageService from a url and returns a rioxarray dataset containing it.
+
+    Parameters
+    ----------
+    studyArea : geopandas.GeoDataFrame
+        Dataframe containing study area polygon
+    wcs_url : str, default=lidarURL
+    Represents the url for the WCS
+    res_x : int, default=30
+        Sets resolution for x axis
+    res_y : int, default=30
+        Sets resolution for y axis
     
-    Reads a WebCoverageService from a url and returns a rioxarray dataset containing it.
-
-            Parameters:
-                    studyArea (list): A list of integers representing a bounding box
-                    wcs_url (str): A string representing the url for the WCS
-                    res_x (int): An integer to set resolution for x axis
-                    res_y (int): An integer to set resolution for y axis
-            
-            Returns:
-                    wcsData_rxr (xarray dataarray): A xarray dataarray holding the image from the WebCoverageService
+    Returns
+    -------
+    wcsData_rxr : xarray.DataArray
+        A xarray dataarray holding the image from the WebCoverageService
 
 
-    '''
+    """
     #Drawn largely from: https://git.wur.nl/isric/soilgrids/soilgrids.notebooks/-/blob/master/01-WCS-basics.ipynb
     
     #30m DEM
@@ -269,21 +287,35 @@ def readWCS(studyArea, wcs_url=lidarURL, res_x=30, res_y=30, **kwargs):
     return wcsData_rxr
 
 def readWMS(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:None', wms_url=lidarURL, srs='EPSG:3857', clip_to_studyarea=True, bbox=[-9889002.615500,5134541.069716,-9737541.607038,5239029.627400],res_x=30, res_y=30, size_x=512, size_y=512, format='image/tiff', **kwargs):
-    '''
+    """
     Reads a WebMapService from a url and returns a rioxarray dataset containing it.
 
-            Parameters:
-                    study_area (list): A list of integers representing a bounding box
-                    layer_name (str): A string representing the layer name in the WMS
-                    wms_url (str): A string representing the url for the WMS
-                    res_x (int): An integer to set resolution for x axis
-                    res_y (int): An integer to set resolution for y axis
-                    size_x (int): An integer to set width of result
-                    size_y (int): An integer to set height of result
-            
-            Returns:
-                    wmsData_rxr (xarray dataarray): A xarray dataarray holding the image from the WebMapService
-    '''
+    Parameters
+    ----------
+    study_area : geopandas.GeoDataFrame
+        Dataframe containg study area polygon
+    layer_name : str, default='IL_Statewide_Lidar_DEM_WGS:None'
+        Represents the layer name in the WMS
+    wms_url : str, default=lidarURL
+        Represents the url for the WMS
+    srs : str, default='EPSG:3857'
+        Sets the srs
+    clip_to_studyarea : bool, default=True
+        Whether to clip to study area or not
+    res_x : int, default=30
+        Sets resolution for x axis
+    res_y : int, default=512
+        Sets resolution for y axis
+    size_x : int, default=512
+        Sets width of result
+    size_y : int, default=512
+        Sets height of result
+    
+    Returns
+    -------
+    wmsData_rxr : xarray.DataArray
+        Holds the image from the WebMapService
+    """
     from owslib.wms import WebMapService
     # Define WMS endpoint URL
     if 'wms_url' in kwargs:
@@ -367,20 +399,25 @@ def readWMS(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:None', wms_url=li
     return wmsData_rxr
 
 def clipGrid2StudyArea(studyArea, grid, studyAreacrs='', gridcrs=''):
-    '''
+    """Clips grid to study area.
+
+    Parameters
+    ----------
+    studyArea : geopandas.GeoDataFrame
+        inputs study area polygon
+    grid : xarray.DataArray
+        inputs grid array
+    studyAreacrs : str, default=''
+        inputs the coordinate reference system for the study area
+    gridcrs : str, default=''
+        inputs the coordinate reference system for the grid
     
-    Clips grid to study area.
+    Returns
+    -------
+    grid : xarray.DataArray
+        returns xarray containing grid clipped only to area within study area
 
-            Parameters:
-                    studyArea (geopandas dataframe): inputs study area polygon
-                    grid (xarray dataarray): inputs grid array
-                    studyAreacrs (str): inputs the coordinate reference system for the study area
-                    gridcrs (str): inputs the coordinate reference system for the grid
-            
-            Returns:
-                    grid (xarray dataarray): returns xarray containing grid clipped only to area within study area
-
-    '''
+    """
     
     if studyAreacrs=='':
         studyAreacrs=studyArea.crs
@@ -419,31 +456,31 @@ def clipGrid2StudyArea(studyArea, grid, studyAreacrs='', gridcrs=''):
 
 
 def read_model_grid(studyArea, gridpath, nodataval=0, read_grid=True, node_bySpace=False, clip2SA=True, studyAreacrs=None, gridcrs=None):
-    """_summary_
+    """Reads in model grid to xarray data array
 
     Parameters
     ----------
-    studyArea : _type_
-        _description_
-    gridpath : _type_
-        _description_
-    nodataval : int, optional
-        _description_, by default 0
-    readGrid : bool, optional
-        _description_, by default True
-    node_bySpace : bool, optional
-        _description_, by default False
-    clip2SA : bool, optional
-        _description_, by default True
-    studyAreacrs : str, optional
-        _description_, by default ''
-    gridcrs : str, optional
-        _description_, by default ''
+    studyArea : geopandas.GeoDataFrame
+        Dataframe containing study area polygon
+    gridpath : str
+        Path to model grid file
+    nodataval : int, default=0
+        value assigned to areas with no data
+    readGrid : bool, default=True
+        Whether function to either read grid or create grid
+    node_bySpace : bool, default=False
+        Denotes how to create grid
+    clip2SA : bool, default=True
+        Whether to clip grid to study area
+    studyAreacrs : str, default=None
+        Inputs study area crs
+    gridcrs : str, default=None
+        Inputs grid crs
 
     Returns
     -------
-    _type_
-        _description_
+    modelGrid : xarray.DataArray
+        Data array containing model grid
     """
     read_grid = True
     node_bySpace = False #False means by number of nodes
@@ -532,6 +569,34 @@ def read_model_grid(studyArea, gridpath, nodataval=0, read_grid=True, node_bySpa
     return modelGrid
 
 def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, studyArea='', clip2SA=True,  studyAreacrs=None, gridcrs=None, **kwargs):
+    """Reads in grid
+
+    Parameters
+    ----------
+    datapath : str, default=''
+        ontains data path to a grid file
+    grid_type : str, default='model'
+        Sets what type of grid to load in
+    nodataval : int, default=0
+        Sets the no data value of the grid
+    use_service : str, default=False
+        Sets which service the function uses
+    studyArea : geopandas.GeoDataFrame, default=''
+        Dataframe containing study area polygon
+    clip2SA : bool, default=True
+        If function clips grid to study area
+    studyAreacrs : str, default=None
+        Sets specific crs if current crs is not wanted
+    gridcrs : str, default=None
+        Sets crs to use if clipping to study area
+
+    Returns
+    -------
+    gridIN : xarray.DataArray
+        Returns grid
+    
+    """
+
     if grid_type=='model':
         if 'read_grid' in list(kwargs.keys()):
             rgrid = kwargs['read_grid']
@@ -574,7 +639,27 @@ def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, st
     return gridIN
 
 def alignRasters(unalignedGrids, modelgrid, nodataval=0):
+    """Reprojects two rasters to align their pixels
+
+    Parameters
+    ----------
+    unalignedGrids : list or xarray.DataArray
+        Contains a list of grids or one unaligned grid
+    modelgrid : xarray.DataArray
+        Contains model grid
+    nodataval : int, default=0
+        Sets value of no data pixels
+
+    Returns
+    -------
+    alignedGrids : list or xarray.DataArray
+        Contains aligned grids
+
     
+    
+    
+    """
+
     if type(unalignedGrids) is list:
         alignedGrids=[]
         for g in unalignedGrids:
@@ -601,21 +686,27 @@ def alignRasters(unalignedGrids, modelgrid, nodataval=0):
     return alignedGrids
 
 def get_drift_thick(surface, bedrock, noLayers=9, plotData=False):
-    '''
-    
-    Finds the distance from surface to bedrock and then divides by number of layers to get layer thickness.
+    """Finds the distance from surface to bedrock and then divides by number of layers to get layer thickness.
 
-            Parameters:
-                    surface (rioxarray dataarray): array holding surface elevation
-                    bedrock (rioxarray dataarray): array holding bedrock elevation
-                    noLayers (int): number of layers needed to calculate thickness for
-                    plotData (bool): tells function to either plot the data or not
+    Parameters
+    ----------
+    surface : rioxarray.DataArray
+        array holding surface elevation
+    bedrock : rioxarray.DataArray
+        array holding bedrock elevation
+    noLayers : int, default=9
+        number of layers needed to calculate thickness for
+    plotData : bool, default=False
+        tells function to either plot the data or not
 
-            Returns:
-                    driftThick (rioxarray dataarray): Contains data array containing depth to bedrock at each point
-                    layerThick (rioxarray dataarray): Contains data array with layer thickness at each point
-    
-    '''
+    Returns
+    -------
+    driftThick : rioxarray.DataArray
+        Contains data array containing depth to bedrock at each point
+    layerThick : rioxarray.DataArray
+        Contains data array with layer thickness at each point
+
+    """
     xr.set_options(keep_attrs=True)
 
     driftThick = surface - bedrock
