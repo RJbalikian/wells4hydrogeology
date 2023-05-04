@@ -521,7 +521,7 @@ def read_model_grid(study_area, gridpath, nodataval=0, read_grid=True, node_bysp
     if read_grid:
         modelGridIN = rxr.open_rasterio(gridpath)
 
-        file = w4h.get_resource_path('isws_crs.txt')
+        file = w4h.read.__get_resource_path('isws_crs.txt')
         iswsCRS = w4h.read_dict(file, keytype=None)
 
         if grid_crs is None:

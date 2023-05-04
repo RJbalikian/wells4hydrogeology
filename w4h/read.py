@@ -48,7 +48,6 @@ def get_most_recent(dir=str(repoDir)+'/resources', glob_pattern='*', verbose=Tru
     todayDateStr = str(todayDate)
 
     files = pathlib.Path(dir).rglob(glob_pattern) #Get all the files that fit the pattern
-
     fileDates = []
     for f in files: #Get the file dates from their file modification times
         fileDates.append(np.datetime64(datetime.datetime.fromtimestamp(os.path.getmtime(f))))
@@ -110,16 +109,16 @@ def file_setup(db_dir, metadata_dir=None, xyz_dir=None, data_pattern='*ISGS_DOWN
     else:
         xyz_dir=pathlib.Path(xyz_dir)
 
-    downholeDataFILE = get_most_recent(raw_directory, data_pattern)
-    headerDataFILE = get_most_recent(metadata_dir, metadata_pattern)
-    xyzInFILE = get_most_recent(xyz_dir,xyz_pattern)
+    downholeDataFILE = get_most_recent(raw_directory, data_pattern, verbose=verbose)
+    headerDataFILE = get_most_recent(metadata_dir, metadata_pattern, verbose=verbose)
+    xyzInFILE = get_most_recent(xyz_dir,xyz_pattern, verbose=verbose)
 
     downholeDataPATH = pathlib.Path(downholeDataFILE)
     headerDataPATH = pathlib.Path(headerDataFILE)
     xyzInPATH = pathlib.Path(xyzInFILE)
 
     if verbose:
-        print('Using the following files:\n')
+        print('Using the following files:')
         print('\t', downholeDataFILE)
         print('\t', headerDataFILE)
         print('\t', xyzInFILE)
@@ -130,16 +129,14 @@ def file_setup(db_dir, metadata_dir=None, xyz_dir=None, data_pattern='*ISGS_DOWN
     return downholeDataPATH, headerDataPATH, xyzInPATH
 
 #Read raw data by text
-def read_raw_txt(raw_dir, data_filename, metadata_filename, data_cols=None, metadata_cols=None, x_col='LONGITUDE', ycol='LATITUDE', id_col='API_NUMBER', encoding='latin-1', verbose=False, log=False):
+def read_raw_txt(data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, x_col='LONGITUDE', ycol='LATITUDE', id_col='API_NUMBER', encoding='latin-1', verbose=False, log=False):
     """Easy function to read raw .txt files output from (for example), an Access database
 
     Parameters
     ----------
-    raw_dir : str or pathlib.Path object
-        String or pathlib.Path to directory containing the files.
-    data_filename : str
+    data_filepath : str
         Filename of the file containing data, including the extension.
-    metadata_filename : str
+    metadata_filepath : str
         Filename of the file containing metadata, including the extension.
     data_cols : list, default = None
         List with strings with names of columns from txt file to keep after reading. If None, ["API_NUMBER","TABLE_NAME","FORMATION","THICKNESS","TOP","BOTTOM"], by default None.
@@ -167,16 +164,16 @@ def read_raw_txt(raw_dir, data_filename, metadata_filename, data_cols=None, meta
 
     if data_cols is None:
         data_useCols = ["API_NUMBER","TABLE_NAME","FORMATION","THICKNESS","TOP","BOTTOM"]
+    else:
+        data_useCols= data_cols
+
     if metadata_cols is None:
         metadata_useCols = ['API_NUMBER',"TOTAL_DEPTH","SECTION","TWP","TDIR","RNG","RDIR","MERIDIAN","QUARTERS","ELEVATION","ELEVREF","COUNTY_CODE","LATITUDE","LONGITUDE","ELEVSOURCE"]
-   
-    raw_dir = pathlib.path(raw_dir)
-    raw_dir = raw_dir.as_posix()
-    if raw_dir[-1] != '/':
-        raw_dir = raw_dir + '/'
+    else:
+        metadata_useCols= metadata_cols
 
-    downholeDataIN = pd.read_csv(raw_dir+str(data_filename), sep=',', header='infer', encoding=encoding, usecols=data_useCols)
-    headerDataIN = pd.read_csv(raw_dir+str(metadata_filename), sep=',', header='infer', encoding=encoding, usecols=metadata_useCols)
+    downholeDataIN = pd.read_csv(data_filepath, sep=',', header='infer', encoding=encoding, usecols=data_useCols)
+    headerDataIN = pd.read_csv(metadata_filepath, sep=',', header='infer', encoding=encoding, usecols=metadata_useCols)
 
     #Drop data with no API        
     downholeDataIN = downholeDataIN.dropna(subset=[id_col]) #Drop data with no API
@@ -198,15 +195,13 @@ def read_raw_txt(raw_dir, data_filename, metadata_filename, data_cols=None, meta
     return downholeDataIN, headerDataIN
 
 #Read file with xyz data
-def read_xyz(rawdir, xyzfile, dtypes=None, verbose=False, log=False):
+def read_xyz(xyzpath, dtypes=None, verbose=False, log=False):
     """Function to read file containing xyz data (elevation/location)
 
     Parameters
     ----------
-    rawdir : str or pathlib.Path object
-        String to the directory in which the xyz file is contained
-    xyzfile : str
-        String with the filename of the xyz file, including extension.
+    xyzpath : str or pathlib.Path
+        Filepath of the xyz file, including extension
     dtypes : dict, default = None
         Dictionary containing the datatypes for the columns int he xyz file. If None, {'ID':np.uint32,'API_NUMBER':np.uint64,'LATITUDE':np.float64,'LONGITUDE':np.float64,'ELEV_FT':np.float64}, by default None
     verbose : bool, default = False
@@ -224,7 +219,7 @@ def read_xyz(rawdir, xyzfile, dtypes=None, verbose=False, log=False):
     if dtypes is None:
         xyzDTypes = {'ID':np.uint32,'API_NUMBER':np.uint64,'LATITUDE':np.float64,'LONGITUDE':np.float64,'ELEV_FT':np.float64}
 
-    xyzDataIN = pd.read_csv(rawdir+str(xyzfile), sep=',', header='infer', dtype=xyzDTypes, index_col='ID')
+    xyzDataIN = pd.read_csv(xyzpath, sep=',', header='infer', dtype=xyzDTypes, index_col='ID')
     
     if verbose:
         print('XYZ file has ' + str(xyzDataIN.shape[0])+' records with elevation and location.')
@@ -312,11 +307,12 @@ def define_dtypes(df, dtypes=None, dtype_file=None, dtype_dir=str(repoDir)+'/res
             print('ERROR: Either dtype_file (and dtype_dir) or dtypes must be defined')
             return 
         
-        dtype_file = pathlib.Path(dtype_dir+dtype_file)
+        dtype_file = pathlib.Path(dtype_dir).joinpath(dtype_file)
         dtypes = read_dict(file=dtype_file)
     
+    dfcols = dfout.columns
     for i in range(0, np.shape(dfout)[1]):
-        dfout.iloc[:,i] = df.iloc[:,i].astype(dtypes[df.iloc[:,i].name])
+        dfout.iloc[:,i] = df.iloc[:,i].astype(dtypes[dfcols[i]])
 
     return dfout
 
