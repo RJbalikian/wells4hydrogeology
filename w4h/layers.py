@@ -115,7 +115,7 @@ def get_layer_depths(well_metadata, no_layers=9, log=False):
 
 #Function to export the result of thickness of target sediments in each layer
 @logger
-def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_prefix='', depth_top_col='TOP', depth_bot_col='BOTTOM', log=True):
+def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_prefix='', depth_top_col='TOP', depth_bot_col='BOTTOM', log=False):
     """Function to calculate thickness of target material in each layer at each well point
 
     Parameters
@@ -252,7 +252,7 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
 
 #Interpolate layers to model grid
 @logger
-def layer_interp(points, grid, layers=None, method='nearest', return_type='dataarray', export_dir=None, targetcol='TARG_THICK_PER', lyrcol='LAYER', xcol=None, ycol=None, xcoord='x', ycoord='y', log=True, **kwargs):
+def layer_interp(points, grid, layers=None, method='nearest', return_type='dataarray', export_dir=None, targetcol='TARG_THICK_PER', lyrcol='LAYER', xcol=None, ycol=None, xcoord='x', ycoord='y', log=False, **kwargs):
     """Function to interpolate results, going from points to grid data. Uses scipy.interpolate module.
 
     Parameters

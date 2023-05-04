@@ -65,7 +65,7 @@ def get_most_recent(dir=str(repoDir)+'/resources', glob_pattern='*', verbose=Tru
 
 #Function to setup files of interest
 @logger
-def file_setup(db_dir, metadata_dir=None, xyz_dir=None, data_pattern='*ISGS_DOWNHOLE_DATA*.txt', metadata_pattern='*ISGS_HEADER*.txt', xyz_pattern= '*xyzData*', out_dir=None, verbose=False, log=True):
+def file_setup(db_dir, metadata_dir=None, xyz_dir=None, data_pattern='*ISGS_DOWNHOLE_DATA*.txt', metadata_pattern='*ISGS_HEADER*.txt', xyz_pattern= '*xyzData*', out_dir=None, verbose=False, log=False):
     """Function to setup files, assuming data, metadata, and elevation/location are in separate files (there should be one "key"/identifying column consistent across all files to join/merge them later)
 
     This function may not be useful if files are organized differently than this structure. If that is the case, it is recommended to use the get_most_recent() function for each individual file needed.
@@ -318,7 +318,7 @@ def define_dtypes(df, dtypes=None, dtype_file=None, dtype_dir=str(repoDir)+'/res
 
 #Define the search term filepaths
 @logger
-def get_search_terms(spec_dir=str(repoDir)+'/resources/', specStartPattern='*SearchTerms-Specific*', start_dir=None, startGlobPattern = '*SearchTerms-Start*', log=True):
+def get_search_terms(spec_dir=str(repoDir)+'/resources/', specStartPattern='*SearchTerms-Specific*', start_dir=None, startGlobPattern = '*SearchTerms-Start*', log=False):
     """Read in dictionary files for downhole data
 
     Parameters
@@ -353,7 +353,7 @@ def get_search_terms(spec_dir=str(repoDir)+'/resources/', specStartPattern='*Sea
 
 #Read files into pandas dataframes
 @logger
-def read_dictionary_terms(dict_file, cols=None, col_types=None, dictionary_type=None, class_flag=1, rem_extra_cols=True, log=True):
+def read_dictionary_terms(dict_file, cols=None, col_types=None, dictionary_type=None, class_flag=1, rem_extra_cols=True, log=False):
     """Function to read dictionary terms from file into pandas dataframe
 
     Parameters
@@ -449,7 +449,7 @@ def read_dictionary_terms(dict_file, cols=None, col_types=None, dictionary_type=
 
 #Function to read lithology file into pandas dataframe
 @logger
-def read_lithologies(litho_dir=None, lith_file=None, interp_col='LITHOLOGY', target_col='CODE', use_cols=None, log=True):
+def read_lithologies(litho_dir=None, lith_file=None, interp_col='LITHOLOGY', target_col='CODE', use_cols=None, log=False):
     """Function to read lithology file into pandas dataframe
 
     Parameters

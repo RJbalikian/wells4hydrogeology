@@ -7,7 +7,12 @@ log_filename = None
 def logger(func):
     def wrapper(*args, **kwargs):
         global log_filename
-        log_file = kwargs.pop('log', None)
+        #log parameter should be false by default on all. If true, will show up in kwargs
+            #Is there a way to do this so all can be set at once?
+        if 'log' in kwargs.keys():
+            log_file = kwargs.pop('log', None)
+        else:
+            log_file = None
         if log_file == True and (func.__name__ == 'file_setup' or func.__name__ == 'new_logfile'):
             out_dir = kwargs.pop('out_dir', None)
             if out_dir is None:
@@ -25,5 +30,7 @@ def logger(func):
         else:
             pass
         result = func(*args, **kwargs)
+        print('logged', func.__name__)
+        print('fname', log_filename)
         return result
     return wrapper

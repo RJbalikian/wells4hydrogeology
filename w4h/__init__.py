@@ -21,6 +21,8 @@ The w4h module has the following dependencies:
 
 #from w4h import classify, clean, export, layers, mapping, read
 
+from w4h.utilities import(logger)
+
 from w4h.classify import (specific_define, 
                           split_defined, 
                           start_define, 
@@ -71,7 +73,6 @@ from w4h.read import (get_current_date,
                       read_dictionary_terms,
                       read_lithologies)
 
-from w4h.utilities import(logger)
 
 __all__=(
         'specific_define', 

@@ -7,7 +7,7 @@ from w4h import logger
 
 #Export data
 @logger
-def export_dataframe(df, procdir, filename, date_stamp=True, log=True):
+def export_dataframe(df, procdir, filename, date_stamp=True, log=False):
     """Function to export dataframes
 
     Parameters
@@ -52,7 +52,7 @@ def export_dataframe(df, procdir, filename, date_stamp=True, log=True):
 
 #Export (rio)xarray dataarrays and datasets
 @logger
-def export_grids(grid_data, out_path, file_id='',filetype='tif', variable_sep=True, date_stamp=True, log=True):
+def export_grids(grid_data, out_path, file_id='',filetype='tif', variable_sep=True, date_stamp=True, log=False):
     """Function to export grids to files.
 
     Parameters
