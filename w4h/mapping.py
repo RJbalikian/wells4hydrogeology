@@ -80,7 +80,7 @@ def coords2geometry(df, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', crs='
     z = df[zcol].to_numpy()
 
     #coords = pd.concat([y, x], axis=1)
-    if use_zs:
+    if use_z:
         df["geometry"] = gpd.points_from_xy(x, y, z=z, crs=ptCRS)
     else:
         df["geometry"] = gpd.points_from_xy(x, y, crs=ptCRS)
