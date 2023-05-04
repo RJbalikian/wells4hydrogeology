@@ -5,7 +5,7 @@ from w4h import logger
 
 #This function removes all data from the downholeData table where there is no location information (in the headerData table). This includes elevation info too
 @logger
-def remove_nonlocated(data_DF, metadata_DF, verbose=False, log=True):
+def remove_nonlocated(data_DF, metadata_DF, verbose=False, log=False):
     """Function to remove wells and well intervals where there is no location information
 
     Parameters
@@ -41,7 +41,7 @@ def remove_nonlocated(data_DF, metadata_DF, verbose=False, log=True):
 #Function to remove data (intended for headerData) without surface topography information
 ##THIS ASSUMES AND SHOULD ONLY BE RUN AFTER ALL DESIRED SURFACE TOPO DATASETS HAVE BEEN MERGED/ADDED
 @logger
-def remove_no_topo(df, elev_column='ELEV_FT', no_data_val='', verbose=False, log=True):
+def remove_no_topo(df, elev_column='ELEV_FT', no_data_val='', verbose=False, log=False):
     """Function to remove wells that do not have topography data (needed for layer selection later).
 
     This function is intended to be run on the metadata table after elevations have attempted to been added.
@@ -79,7 +79,7 @@ def remove_no_topo(df, elev_column='ELEV_FT', no_data_val='', verbose=False, log
 
 #This function drops all records in the downholedata with no depth information (either top or bottom depth of well interval)
 @logger
-def drop_no_depth(df, top_col='TOP', bottom_col='BOTTOM', no_data_val='', verbose=False, log=True):
+def drop_no_depth(df, top_col='TOP', bottom_col='BOTTOM', no_data_val='', verbose=False, log=False):
     """Function to drop well intervals with no depth information
 
     Parameters
@@ -123,7 +123,7 @@ def drop_no_depth(df, top_col='TOP', bottom_col='BOTTOM', no_data_val='', verbos
 
 #This function drops all records in downholeData with bad depth information (where the bottom of a record is nearer to the surface than the top)
 @logger
-def drop_bad_depth(df, top_col='TOP', bottom_col='BOTTOM', depth_type='depth', verbose=False, log=True):
+def drop_bad_depth(df, top_col='TOP', bottom_col='BOTTOM', depth_type='depth', verbose=False, log=False):
     """Function to remove all records in the dataframe with well interpretations where the depth information is bad (i.e., where the bottom of the record is neerer to the surface than the top)
 
     Parameters
@@ -163,7 +163,7 @@ def drop_bad_depth(df, top_col='TOP', bottom_col='BOTTOM', depth_type='depth', v
 
 #This function drops all records in downholeData with no formation in formation in the description field
 @logger
-def drop_no_formation(df, description_col='FORMATION', no_data_val='', verbose=False, log=True):
+def drop_no_formation(df, description_col='FORMATION', no_data_val='', verbose=False, log=False):
     """Function that drops all records in the dataframe containing the well descriptions where no description is given.
 
     Parameters

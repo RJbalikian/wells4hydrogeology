@@ -93,7 +93,7 @@ def split_defined(df, classification_col='CLASS_FLAG', verbose=False, log=False)
 
 #Classify downhole data by the initial substring
 @logger
-def start_define(df, terms_df, description_col='FORMATION', terms_col='FORMATION', verbose=False, log=True):
+def start_define(df, terms_df, description_col='FORMATION', terms_col='FORMATION', verbose=False, log=False):
     """Function to classify descriptions according to starting substring. 
 
     Parameters
@@ -157,7 +157,7 @@ def remerge_data(classifieddf, searchdf):
 
 #Define well intervals by depth
 @logger
-def depth_define(dfIN, top_col='TOP', thresh=550.0, verbose=False, log=True):
+def depth_define(dfIN, top_col='TOP', thresh=550.0, verbose=False, log=False):
     """Function to define all intervals lower than thresh as bedrock
 
     Parameters
