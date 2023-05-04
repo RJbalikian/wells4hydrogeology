@@ -14,8 +14,8 @@ def remove_nonlocated(data_DF, metadata_DF, verbose=False, log=False):
         Pandas dataframe containing well descriptions
     metadata_DF : pandas.DataFrame
         Pandas dataframe containing metadata, including well locations (e.g., Latitude/Longitude)
-    log : bool, default = True
-        Whether to log inputs and outputs to log file.
+    log : bool, default = False
+        Whether to log results to log file, by default False
 
     Returns
     -------
@@ -56,8 +56,8 @@ def remove_no_topo(df, elev_column='ELEV_FT', no_data_val='', verbose=False, log
         Value in dataset that indicates no data is present (replaced with np.nan)
     verbose : bool, optional
         Whether to print outputs, by default True
-    log : bool, default = True
-        Whether to log inputs and outputs to log file.
+    log : bool, default = False
+        Whether to log results to log file, by default False
 
     Returns
     -------
@@ -94,8 +94,8 @@ def drop_no_depth(df, top_col='TOP', bottom_col='BOTTOM', no_data_val='', verbos
         No data value in the input data, used by this function to indicate that depth data is not there, to be replaced by np.nan, by default ''
     verbose : bool, optional
         Whether to print results to console, by default False
-    log : bool, optional
-        Whether to log results to log file, by default True
+    log : bool, default = False
+        Whether to log results to log file, by default False
 
     Returns
     -------
@@ -138,8 +138,8 @@ def drop_bad_depth(df, top_col='TOP', bottom_col='BOTTOM', depth_type='depth', v
         Whether the table is organized by depth or elevation. If depth, the top column will have smaller values than the bottom column. If elevation, the top column will have higher values than the bottom column, by default 'depth'
     verbose : bool, default = False
         Whether to print results to the terminal, by default False
-    log : bool, optional
-        Whether to log results to log file, by default True
+    log : bool, default = False
+        Whether to log results to log file, by default False
 
     Returns
     -------
@@ -176,8 +176,8 @@ def drop_no_formation(df, description_col='FORMATION', no_data_val='', verbose=F
         The value expected if the column is empty or there is no data. These will be replaced by np.nan before being removed, by default ''
     verbose : bool, optional
         Whether to print the results of this step to the terminal, by default False
-    log : bool, optional
-        Whether to log results to log file, by default True
+    log : bool, default = False
+        Whether to log results to log file, by default False
         
     Returns
     -------
