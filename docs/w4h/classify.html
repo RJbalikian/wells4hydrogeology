@@ -26,10 +26,13 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import pandas as pd
-import numpy as np
-import datetime
+<pre><code class="python">import datetime
+import logging
 
+import pandas as pd
+import numpy as np
+
+from w4h import logger
 #The following flags are used to mark the classification method:
 #- 0: Not classified
 #- 1: Specific Search Term Match
@@ -40,7 +43,8 @@ import datetime
 #- Top of well?
 
 #Define records with full search term
-def specific_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;FORMATION&#39;, verbose=False):
+@logger
+def specific_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;FORMATION&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to classify terms that have been specifically defined in the terms_df.
 
     Parameters
@@ -87,7 +91,8 @@ def specific_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col
 
     return df_Interps
 
-def split_defined(df, classification_col=&#39;CLASS_FLAG&#39;, verbose=False):
+@logger
+def split_defined(df, classification_col=&#39;CLASS_FLAG&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to split dataframe with well descriptions into two dataframes based on whether a row has been classified.
 
     Parameters
@@ -98,6 +103,8 @@ def split_defined(df, classification_col=&#39;CLASS_FLAG&#39;, verbose=False):
         Name of column containing the classification flag, by default &#39;CLASS_FLAG&#39;
     verbose : bool, default = False
         Whether to print results, by default False
+    log : bool, default = False
+        Whether to log results to log file
 
     Returns
     -------
@@ -113,7 +120,8 @@ def split_defined(df, classification_col=&#39;CLASS_FLAG&#39;, verbose=False):
     return classifedDF, searchDF
 
 #Classify downhole data by the initial substring
-def start_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;FORMATION&#39;, verbose=False):
+@logger
+def start_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;FORMATION&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to classify descriptions according to starting substring. 
 
     Parameters
@@ -128,6 +136,8 @@ def start_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#
         Name of column in terms_df containing startswith substring to match with description_col, by default &#39;FORMATION&#39;
     verbose : bool, default = False
         Whether to print out results, by default False
+    log : bool, default = True
+        Whether to log results to log file
 
     Returns
     -------
@@ -174,7 +184,8 @@ def remerge_data(classifieddf, searchdf):
     return remergeDF
 
 #Define well intervals by depth
-def depth_define(dfIN, top_col=&#39;TOP&#39;, thresh=550.0, verbose=False):
+@logger
+def depth_define(dfIN, top_col=&#39;TOP&#39;, thresh=550.0, verbose=False, log=False):
     &#34;&#34;&#34;Function to define all intervals lower than thresh as bedrock
 
     Parameters
@@ -187,6 +198,8 @@ def depth_define(dfIN, top_col=&#39;TOP&#39;, thresh=550.0, verbose=False):
         Depth (in units used in dfIN[&#39;top_col&#39;]) below which all intervals will be classified as bedrock, by default 550.0.
     verbose : bool, default = False
         Whether to print results, by default False
+    log : bool, default = True
+        Whether to log results to log file
 
     Returns
     -------
@@ -300,7 +313,8 @@ def merge_lithologies(df, targinterps_df, target_col=&#39;TARGET&#39;, target_cl
     return df_targ
 
 #Function to get unique wells
-def get_unique_wells(df, wellid_col=&#39;API_NUMBER&#39;):
+@logger
+def get_unique_wells(df, wellid_col=&#39;API_NUMBER&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Gets unique wells as a dataframe based on a given column name.
 
     Parameters
@@ -309,6 +323,8 @@ def get_unique_wells(df, wellid_col=&#39;API_NUMBER&#39;):
         Dataframe containing all wells and/or well intervals of interest
     wellid_col : str, default=&#34;API_NUMBER&#34;
         Name of column in df containing a unique identifier for each well, by default &#39;API_NUMBER&#39;. .unique() will be run on this column to get the unique values.
+    log : bool, default = False
+        Whether to log results to log file
 
     Returns
     -------
@@ -318,7 +334,8 @@ def get_unique_wells(df, wellid_col=&#39;API_NUMBER&#39;):
     #Get Unique well APIs
     uniqueWells = df[wellid_col].unique()
     wellsDF = pd.DataFrame(uniqueWells)
-    print(&#39;Number of unique wells in downholeData: &#39;+str(wellsDF.shape[0]))
+    if verbose:
+        print(&#39;Number of unique wells in downholeData: &#39;+str(wellsDF.shape[0]))
     wellsDF.columns = [&#39;UNIQUE_ID&#39;]
     
     return wellsDF
@@ -357,66 +374,6 @@ def sort_dataframe(df, sort_cols=[&#39;API_NUMBER&#39;,&#39;TOP&#39;], remove_na
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="w4h.classify.depth_define"><code class="name flex">
-<span>def <span class="ident">depth_define</span></span>(<span>dfIN, top_col='TOP', thresh=550.0, verbose=False)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Function to define all intervals lower than thresh as bedrock</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>dfIN</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
-<dd>Dataframe to classify</dd>
-<dt><strong><code>top_col</code></strong> :&ensp;<code>str</code>, default <code>= 'TOP'</code></dt>
-<dd>Name of column that contains the depth information, likely of the top of the well interval, by default 'TOP'</dd>
-<dt><strong><code>thresh</code></strong> :&ensp;<code>float</code>, default <code>= 550.0</code></dt>
-<dd>Depth (in units used in dfIN['top_col']) below which all intervals will be classified as bedrock, by default 550.0.</dd>
-<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
-<dd>Whether to print results, by default False</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
-<dd>Dataframe containing intervals classified as bedrock due to depth</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def depth_define(dfIN, top_col=&#39;TOP&#39;, thresh=550.0, verbose=False):
-    &#34;&#34;&#34;Function to define all intervals lower than thresh as bedrock
-
-    Parameters
-    ----------
-    dfIN : pandas.DataFrame
-        Dataframe to classify
-    top_col : str, default = &#39;TOP&#39;
-        Name of column that contains the depth information, likely of the top of the well interval, by default &#39;TOP&#39;
-    thresh : float, default = 550.0
-        Depth (in units used in dfIN[&#39;top_col&#39;]) below which all intervals will be classified as bedrock, by default 550.0.
-    verbose : bool, default = False
-        Whether to print results, by default False
-
-    Returns
-    -------
-    df : pandas.DataFrame
-        Dataframe containing intervals classified as bedrock due to depth
-    &#34;&#34;&#34;
-    df = dfIN.copy()
-    df[&#39;CLASS_FLAG&#39;].mask(df[top_col]&gt;thresh, 3 ,inplace=True) #Add a Classification Flag of 3 (bedrock b/c it&#39;s deepter than 550&#39;) to all records where the top of the interval is &gt;550&#39;
-    df[&#39;BEDROCK_FLAG&#39;].mask(df[top_col]&gt;thresh, True, inplace=True)
-
-    if verbose:
-        if df.CLASS_FLAG.notnull().sum() == 0:
-            brDepthClass = 0
-        else:
-            brDepthClass = df[&#39;CLASS_FLAG&#39;].value_counts()[3.0]
-        total = dfIN.shape[0]
-        print(&#34;Records classified as bedrock that were deeper than &#34;+str(thresh)+ &#34;&#39;: &#34; + str(brDepthClass))
-        print(&#34;This represents &#34;+str(round((brDepthClass)*100/total,2))+&#34;% of the unclassified data in this dataframe.&#34;)
-        
-    return df</code></pre>
-</details>
-</dd>
 <dt id="w4h.classify.export_undefined"><code class="name flex">
 <span>def <span class="ident">export_undefined</span></span>(<span>df, outdir)</span>
 </code></dt>
@@ -510,51 +467,6 @@ def sort_dataframe(df, sort_cols=[&#39;API_NUMBER&#39;,&#39;TOP&#39;], remove_na
     &#34;&#34;&#34;
     df[&#39;CLASS_FLAG&#39;].fillna(0, inplace=True)
     return df</code></pre>
-</details>
-</dd>
-<dt id="w4h.classify.get_unique_wells"><code class="name flex">
-<span>def <span class="ident">get_unique_wells</span></span>(<span>df, wellid_col='API_NUMBER')</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Gets unique wells as a dataframe based on a given column name.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
-<dd>Dataframe containing all wells and/or well intervals of interest</dd>
-<dt><strong><code>wellid_col</code></strong> :&ensp;<code>str</code>, default=<code>"API_NUMBER"</code></dt>
-<dd>Name of column in df containing a unique identifier for each well, by default 'API_NUMBER'. .unique() will be run on this column to get the unique values.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>wellsDF</code></dt>
-<dd>DataFrame containing only the unique well IDs</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_unique_wells(df, wellid_col=&#39;API_NUMBER&#39;):
-    &#34;&#34;&#34;Gets unique wells as a dataframe based on a given column name.
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Dataframe containing all wells and/or well intervals of interest
-    wellid_col : str, default=&#34;API_NUMBER&#34;
-        Name of column in df containing a unique identifier for each well, by default &#39;API_NUMBER&#39;. .unique() will be run on this column to get the unique values.
-
-    Returns
-    -------
-    wellsDF
-        DataFrame containing only the unique well IDs
-    &#34;&#34;&#34;
-    #Get Unique well APIs
-    uniqueWells = df[wellid_col].unique()
-    wellsDF = pd.DataFrame(uniqueWells)
-    print(&#39;Number of unique wells in downholeData: &#39;+str(wellsDF.shape[0]))
-    wellsDF.columns = [&#39;UNIQUE_ID&#39;]
-    
-    return wellsDF</code></pre>
 </details>
 </dd>
 <dt id="w4h.classify.merge_lithologies"><code class="name flex">
@@ -707,199 +619,6 @@ Whether the input column is using boolean values as its target indicator</p>
     return df_sorted</code></pre>
 </details>
 </dd>
-<dt id="w4h.classify.specific_define"><code class="name flex">
-<span>def <span class="ident">specific_define</span></span>(<span>df, terms_df, description_col='FORMATION', terms_col='FORMATION', verbose=False)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Function to classify terms that have been specifically defined in the terms_df.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
-<dd>Input dataframe with unclassified well descriptions.</dd>
-<dt><strong><code>terms_df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
-<dd>Dataframe containing the classifications</dd>
-<dt><strong><code>description_col</code></strong> :&ensp;<code>str</code>, default=<code>'FORMATION'</code></dt>
-<dd>Column name in df containing the well descriptions, by default 'FORMATION'.</dd>
-<dt><strong><code>terms_col</code></strong> :&ensp;<code>str</code>, default=<code>'FORMATION'</code></dt>
-<dd>Column name in terms_df containing the classified descriptions, by default 'FORMATION'.</dd>
-<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, default=<code>False</code></dt>
-<dd>Whether to print up results, by default False.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>df_Interps</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
-<dd>Dataframe containing the well descriptions and their matched classifications.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def specific_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;FORMATION&#39;, verbose=False):
-    &#34;&#34;&#34;Function to classify terms that have been specifically defined in the terms_df.
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Input dataframe with unclassified well descriptions.
-    terms_df : pandas.DataFrame
-        Dataframe containing the classifications
-    description_col : str, default=&#39;FORMATION&#39;
-        Column name in df containing the well descriptions, by default &#39;FORMATION&#39;.
-    terms_col : str, default=&#39;FORMATION&#39;
-        Column name in terms_df containing the classified descriptions, by default &#39;FORMATION&#39;.
-    verbose : bool, default=False
-        Whether to print up results, by default False.
-
-    Returns
-    -------
-    df_Interps : pandas.DataFrame
-        Dataframe containing the well descriptions and their matched classifications.
-    &#34;&#34;&#34;
-    if description_col != terms_col:
-        terms_df.rename(columns={terms_col:description_col}, inplace=True)
-        terms_col = description_col
-
-
-    df[description_col] = df[description_col].astype(str)
-    terms_df[terms_col] = terms_df[terms_col].astype(str)
-
-    df[description_col] = df[description_col].str.casefold()
-    terms_df[terms_col] = terms_df[terms_col].str.casefold()
-    #df[&#39;FORMATION&#39;] = df[&#39;FORMATION&#39;].str.strip([&#39;.,:?\t\s&#39;])
-    #terms_df[&#39;FORMATION&#39;] = terms_df[&#39;FORMATION&#39;].str.strip([&#39;.,:?\t\s&#39;])
-
-    terms_df.drop_duplicates(subset=terms_col, keep=&#39;last&#39;, inplace=True)
-    terms_df.reset_index(drop=True, inplace=True)
-    
-    df_Interps = pd.merge(df, terms_df.set_index(terms_col), on=description_col, how=&#39;left&#39;)
-    df_Interps.rename(columns={description_col:&#39;FORMATION&#39;}, inplace=True)
-    df_Interps[&#39;BEDROCK_FLAG&#39;] = df_Interps[&#39;INTERPRETATION&#39;] == &#39;BEDROCK&#39;
-    
-    if verbose:
-        print(&#34;Records Classified with full search term: &#34;+str(int(df_Interps[&#39;CLASS_FLAG&#39;].sum())))
-        print(&#34;Records Classified with full search term: &#34;+str(round((df_Interps[&#39;CLASS_FLAG&#39;].sum()/df_Interps.shape[0])*100,2))+&#34;% of data&#34;)
-
-    return df_Interps</code></pre>
-</details>
-</dd>
-<dt id="w4h.classify.split_defined"><code class="name flex">
-<span>def <span class="ident">split_defined</span></span>(<span>df, classification_col='CLASS_FLAG', verbose=False)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Function to split dataframe with well descriptions into two dataframes based on whether a row has been classified.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
-<dd>Dataframe containing all the well descriptions</dd>
-<dt><strong><code>classification_col</code></strong> :&ensp;<code>str</code>, default <code>= 'CLASS_FLAG'</code></dt>
-<dd>Name of column containing the classification flag, by default 'CLASS_FLAG'</dd>
-<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
-<dd>Whether to print results, by default False</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>Two-item tuple</code> of <code>pandas.Dataframe</code></dt>
-<dd>tuple[0] is dataframe containing classified data, tuple[1] is dataframe containing unclassified data.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def split_defined(df, classification_col=&#39;CLASS_FLAG&#39;, verbose=False):
-    &#34;&#34;&#34;Function to split dataframe with well descriptions into two dataframes based on whether a row has been classified.
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Dataframe containing all the well descriptions
-    classification_col : str, default = &#39;CLASS_FLAG&#39;
-        Name of column containing the classification flag, by default &#39;CLASS_FLAG&#39;
-    verbose : bool, default = False
-        Whether to print results, by default False
-
-    Returns
-    -------
-    Two-item tuple of pandas.Dataframe
-        tuple[0] is dataframe containing classified data, tuple[1] is dataframe containing unclassified data.
-    &#34;&#34;&#34;
-    classifedDF= df[df[classification_col].notna()] #Already-classifed data
-    searchDF = df[df[classification_col].isna()] #Unclassified data
-    
-    if verbose:
-        print(str(searchDF.shape[0])+&#39; records unclassified; isolated into searchDF.&#39;)
-    
-    return classifedDF, searchDF</code></pre>
-</details>
-</dd>
-<dt id="w4h.classify.start_define"><code class="name flex">
-<span>def <span class="ident">start_define</span></span>(<span>df, terms_df, description_col='FORMATION', terms_col='FORMATION', verbose=False)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Function to classify descriptions according to starting substring. </p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
-<dd>Dataframe containing all the well descriptions</dd>
-<dt><strong><code>terms_df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
-<dd>Dataframe containing all the startswith substrings to use for searching</dd>
-<dt><strong><code>description_col</code></strong> :&ensp;<code>str</code>, default <code>= 'FORMATION'</code></dt>
-<dd>Name of column in df containing descriptions, by default 'FORMATION'</dd>
-<dt><strong><code>terms_col</code></strong> :&ensp;<code>str</code>, default <code>= 'FORMATION'</code></dt>
-<dd>Name of column in terms_df containing startswith substring to match with description_col, by default 'FORMATION'</dd>
-<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
-<dd>Whether to print out results, by default False</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
-<dd>Dataframe containing the original data and new classifications</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def start_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;FORMATION&#39;, verbose=False):
-    &#34;&#34;&#34;Function to classify descriptions according to starting substring. 
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Dataframe containing all the well descriptions
-    terms_df : pandas.DataFrame
-        Dataframe containing all the startswith substrings to use for searching
-    description_col : str, default = &#39;FORMATION&#39;
-        Name of column in df containing descriptions, by default &#39;FORMATION&#39;
-    terms_col : str, default = &#39;FORMATION&#39;
-        Name of column in terms_df containing startswith substring to match with description_col, by default &#39;FORMATION&#39;
-    verbose : bool, default = False
-        Whether to print out results, by default False
-
-    Returns
-    -------
-    df : pandas.DataFrame
-        Dataframe containing the original data and new classifications
-    &#34;&#34;&#34;
-    if verbose:
-        #Estimate when it will end, based on test run
-        estTime = df.shape[0]/3054409 * 6 #It took about 6 minutes to classify data with entire dataframe. This estimates the fraction of that it will take
-        nowTime = datetime.datetime.now()
-        endTime = nowTime+datetime.timedelta(minutes=estTime)
-        print(&#34;Start Term process should be done by {:d}:{:02d}&#34;.format(endTime.hour, endTime.minute))
-
-    #First, for each startterm, find all results in df that start with, add classification flag, and add interpretation.
-    for i,s in enumerate(terms_df[terms_col]):
-        df[&#39;CLASS_FLAG&#39;].where(~df[description_col].str.startswith(s,na=False),4,inplace=True)
-        df[&#39;INTERPRETATION&#39;].where(~df[description_col].str.startswith(s,na=False),terms_df.loc[i,&#39;INTERPRETATION&#39;],inplace=True)
-    df[&#39;BEDROCK_FLAG&#39;].loc[df[&#34;INTERPRETATION&#34;] == &#39;BEDROCK&#39;]
-    
-    if verbose:
-        print(&#34;Records classified with start search term: &#34;+str(int(df[&#39;CLASS_FLAG&#39;].count())))
-        print(&#34;Records classified with start search term: &#34;+str(round((df[&#39;CLASS_FLAG&#39;].count()/df.shape[0])*100,2))+&#34;% of remaining data&#34;)
-        #print(&#34;Records classified with both search terms: &#34;+str(round(((df[&#39;CLASS_FLAG&#39;].count()+specDF[&#39;CLASS_FLAG&#39;].count())/downholeData_Interps.shape[0])*100,2))+&#34;% of all data&#34;)
-        #This step usually takes about 5-6 minutes
-    return df</code></pre>
-</details>
-</dd>
 </dl>
 </section>
 <section>
@@ -917,17 +636,12 @@ Whether the input column is using boolean values as its target indicator</p>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="two-column">
-<li><code><a title="w4h.classify.depth_define" href="#w4h.classify.depth_define">depth_define</a></code></li>
+<ul class="">
 <li><code><a title="w4h.classify.export_undefined" href="#w4h.classify.export_undefined">export_undefined</a></code></li>
 <li><code><a title="w4h.classify.fill_unclassified" href="#w4h.classify.fill_unclassified">fill_unclassified</a></code></li>
-<li><code><a title="w4h.classify.get_unique_wells" href="#w4h.classify.get_unique_wells">get_unique_wells</a></code></li>
 <li><code><a title="w4h.classify.merge_lithologies" href="#w4h.classify.merge_lithologies">merge_lithologies</a></code></li>
 <li><code><a title="w4h.classify.remerge_data" href="#w4h.classify.remerge_data">remerge_data</a></code></li>
 <li><code><a title="w4h.classify.sort_dataframe" href="#w4h.classify.sort_dataframe">sort_dataframe</a></code></li>
-<li><code><a title="w4h.classify.specific_define" href="#w4h.classify.specific_define">specific_define</a></code></li>
-<li><code><a title="w4h.classify.split_defined" href="#w4h.classify.split_defined">split_defined</a></code></li>
-<li><code><a title="w4h.classify.start_define" href="#w4h.classify.start_define">start_define</a></code></li>
 </ul>
 </li>
 </ul>
