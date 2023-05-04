@@ -21,7 +21,7 @@ The w4h module has the following dependencies:
 
 #from w4h import classify, clean, export, layers, mapping, read
 
-from w4h.utilities import(logger)
+from w4h.utilities import(logger_function)
 
 from w4h.classify import (specific_define, 
                           split_defined, 
@@ -119,6 +119,6 @@ __all__=(
          'get_search_terms',
          'read_dictionary_terms',
          'read_lithologies',
-        'logger')
+        'logger_function')
 
 __author__='Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski'

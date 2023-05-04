@@ -1,12 +1,14 @@
-import pandas as pd
 import datetime
+import inspect
 import pathlib
+
+import pandas as pd
 import xarray as xr
 
-from w4h import logger
+from w4h import logger_function
 
 #Export data
-@logger
+
 def export_dataframe(df, procdir, filename, date_stamp=True, log=False):
     """Function to export dataframes
 
@@ -23,6 +25,7 @@ def export_dataframe(df, procdir, filename, date_stamp=True, log=False):
     log : bool, default = True
         Whether to log inputs and outputs to log file.        
     """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     if date_stamp:
         todayDate = datetime.date.today()
@@ -51,7 +54,7 @@ def export_dataframe(df, procdir, filename, date_stamp=True, log=False):
             print('Exported '+fname+todayDateStr+'.csv')
 
 #Export (rio)xarray dataarrays and datasets
-@logger
+
 def export_grids(grid_data, out_path, file_id='',filetype='tif', variable_sep=True, date_stamp=True, log=False):
     """Function to export grids to files.
 
@@ -72,6 +75,7 @@ def export_grids(grid_data, out_path, file_id='',filetype='tif', variable_sep=Tr
     log : bool, default = True
         Whether to log inputs and outputs to log file.        
     """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     #Initialize lists to determine which filetype will be used for export
     ncdfList = ['netcdf', 'ncdf', 'n']

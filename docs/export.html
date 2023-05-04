@@ -26,15 +26,17 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import pandas as pd
-import datetime
+<pre><code class="python">import datetime
+import inspect
 import pathlib
+
+import pandas as pd
 import xarray as xr
 
-from w4h import logger
+from w4h import logger_function
 
 #Export data
-@logger
+
 def export_dataframe(df, procdir, filename, date_stamp=True, log=False):
     &#34;&#34;&#34;Function to export dataframes
 
@@ -51,6 +53,7 @@ def export_dataframe(df, procdir, filename, date_stamp=True, log=False):
     log : bool, default = True
         Whether to log inputs and outputs to log file.        
     &#34;&#34;&#34;
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     if date_stamp:
         todayDate = datetime.date.today()
@@ -79,7 +82,7 @@ def export_dataframe(df, procdir, filename, date_stamp=True, log=False):
             print(&#39;Exported &#39;+fname+todayDateStr+&#39;.csv&#39;)
 
 #Export (rio)xarray dataarrays and datasets
-@logger
+
 def export_grids(grid_data, out_path, file_id=&#39;&#39;,filetype=&#39;tif&#39;, variable_sep=True, date_stamp=True, log=False):
     &#34;&#34;&#34;Function to export grids to files.
 
@@ -100,6 +103,7 @@ def export_grids(grid_data, out_path, file_id=&#39;&#39;,filetype=&#39;tif&#39;,
     log : bool, default = True
         Whether to log inputs and outputs to log file.        
     &#34;&#34;&#34;
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     #Initialize lists to determine which filetype will be used for export
     ncdfList = [&#39;netcdf&#39;, &#39;ncdf&#39;, &#39;n&#39;]
@@ -205,6 +209,223 @@ def export_grids(grid_data, out_path, file_id=&#39;&#39;,filetype=&#39;tif&#39;,
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="w4h.export.export_dataframe"><code class="name flex">
+<span>def <span class="ident">export_dataframe</span></span>(<span>df, procdir, filename, date_stamp=True, log=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function to export dataframes</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>df</code></strong> :&ensp;<code>pandas dataframe,</code> or <code>list</code> of <code>pandas dataframes</code></dt>
+<dd>Data frame or list of dataframes to be exported</dd>
+<dt><strong><code>procdir</code></strong> :&ensp;<code>string</code> or <code>pathlib.Path object</code></dt>
+<dd>Directory to which to export dataframe object(s) as .csv</dd>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code> or <code>list</code> of <code>strings</code></dt>
+<dd>Filename(s) of output files</dd>
+<dt><strong><code>date_stamp</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
+<dd>Whether to include a datestamp in the filename. If true, file ends with _yyyy-mm-dd.csv of current date, by default True.</dd>
+<dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= True</code></dt>
+<dd>Whether to log inputs and outputs to log file.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def export_dataframe(df, procdir, filename, date_stamp=True, log=False):
+    &#34;&#34;&#34;Function to export dataframes
+
+    Parameters
+    ----------
+    df : pandas dataframe, or list of pandas dataframes
+        Data frame or list of dataframes to be exported
+    procdir : string or pathlib.Path object
+        Directory to which to export dataframe object(s) as .csv
+    filename : str or list of strings
+        Filename(s) of output files
+    date_stamp : bool, default=True
+        Whether to include a datestamp in the filename. If true, file ends with _yyyy-mm-dd.csv of current date, by default True.
+    log : bool, default = True
+        Whether to log inputs and outputs to log file.        
+    &#34;&#34;&#34;
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
+    if date_stamp:
+        todayDate = datetime.date.today()
+        todayDateStr = &#39;_&#39;+str(todayDate)
+    else:
+        todayDateStr=&#39;&#39;
+
+    if type(procdir) is str or isinstance(procdir, pathlib.PurePath):
+        procdir = str(procdir)
+        procdir = procdir.replace(&#39;\\&#39;, &#39;/&#39;).replace(&#39;\\&#39;[-1], &#39;/&#39;)
+        if procdir[-1] != &#39;/&#39;:
+            procdir = procdir + &#39;/&#39;
+    else:
+        print(&#39;Please input string or pathlib object for procdir parameters&#39;)
+        return
+
+    if type(filename) is str:
+        dfOutFile =  procdir+filename+todayDateStr+&#39;.csv&#39;
+        df.to_csv(dfOutFile, index_label=&#39;ID&#39;)
+        print(&#39;Exported &#39;+filename+todayDateStr+&#39;.csv&#39;)
+    elif type(filename) is list and type(df) is list and len(df) == len(filename):
+        for i, f in enumerate(df):
+            fname = filename[i]
+            dfOutFile =  procdir+fname+todayDateStr+&#39;.csv&#39;
+            f.to_csv(dfOutFile, index_label=&#39;ID&#39;)
+            print(&#39;Exported &#39;+fname+todayDateStr+&#39;.csv&#39;)</code></pre>
+</details>
+</dd>
+<dt id="w4h.export.export_grids"><code class="name flex">
+<span>def <span class="ident">export_grids</span></span>(<span>grid_data, out_path, file_id='', filetype='tif', variable_sep=True, date_stamp=True, log=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function to export grids to files.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>grid_data</code></strong> :&ensp;<code>xarray DataArray</code> or <code>xarray Dataset</code></dt>
+<dd>Dataset or dataarray to be exported</dd>
+<dt><strong><code>out_path</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code></dt>
+<dd>Output location for data export. If variable_sep=True, this should be a directory. Otherwise, this should also include the filename. The file extension should not be included here.</dd>
+<dt><strong><code>file_id</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>If specified, will add this after 'LayerXX' or 'AllLayers' in the filename, just before datestamp, if used. Example filename for file_id='Coarse': Layer1_Coarse_2023-04-18.tif.</dd>
+<dt><strong><code>filetype</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Output filetype. Can either be pickle or any file extension supported by rioxarray.rio.to_raster(). Can either include period or not., by default 'tif'</dd>
+<dt><strong><code>variable_sep</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If grid_data is an xarray Dataset, this will export each variable in the dataset as a separate file, including the variable name in the filename, by default False</dd>
+<dt><strong><code>date_stamp</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Whether to include a date stamp in the file name., by default True</dd>
+<dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= True</code></dt>
+<dd>Whether to log inputs and outputs to log file.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def export_grids(grid_data, out_path, file_id=&#39;&#39;,filetype=&#39;tif&#39;, variable_sep=True, date_stamp=True, log=False):
+    &#34;&#34;&#34;Function to export grids to files.
+
+    Parameters
+    ----------
+    grid_data : xarray DataArray or xarray Dataset
+        Dataset or dataarray to be exported
+    out_path : str or pathlib.Path object
+        Output location for data export. If variable_sep=True, this should be a directory. Otherwise, this should also include the filename. The file extension should not be included here.
+    file_id : str, optional
+        If specified, will add this after &#39;LayerXX&#39; or &#39;AllLayers&#39; in the filename, just before datestamp, if used. Example filename for file_id=&#39;Coarse&#39;: Layer1_Coarse_2023-04-18.tif.
+    filetype : str, optional
+        Output filetype. Can either be pickle or any file extension supported by rioxarray.rio.to_raster(). Can either include period or not., by default &#39;tif&#39;
+    variable_sep : bool, optional
+        If grid_data is an xarray Dataset, this will export each variable in the dataset as a separate file, including the variable name in the filename, by default False
+    date_stamp : bool, optional
+        Whether to include a date stamp in the file name., by default True
+    log : bool, default = True
+        Whether to log inputs and outputs to log file.        
+    &#34;&#34;&#34;
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
+    #Initialize lists to determine which filetype will be used for export
+    ncdfList = [&#39;netcdf&#39;, &#39;ncdf&#39;, &#39;n&#39;]
+    tifList = [&#39;tif&#39;, &#39;tiff&#39;, &#39;geotiff&#39;, &#39;geotif&#39;, &#39;t&#39;]
+    pickleList = [&#39;pickle&#39;, &#39;pkl&#39;, &#39;p&#39;]
+
+    #Format output string(s)
+    #Format output filepath
+    if type(out_path) is str or isinstance(out_path, pathlib.PurePath):
+        if isinstance(out_path, pathlib.PurePath):
+            pass
+        else:
+            out_path = pathlib.Path(out_path)
+        if out_path.parent.exists()==False:
+            print(&#39;Directory does not exist. Please enter a different value for the out_path parameter.&#39;)
+            return        
+
+        if out_path.is_dir():
+            if isinstance(grid_data, xr.DataArray):
+                if variable_sep:
+                    lyrs = grid_data.coords[&#39;Layer&#39;].values
+                    filenames = []
+                    for l in lyrs:
+                        filenames.append(&#39;Layer&#39;+str(l))
+                else:
+                    filenames = [&#39;AllLayers&#39;]
+            if isinstance(grid_data, xr.Dataset):
+                if variable_sep:
+                    filenames = []
+                    for var in grid_data:
+                        filenames.append(var)
+                else:
+                    filenames = [&#39;AllLayers&#39;]    
+        else:
+            filenames = [out_path.stem]
+            out_path = out_path.parent
+
+    else:
+        print(&#39;Please input string or pathlib object for out_path parameters&#39;)
+        return
+    
+    #Format datestamp, if desired in output filename
+    if date_stamp:
+        todayDate = datetime.date.today()
+        todayDateStr = &#39;_&#39;+str(todayDate)
+    else:
+        todayDateStr=&#39;&#39;
+
+    #Ensure the file suffix includes .
+    if filetype[0] == &#39;.&#39;:
+        pass
+    else:
+        filetype = &#39;.&#39; + filetype
+
+    if file_id != &#39;&#39;:
+        file_id = &#39;_&#39;+file_id
+
+    out_path = out_path.as_posix()+&#39;/&#39;
+    outPaths = []
+    for f in filenames:
+        outPaths.append(out_path+f+file_id+todayDateStr+filetype)
+
+    #Do export
+    if filetype.lower() in pickleList:
+        import pickle
+        for op in outPaths:
+            try:
+                with open(op, &#39;wb&#39;) as f:
+                    pickle.dump(grid_data, f)
+            except:
+                print(&#39;An error occured during export.&#39;)
+                print(op, &#39;could not be exported as a pickle object.&#39;)
+                print(&#39;Try again using different parameters.&#39;)
+    else:
+        import rioxarray as rxr
+        try:
+            if isinstance(grid_data, xr.Dataset):
+                if variable_sep:
+                    for i, var in enumerate(grid_data.data_vars):
+                        grid_data[var].rio.to_raster(outPaths[i])
+                else:
+                    grid_data.rio.to_raster(outPaths[0])
+            elif isinstance(grid_data, xr.DataArray):
+                if variable_sep:
+                    lyrs = grid_data.coords[&#39;Layer&#39;].values
+                    for i, l in enumerate(lyrs):
+                        out_grid = grid_data.sel(Layer = l).copy()
+                        out_grid.rio.to_raster(outPaths[i])
+                else:
+                    grid_data.rio.to_raster(outPaths[0])
+            else:
+                grid_data.rio.to_raster(outPaths[0])
+        except:
+            print(&#39;An error occured during export.&#39;)
+            print(&#39;{} could not be exported as {} file.&#39;.format(outPaths, filetype))
+            print(&#39;Try again using different parameters.&#39;)
+
+    return</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -218,6 +439,12 @@ def export_grids(grid_data, out_path, file_id=&#39;&#39;,filetype=&#39;tif&#39;,
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="w4h" href="index.html">w4h</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="w4h.export.export_dataframe" href="#w4h.export.export_dataframe">export_dataframe</a></code></li>
+<li><code><a title="w4h.export.export_grids" href="#w4h.export.export_grids">export_grids</a></code></li>
 </ul>
 </li>
 </ul>

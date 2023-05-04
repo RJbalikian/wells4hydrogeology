@@ -28,11 +28,13 @@
 </summary>
 <pre><code class="python">import datetime
 import logging
+import os
+import pathlib
 
-log_filename = None
+#log_filename = None
 
 #Log data to file
-def logger(func):
+&#34;&#34;&#34;def logger(func):
     def wrapper(*args, **kwargs):
         global log_filename
         #log parameter should be false by default on all. If true, will show up in kwargs
@@ -61,7 +63,54 @@ def logger(func):
         print(&#39;logged&#39;, func.__name__)
         print(&#39;fname&#39;, log_filename)
         return result
-    return wrapper</code></pre>
+    return wrapper&#34;&#34;&#34;
+
+log_filename=None
+
+def logger_function(logtocommence, parameters, func_name):
+    &#34;&#34;&#34;Function to log other functions, to be called from within other functions
+
+    Parameters
+    ----------
+    logtocommence : bool
+        Whether to perform logging steps
+    parameters : dict
+        Dictionary containing parameters and their values, from function
+    func_name : str
+        Name of function within which this is called
+    &#34;&#34;&#34;
+    if logtocommence:
+        global log_filename
+        #log parameter should be false by default on all. If true, will show up in kwargs
+            #Is there a way to do this so all can be set at once?
+        if &#39;log&#39; in parameters.keys():
+            log_file = parameters.pop(&#39;log&#39;, None)
+        else:
+            log_file = None
+        
+        curr_time = datetime.datetime.now()
+        FORMAT = &#39;%(asctime)s  %(message)s&#39;
+        if log_file == True and (func_name == &#39;file_setup&#39; or func_name == &#39;new_logfile&#39;):
+            out_dir = parameters.pop(&#39;out_dir&#39;, None)
+            print(out_dir)
+            if out_dir is None:
+                out_dir = parameters[&#39;db_dir&#39;]
+            timestamp = curr_time.strftime(&#39;%Y-%m-%d_%H-%M-%S&#39;)
+            log_filename = pathlib.Path(out_dir).joinpath(f&#34;log_{timestamp}.txt&#34;)
+            logging.basicConfig(filename=log_filename, level=logging.INFO, format=FORMAT, filemode=&#39;w&#39;)
+            logging.info(f&#34;Called {func_name} with args: {parameters}&#34;)
+        elif log_file == True:
+            if log_filename:
+                logging.basicConfig(filename=log_filename, level=logging.INFO, format=FORMAT)
+                logging.info(f&#34;Called {func_name} with args: {parameters}&#34;)
+            else:
+                timestamp = curr_time.strftime(&#39;%Y-%m-%d_%H-%M-%S&#39;)
+                log_filename = f&#34;log_{timestamp}.txt&#34;
+                logging.basicConfig(filename=log_filename, level=logging.INFO, format=FORMAT)
+                logging.info(f&#34;Called {func_name} with args: {parameters}&#34;)
+        else:
+            pass
+    return</code></pre>
 </details>
 </section>
 <section>
@@ -71,45 +120,68 @@ def logger(func):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="w4h.utilities.logger"><code class="name flex">
-<span>def <span class="ident">logger</span></span>(<span>func)</span>
+<dt id="w4h.utilities.logger_function"><code class="name flex">
+<span>def <span class="ident">logger_function</span></span>(<span>logtocommence, parameters, func_name)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Function to log other functions, to be called from within other functions</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>logtocommence</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to perform logging steps</dd>
+<dt><strong><code>parameters</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Dictionary containing parameters and their values, from function</dd>
+<dt><strong><code>func_name</code></strong> :&ensp;<code>str</code></dt>
+<dd>Name of function within which this is called</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def logger(func):
-    def wrapper(*args, **kwargs):
+<pre><code class="python">def logger_function(logtocommence, parameters, func_name):
+    &#34;&#34;&#34;Function to log other functions, to be called from within other functions
+
+    Parameters
+    ----------
+    logtocommence : bool
+        Whether to perform logging steps
+    parameters : dict
+        Dictionary containing parameters and their values, from function
+    func_name : str
+        Name of function within which this is called
+    &#34;&#34;&#34;
+    if logtocommence:
         global log_filename
         #log parameter should be false by default on all. If true, will show up in kwargs
             #Is there a way to do this so all can be set at once?
-        if &#39;log&#39; in kwargs.keys():
-            log_file = kwargs.pop(&#39;log&#39;, None)
+        if &#39;log&#39; in parameters.keys():
+            log_file = parameters.pop(&#39;log&#39;, None)
         else:
             log_file = None
-        if log_file == True and (func.__name__ == &#39;file_setup&#39; or func.__name__ == &#39;new_logfile&#39;):
-            out_dir = kwargs.pop(&#39;out_dir&#39;, None)
+        
+        curr_time = datetime.datetime.now()
+        FORMAT = &#39;%(asctime)s  %(message)s&#39;
+        if log_file == True and (func_name == &#39;file_setup&#39; or func_name == &#39;new_logfile&#39;):
+            out_dir = parameters.pop(&#39;out_dir&#39;, None)
+            print(out_dir)
             if out_dir is None:
-                out_dir = kwargs[&#39;db_dir&#39;]
-            timestamp = datetime.datetime.now().strftime(&#39;%Y-%m-%d_%H-%M-%S&#39;)
-            log_filename = f&#34;log_{timestamp}.txt&#34;
-            logging.basicConfig(filename=log_filename, level=logging.INFO)
+                out_dir = parameters[&#39;db_dir&#39;]
+            timestamp = curr_time.strftime(&#39;%Y-%m-%d_%H-%M-%S&#39;)
+            log_filename = pathlib.Path(out_dir).joinpath(f&#34;log_{timestamp}.txt&#34;)
+            logging.basicConfig(filename=log_filename, level=logging.INFO, format=FORMAT, filemode=&#39;w&#39;)
+            logging.info(f&#34;Called {func_name} with args: {parameters}&#34;)
         elif log_file == True:
             if log_filename:
-                logging.basicConfig(filename=log_filename, level=logging.INFO)
+                logging.basicConfig(filename=log_filename, level=logging.INFO, format=FORMAT)
+                logging.info(f&#34;Called {func_name} with args: {parameters}&#34;)
             else:
-                timestamp = datetime.datetime.now().strftime(&#39;%Y-%m-%d_%H-%M-%S&#39;)
+                timestamp = curr_time.strftime(&#39;%Y-%m-%d_%H-%M-%S&#39;)
                 log_filename = f&#34;log_{timestamp}.txt&#34;
-                logging.basicConfig(filename=log_filename, level=logging.INFO)
+                logging.basicConfig(filename=log_filename, level=logging.INFO, format=FORMAT)
+                logging.info(f&#34;Called {func_name} with args: {parameters}&#34;)
         else:
             pass
-        result = func(*args, **kwargs)
-        print(&#39;logged&#39;, func.__name__)
-        print(&#39;fname&#39;, log_filename)
-        return result
-    return wrapper</code></pre>
+    return</code></pre>
 </details>
 </dd>
 </dl>
@@ -130,7 +202,7 @@ def logger(func):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="w4h.utilities.logger" href="#w4h.utilities.logger">logger</a></code></li>
+<li><code><a title="w4h.utilities.logger_function" href="#w4h.utilities.logger_function">logger_function</a></code></li>
 </ul>
 </li>
 </ul>

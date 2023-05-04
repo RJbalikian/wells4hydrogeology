@@ -1,12 +1,15 @@
+import datetime
+import inspect
+import json
+import os
+import pathlib
+
 import pandas as pd
 import numpy as np
-import pathlib
-import datetime
-import os
-import json
+
 repoDir = pathlib.Path(os.getcwd())
 
-from w4h import logger
+from w4h import logger_function
 
 # Gets the current date for use with in code
 def get_current_date():
@@ -64,7 +67,6 @@ def get_most_recent(dir=str(repoDir)+'/resources', glob_pattern='*', verbose=Tru
     return mostRecentFile
 
 #Function to setup files of interest
-@logger
 def file_setup(db_dir, metadata_dir=None, xyz_dir=None, data_pattern='*ISGS_DOWNHOLE_DATA*.txt', metadata_pattern='*ISGS_HEADER*.txt', xyz_pattern= '*xyzData*', out_dir=None, verbose=False, log=False):
     """Function to setup files, assuming data, metadata, and elevation/location are in separate files (there should be one "key"/identifying column consistent across all files to join/merge them later)
 
@@ -94,6 +96,8 @@ def file_setup(db_dir, metadata_dir=None, xyz_dir=None, data_pattern='*ISGS_DOWN
     tuple
         Tuple with (well_data, metadata, xyz_location_data)
     """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
     #Define  filepath variables to be used later for reading/writing files
     raw_directory = pathlib.Path(db_dir)
     if metadata_dir is None:
@@ -126,7 +130,6 @@ def file_setup(db_dir, metadata_dir=None, xyz_dir=None, data_pattern='*ISGS_DOWN
     return downholeDataPATH, headerDataPATH, xyzInPATH
 
 #Read raw data by text
-@logger
 def read_raw_txt(raw_dir, data_filename, metadata_filename, data_cols=None, metadata_cols=None, x_col='LONGITUDE', ycol='LATITUDE', id_col='API_NUMBER', encoding='latin-1', verbose=False, log=False):
     """Easy function to read raw .txt files output from (for example), an Access database
 
@@ -160,6 +163,7 @@ def read_raw_txt(raw_dir, data_filename, metadata_filename, data_cols=None, meta
     (pandas.DataFrame, pandas.DataFrame)
         Tuple/list with two pandas dataframes: (data, metadata)
     """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     if data_cols is None:
         data_useCols = ["API_NUMBER","TABLE_NAME","FORMATION","THICKNESS","TOP","BOTTOM"]
@@ -194,7 +198,6 @@ def read_raw_txt(raw_dir, data_filename, metadata_filename, data_cols=None, meta
     return downholeDataIN, headerDataIN
 
 #Read file with xyz data
-@logger
 def read_xyz(rawdir, xyzfile, dtypes=None, verbose=False, log=False):
     """Function to read file containing xyz data (elevation/location)
 
@@ -216,6 +219,7 @@ def read_xyz(rawdir, xyzfile, dtypes=None, verbose=False, log=False):
     pandas.DataFrame
         Pandas dataframe containing the elevation and location data
     """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     if dtypes is None:
         xyzDTypes = {'ID':np.uint32,'API_NUMBER':np.uint64,'LATITUDE':np.float64,'LONGITUDE':np.float64,'ELEV_FT':np.float64}
@@ -273,7 +277,6 @@ def read_dict(file, keytype='np'):
     return jsDict
 
 #Define the datatypes for a dataframe
-@logger
 def define_dtypes(df, dtypes=None, dtype_file=None, dtype_dir=str(repoDir)+'/resources/', log=False):
     """Function to define datatypes of a dataframe, especially with file-indicated dyptes
 
@@ -295,6 +298,7 @@ def define_dtypes(df, dtypes=None, dtype_file=None, dtype_dir=str(repoDir)+'/res
     dfout : pandas.DataFrame
         Pandas dataframe containing redefined columns
     """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     dfout = df.copy()
     
@@ -317,7 +321,6 @@ def define_dtypes(df, dtypes=None, dtype_file=None, dtype_dir=str(repoDir)+'/res
     return dfout
 
 #Define the search term filepaths
-@logger
 def get_search_terms(spec_dir=str(repoDir)+'/resources/', specStartPattern='*SearchTerms-Specific*', start_dir=None, startGlobPattern = '*SearchTerms-Start*', log=False):
     """Read in dictionary files for downhole data
 
@@ -339,6 +342,7 @@ def get_search_terms(spec_dir=str(repoDir)+'/resources/', specStartPattern='*Sea
     (specTermsPath, startTermsPath) : tuple
         Tuple containing the pandas dataframe with specific search terms and one with start search terms
     """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     
     #specTermsFile = "SearchTerms-Specific_BedrockOrNo_2022-09.csv" #Specific matches
     #startTermsFile = "SearchTerms-Start_BedrockOrNo.csv" #Wildcard matches for the start of the description
@@ -352,7 +356,6 @@ def get_search_terms(spec_dir=str(repoDir)+'/resources/', specStartPattern='*Sea
     return specTermsPath, startTermsPath
 
 #Read files into pandas dataframes
-@logger
 def read_dictionary_terms(dict_file, cols=None, col_types=None, dictionary_type=None, class_flag=1, rem_extra_cols=True, log=False):
     """Function to read dictionary terms from file into pandas dataframe
 
@@ -381,6 +384,8 @@ def read_dictionary_terms(dict_file, cols=None, col_types=None, dictionary_type=
     dict_terms : pandas.DataFrame
         Pandas dataframe with formatting ready to be used in the classification steps of this package
     """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
     #Read files into pandas dataframes
     dict_terms = []
     if type(dict_file) is list:
@@ -448,7 +453,6 @@ def read_dictionary_terms(dict_file, cols=None, col_types=None, dictionary_type=
     return dict_terms
 
 #Function to read lithology file into pandas dataframe
-@logger
 def read_lithologies(litho_dir=None, lith_file=None, interp_col='LITHOLOGY', target_col='CODE', use_cols=None, log=False):
     """Function to read lithology file into pandas dataframe
 
@@ -472,6 +476,8 @@ def read_lithologies(litho_dir=None, lith_file=None, interp_col='LITHOLOGY', tar
     pandas.DataFrame
         Pandas dataframe with lithology information
     """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
     #dictDir = "\\\\isgs-sinkhole\\geophysics\\Balikian\\ISWS_HydroGeo\\WellDataAutoClassification\\SupportingDocs\\"
     if litho_dir is None:
         litho_dir=str(repoDir)+'/resources/'

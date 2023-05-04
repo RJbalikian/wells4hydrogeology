@@ -1,4 +1,5 @@
 import datetime
+import inspect
 import os
 import pathlib
 
@@ -11,10 +12,9 @@ from shapely.geometry import Point
 from scipy import interpolate
 
 import w4h
-from w4h import logger
+from w4h import logger_function
 
 #Function to Merge tables
-@logger
 def merge_tables(data_df, header_df, data_cols=None, header_cols=None, on='API_NUMBER', how='inner', auto_pick_cols=False, drop_duplicate_cols=True, log=False):
     """Function to merge tables, intended for merging metadata table with data table
 
@@ -44,6 +44,8 @@ def merge_tables(data_df, header_df, data_cols=None, header_cols=None, on='API_N
     mergedTable : pandas.DataFrame
         Merged dataframe
     """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
     if auto_pick_cols:
         header_cols = ['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'BEDROCK_ELEV_FT', 'SURFACE_ELEV_FT', 'BEDROCK_DEPTH_FT', 'LAYER_THICK_FT']
         for c in header_df.columns:
@@ -78,7 +80,6 @@ def merge_tables(data_df, header_df, data_cols=None, header_cols=None, on='API_N
     return mergedTable
 
 #Get layer depths of each layer, based on precalculated layer thickness
-@logger
 def get_layer_depths(well_metadata, no_layers=9, log=False):
     """Function to calculate depths and elevations of each model layer at each well based on surface elevation, bedrock elevation, and number of layers/layer thickness
 
@@ -96,6 +97,8 @@ def get_layer_depths(well_metadata, no_layers=9, log=False):
     pandas.Dataframe
         Dataframe containing new columns for depth to layers and elevation of layers.
     """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
     for layer in range(0, no_layers): #For each layer
         #Make column names
         depthColName  = 'DEPTH_FT_LAYER'+str(layer+1)
@@ -114,7 +117,6 @@ def get_layer_depths(well_metadata, no_layers=9, log=False):
     return well_metadata
 
 #Function to export the result of thickness of target sediments in each layer
-@logger
 def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_prefix='', depth_top_col='TOP', depth_bot_col='BOTTOM', log=False):
     """Function to calculate thickness of target material in each layer at each well point
 
@@ -143,6 +145,8 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
     res_df or res : geopandas.geodataframe
         Geopandas geodataframe containing only important information needed for next stage of analysis.
     """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
     df['TOP_ELEV_FT'] = df['SURFACE_ELEV_FT'] - df[depth_top_col]
     df['BOT_ELEV_FT'] = df['SURFACE_ELEV_FT'] - df[depth_bot_col]
 
@@ -251,7 +255,6 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
 
 
 #Interpolate layers to model grid
-@logger
 def layer_interp(points, grid, layers=None, method='nearest', return_type='dataarray', export_dir=None, targetcol='TARG_THICK_PER', lyrcol='LAYER', xcol=None, ycol=None, xcoord='x', ycoord='y', log=False, **kwargs):
     """Function to interpolate results, going from points to grid data. Uses scipy.interpolate module.
 
@@ -291,7 +294,7 @@ def layer_interp(points, grid, layers=None, method='nearest', return_type='dataa
     interp_data : xr.DataArray or xr.Dataset, depending on return_type
         By default, returns an xr.DataArray object with the layers added as a new dimension called Layer. Can also specify return_type='dataset' to return an xr.Dataset with each layer as a separate variable.
     """
-
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     nnList = ['nearest', 'nearest neighbor', 'nearestneighbor','neighbor',  'nn','n']
     splineList = ['interp2d', 'interp2', 'interp', 'spline', 'spl', 'sp', 's']
@@ -424,7 +427,6 @@ def layer_interp(points, grid, layers=None, method='nearest', return_type='dataa
     return interp_data
 
 #Optional, combine dataset
-@logger
 def combine_dataset(layer_dataset, surface_elev, bedrock_elev, layer_thick, log=False):
     """Function to combine xarray datasets or datarrays into a single xr.Dataset. Useful to add surface, bedrock, layer thick, and layer datasets all into one variable, for pickling, for example.
 
@@ -446,6 +448,7 @@ def combine_dataset(layer_dataset, surface_elev, bedrock_elev, layer_thick, log=
     xr.Dataset
         Dataset with all input arrays set to different variables within the dataset.
     """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     
     daDict = {}
     daDict['Layers'] = layer_dataset

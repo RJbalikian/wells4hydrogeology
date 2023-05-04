@@ -1,10 +1,10 @@
 import datetime
-import logging
+import inspect
 
 import pandas as pd
 import numpy as np
 
-from w4h import logger
+from w4h import logger_function
 #The following flags are used to mark the classification method:
 #- 0: Not classified
 #- 1: Specific Search Term Match
@@ -15,7 +15,7 @@ from w4h import logger
 #- Top of well?
 
 #Define records with full search term
-@logger
+
 def specific_define(df, terms_df, description_col='FORMATION', terms_col='FORMATION', verbose=False, log=False):
     """Function to classify terms that have been specifically defined in the terms_df.
 
@@ -37,6 +37,8 @@ def specific_define(df, terms_df, description_col='FORMATION', terms_col='FORMAT
     df_Interps : pandas.DataFrame
         Dataframe containing the well descriptions and their matched classifications.
     """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
     if description_col != terms_col:
         terms_df.rename(columns={terms_col:description_col}, inplace=True)
         terms_col = description_col
@@ -63,7 +65,7 @@ def specific_define(df, terms_df, description_col='FORMATION', terms_col='FORMAT
 
     return df_Interps
 
-@logger
+
 def split_defined(df, classification_col='CLASS_FLAG', verbose=False, log=False):
     """Function to split dataframe with well descriptions into two dataframes based on whether a row has been classified.
 
@@ -83,6 +85,8 @@ def split_defined(df, classification_col='CLASS_FLAG', verbose=False, log=False)
     Two-item tuple of pandas.Dataframe
         tuple[0] is dataframe containing classified data, tuple[1] is dataframe containing unclassified data.
     """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
     classifedDF= df[df[classification_col].notna()] #Already-classifed data
     searchDF = df[df[classification_col].isna()] #Unclassified data
     
@@ -92,7 +96,7 @@ def split_defined(df, classification_col='CLASS_FLAG', verbose=False, log=False)
     return classifedDF, searchDF
 
 #Classify downhole data by the initial substring
-@logger
+
 def start_define(df, terms_df, description_col='FORMATION', terms_col='FORMATION', verbose=False, log=False):
     """Function to classify descriptions according to starting substring. 
 
@@ -116,6 +120,8 @@ def start_define(df, terms_df, description_col='FORMATION', terms_col='FORMATION
     df : pandas.DataFrame
         Dataframe containing the original data and new classifications
     """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
     if verbose:
         #Estimate when it will end, based on test run
         estTime = df.shape[0]/3054409 * 6 #It took about 6 minutes to classify data with entire dataframe. This estimates the fraction of that it will take
@@ -156,7 +162,7 @@ def remerge_data(classifieddf, searchdf):
     return remergeDF
 
 #Define well intervals by depth
-@logger
+
 def depth_define(dfIN, top_col='TOP', thresh=550.0, verbose=False, log=False):
     """Function to define all intervals lower than thresh as bedrock
 
@@ -178,6 +184,8 @@ def depth_define(dfIN, top_col='TOP', thresh=550.0, verbose=False, log=False):
     df : pandas.DataFrame
         Dataframe containing intervals classified as bedrock due to depth
     """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
     df = dfIN.copy()
     df['CLASS_FLAG'].mask(df[top_col]>thresh, 3 ,inplace=True) #Add a Classification Flag of 3 (bedrock b/c it's deepter than 550') to all records where the top of the interval is >550'
     df['BEDROCK_FLAG'].mask(df[top_col]>thresh, True, inplace=True)
@@ -285,7 +293,7 @@ def merge_lithologies(df, targinterps_df, target_col='TARGET', target_class='boo
     return df_targ
 
 #Function to get unique wells
-@logger
+
 def get_unique_wells(df, wellid_col='API_NUMBER', verbose=False, log=False):
     """Gets unique wells as a dataframe based on a given column name.
 
@@ -303,6 +311,8 @@ def get_unique_wells(df, wellid_col='API_NUMBER', verbose=False, log=False):
     wellsDF
         DataFrame containing only the unique well IDs
     """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
     #Get Unique well APIs
     uniqueWells = df[wellid_col].unique()
     wellsDF = pd.DataFrame(uniqueWells)
@@ -330,7 +340,6 @@ def sort_dataframe(df, sort_cols=['API_NUMBER','TOP'], remove_nans=True):
     df_sorted : pandas.DataFrame
         Sorted dataframe
     """
-    
     #Sort columns for better processing later
     df_sorted = df.sort_values(sort_cols)
     df_sorted.reset_index(inplace=True, drop=True)
