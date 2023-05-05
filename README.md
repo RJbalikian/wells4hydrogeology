@@ -48,7 +48,7 @@ Required inputs include:
 
 ```mermaid
 flowchart TD
-    subgraph setup[id="files_setup"]
+    subgraph setup["Set up Files"]
         direction RL
 
         A0((file_setup))
@@ -63,35 +63,93 @@ flowchart TD
         A4-.->A0
     end
 
-    subgraph Read_Raw_Text
-        direction RL
-        B0((read_raw_txt))
-        B1{filepath}
+    subgraph read["Read Data"]
+        direction TB
+        subgraph readraw["read_raw_txt()"]
+            direction RL
+            B0(("read_raw_txt()"))
+            B1{filepath}
 
-        B1-.->B0
+            B1-.->B0
+        end
+
+        subgraph defineDtypes["define_dtypes()"]
+            direction RL
+            C0(("define_datatypes()"))
+            C1{df}
+            C2{{"dtype_filepath"}}
+            C1-.->C0
+            C2-.->C0
+        end
+        readraw-->defineDtypes
     end
 
-    subgraph Define_Datatypes
-        direction RL
-        C0[define_datatypes]
-        C1((df, dtype_filepath))
-        
-        C1-.->C0
-    end
-
-    subgraph Read_Study_Area
+    subgraph readSA["Read Study Area"]
         direction RL
         D0[read_study_area]
     end
 
-    subgraph Read_Grids
+    subgraph Read_Grids["Read Grids"]
         direction RL
         E0[read_grids]
     end
 
-    File_Setup-->Read_Raw_Text
-    Read_Raw_Text-->Define_Datatypes
-    Define_Datatypes-->Read_Study_Area
-    Read_Study_Area-->Read_Grids
+    subgraph clipdatatoSA["Clip Data to Study Area"]
+        direction RL
+        F0[xyz_metadata_merge]
+        G0[coords2geometry]
+        H0[clip_gdf2study_area]        
+    end
+
+    subgraph clean["Clean Data"]
+        direction RL
+        I0[remove_nonlocated]
+        J0[remove_no_topo]
+        K0[drop_no_depth]
+        L0[drop_bad_depth]
+        M0[drop_no_formation]
+        N0[merge]
+    end
+
+    subgraph classify["Classify Well Descriptions"]
+        direction RL
+        O0[read_dictionary_terms]
+        P0[specific_define]
+        Q0[start_define]
+        R0[depth_define]
+        S0[fill_unclassified]
+        T0[read_lithologies]
+        U0[merge_lithologies]
+    end
+
+    subgraph get_layers["Get (Hydro)geologic Layers"]
+        direction RL
+        I0[get_unique_wells]
+        V0[sort_dataframe]
+        W0[align_rasters]
+        X0[get_drift_thick]
+        Y0[sample_raster_points]
+        Z0[get_layer_depths]
+        AA0[merge_tables]
+        BB0[layer_target_thick]
+        CC0[layer_interp]
+
+    end
+    
+    subgraph export["Export Data"]
+        direction RL
+        DD0[export_dataframe]
+        EE0[export_grids]
+
+    end
+
+    setup-->read
+    read-->readSA
+    readSA-->Read_Grids
+    Read_Grids-->clipdatatoSA
+    clipdatatoSA-->clean
+    clean-->classify
+    classify-->get_layers
+    get_layers-->export
 
 ```
