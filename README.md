@@ -45,10 +45,51 @@ Required inputs include:
 - xyzData_yyyy-mm-dd.csv: most recent update of statewide wells with API, Latitude, Longitude, and surface elevation extracted from statewide lidar topography
 
 ## Intended workflow 
-graph TD;
-    A[Input 1] --> B[Step 1];
-    B --> C[Output 1];
-    C --> D[Step 2];
-    D --> E[Output 2];
-    E --> F[Step 3];
-    F --> G[Output 3];
+
+```mermaid
+flowchart TB
+    subgraph "File Setup"
+        direction LR
+        A0[file_setup]
+        A1((db_dir))
+        A2((log_dir))
+        A3((verbose))
+        A4((log))
+
+        A1-.->A0
+        A2-.->A0
+        A3-.->A0
+        A4-.->A0
+    end
+
+    subgraph "Read Raw Text"
+        direction LR
+        B0((read_raw_txt))
+        B1[filepath]
+
+        A0-->B0
+        B1-.->B0
+    end
+
+    subgraph "Define Datatypes"
+        direction LR
+        C0[define_datatypes]
+        C1((df, dtype_filepath))
+        
+        B0-->C0
+        C1-.->C0
+    end
+
+    subgraph "Read Study Area"
+        direction LR
+        D0[read_study_area]
+        C0-->D0
+    end
+
+    subgraph "Read Grids"
+        direction LR
+        E0[read_grids]
+        D0-->E0
+    end
+
+```
