@@ -54,10 +54,13 @@ graph TD;
     E --> F[Step 3];
     F --> G[Output 3];
 ```
+
 ```mermaid
 graph TD;
-    A-->B;
-    A-->C;
-    B-->D;
-    C-->D;
+    A[Input 1] --> B[Step 1];
+    B --> C[Output 1];
+    A --> D[Step 2];
+    D --> E[Output 2];
+    A --> F[Step 3];
+    F --> G[Output 3];
 ```
