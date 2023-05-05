@@ -15,7 +15,7 @@ import w4h
 from w4h import logger_function
 
 #Function to Merge tables
-def merge_tables(data_df, header_df, data_cols=None, header_cols=None, on='API_NUMBER', how='inner', auto_pick_cols=False, drop_duplicate_cols=True, log=False):
+def merge_tables(data_df, header_df, data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, **kwargs):
     """Function to merge tables, intended for merging metadata table with data table
 
     Parameters
@@ -28,16 +28,14 @@ def merge_tables(data_df, header_df, data_cols=None, header_cols=None, on='API_N
         List of strings of column names, for columns to be included after join from "left" table (data table). If None, all columns are kept, by default None
     header_cols : list, optional
         List of strings of columns names, for columns to be included in merged table after merge from "right" table (metadata). If None, all columns are kept, by default None
-    on : str, optional
-        Column name to use for joining. Both tables need to have the same column name for this function, by default 'API_NUMBER'
-    how : str, optional
-        See the how parameter of pd.merge, by default 'inner'
-    auto_pick_cols : bool, optional
+    auto_pick_cols : bool, default = False
         Whether to autopick the columns from the metadata table. If True, the following column names are kept:['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'BEDROCK_ELEV_FT', 'SURFACE_ELEV_FT', 'BEDROCK_DEPTH_FT', 'LAYER_THICK_FT'], by default False
     drop_duplicate_cols : bool, optional
         If True, drops duplicate columns from the tables so that columns do not get renamed upon merge, by default True
     log : bool, default = False
         Whether to log inputs and outputs to log file.
+    **kwargs
+        kwargs that are passed directly to pd.merge(). By default, the 'on' and 'how' parameters are defined as on='API_NUMBER' and how='inner'
 
     Returns
     -------
@@ -76,7 +74,14 @@ def merge_tables(data_df, header_df, data_cols=None, header_cols=None, on='API_N
     leftTable_join = data_df[data_cols]
     rightTable_join = header_df[header_cols]
 
-    mergedTable = pd.merge(left=leftTable_join, right=rightTable_join, how=how, on=on)
+    #Defults for on and how
+    if 'on' not in kwargs.keys():
+        kwargs['on']='API_NUMBER'
+
+    if 'how' not in kwargs.keys():
+        kwargs['how']='inner'
+
+    mergedTable = pd.merge(left=leftTable_join, right=rightTable_join, **kwargs)
     return mergedTable
 
 #Get layer depths of each layer, based on precalculated layer thickness

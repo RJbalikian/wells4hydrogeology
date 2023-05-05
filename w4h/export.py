@@ -9,14 +9,14 @@ from w4h import logger_function
 
 #Export data
 
-def export_dataframe(df, procdir, filename, date_stamp=True, log=False):
+def export_dataframe(df, out_dir, filename, date_stamp=True, log=False):
     """Function to export dataframes
 
     Parameters
     ----------
     df : pandas dataframe, or list of pandas dataframes
         Data frame or list of dataframes to be exported
-    procdir : string or pathlib.Path object
+    out_dir : string or pathlib.Path object
         Directory to which to export dataframe object(s) as .csv
     filename : str or list of strings
         Filename(s) of output files
@@ -33,23 +33,23 @@ def export_dataframe(df, procdir, filename, date_stamp=True, log=False):
     else:
         todayDateStr=''
 
-    if type(procdir) is str or isinstance(procdir, pathlib.PurePath):
-        procdir = str(procdir)
-        procdir = procdir.replace('\\', '/').replace('\\'[-1], '/')
-        if procdir[-1] != '/':
-            procdir = procdir + '/'
+    if type(out_dir) is str or isinstance(out_dir, pathlib.PurePath):
+        out_dir = str(out_dir)
+        out_dir = out_dir.replace('\\', '/').replace('\\'[-1], '/')
+        if out_dir[-1] != '/':
+            out_dir = out_dir + '/'
     else:
-        print('Please input string or pathlib object for procdir parameters')
+        print('Please input string or pathlib object for out_dir parameters')
         return
 
     if type(filename) is str:
-        dfOutFile =  procdir+filename+todayDateStr+'.csv'
+        dfOutFile =  out_dir+filename+todayDateStr+'.csv'
         df.to_csv(dfOutFile, index_label='ID')
         print('Exported '+filename+todayDateStr+'.csv')
     elif type(filename) is list and type(df) is list and len(df) == len(filename):
         for i, f in enumerate(df):
             fname = filename[i]
-            dfOutFile =  procdir+fname+todayDateStr+'.csv'
+            dfOutFile =  out_dir+fname+todayDateStr+'.csv'
             f.to_csv(dfOutFile, index_label='ID')
             print('Exported '+fname+todayDateStr+'.csv')
 
