@@ -48,7 +48,7 @@ Required inputs include:
 
 ```mermaid
 flowchart TD
-    subgraph File_Setup
+    subgraph setup[id="files_setup"]
         direction RL
 
         A0((file_setup))
@@ -95,4 +95,3 @@ flowchart TD
     Read_Study_Area-->Read_Grids
 
 ```
-<style> .mermaid-subgraph { width: 300px; } </style>
