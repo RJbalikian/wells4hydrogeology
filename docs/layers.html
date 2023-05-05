@@ -43,7 +43,7 @@ import w4h
 from w4h import logger_function
 
 #Function to Merge tables
-def merge_tables(data_df, header_df, data_cols=None, header_cols=None, on=&#39;API_NUMBER&#39;, how=&#39;inner&#39;, auto_pick_cols=False, drop_duplicate_cols=True, log=False):
+def merge_tables(data_df, header_df, data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, **kwargs):
     &#34;&#34;&#34;Function to merge tables, intended for merging metadata table with data table
 
     Parameters
@@ -56,16 +56,14 @@ def merge_tables(data_df, header_df, data_cols=None, header_cols=None, on=&#39;A
         List of strings of column names, for columns to be included after join from &#34;left&#34; table (data table). If None, all columns are kept, by default None
     header_cols : list, optional
         List of strings of columns names, for columns to be included in merged table after merge from &#34;right&#34; table (metadata). If None, all columns are kept, by default None
-    on : str, optional
-        Column name to use for joining. Both tables need to have the same column name for this function, by default &#39;API_NUMBER&#39;
-    how : str, optional
-        See the how parameter of pd.merge, by default &#39;inner&#39;
-    auto_pick_cols : bool, optional
+    auto_pick_cols : bool, default = False
         Whether to autopick the columns from the metadata table. If True, the following column names are kept:[&#39;API_NUMBER&#39;, &#39;LATITUDE&#39;, &#39;LONGITUDE&#39;, &#39;BEDROCK_ELEV_FT&#39;, &#39;SURFACE_ELEV_FT&#39;, &#39;BEDROCK_DEPTH_FT&#39;, &#39;LAYER_THICK_FT&#39;], by default False
     drop_duplicate_cols : bool, optional
         If True, drops duplicate columns from the tables so that columns do not get renamed upon merge, by default True
     log : bool, default = False
         Whether to log inputs and outputs to log file.
+    **kwargs
+        kwargs that are passed directly to pd.merge(). By default, the &#39;on&#39; and &#39;how&#39; parameters are defined as on=&#39;API_NUMBER&#39; and how=&#39;inner&#39;
 
     Returns
     -------
@@ -104,7 +102,14 @@ def merge_tables(data_df, header_df, data_cols=None, header_cols=None, on=&#39;A
     leftTable_join = data_df[data_cols]
     rightTable_join = header_df[header_cols]
 
-    mergedTable = pd.merge(left=leftTable_join, right=rightTable_join, how=how, on=on)
+    #Defults for on and how
+    if &#39;on&#39; not in kwargs.keys():
+        kwargs[&#39;on&#39;]=&#39;API_NUMBER&#39;
+
+    if &#39;how&#39; not in kwargs.keys():
+        kwargs[&#39;how&#39;]=&#39;inner&#39;
+
+    mergedTable = pd.merge(left=leftTable_join, right=rightTable_join, **kwargs)
     return mergedTable
 
 #Get layer depths of each layer, based on precalculated layer thickness
@@ -1006,7 +1011,7 @@ If False, return list of geopandas.geodataframes with only essential information
 </details>
 </dd>
 <dt id="w4h.layers.merge_tables"><code class="name flex">
-<span>def <span class="ident">merge_tables</span></span>(<span>data_df, header_df, data_cols=None, header_cols=None, on='API_NUMBER', how='inner', auto_pick_cols=False, drop_duplicate_cols=True, log=False)</span>
+<span>def <span class="ident">merge_tables</span></span>(<span>data_df, header_df, data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to merge tables, intended for merging metadata table with data table</p>
@@ -1020,16 +1025,14 @@ If False, return list of geopandas.geodataframes with only essential information
 <dd>List of strings of column names, for columns to be included after join from "left" table (data table). If None, all columns are kept, by default None</dd>
 <dt><strong><code>header_cols</code></strong> :&ensp;<code>list</code>, optional</dt>
 <dd>List of strings of columns names, for columns to be included in merged table after merge from "right" table (metadata). If None, all columns are kept, by default None</dd>
-<dt><strong><code>on</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>Column name to use for joining. Both tables need to have the same column name for this function, by default 'API_NUMBER'</dd>
-<dt><strong><code>how</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>See the how parameter of pd.merge, by default 'inner'</dd>
-<dt><strong><code>auto_pick_cols</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dt><strong><code>auto_pick_cols</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
 <dd>Whether to autopick the columns from the metadata table. If True, the following column names are kept:['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'BEDROCK_ELEV_FT', 'SURFACE_ELEV_FT', 'BEDROCK_DEPTH_FT', 'LAYER_THICK_FT'], by default False</dd>
 <dt><strong><code>drop_duplicate_cols</code></strong> :&ensp;<code>bool</code>, optional</dt>
 <dd>If True, drops duplicate columns from the tables so that columns do not get renamed upon merge, by default True</dd>
 <dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
 <dd>Whether to log inputs and outputs to log file.</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>kwargs that are passed directly to pd.merge(). By default, the 'on' and 'how' parameters are defined as on='API_NUMBER' and how='inner'</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -1040,7 +1043,7 @@ If False, return list of geopandas.geodataframes with only essential information
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def merge_tables(data_df, header_df, data_cols=None, header_cols=None, on=&#39;API_NUMBER&#39;, how=&#39;inner&#39;, auto_pick_cols=False, drop_duplicate_cols=True, log=False):
+<pre><code class="python">def merge_tables(data_df, header_df, data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, **kwargs):
     &#34;&#34;&#34;Function to merge tables, intended for merging metadata table with data table
 
     Parameters
@@ -1053,16 +1056,14 @@ If False, return list of geopandas.geodataframes with only essential information
         List of strings of column names, for columns to be included after join from &#34;left&#34; table (data table). If None, all columns are kept, by default None
     header_cols : list, optional
         List of strings of columns names, for columns to be included in merged table after merge from &#34;right&#34; table (metadata). If None, all columns are kept, by default None
-    on : str, optional
-        Column name to use for joining. Both tables need to have the same column name for this function, by default &#39;API_NUMBER&#39;
-    how : str, optional
-        See the how parameter of pd.merge, by default &#39;inner&#39;
-    auto_pick_cols : bool, optional
+    auto_pick_cols : bool, default = False
         Whether to autopick the columns from the metadata table. If True, the following column names are kept:[&#39;API_NUMBER&#39;, &#39;LATITUDE&#39;, &#39;LONGITUDE&#39;, &#39;BEDROCK_ELEV_FT&#39;, &#39;SURFACE_ELEV_FT&#39;, &#39;BEDROCK_DEPTH_FT&#39;, &#39;LAYER_THICK_FT&#39;], by default False
     drop_duplicate_cols : bool, optional
         If True, drops duplicate columns from the tables so that columns do not get renamed upon merge, by default True
     log : bool, default = False
         Whether to log inputs and outputs to log file.
+    **kwargs
+        kwargs that are passed directly to pd.merge(). By default, the &#39;on&#39; and &#39;how&#39; parameters are defined as on=&#39;API_NUMBER&#39; and how=&#39;inner&#39;
 
     Returns
     -------
@@ -1101,7 +1102,14 @@ If False, return list of geopandas.geodataframes with only essential information
     leftTable_join = data_df[data_cols]
     rightTable_join = header_df[header_cols]
 
-    mergedTable = pd.merge(left=leftTable_join, right=rightTable_join, how=how, on=on)
+    #Defults for on and how
+    if &#39;on&#39; not in kwargs.keys():
+        kwargs[&#39;on&#39;]=&#39;API_NUMBER&#39;
+
+    if &#39;how&#39; not in kwargs.keys():
+        kwargs[&#39;how&#39;]=&#39;inner&#39;
+
+    mergedTable = pd.merge(left=leftTable_join, right=rightTable_join, **kwargs)
     return mergedTable</code></pre>
 </details>
 </dd>

@@ -37,14 +37,14 @@ from w4h import logger_function
 
 #Export data
 
-def export_dataframe(df, procdir, filename, date_stamp=True, log=False):
+def export_dataframe(df, out_dir, filename, date_stamp=True, log=False):
     &#34;&#34;&#34;Function to export dataframes
 
     Parameters
     ----------
     df : pandas dataframe, or list of pandas dataframes
         Data frame or list of dataframes to be exported
-    procdir : string or pathlib.Path object
+    out_dir : string or pathlib.Path object
         Directory to which to export dataframe object(s) as .csv
     filename : str or list of strings
         Filename(s) of output files
@@ -61,23 +61,23 @@ def export_dataframe(df, procdir, filename, date_stamp=True, log=False):
     else:
         todayDateStr=&#39;&#39;
 
-    if type(procdir) is str or isinstance(procdir, pathlib.PurePath):
-        procdir = str(procdir)
-        procdir = procdir.replace(&#39;\\&#39;, &#39;/&#39;).replace(&#39;\\&#39;[-1], &#39;/&#39;)
-        if procdir[-1] != &#39;/&#39;:
-            procdir = procdir + &#39;/&#39;
+    if type(out_dir) is str or isinstance(out_dir, pathlib.PurePath):
+        out_dir = str(out_dir)
+        out_dir = out_dir.replace(&#39;\\&#39;, &#39;/&#39;).replace(&#39;\\&#39;[-1], &#39;/&#39;)
+        if out_dir[-1] != &#39;/&#39;:
+            out_dir = out_dir + &#39;/&#39;
     else:
-        print(&#39;Please input string or pathlib object for procdir parameters&#39;)
+        print(&#39;Please input string or pathlib object for out_dir parameters&#39;)
         return
 
     if type(filename) is str:
-        dfOutFile =  procdir+filename+todayDateStr+&#39;.csv&#39;
+        dfOutFile =  out_dir+filename+todayDateStr+&#39;.csv&#39;
         df.to_csv(dfOutFile, index_label=&#39;ID&#39;)
         print(&#39;Exported &#39;+filename+todayDateStr+&#39;.csv&#39;)
     elif type(filename) is list and type(df) is list and len(df) == len(filename):
         for i, f in enumerate(df):
             fname = filename[i]
-            dfOutFile =  procdir+fname+todayDateStr+&#39;.csv&#39;
+            dfOutFile =  out_dir+fname+todayDateStr+&#39;.csv&#39;
             f.to_csv(dfOutFile, index_label=&#39;ID&#39;)
             print(&#39;Exported &#39;+fname+todayDateStr+&#39;.csv&#39;)
 
@@ -212,7 +212,7 @@ def export_grids(grid_data, out_path, file_id=&#39;&#39;,filetype=&#39;tif&#39;,
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="w4h.export.export_dataframe"><code class="name flex">
-<span>def <span class="ident">export_dataframe</span></span>(<span>df, procdir, filename, date_stamp=True, log=False)</span>
+<span>def <span class="ident">export_dataframe</span></span>(<span>df, out_dir, filename, date_stamp=True, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to export dataframes</p>
@@ -220,7 +220,7 @@ def export_grids(grid_data, out_path, file_id=&#39;&#39;,filetype=&#39;tif&#39;,
 <dl>
 <dt><strong><code>df</code></strong> :&ensp;<code>pandas dataframe,</code> or <code>list</code> of <code>pandas dataframes</code></dt>
 <dd>Data frame or list of dataframes to be exported</dd>
-<dt><strong><code>procdir</code></strong> :&ensp;<code>string</code> or <code>pathlib.Path object</code></dt>
+<dt><strong><code>out_dir</code></strong> :&ensp;<code>string</code> or <code>pathlib.Path object</code></dt>
 <dd>Directory to which to export dataframe object(s) as .csv</dd>
 <dt><strong><code>filename</code></strong> :&ensp;<code>str</code> or <code>list</code> of <code>strings</code></dt>
 <dd>Filename(s) of output files</dd>
@@ -233,14 +233,14 @@ def export_grids(grid_data, out_path, file_id=&#39;&#39;,filetype=&#39;tif&#39;,
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def export_dataframe(df, procdir, filename, date_stamp=True, log=False):
+<pre><code class="python">def export_dataframe(df, out_dir, filename, date_stamp=True, log=False):
     &#34;&#34;&#34;Function to export dataframes
 
     Parameters
     ----------
     df : pandas dataframe, or list of pandas dataframes
         Data frame or list of dataframes to be exported
-    procdir : string or pathlib.Path object
+    out_dir : string or pathlib.Path object
         Directory to which to export dataframe object(s) as .csv
     filename : str or list of strings
         Filename(s) of output files
@@ -257,23 +257,23 @@ def export_grids(grid_data, out_path, file_id=&#39;&#39;,filetype=&#39;tif&#39;,
     else:
         todayDateStr=&#39;&#39;
 
-    if type(procdir) is str or isinstance(procdir, pathlib.PurePath):
-        procdir = str(procdir)
-        procdir = procdir.replace(&#39;\\&#39;, &#39;/&#39;).replace(&#39;\\&#39;[-1], &#39;/&#39;)
-        if procdir[-1] != &#39;/&#39;:
-            procdir = procdir + &#39;/&#39;
+    if type(out_dir) is str or isinstance(out_dir, pathlib.PurePath):
+        out_dir = str(out_dir)
+        out_dir = out_dir.replace(&#39;\\&#39;, &#39;/&#39;).replace(&#39;\\&#39;[-1], &#39;/&#39;)
+        if out_dir[-1] != &#39;/&#39;:
+            out_dir = out_dir + &#39;/&#39;
     else:
-        print(&#39;Please input string or pathlib object for procdir parameters&#39;)
+        print(&#39;Please input string or pathlib object for out_dir parameters&#39;)
         return
 
     if type(filename) is str:
-        dfOutFile =  procdir+filename+todayDateStr+&#39;.csv&#39;
+        dfOutFile =  out_dir+filename+todayDateStr+&#39;.csv&#39;
         df.to_csv(dfOutFile, index_label=&#39;ID&#39;)
         print(&#39;Exported &#39;+filename+todayDateStr+&#39;.csv&#39;)
     elif type(filename) is list and type(df) is list and len(df) == len(filename):
         for i, f in enumerate(df):
             fname = filename[i]
-            dfOutFile =  procdir+fname+todayDateStr+&#39;.csv&#39;
+            dfOutFile =  out_dir+fname+todayDateStr+&#39;.csv&#39;
             f.to_csv(dfOutFile, index_label=&#39;ID&#39;)
             print(&#39;Exported &#39;+fname+todayDateStr+&#39;.csv&#39;)</code></pre>
 </details>

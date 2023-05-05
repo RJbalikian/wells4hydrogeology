@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>w4h API documentation</title>
-<meta name="description" content="The Wells 4 Hydrogeology (w4h) Python package is a package designed jointly by the Illinois State Geological Survey and Illinois State Water Survey …" />
+<meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,43 +22,12 @@
 <h1 class="title">Package <code>w4h</code></h1>
 </header>
 <section id="section-intro">
-<p>The Wells 4 Hydrogeology (w4h) Python package is a package designed jointly by the Illinois State Geological Survey and Illinois State Water Survey.</p>
-<p>It is designed to read in geology data from wells and create a layered, gridded hydrogeologic model of a study region, all within a python environment, automating and performing tasks often carried out in a dedicated GIS software.</p>
-<p>The w4h package contains all the functions needed for getting N layers of a hydrogeology grid.
-Though the source code is split into separate modules, all functions are designed to be accessed directly from the w4h module (example: w4h.read_study_area())</p>
-<p>The w4h module is designed to be flexible and customizable, allowing various kinds of data to be read in, with many different kinds of initial structures.</p>
-<p>The w4h module has the following dependencies:
-- numpy
-- pandas
-- rioxarray (and therefore xarray)
-- geopandas
-- matplotlib
-- scipy
-- owslib</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">#__init__.py
-&#34;&#34;&#34;The Wells 4 Hydrogeology (w4h) Python package is a package designed jointly by the Illinois State Geological Survey and Illinois State Water Survey.
 
-It is designed to read in geology data from wells and create a layered, gridded hydrogeologic model of a study region, all within a python environment, automating and performing tasks often carried out in a dedicated GIS software.
-
-The w4h package contains all the functions needed for getting N layers of a hydrogeology grid. 
-Though the source code is split into separate modules, all functions are designed to be accessed directly from the w4h module (example: w4h.read_study_area())
-
-The w4h module is designed to be flexible and customizable, allowing various kinds of data to be read in, with many different kinds of initial structures.
-
-The w4h module has the following dependencies:
-- numpy
-- pandas
-- rioxarray (and therefore xarray)
-- geopandas
-- matplotlib
-- scipy
-- owslib
-
-&#34;&#34;&#34;
 
 #from w4h import classify, clean, export, layers, mapping, read
 
@@ -813,7 +782,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 </details>
 </dd>
 <dt id="w4h.export_dataframe"><code class="name flex">
-<span>def <span class="ident">export_dataframe</span></span>(<span>df, procdir, filename, date_stamp=True, log=False)</span>
+<span>def <span class="ident">export_dataframe</span></span>(<span>df, out_dir, filename, date_stamp=True, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to export dataframes</p>
@@ -821,7 +790,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 <dl>
 <dt><strong><code>df</code></strong> :&ensp;<code>pandas dataframe,</code> or <code>list</code> of <code>pandas dataframes</code></dt>
 <dd>Data frame or list of dataframes to be exported</dd>
-<dt><strong><code>procdir</code></strong> :&ensp;<code>string</code> or <code>pathlib.Path object</code></dt>
+<dt><strong><code>out_dir</code></strong> :&ensp;<code>string</code> or <code>pathlib.Path object</code></dt>
 <dd>Directory to which to export dataframe object(s) as .csv</dd>
 <dt><strong><code>filename</code></strong> :&ensp;<code>str</code> or <code>list</code> of <code>strings</code></dt>
 <dd>Filename(s) of output files</dd>
@@ -834,14 +803,14 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def export_dataframe(df, procdir, filename, date_stamp=True, log=False):
+<pre><code class="python">def export_dataframe(df, out_dir, filename, date_stamp=True, log=False):
     &#34;&#34;&#34;Function to export dataframes
 
     Parameters
     ----------
     df : pandas dataframe, or list of pandas dataframes
         Data frame or list of dataframes to be exported
-    procdir : string or pathlib.Path object
+    out_dir : string or pathlib.Path object
         Directory to which to export dataframe object(s) as .csv
     filename : str or list of strings
         Filename(s) of output files
@@ -858,23 +827,23 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
     else:
         todayDateStr=&#39;&#39;
 
-    if type(procdir) is str or isinstance(procdir, pathlib.PurePath):
-        procdir = str(procdir)
-        procdir = procdir.replace(&#39;\\&#39;, &#39;/&#39;).replace(&#39;\\&#39;[-1], &#39;/&#39;)
-        if procdir[-1] != &#39;/&#39;:
-            procdir = procdir + &#39;/&#39;
+    if type(out_dir) is str or isinstance(out_dir, pathlib.PurePath):
+        out_dir = str(out_dir)
+        out_dir = out_dir.replace(&#39;\\&#39;, &#39;/&#39;).replace(&#39;\\&#39;[-1], &#39;/&#39;)
+        if out_dir[-1] != &#39;/&#39;:
+            out_dir = out_dir + &#39;/&#39;
     else:
-        print(&#39;Please input string or pathlib object for procdir parameters&#39;)
+        print(&#39;Please input string or pathlib object for out_dir parameters&#39;)
         return
 
     if type(filename) is str:
-        dfOutFile =  procdir+filename+todayDateStr+&#39;.csv&#39;
+        dfOutFile =  out_dir+filename+todayDateStr+&#39;.csv&#39;
         df.to_csv(dfOutFile, index_label=&#39;ID&#39;)
         print(&#39;Exported &#39;+filename+todayDateStr+&#39;.csv&#39;)
     elif type(filename) is list and type(df) is list and len(df) == len(filename):
         for i, f in enumerate(df):
             fname = filename[i]
-            dfOutFile =  procdir+fname+todayDateStr+&#39;.csv&#39;
+            dfOutFile =  out_dir+fname+todayDateStr+&#39;.csv&#39;
             f.to_csv(dfOutFile, index_label=&#39;ID&#39;)
             print(&#39;Exported &#39;+fname+todayDateStr+&#39;.csv&#39;)</code></pre>
 </details>
@@ -1086,7 +1055,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 </details>
 </dd>
 <dt id="w4h.file_setup"><code class="name flex">
-<span>def <span class="ident">file_setup</span></span>(<span>db_dir, metadata_dir=None, xyz_dir=None, data_pattern='*ISGS_DOWNHOLE_DATA*.txt', metadata_pattern='*ISGS_HEADER*.txt', xyz_pattern='*xyzData*', out_dir=None, verbose=False, log=False)</span>
+<span>def <span class="ident">file_setup</span></span>(<span>db_dir, metadata_dir=None, xyz_dir=None, data_pattern='*ISGS_DOWNHOLE_DATA*.txt', metadata_pattern='*ISGS_HEADER*.txt', xyz_pattern='*xyzData*', log_dir=None, verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to setup files, assuming data, metadata, and elevation/location are in separate files (there should be one "key"/identifying column consistent across all files to join/merge them later)</p>
@@ -1119,7 +1088,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def file_setup(db_dir, metadata_dir=None, xyz_dir=None, data_pattern=&#39;*ISGS_DOWNHOLE_DATA*.txt&#39;, metadata_pattern=&#39;*ISGS_HEADER*.txt&#39;, xyz_pattern= &#39;*xyzData*&#39;, out_dir=None, verbose=False, log=False):
+<pre><code class="python">def file_setup(db_dir, metadata_dir=None, xyz_dir=None, data_pattern=&#39;*ISGS_DOWNHOLE_DATA*.txt&#39;, metadata_pattern=&#39;*ISGS_HEADER*.txt&#39;, xyz_pattern= &#39;*xyzData*&#39;, log_dir=None, verbose=False, log=False):
     &#34;&#34;&#34;Function to setup files, assuming data, metadata, and elevation/location are in separate files (there should be one &#34;key&#34;/identifying column consistent across all files to join/merge them later)
 
     This function may not be useful if files are organized differently than this structure. If that is the case, it is recommended to use the get_most_recent() function for each individual file needed.
@@ -1448,7 +1417,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 </details>
 </dd>
 <dt id="w4h.get_search_terms"><code class="name flex">
-<span>def <span class="ident">get_search_terms</span></span>(<span>spec_dir='C:\\Users\\riley\\LocalData\\Code\\Github\\wells4hydrogeology/resources/', specStartPattern='*SearchTerms-Specific*', start_dir=None, startGlobPattern='*SearchTerms-Start*', log=False)</span>
+<span>def <span class="ident">get_search_terms</span></span>(<span>spec_dir='C:\\Users\\riley\\LocalData\\Code\\Github\\wells4hydrogeology/resources/', spec_glob_pattern='*SearchTerms-Specific*', start_dir=None, start_glob_pattern='*SearchTerms-Start*', log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Read in dictionary files for downhole data</p>
@@ -1456,11 +1425,11 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 <dl>
 <dt><strong><code>spec_dir</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path</code>, optional</dt>
 <dd>Directory where the file containing the specific search terms is located, by default str(repoDir)+'/resources/'</dd>
-<dt><strong><code>specStartPattern</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dt><strong><code>spec_glob_pattern</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default '<em>SearchTerms-Specific</em>'</dd>
 <dt><strong><code>start_dir</code></strong> :&ensp;<code>str</code> or <code>None</code>, optional</dt>
 <dd>Directory where the file containing the start search terms is located, by default None</dd>
-<dt><strong><code>startGlobPattern</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dt><strong><code>start_glob_pattern</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default '<em>SearchTerms-Start</em>'</dd>
 <dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= True</code></dt>
 <dd>Whether to log inputs and outputs to log file.</dd>
@@ -1472,18 +1441,18 @@ Tuple containing the pandas dataframe with specific search terms and one with st
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_search_terms(spec_dir=str(repoDir)+&#39;/resources/&#39;, specStartPattern=&#39;*SearchTerms-Specific*&#39;, start_dir=None, startGlobPattern = &#39;*SearchTerms-Start*&#39;, log=False):
+<pre><code class="python">def get_search_terms(spec_dir=str(repoDir)+&#39;/resources/&#39;, spec_glob_pattern=&#39;*SearchTerms-Specific*&#39;, start_dir=None, start_glob_pattern = &#39;*SearchTerms-Start*&#39;, log=False):
     &#34;&#34;&#34;Read in dictionary files for downhole data
 
     Parameters
     ----------
     spec_dir : str or pathlib.Path, optional
         Directory where the file containing the specific search terms is located, by default str(repoDir)+&#39;/resources/&#39;
-    specStartPattern : str, optional
+    spec_glob_pattern : str, optional
         Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default &#39;*SearchTerms-Specific*&#39;
     start_dir : str or None, optional
         Directory where the file containing the start search terms is located, by default None
-    startGlobPattern : str, optional
+    start_glob_pattern : str, optional
         Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default &#39;*SearchTerms-Start*&#39;
     log : bool, default = True
         Whether to log inputs and outputs to log file.        
@@ -1501,8 +1470,8 @@ Tuple containing the pandas dataframe with specific search terms and one with st
     if start_dir is None:
         start_dir = spec_dir
 
-    specTermsPath = get_most_recent(spec_dir, specStartPattern)
-    startTermsPath = get_most_recent(start_dir, startGlobPattern)
+    specTermsPath = get_most_recent(spec_dir, spec_glob_pattern)
+    startTermsPath = get_most_recent(start_dir, start_glob_pattern)
     
     return specTermsPath, startTermsPath</code></pre>
 </details>
@@ -2076,7 +2045,7 @@ If False, return list of geopandas.geodataframes with only essential information
         curr_time = datetime.datetime.now()
         FORMAT = &#39;%(asctime)s  %(message)s&#39;
         if log_file == True and (func_name == &#39;file_setup&#39; or func_name == &#39;new_logfile&#39;):
-            out_dir = parameters.pop(&#39;out_dir&#39;, None)
+            out_dir = parameters.pop(&#39;log_dir&#39;, None)
             if out_dir is None:
                 out_dir = parameters[&#39;db_dir&#39;]
             timestamp = curr_time.strftime(&#39;%Y-%m-%d_%H-%M-%S&#39;)
@@ -2160,7 +2129,7 @@ Whether the input column is using boolean values as its target indicator</p>
 </details>
 </dd>
 <dt id="w4h.merge_tables"><code class="name flex">
-<span>def <span class="ident">merge_tables</span></span>(<span>data_df, header_df, data_cols=None, header_cols=None, on='API_NUMBER', how='inner', auto_pick_cols=False, drop_duplicate_cols=True, log=False)</span>
+<span>def <span class="ident">merge_tables</span></span>(<span>data_df, header_df, data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to merge tables, intended for merging metadata table with data table</p>
@@ -2174,16 +2143,14 @@ Whether the input column is using boolean values as its target indicator</p>
 <dd>List of strings of column names, for columns to be included after join from "left" table (data table). If None, all columns are kept, by default None</dd>
 <dt><strong><code>header_cols</code></strong> :&ensp;<code>list</code>, optional</dt>
 <dd>List of strings of columns names, for columns to be included in merged table after merge from "right" table (metadata). If None, all columns are kept, by default None</dd>
-<dt><strong><code>on</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>Column name to use for joining. Both tables need to have the same column name for this function, by default 'API_NUMBER'</dd>
-<dt><strong><code>how</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>See the how parameter of pd.merge, by default 'inner'</dd>
-<dt><strong><code>auto_pick_cols</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dt><strong><code>auto_pick_cols</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
 <dd>Whether to autopick the columns from the metadata table. If True, the following column names are kept:['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'BEDROCK_ELEV_FT', 'SURFACE_ELEV_FT', 'BEDROCK_DEPTH_FT', 'LAYER_THICK_FT'], by default False</dd>
 <dt><strong><code>drop_duplicate_cols</code></strong> :&ensp;<code>bool</code>, optional</dt>
 <dd>If True, drops duplicate columns from the tables so that columns do not get renamed upon merge, by default True</dd>
 <dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
 <dd>Whether to log inputs and outputs to log file.</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>kwargs that are passed directly to pd.merge(). By default, the 'on' and 'how' parameters are defined as on='API_NUMBER' and how='inner'</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -2194,7 +2161,7 @@ Whether the input column is using boolean values as its target indicator</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def merge_tables(data_df, header_df, data_cols=None, header_cols=None, on=&#39;API_NUMBER&#39;, how=&#39;inner&#39;, auto_pick_cols=False, drop_duplicate_cols=True, log=False):
+<pre><code class="python">def merge_tables(data_df, header_df, data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, **kwargs):
     &#34;&#34;&#34;Function to merge tables, intended for merging metadata table with data table
 
     Parameters
@@ -2207,16 +2174,14 @@ Whether the input column is using boolean values as its target indicator</p>
         List of strings of column names, for columns to be included after join from &#34;left&#34; table (data table). If None, all columns are kept, by default None
     header_cols : list, optional
         List of strings of columns names, for columns to be included in merged table after merge from &#34;right&#34; table (metadata). If None, all columns are kept, by default None
-    on : str, optional
-        Column name to use for joining. Both tables need to have the same column name for this function, by default &#39;API_NUMBER&#39;
-    how : str, optional
-        See the how parameter of pd.merge, by default &#39;inner&#39;
-    auto_pick_cols : bool, optional
+    auto_pick_cols : bool, default = False
         Whether to autopick the columns from the metadata table. If True, the following column names are kept:[&#39;API_NUMBER&#39;, &#39;LATITUDE&#39;, &#39;LONGITUDE&#39;, &#39;BEDROCK_ELEV_FT&#39;, &#39;SURFACE_ELEV_FT&#39;, &#39;BEDROCK_DEPTH_FT&#39;, &#39;LAYER_THICK_FT&#39;], by default False
     drop_duplicate_cols : bool, optional
         If True, drops duplicate columns from the tables so that columns do not get renamed upon merge, by default True
     log : bool, default = False
         Whether to log inputs and outputs to log file.
+    **kwargs
+        kwargs that are passed directly to pd.merge(). By default, the &#39;on&#39; and &#39;how&#39; parameters are defined as on=&#39;API_NUMBER&#39; and how=&#39;inner&#39;
 
     Returns
     -------
@@ -2255,7 +2220,14 @@ Whether the input column is using boolean values as its target indicator</p>
     leftTable_join = data_df[data_cols]
     rightTable_join = header_df[header_cols]
 
-    mergedTable = pd.merge(left=leftTable_join, right=rightTable_join, how=how, on=on)
+    #Defults for on and how
+    if &#39;on&#39; not in kwargs.keys():
+        kwargs[&#39;on&#39;]=&#39;API_NUMBER&#39;
+
+    if &#39;how&#39; not in kwargs.keys():
+        kwargs[&#39;how&#39;]=&#39;inner&#39;
+
+    mergedTable = pd.merge(left=leftTable_join, right=rightTable_join, **kwargs)
     return mergedTable</code></pre>
 </details>
 </dd>
@@ -3385,13 +3357,13 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 </details>
 </dd>
 <dt id="w4h.remove_nonlocated"><code class="name flex">
-<span>def <span class="ident">remove_nonlocated</span></span>(<span>data_DF, metadata_DF, verbose=False, log=False)</span>
+<span>def <span class="ident">remove_nonlocated</span></span>(<span>df, metadata_df, verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to remove wells and well intervals where there is no location information</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>data_DF</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
+<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
 <dd>Pandas dataframe containing well descriptions</dd>
 <dt><strong><code>metadata_DF</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
 <dd>Pandas dataframe containing metadata, including well locations (e.g., Latitude/Longitude)</dd>
@@ -3400,19 +3372,19 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>data_DF</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
+<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
 <dd>Pandas dataframe containing only data with location information</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def remove_nonlocated(data_DF, metadata_DF, verbose=False, log=False):
+<pre><code class="python">def remove_nonlocated(df, metadata_df, verbose=False, log=False):
     &#34;&#34;&#34;Function to remove wells and well intervals where there is no location information
 
     Parameters
     ----------
-    data_DF : pandas.DataFrame
+    df : pandas.DataFrame
         Pandas dataframe containing well descriptions
     metadata_DF : pandas.DataFrame
         Pandas dataframe containing metadata, including well locations (e.g., Latitude/Longitude)
@@ -3421,26 +3393,26 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 
     Returns
     -------
-    data_DF : pandas.DataFrame
+    df : pandas.DataFrame
         Pandas dataframe containing only data with location information
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    before = data_DF.shape[0] #Extract length of data before this process
+    before = df.shape[0] #Extract length of data before this process
 
     #Create Merged dataset only with data where wells exist in both databases (i.e., well has data and location info)
-    df = pd.merge(data_DF, metadata_DF.set_index(&#39;API_NUMBER&#39;), on=&#39;API_NUMBER&#39;, how=&#39;left&#39;, indicator=&#39;Exist&#39;)
+    df = pd.merge(df, metadata_df.set_index(&#39;API_NUMBER&#39;), on=&#39;API_NUMBER&#39;, how=&#39;left&#39;, indicator=&#39;Exist&#39;)
     df[&#39;Existbool&#39;] = np.where(df[&#39;Exist&#39;] == &#39;both&#39;, True, False)
     df = df[df[&#39;Existbool&#39;]==True].drop([&#39;Exist&#39;,&#39;Existbool&#39;], axis=1)
     
     #Create new downhole data table with only relevant records and columns
     keepCols=[&#39;API_NUMBER&#39;,&#39;TABLE_NAME&#39;,&#39;FORMATION&#39;,&#39;THICKNESS&#39;,&#39;TOP&#39;,&#39;BOTTOM&#39;]
-    data_DF = df[keepCols].copy()
+    df = df[keepCols].copy()
     if verbose:
-        after = data_DF.shape[0]
+        after = df.shape[0]
         print(str(before-after)+&#39; records removed without location information.&#39;)
-        print(str(data_DF.shape[0])+&#39; wells remain from &#39;+str(data_DF[&#39;API_NUMBER&#39;].unique().shape[0])+&#39; geolocated wells in study area.&#39;)
-    return data_DF</code></pre>
+        print(str(df.shape[0])+&#39; wells remain from &#39;+str(df[&#39;API_NUMBER&#39;].unique().shape[0])+&#39; geolocated wells in study area.&#39;)
+    return df</code></pre>
 </details>
 </dd>
 <dt id="w4h.sample_raster_points"><code class="name flex">

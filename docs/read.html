@@ -94,7 +94,7 @@ def get_most_recent(dir=str(repoDir)+&#39;/resources&#39;, glob_pattern=&#39;*&#
     return mostRecentFile
 
 #Function to setup files of interest
-def file_setup(db_dir, metadata_dir=None, xyz_dir=None, data_pattern=&#39;*ISGS_DOWNHOLE_DATA*.txt&#39;, metadata_pattern=&#39;*ISGS_HEADER*.txt&#39;, xyz_pattern= &#39;*xyzData*&#39;, out_dir=None, verbose=False, log=False):
+def file_setup(db_dir, metadata_dir=None, xyz_dir=None, data_pattern=&#39;*ISGS_DOWNHOLE_DATA*.txt&#39;, metadata_pattern=&#39;*ISGS_HEADER*.txt&#39;, xyz_pattern= &#39;*xyzData*&#39;, log_dir=None, verbose=False, log=False):
     &#34;&#34;&#34;Function to setup files, assuming data, metadata, and elevation/location are in separate files (there should be one &#34;key&#34;/identifying column consistent across all files to join/merge them later)
 
     This function may not be useful if files are organized differently than this structure. If that is the case, it is recommended to use the get_most_recent() function for each individual file needed.
@@ -345,18 +345,18 @@ def define_dtypes(df, dtypes=None, dtype_file=None, dtype_dir=str(repoDir)+&#39;
     return dfout
 
 #Define the search term filepaths
-def get_search_terms(spec_dir=str(repoDir)+&#39;/resources/&#39;, specStartPattern=&#39;*SearchTerms-Specific*&#39;, start_dir=None, startGlobPattern = &#39;*SearchTerms-Start*&#39;, log=False):
+def get_search_terms(spec_dir=str(repoDir)+&#39;/resources/&#39;, spec_glob_pattern=&#39;*SearchTerms-Specific*&#39;, start_dir=None, start_glob_pattern = &#39;*SearchTerms-Start*&#39;, log=False):
     &#34;&#34;&#34;Read in dictionary files for downhole data
 
     Parameters
     ----------
     spec_dir : str or pathlib.Path, optional
         Directory where the file containing the specific search terms is located, by default str(repoDir)+&#39;/resources/&#39;
-    specStartPattern : str, optional
+    spec_glob_pattern : str, optional
         Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default &#39;*SearchTerms-Specific*&#39;
     start_dir : str or None, optional
         Directory where the file containing the start search terms is located, by default None
-    startGlobPattern : str, optional
+    start_glob_pattern : str, optional
         Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default &#39;*SearchTerms-Start*&#39;
     log : bool, default = True
         Whether to log inputs and outputs to log file.        
@@ -374,8 +374,8 @@ def get_search_terms(spec_dir=str(repoDir)+&#39;/resources/&#39;, specStartPatte
     if start_dir is None:
         start_dir = spec_dir
 
-    specTermsPath = get_most_recent(spec_dir, specStartPattern)
-    startTermsPath = get_most_recent(start_dir, startGlobPattern)
+    specTermsPath = get_most_recent(spec_dir, spec_glob_pattern)
+    startTermsPath = get_most_recent(start_dir, start_glob_pattern)
     
     return specTermsPath, startTermsPath
 
@@ -607,7 +607,7 @@ def read_lithologies(litho_dir=None, lith_file=None, interp_col=&#39;LITHOLOGY&#
 </details>
 </dd>
 <dt id="w4h.read.file_setup"><code class="name flex">
-<span>def <span class="ident">file_setup</span></span>(<span>db_dir, metadata_dir=None, xyz_dir=None, data_pattern='*ISGS_DOWNHOLE_DATA*.txt', metadata_pattern='*ISGS_HEADER*.txt', xyz_pattern='*xyzData*', out_dir=None, verbose=False, log=False)</span>
+<span>def <span class="ident">file_setup</span></span>(<span>db_dir, metadata_dir=None, xyz_dir=None, data_pattern='*ISGS_DOWNHOLE_DATA*.txt', metadata_pattern='*ISGS_HEADER*.txt', xyz_pattern='*xyzData*', log_dir=None, verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to setup files, assuming data, metadata, and elevation/location are in separate files (there should be one "key"/identifying column consistent across all files to join/merge them later)</p>
@@ -640,7 +640,7 @@ def read_lithologies(litho_dir=None, lith_file=None, interp_col=&#39;LITHOLOGY&#
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def file_setup(db_dir, metadata_dir=None, xyz_dir=None, data_pattern=&#39;*ISGS_DOWNHOLE_DATA*.txt&#39;, metadata_pattern=&#39;*ISGS_HEADER*.txt&#39;, xyz_pattern= &#39;*xyzData*&#39;, out_dir=None, verbose=False, log=False):
+<pre><code class="python">def file_setup(db_dir, metadata_dir=None, xyz_dir=None, data_pattern=&#39;*ISGS_DOWNHOLE_DATA*.txt&#39;, metadata_pattern=&#39;*ISGS_HEADER*.txt&#39;, xyz_pattern= &#39;*xyzData*&#39;, log_dir=None, verbose=False, log=False):
     &#34;&#34;&#34;Function to setup files, assuming data, metadata, and elevation/location are in separate files (there should be one &#34;key&#34;/identifying column consistent across all files to join/merge them later)
 
     This function may not be useful if files are organized differently than this structure. If that is the case, it is recommended to use the get_most_recent() function for each individual file needed.
@@ -800,7 +800,7 @@ def read_lithologies(litho_dir=None, lith_file=None, interp_col=&#39;LITHOLOGY&#
 </details>
 </dd>
 <dt id="w4h.read.get_search_terms"><code class="name flex">
-<span>def <span class="ident">get_search_terms</span></span>(<span>spec_dir='C:\\Users\\riley\\LocalData\\Code\\Github\\wells4hydrogeology/resources/', specStartPattern='*SearchTerms-Specific*', start_dir=None, startGlobPattern='*SearchTerms-Start*', log=False)</span>
+<span>def <span class="ident">get_search_terms</span></span>(<span>spec_dir='C:\\Users\\riley\\LocalData\\Code\\Github\\wells4hydrogeology/resources/', spec_glob_pattern='*SearchTerms-Specific*', start_dir=None, start_glob_pattern='*SearchTerms-Start*', log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Read in dictionary files for downhole data</p>
@@ -808,11 +808,11 @@ def read_lithologies(litho_dir=None, lith_file=None, interp_col=&#39;LITHOLOGY&#
 <dl>
 <dt><strong><code>spec_dir</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path</code>, optional</dt>
 <dd>Directory where the file containing the specific search terms is located, by default str(repoDir)+'/resources/'</dd>
-<dt><strong><code>specStartPattern</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dt><strong><code>spec_glob_pattern</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default '<em>SearchTerms-Specific</em>'</dd>
 <dt><strong><code>start_dir</code></strong> :&ensp;<code>str</code> or <code>None</code>, optional</dt>
 <dd>Directory where the file containing the start search terms is located, by default None</dd>
-<dt><strong><code>startGlobPattern</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dt><strong><code>start_glob_pattern</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default '<em>SearchTerms-Start</em>'</dd>
 <dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= True</code></dt>
 <dd>Whether to log inputs and outputs to log file.</dd>
@@ -824,18 +824,18 @@ Tuple containing the pandas dataframe with specific search terms and one with st
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_search_terms(spec_dir=str(repoDir)+&#39;/resources/&#39;, specStartPattern=&#39;*SearchTerms-Specific*&#39;, start_dir=None, startGlobPattern = &#39;*SearchTerms-Start*&#39;, log=False):
+<pre><code class="python">def get_search_terms(spec_dir=str(repoDir)+&#39;/resources/&#39;, spec_glob_pattern=&#39;*SearchTerms-Specific*&#39;, start_dir=None, start_glob_pattern = &#39;*SearchTerms-Start*&#39;, log=False):
     &#34;&#34;&#34;Read in dictionary files for downhole data
 
     Parameters
     ----------
     spec_dir : str or pathlib.Path, optional
         Directory where the file containing the specific search terms is located, by default str(repoDir)+&#39;/resources/&#39;
-    specStartPattern : str, optional
+    spec_glob_pattern : str, optional
         Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default &#39;*SearchTerms-Specific*&#39;
     start_dir : str or None, optional
         Directory where the file containing the start search terms is located, by default None
-    startGlobPattern : str, optional
+    start_glob_pattern : str, optional
         Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default &#39;*SearchTerms-Start*&#39;
     log : bool, default = True
         Whether to log inputs and outputs to log file.        
@@ -853,8 +853,8 @@ Tuple containing the pandas dataframe with specific search terms and one with st
     if start_dir is None:
         start_dir = spec_dir
 
-    specTermsPath = get_most_recent(spec_dir, specStartPattern)
-    startTermsPath = get_most_recent(start_dir, startGlobPattern)
+    specTermsPath = get_most_recent(spec_dir, spec_glob_pattern)
+    startTermsPath = get_most_recent(start_dir, start_glob_pattern)
     
     return specTermsPath, startTermsPath</code></pre>
 </details>
