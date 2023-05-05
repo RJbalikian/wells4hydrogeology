@@ -63,7 +63,7 @@ def logger_function(logtocommence, parameters, func_name):
         curr_time = datetime.datetime.now()
         FORMAT = '%(asctime)s  %(message)s'
         if log_file == True and (func_name == 'file_setup' or func_name == 'new_logfile'):
-            out_dir = parameters.pop('out_dir', None)
+            out_dir = parameters.pop('log_dir', None)
             if out_dir is None:
                 out_dir = parameters['db_dir']
             timestamp = curr_time.strftime('%Y-%m-%d_%H-%M-%S')

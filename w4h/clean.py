@@ -6,12 +6,12 @@ import pandas as pd
 from w4h import logger_function
 
 #This function removes all data from the downholeData table where there is no location information (in the headerData table). This includes elevation info too
-def remove_nonlocated(data_DF, metadata_DF, verbose=False, log=False):
+def remove_nonlocated(df, metadata_df, verbose=False, log=False):
     """Function to remove wells and well intervals where there is no location information
 
     Parameters
     ----------
-    data_DF : pandas.DataFrame
+    df : pandas.DataFrame
         Pandas dataframe containing well descriptions
     metadata_DF : pandas.DataFrame
         Pandas dataframe containing metadata, including well locations (e.g., Latitude/Longitude)
@@ -20,26 +20,26 @@ def remove_nonlocated(data_DF, metadata_DF, verbose=False, log=False):
 
     Returns
     -------
-    data_DF : pandas.DataFrame
+    df : pandas.DataFrame
         Pandas dataframe containing only data with location information
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    before = data_DF.shape[0] #Extract length of data before this process
+    before = df.shape[0] #Extract length of data before this process
 
     #Create Merged dataset only with data where wells exist in both databases (i.e., well has data and location info)
-    df = pd.merge(data_DF, metadata_DF.set_index('API_NUMBER'), on='API_NUMBER', how='left', indicator='Exist')
+    df = pd.merge(df, metadata_df.set_index('API_NUMBER'), on='API_NUMBER', how='left', indicator='Exist')
     df['Existbool'] = np.where(df['Exist'] == 'both', True, False)
     df = df[df['Existbool']==True].drop(['Exist','Existbool'], axis=1)
     
     #Create new downhole data table with only relevant records and columns
     keepCols=['API_NUMBER','TABLE_NAME','FORMATION','THICKNESS','TOP','BOTTOM']
-    data_DF = df[keepCols].copy()
+    df = df[keepCols].copy()
     if verbose:
-        after = data_DF.shape[0]
+        after = df.shape[0]
         print(str(before-after)+' records removed without location information.')
-        print(str(data_DF.shape[0])+' wells remain from '+str(data_DF['API_NUMBER'].unique().shape[0])+' geolocated wells in study area.')
-    return data_DF
+        print(str(df.shape[0])+' wells remain from '+str(df['API_NUMBER'].unique().shape[0])+' geolocated wells in study area.')
+    return df
 
 #Function to remove data (intended for headerData) without surface topography information
 ##THIS ASSUMES AND SHOULD ONLY BE RUN AFTER ALL DESIRED SURFACE TOPO DATASETS HAVE BEEN MERGED/ADDED
