@@ -92,11 +92,11 @@ def logger_function(logtocommence, parameters, func_name):
         FORMAT = &#39;%(asctime)s  %(message)s&#39;
         if log_file == True and (func_name == &#39;file_setup&#39; or func_name == &#39;new_logfile&#39;):
             out_dir = parameters.pop(&#39;out_dir&#39;, None)
-            print(out_dir)
             if out_dir is None:
                 out_dir = parameters[&#39;db_dir&#39;]
             timestamp = curr_time.strftime(&#39;%Y-%m-%d_%H-%M-%S&#39;)
             log_filename = pathlib.Path(out_dir).joinpath(f&#34;log_{timestamp}.txt&#34;)
+            print(&#39;Logging data to&#39;, log_filename)
             logging.basicConfig(filename=log_filename, level=logging.INFO, format=FORMAT, filemode=&#39;w&#39;)
             logging.info(f&#34;Called {func_name} with args: {parameters}&#34;)
         elif log_file == True:
@@ -163,11 +163,11 @@ def logger_function(logtocommence, parameters, func_name):
         FORMAT = &#39;%(asctime)s  %(message)s&#39;
         if log_file == True and (func_name == &#39;file_setup&#39; or func_name == &#39;new_logfile&#39;):
             out_dir = parameters.pop(&#39;out_dir&#39;, None)
-            print(out_dir)
             if out_dir is None:
                 out_dir = parameters[&#39;db_dir&#39;]
             timestamp = curr_time.strftime(&#39;%Y-%m-%d_%H-%M-%S&#39;)
             log_filename = pathlib.Path(out_dir).joinpath(f&#34;log_{timestamp}.txt&#34;)
+            print(&#39;Logging data to&#39;, log_filename)
             logging.basicConfig(filename=log_filename, level=logging.INFO, format=FORMAT, filemode=&#39;w&#39;)
             logging.info(f&#34;Called {func_name} with args: {parameters}&#34;)
         elif log_file == True:

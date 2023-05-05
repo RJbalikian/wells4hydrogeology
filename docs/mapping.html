@@ -549,7 +549,7 @@ def read_model_grid(study_area, gridpath, nodataval=0, read_grid=True, node_bysp
     if read_grid:
         modelGridIN = rxr.open_rasterio(gridpath)
 
-        file = w4h.get_resource_path(&#39;isws_crs.txt&#39;)
+        file = w4h.read.__get_resource_path(&#39;isws_crs.txt&#39;)
         iswsCRS = w4h.read_dict(file, keytype=None)
 
         if grid_crs is None:
@@ -1343,7 +1343,7 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
     if read_grid:
         modelGridIN = rxr.open_rasterio(gridpath)
 
-        file = w4h.get_resource_path(&#39;isws_crs.txt&#39;)
+        file = w4h.read.__get_resource_path(&#39;isws_crs.txt&#39;)
         iswsCRS = w4h.read_dict(file, keytype=None)
 
         if grid_crs is None:

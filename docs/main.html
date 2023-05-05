@@ -527,11 +527,12 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
             print(&#39;ERROR: Either dtype_file (and dtype_dir) or dtypes must be defined&#39;)
             return 
         
-        dtype_file = pathlib.Path(dtype_dir+dtype_file)
+        dtype_file = pathlib.Path(dtype_dir).joinpath(dtype_file)
         dtypes = read_dict(file=dtype_file)
     
+    dfcols = dfout.columns
     for i in range(0, np.shape(dfout)[1]):
-        dfout.iloc[:,i] = df.iloc[:,i].astype(dtypes[df.iloc[:,i].name])
+        dfout.iloc[:,i] = df.iloc[:,i].astype(dtypes[dfcols[i]])
 
     return dfout</code></pre>
 </details>
@@ -1161,16 +1162,16 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
     else:
         xyz_dir=pathlib.Path(xyz_dir)
 
-    downholeDataFILE = get_most_recent(raw_directory, data_pattern)
-    headerDataFILE = get_most_recent(metadata_dir, metadata_pattern)
-    xyzInFILE = get_most_recent(xyz_dir,xyz_pattern)
+    downholeDataFILE = get_most_recent(raw_directory, data_pattern, verbose=verbose)
+    headerDataFILE = get_most_recent(metadata_dir, metadata_pattern, verbose=verbose)
+    xyzInFILE = get_most_recent(xyz_dir,xyz_pattern, verbose=verbose)
 
     downholeDataPATH = pathlib.Path(downholeDataFILE)
     headerDataPATH = pathlib.Path(headerDataFILE)
     xyzInPATH = pathlib.Path(xyzInFILE)
 
     if verbose:
-        print(&#39;Using the following files:\n&#39;)
+        print(&#39;Using the following files:&#39;)
         print(&#39;\t&#39;, downholeDataFILE)
         print(&#39;\t&#39;, headerDataFILE)
         print(&#39;\t&#39;, xyzInFILE)
@@ -1428,7 +1429,6 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
     todayDateStr = str(todayDate)
 
     files = pathlib.Path(dir).rglob(glob_pattern) #Get all the files that fit the pattern
-
     fileDates = []
     for f in files: #Get the file dates from their file modification times
         fileDates.append(np.datetime64(datetime.datetime.fromtimestamp(os.path.getmtime(f))))
@@ -2077,11 +2077,11 @@ If False, return list of geopandas.geodataframes with only essential information
         FORMAT = &#39;%(asctime)s  %(message)s&#39;
         if log_file == True and (func_name == &#39;file_setup&#39; or func_name == &#39;new_logfile&#39;):
             out_dir = parameters.pop(&#39;out_dir&#39;, None)
-            print(out_dir)
             if out_dir is None:
                 out_dir = parameters[&#39;db_dir&#39;]
             timestamp = curr_time.strftime(&#39;%Y-%m-%d_%H-%M-%S&#39;)
             log_filename = pathlib.Path(out_dir).joinpath(f&#34;log_{timestamp}.txt&#34;)
+            print(&#39;Logging data to&#39;, log_filename)
             logging.basicConfig(filename=log_filename, level=logging.INFO, format=FORMAT, filemode=&#39;w&#39;)
             logging.info(f&#34;Called {func_name} with args: {parameters}&#34;)
         elif log_file == True:
@@ -2695,7 +2695,7 @@ Whether the input column is using boolean values as its target indicator</p>
     if read_grid:
         modelGridIN = rxr.open_rasterio(gridpath)
 
-        file = w4h.get_resource_path(&#39;isws_crs.txt&#39;)
+        file = w4h.read.__get_resource_path(&#39;isws_crs.txt&#39;)
         iswsCRS = w4h.read_dict(file, keytype=None)
 
         if grid_crs is None:
@@ -2777,17 +2777,15 @@ Whether the input column is using boolean values as its target indicator</p>
 </details>
 </dd>
 <dt id="w4h.read_raw_txt"><code class="name flex">
-<span>def <span class="ident">read_raw_txt</span></span>(<span>raw_dir, data_filename, metadata_filename, data_cols=None, metadata_cols=None, x_col='LONGITUDE', ycol='LATITUDE', id_col='API_NUMBER', encoding='latin-1', verbose=False, log=False)</span>
+<span>def <span class="ident">read_raw_txt</span></span>(<span>data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, x_col='LONGITUDE', ycol='LATITUDE', id_col='API_NUMBER', encoding='latin-1', verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Easy function to read raw .txt files output from (for example), an Access database</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>raw_dir</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code></dt>
-<dd>String or pathlib.Path to directory containing the files.</dd>
-<dt><strong><code>data_filename</code></strong> :&ensp;<code>str</code></dt>
+<dt><strong><code>data_filepath</code></strong> :&ensp;<code>str</code></dt>
 <dd>Filename of the file containing data, including the extension.</dd>
-<dt><strong><code>metadata_filename</code></strong> :&ensp;<code>str</code></dt>
+<dt><strong><code>metadata_filepath</code></strong> :&ensp;<code>str</code></dt>
 <dd>Filename of the file containing metadata, including the extension.</dd>
 <dt><strong><code>data_cols</code></strong> :&ensp;<code>list</code>, default <code>= None</code></dt>
 <dd>List with strings with names of columns from txt file to keep after reading. If None, ["API_NUMBER","TABLE_NAME","FORMATION","THICKNESS","TOP","BOTTOM"], by default None.</dd>
@@ -2813,16 +2811,14 @@ Tuple/list with two pandas dataframes: (data, metadata)</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_raw_txt(raw_dir, data_filename, metadata_filename, data_cols=None, metadata_cols=None, x_col=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, id_col=&#39;API_NUMBER&#39;, encoding=&#39;latin-1&#39;, verbose=False, log=False):
+<pre><code class="python">def read_raw_txt(data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, x_col=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, id_col=&#39;API_NUMBER&#39;, encoding=&#39;latin-1&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Easy function to read raw .txt files output from (for example), an Access database
 
     Parameters
     ----------
-    raw_dir : str or pathlib.Path object
-        String or pathlib.Path to directory containing the files.
-    data_filename : str
+    data_filepath : str
         Filename of the file containing data, including the extension.
-    metadata_filename : str
+    metadata_filepath : str
         Filename of the file containing metadata, including the extension.
     data_cols : list, default = None
         List with strings with names of columns from txt file to keep after reading. If None, [&#34;API_NUMBER&#34;,&#34;TABLE_NAME&#34;,&#34;FORMATION&#34;,&#34;THICKNESS&#34;,&#34;TOP&#34;,&#34;BOTTOM&#34;], by default None.
@@ -2850,16 +2846,16 @@ Tuple/list with two pandas dataframes: (data, metadata)</p></div>
 
     if data_cols is None:
         data_useCols = [&#34;API_NUMBER&#34;,&#34;TABLE_NAME&#34;,&#34;FORMATION&#34;,&#34;THICKNESS&#34;,&#34;TOP&#34;,&#34;BOTTOM&#34;]
+    else:
+        data_useCols= data_cols
+
     if metadata_cols is None:
         metadata_useCols = [&#39;API_NUMBER&#39;,&#34;TOTAL_DEPTH&#34;,&#34;SECTION&#34;,&#34;TWP&#34;,&#34;TDIR&#34;,&#34;RNG&#34;,&#34;RDIR&#34;,&#34;MERIDIAN&#34;,&#34;QUARTERS&#34;,&#34;ELEVATION&#34;,&#34;ELEVREF&#34;,&#34;COUNTY_CODE&#34;,&#34;LATITUDE&#34;,&#34;LONGITUDE&#34;,&#34;ELEVSOURCE&#34;]
-   
-    raw_dir = pathlib.path(raw_dir)
-    raw_dir = raw_dir.as_posix()
-    if raw_dir[-1] != &#39;/&#39;:
-        raw_dir = raw_dir + &#39;/&#39;
+    else:
+        metadata_useCols= metadata_cols
 
-    downholeDataIN = pd.read_csv(raw_dir+str(data_filename), sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=data_useCols)
-    headerDataIN = pd.read_csv(raw_dir+str(metadata_filename), sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=metadata_useCols)
+    downholeDataIN = pd.read_csv(data_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=data_useCols)
+    headerDataIN = pd.read_csv(metadata_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=metadata_useCols)
 
     #Drop data with no API        
     downholeDataIN = downholeDataIN.dropna(subset=[id_col]) #Drop data with no API
@@ -3226,16 +3222,14 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 </details>
 </dd>
 <dt id="w4h.read_xyz"><code class="name flex">
-<span>def <span class="ident">read_xyz</span></span>(<span>rawdir, xyzfile, dtypes=None, verbose=False, log=False)</span>
+<span>def <span class="ident">read_xyz</span></span>(<span>xyzpath, dtypes=None, verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to read file containing xyz data (elevation/location)</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>rawdir</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code></dt>
-<dd>String to the directory in which the xyz file is contained</dd>
-<dt><strong><code>xyzfile</code></strong> :&ensp;<code>str</code></dt>
-<dd>String with the filename of the xyz file, including extension.</dd>
+<dt><strong><code>xyzpath</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path</code></dt>
+<dd>Filepath of the xyz file, including extension</dd>
 <dt><strong><code>dtypes</code></strong> :&ensp;<code>dict</code>, default <code>= None</code></dt>
 <dd>Dictionary containing the datatypes for the columns int he xyz file. If None, {'ID':np.uint32,'API_NUMBER':np.uint64,'LATITUDE':np.float64,'LONGITUDE':np.float64,'ELEV_FT':np.float64}, by default None</dd>
 <dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
@@ -3252,15 +3246,13 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_xyz(rawdir, xyzfile, dtypes=None, verbose=False, log=False):
+<pre><code class="python">def read_xyz(xyzpath, dtypes=None, verbose=False, log=False):
     &#34;&#34;&#34;Function to read file containing xyz data (elevation/location)
 
     Parameters
     ----------
-    rawdir : str or pathlib.Path object
-        String to the directory in which the xyz file is contained
-    xyzfile : str
-        String with the filename of the xyz file, including extension.
+    xyzpath : str or pathlib.Path
+        Filepath of the xyz file, including extension
     dtypes : dict, default = None
         Dictionary containing the datatypes for the columns int he xyz file. If None, {&#39;ID&#39;:np.uint32,&#39;API_NUMBER&#39;:np.uint64,&#39;LATITUDE&#39;:np.float64,&#39;LONGITUDE&#39;:np.float64,&#39;ELEV_FT&#39;:np.float64}, by default None
     verbose : bool, default = False
@@ -3278,7 +3270,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     if dtypes is None:
         xyzDTypes = {&#39;ID&#39;:np.uint32,&#39;API_NUMBER&#39;:np.uint64,&#39;LATITUDE&#39;:np.float64,&#39;LONGITUDE&#39;:np.float64,&#39;ELEV_FT&#39;:np.float64}
 
-    xyzDataIN = pd.read_csv(rawdir+str(xyzfile), sep=&#39;,&#39;, header=&#39;infer&#39;, dtype=xyzDTypes, index_col=&#39;ID&#39;)
+    xyzDataIN = pd.read_csv(xyzpath, sep=&#39;,&#39;, header=&#39;infer&#39;, dtype=xyzDTypes, index_col=&#39;ID&#39;)
     
     if verbose:
         print(&#39;XYZ file has &#39; + str(xyzDataIN.shape[0])+&#39; records with elevation and location.&#39;)
