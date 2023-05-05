@@ -61,25 +61,25 @@ def merge_tables(data_df, header_df, data_cols=None, header_cols=None, auto_pick
     if data_cols is None:
         data_cols = data_df.columns
 
-    #Drop duplicate columns
-    if drop_duplicate_cols:
-        header_colCopy= header_cols.copy()
-        remCount = 0
-        for i, c in enumerate(header_colCopy):
-            if c in data_cols and c != on:
-                print('REMOVING', header_cols[i-remCount])
-                header_cols.pop(i - remCount)
-                remCount += 1
-
-    leftTable_join = data_df[data_cols]
-    rightTable_join = header_df[header_cols]
-
     #Defults for on and how
     if 'on' not in kwargs.keys():
         kwargs['on']='API_NUMBER'
 
     if 'how' not in kwargs.keys():
         kwargs['how']='inner'
+
+    #Drop duplicate columns
+    if drop_duplicate_cols:
+        header_colCopy= header_cols.copy()
+        remCount = 0
+        for i, c in enumerate(header_colCopy):
+            if c in data_cols and c != kwargs['on']:
+                print('REMOVING', header_cols[i-remCount])
+                header_cols.pop(i - remCount)
+                remCount += 1
+
+    leftTable_join = data_df[data_cols]
+    rightTable_join = header_df[header_cols]
 
     mergedTable = pd.merge(left=leftTable_join, right=rightTable_join, **kwargs)
     return mergedTable
