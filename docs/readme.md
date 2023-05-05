@@ -57,7 +57,8 @@ graph TD;
 
 ```mermaid
 graph TD;
-    A[Input 1] --> B[Step 1];
+    A[Read Files] --> B[Filepaths];
+    AA['Data file, metadata file, xyz file']
     B --> C[Output 1];
     A --> D[Step 2];
     D --> E[Output 2];
