@@ -13,7 +13,6 @@ Using well descriptions from these database tables, the code contained here extr
 
 # API Documentation
 <a href="main.html">API Documentation</a>
-API Documentation: [here]("main.html")
 
 # Dependencies
  The w4h module has the following dependencies:
