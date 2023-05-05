@@ -45,6 +45,7 @@ Required inputs include:
 - xyzData_yyyy-mm-dd.csv: most recent update of statewide wells with API, Latitude, Longitude, and surface elevation extracted from statewide lidar topography
 
 ## Intended workflow 
+''' mermaid
 graph TD;
     A[Input 1] --> B[Step 1];
     B --> C[Output 1];
@@ -52,3 +53,4 @@ graph TD;
     D --> E[Output 2];
     E --> F[Step 3];
     F --> G[Output 3];
+'''
