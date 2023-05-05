@@ -89,25 +89,25 @@ def merge_tables(data_df, header_df, data_cols=None, header_cols=None, auto_pick
     if data_cols is None:
         data_cols = data_df.columns
 
-    #Drop duplicate columns
-    if drop_duplicate_cols:
-        header_colCopy= header_cols.copy()
-        remCount = 0
-        for i, c in enumerate(header_colCopy):
-            if c in data_cols and c != on:
-                print(&#39;REMOVING&#39;, header_cols[i-remCount])
-                header_cols.pop(i - remCount)
-                remCount += 1
-
-    leftTable_join = data_df[data_cols]
-    rightTable_join = header_df[header_cols]
-
     #Defults for on and how
     if &#39;on&#39; not in kwargs.keys():
         kwargs[&#39;on&#39;]=&#39;API_NUMBER&#39;
 
     if &#39;how&#39; not in kwargs.keys():
         kwargs[&#39;how&#39;]=&#39;inner&#39;
+
+    #Drop duplicate columns
+    if drop_duplicate_cols:
+        header_colCopy= header_cols.copy()
+        remCount = 0
+        for i, c in enumerate(header_colCopy):
+            if c in data_cols and c != kwargs[&#39;on&#39;]:
+                print(&#39;REMOVING&#39;, header_cols[i-remCount])
+                header_cols.pop(i - remCount)
+                remCount += 1
+
+    leftTable_join = data_df[data_cols]
+    rightTable_join = header_df[header_cols]
 
     mergedTable = pd.merge(left=leftTable_join, right=rightTable_join, **kwargs)
     return mergedTable
@@ -1089,25 +1089,25 @@ If False, return list of geopandas.geodataframes with only essential information
     if data_cols is None:
         data_cols = data_df.columns
 
-    #Drop duplicate columns
-    if drop_duplicate_cols:
-        header_colCopy= header_cols.copy()
-        remCount = 0
-        for i, c in enumerate(header_colCopy):
-            if c in data_cols and c != on:
-                print(&#39;REMOVING&#39;, header_cols[i-remCount])
-                header_cols.pop(i - remCount)
-                remCount += 1
-
-    leftTable_join = data_df[data_cols]
-    rightTable_join = header_df[header_cols]
-
     #Defults for on and how
     if &#39;on&#39; not in kwargs.keys():
         kwargs[&#39;on&#39;]=&#39;API_NUMBER&#39;
 
     if &#39;how&#39; not in kwargs.keys():
         kwargs[&#39;how&#39;]=&#39;inner&#39;
+
+    #Drop duplicate columns
+    if drop_duplicate_cols:
+        header_colCopy= header_cols.copy()
+        remCount = 0
+        for i, c in enumerate(header_colCopy):
+            if c in data_cols and c != kwargs[&#39;on&#39;]:
+                print(&#39;REMOVING&#39;, header_cols[i-remCount])
+                header_cols.pop(i - remCount)
+                remCount += 1
+
+    leftTable_join = data_df[data_cols]
+    rightTable_join = header_df[header_cols]
 
     mergedTable = pd.merge(left=leftTable_join, right=rightTable_join, **kwargs)
     return mergedTable</code></pre>
