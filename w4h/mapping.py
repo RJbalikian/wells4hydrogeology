@@ -1,4 +1,5 @@
 import datetime
+import inspect
 import json
 import pathlib
 import os
@@ -17,46 +18,55 @@ from rasterio import MemoryFile
 
 import w4h
 
+from w4h import logger_function
+
 lidarURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
+studyareapath = r"\\isgs-sinkhole.ad.uillinois.edu\geophysics\Balikian\ISWS_HydroGeo\WellDataAutoClassification\SampleData\ESL_StudyArea_5mi.shp"
 
 #Read study area shapefile (or other file) into geopandas
-def read_study_area(studyareapath, crs=''):
+def read_study_area(studyareapath=studyareapath, crs='', log=False):
     """Read study area geospatial file into geopandas
 
     Parameters
     ----------
-    studyareapath : str or pathlib.Path
+    studyareapath : str or pathlib.Path, default=studyareapath
         Filepath to any geospatial file readable by geopandas. 
         Polygon is best, but may work with other types if extent is correct.
     crs : str, tuple, dict, optional
         CRS designation readable by geopandas/pyproj
+    log : bool, default = False
+        Whether to log results to log file, by default False
 
     Returns
     -------
     studyAreaIN : geopandas dataframe
         Geopandas dataframe with polygon geometry.
     """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
     studyAreaIN = gpd.read_file(studyareapath)
     return studyAreaIN
 
-
-def coords2Geometry(df, xCol='LONGITUDE', yCol='LATITUDE', zCol='ELEV_FT', crs='EPSG:4269', useZ=False):
+#Convert coords in columns to geometry in geopandas dataframe
+def coords2geometry(df, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', crs='EPSG:4269', use_z=False, log=False):
     """Adds geometry to points with xy coordinates in the specified coordinate reference system.
 
     Parameters
     ----------
     df : pandas.Dataframe
         a Pandas dataframe containing points
-    xCol : str, default='LONGITUDE'
+    xcol : str, default='LONGITUDE'
         Name of column holding x coordinate data in df
-    yCol : str, default='LATITUDE'
+    ycol : str, default='LATITUDE'
         Name of column holding y coordinate data in df
-    zCol : str, default='ELEV_FT'
+    zcol : str, default='ELEV_FT'
         Name of column holding z coordinate data in df
     crs : str, default='EPSG:4269
         Name of crs used for geometry
-    useZ : bool, default=False
+    use_z : bool, default=False
         Whether to use z column in calculation
+    log : bool, default = False
+        Whether to log results to log file, by default False
 
     Returns
     -------
@@ -64,15 +74,16 @@ def coords2Geometry(df, xCol='LONGITUDE', yCol='LATITUDE', zCol='ELEV_FT', crs='
         Geopandas dataframe with points and their geometry values
 
     """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     ptCRS=crs
 
-    x = df[xCol].to_numpy()
-    y = df[yCol].to_numpy()
-    z = df[zCol].to_numpy()
+    x = df[xcol].to_numpy()
+    y = df[ycol].to_numpy()
+    z = df[zcol].to_numpy()
 
     #coords = pd.concat([y, x], axis=1)
-    if useZ:
+    if use_z:
         df["geometry"] = gpd.points_from_xy(x, y, z=z, crs=ptCRS)
     else:
         df["geometry"] = gpd.points_from_xy(x, y, crs=ptCRS)
@@ -80,32 +91,37 @@ def coords2Geometry(df, xCol='LONGITUDE', yCol='LATITUDE', zCol='ELEV_FT', crs='
     gdf = gpd.GeoDataFrame(df, crs=ptCRS)
     return gdf
 
-def clipHeader2StudyArea(studyarea, headerdata, headerCRS='EPSG:4269'):
+#Clip a geodataframe to a study area
+def clip_gdf2study_area(study_area, gdf, gdf_crs='EPSG:4269', log=False):
     """Clips dataframe to only include things within study area.
 
     Parameters
     ----------
-            studyarea : geopandas.GeoDataFrame
-                Inputs study area polygon
-            headerdata : geopandas.GeoDataFrame
-                Inputs point data
-            headerCRS : str, default='EPSG:4269'
-                Inputs crs to project study area to
-    
-    Returns:
-            headerDataClip : geopandas.GeoDataFrame
-                Contains only points within the study area
+    study_area : geopandas.GeoDataFrame
+        Inputs study area polygon
+    gdf : geopandas.GeoDataFrame
+        Inputs point data
+    gdf_crs : str, default='EPSG:4269'
+        Inputs crs to project study area to
+    log : bool, default = False
+        Whether to log results to log file, by default False
+
+    Returns
+    -------
+    gdfClip : geopandas.GeoDataFrame
+        Contains only points within the study area
     
     """
-    studyArea_4269 = studyarea.to_crs(headerCRS).copy()
-    
-    headerDataClip = gpd.clip(headerdata, studyArea_4269) #Data from table is in EPSG:4269, easier to just project study area to ensure data fit
-    
-    headerDataClip.reset_index(inplace=True, drop=True) #Reset index
-    
-    return headerDataClip
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-def sample_raster_points(raster, points_df, xCol='LONGITUDE', yCol='LATITUDE', newColName='SAMPLED', printouts=True):  
+    studyArea_proj = study_area.to_crs(gdf_crs).copy()
+    gdfClip = gpd.clip(gdf, studyArea_proj) #Data from table is in EPSG:4269, easier to just project study area to ensure data fit
+    gdfClip.reset_index(inplace=True, drop=True) #Reset index
+    
+    return gdfClip
+
+#Function to sample raster points to points specified in geodataframe
+def sample_raster_points(raster, points_df, xcol='LONGITUDE', ycol='LATITUDE', new_col='SAMPLED', verbose=True, log=False):  
     """Sample raster values to points from geopandas geodataframe.
 
     Parameters
@@ -114,53 +130,60 @@ def sample_raster_points(raster, points_df, xCol='LONGITUDE', yCol='LATITUDE', n
         Raster containing values to be sampled.
     points_df : geopandas.geodataframe
         Geopandas dataframe with geometry column containing point values to sample.
-    xCol : str, default='LONGITUDE'
+    xcol : str, default='LONGITUDE'
         Column containing name for x-column, by default 'LONGITUDE.'
         This is used to output (potentially) reprojected point coordinates so as not to overwrite the original.
-    yCol : str, default='LATITUDE'
+    ycol : str, default='LATITUDE'
         Column containing name for y-column, by default 'LATITUDE.'
-        This is used to output (potentially) reprojected point coordinates so as not to overwrite the original.    newColName : str, optional
-    newColName : str, default='SAMPLED'
+        This is used to output (potentially) reprojected point coordinates so as not to overwrite the original.    new_col : str, optional
+    new_col : str, default='SAMPLED'
         Name for name of new column containing points sampled from the raster, by default 'SAMPLED'.
-    printouts : bool, default=True
+    verbose : bool, default=True
         Whether to send to print() information about progress of function, by default True.
+    log : bool, default = False
+        Whether to log results to log file, by default False
 
     Returns
     -------
     points_df : geopandas.geodataframe
         Same as points_df, but with sampled values and potentially with reprojected coordinates.
     """
-    if printouts:
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
+    if verbose:
         nowTime = datetime.datetime.now()
         expectMin = (points_df.shape[0]/3054409) * 14
         endTime = nowTime+datetime.timedelta(minutes=expectMin)
-        print(newColName+ " sampling should be done by {:d}:{:02d}".format(endTime.hour, endTime.minute))
+        print(new_col+ " sampling should be done by {:d}:{:02d}".format(endTime.hour, endTime.minute))
 
     #Project points to raster CRS
     rastercrsWKT=raster.spatial_ref.crs_wkt
     points_df = points_df.to_crs(rastercrsWKT)
-    #if xCol=='LONGITUDE' and yCol=='LATITUDE':
-    xCOLOUT = xCol+'_PROJ'
-    yCOLOUT = yCol+'_PROJ'
+    #if xcol=='LONGITUDE' and ycol=='LATITUDE':
+    xCOLOUT = xcol+'_PROJ'
+    yCOLOUT = ycol+'_PROJ'
     points_df[xCOLOUT] = points_df['geometry'].x
     points_df[yCOLOUT] = points_df['geometry'].y
     xData = np.array(points_df[xCOLOUT].values)
     yData = np.array(points_df[yCOLOUT].values)
     sampleArr=raster.sel(x=xData, y=yData, method='nearest').values
     sampleArr = np.diag(sampleArr)
-    sampleDF = pd.DataFrame(sampleArr, columns=[newColName])
-    points_df[newColName] = sampleDF[newColName]
+    sampleDF = pd.DataFrame(sampleArr, columns=[new_col])
+    points_df[new_col] = sampleDF[new_col]
     return points_df
 
-def addElevtoHeader(xyz, header):
-    """Adds elevation to header data file.
+#Merge xyz dataframe into a metadata dataframe
+def xyz_metadata_merge(xyz, metadata, log=False):
+    """Add elevation to header data file.
 
     Parameters
     ----------
     xyz : pandas.Dataframe
         Contains elevation for the points
-    header : pandas dataframe
+    metadata : pandas dataframe
         Header data file
+    log : bool, default = False
+        Whether to log results to log file, by default False
 
     Returns
     -------
@@ -168,17 +191,20 @@ def addElevtoHeader(xyz, header):
         Header dataset merged to get elevation values
 
     """
-    headerXYZData = header.merge(xyz, how='left', on='API_NUMBER')
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
+    headerXYZData = metadata.merge(xyz, how='left', on='API_NUMBER')
     headerXYZData.drop(['LATITUDE_x', 'LONGITUDE_x'], axis=1, inplace=True)
     headerXYZData.rename({'LATITUDE_y':'LATITUDE', 'LONGITUDE_y':'LONGITUDE'}, axis=1, inplace=True)
     return headerXYZData
 
-def readWCS(studyArea, wcs_url=lidarURL, res_x=30, res_y=30, **kwargs):
+#Read wcsservice into rioxarray
+def read_wcs(study_area, wcs_url=lidarURL, res_x=30, res_y=30, log=False, **kwargs):
     """Reads a WebCoverageService from a url and returns a rioxarray dataset containing it.
 
     Parameters
     ----------
-    studyArea : geopandas.GeoDataFrame
+    study_area : geopandas.GeoDataFrame
         Dataframe containing study area polygon
     wcs_url : str, default=lidarURL
     Represents the url for the WCS
@@ -186,13 +212,14 @@ def readWCS(studyArea, wcs_url=lidarURL, res_x=30, res_y=30, **kwargs):
         Sets resolution for x axis
     res_y : int, default=30
         Sets resolution for y axis
-    
+    log : bool, default = False
+        Whether to log results to log file, by default False
+    **kwargs
+
     Returns
     -------
     wcsData_rxr : xarray.DataArray
         A xarray dataarray holding the image from the WebCoverageService
-
-
     """
     #Drawn largely from: https://git.wur.nl/isric/soilgrids/soilgrids.notebooks/-/blob/master/01-WCS-basics.ipynb
     
@@ -202,7 +229,8 @@ def readWCS(studyArea, wcs_url=lidarURL, res_x=30, res_y=30, **kwargs):
     #lidarURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
 
     #studyAreaPath = r"\\isgs-sinkhole.ad.uillinois.edu\geophysics\Balikian\ISWS_HydroGeo\WellDataAutoClassification\SampleData\ESL_StudyArea_5mi.shp"
-    #studyArea = gpd.read_file(studyAreaPath)
+    #study_area = gpd.read_file(studyAreaPath)
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     if 'wcs_url' in kwargs:
         wcs_url = kwargs['wcs_url']
@@ -222,8 +250,8 @@ def readWCS(studyArea, wcs_url=lidarURL, res_x=30, res_y=30, **kwargs):
     data = my_wcs.contents[dataID]
     dBBox = data.boundingboxes #Is this an error?
     
-    studyArea = studyArea.to_crs(data.boundingboxes[0]['nativeSrs'])
-    saBBox = studyArea.total_bounds
+    study_area = study_area.to_crs(data.boundingboxes[0]['nativeSrs'])
+    saBBox = study_area.total_bounds
     
     #In case study area bounding box goes outside data bounding box, use data bounding box values
     newBBox = []
@@ -286,7 +314,8 @@ def readWCS(studyArea, wcs_url=lidarURL, res_x=30, res_y=30, **kwargs):
 
     return wcsData_rxr
 
-def readWMS(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:None', wms_url=lidarURL, srs='EPSG:3857', clip_to_studyarea=True, bbox=[-9889002.615500,5134541.069716,-9737541.607038,5239029.627400],res_x=30, res_y=30, size_x=512, size_y=512, format='image/tiff', **kwargs):
+#Read wms service into rioxarray
+def read_wms(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:None', wms_url=lidarURL, srs='EPSG:3857', clip_to_studyarea=True, res_x=30, res_y=30, size_x=512, size_y=512, format='image/tiff', log=False, **kwargs):
     """
     Reads a WebMapService from a url and returns a rioxarray dataset containing it.
 
@@ -310,22 +339,28 @@ def readWMS(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:None', wms_url=li
         Sets width of result
     size_y : int, default=512
         Sets height of result
-    
+    log : bool, default = False
+        Whether to log results to log file, by default False
+
     Returns
     -------
     wmsData_rxr : xarray.DataArray
         Holds the image from the WebMapService
     """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
     from owslib.wms import WebMapService
     # Define WMS endpoint URL
     if 'wms_url' in kwargs:
         wms_url = kwargs['wms_url']
     else:
         wms_url = wms_url
+
     # Create WMS connection object
     wms = WebMapService(wms_url)
     # Print available layers
     #print(wms.contents)
+
     # Select desired layer
     if 'layer_name' in kwargs:
         layer = kwargs['layer_name']
@@ -333,7 +368,6 @@ def readWMS(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:None', wms_url=li
         layer = layer_name
     
     data = wms.contents#[layer]
-    print(data['0'].__dict__)
     if 'srs' in kwargs:
         studyArea_proj = study_area.to_crs(kwargs['srs'])
         saBBox = studyArea_proj.total_bounds
@@ -344,11 +378,11 @@ def readWMS(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:None', wms_url=li
 
     if layer == 'IL_Statewide_Lidar_DEM_WGS:None':
         dBBox = data['0'].boundingBox #Is this an error?
-        print(dBBox)
 
         gpdDict = {'Label': ['Surf Data Box'], 'geometry': [shapely.geometry.Polygon(((dBBox[0], dBBox[1]), (dBBox[0], dBBox[3]), (dBBox[2], dBBox[3]), (dBBox[2], dBBox[1]), (dBBox[0], dBBox[1])))]}
         dBBoxGDF = gpd.GeoDataFrame(gpdDict, crs=dBBox[4])
         dBBoxGDF.to_crs(srs)
+
         #In case study area bounding box goes outside data bounding box, use data bounding box values
         newBBox = []
         for i,c in enumerate(dBBox):
@@ -367,7 +401,6 @@ def readWMS(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:None', wms_url=li
 
     saWidth = saBBox[2]-saBBox[0]
     saHeight = saBBox[3]-saBBox[1]    
-    print('Done with bbx')
     # Check kwargs for rest of parameters
     if 'size_x' in kwargs:
         size_x = kwargs['size_x']
@@ -377,17 +410,13 @@ def readWMS(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:None', wms_url=li
         format = kwargs['format']
     if 'clip_to_studyarea' in kwargs:
         clip_to_studyarea = kwargs['clip_to_studyarea']
+   
     #get the wms
-    print(saBBox)
-
     if clip_to_studyarea:
         img = wms.getmap(layers=[layer], srs=srs, bbox=saBBox, size=(size_x, size_y), format=format, transparent=True, timeout=60)        
     else:
         img = wms.getmap(layers=[layer], srs=srs, bbox=bbox, size=(size_x, size_y), format=format, transparent=True, timeout=60)
-    print('Done with getmap')
 
-    #with open('statewide_test.tiff', 'wb') as f: 
-    #    f.write(img.read())
     #Save wms in memory to a raster dataset
     with MemoryFile(img) as memfile:
         with memfile.open() as dataset:
@@ -398,44 +427,48 @@ def readWMS(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:None', wms_url=li
 
     return wmsData_rxr
 
-def clipGrid2StudyArea(studyArea, grid, studyAreacrs='', gridcrs=''):
+#Clip a grid to a study area
+def grid2study_area(study_area, grid, study_area_crs='', grid_crs='', log=False):
     """Clips grid to study area.
 
     Parameters
     ----------
-    studyArea : geopandas.GeoDataFrame
+    study_area : geopandas.GeoDataFrame
         inputs study area polygon
     grid : xarray.DataArray
         inputs grid array
-    studyAreacrs : str, default=''
+    study_area_crs : str, default=''
         inputs the coordinate reference system for the study area
-    gridcrs : str, default=''
+    grid_crs : str, default=''
         inputs the coordinate reference system for the grid
-    
+    log : bool, default = False
+        Whether to log results to log file, by default False
+
     Returns
     -------
     grid : xarray.DataArray
         returns xarray containing grid clipped only to area within study area
 
     """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     
-    if studyAreacrs=='':
-        studyAreacrs=studyArea.crs
+    if study_area_crs=='':
+        study_area_crs=study_area.crs
 
-    if gridcrs=='':
+    if grid_crs=='':
         #Get EPSG of model grid
         subtext = grid.spatial_ref.crs_wkt[-20:]
         starInd = subtext.find('EPSG')
-        gridcrs = subtext[starInd:-2].replace('"','').replace(',',':')   
-        #print(gridcrs)
+        grid_crs = subtext[starInd:-2].replace('"','').replace(',',':')   
+        #print(grid_crs)
     
-    if studyAreacrs != gridcrs:
-        studyAreaUnproject = studyArea.copy()
-        studyArea = studyArea.to_crs(gridcrs)   
+    if study_area_crs != grid_crs:
+        studyAreaUnproject = study_area.copy()
+        study_area = study_area.to_crs(grid_crs)   
     else:
-        studyArea = studyArea
+        study_area = study_area
 
-    saExtent = studyArea.total_bounds
+    saExtent = study_area.total_bounds
 
     if grid['y'][-1].values - grid['y'][0].values > 0:
         miny=saExtent[1]
@@ -454,13 +487,13 @@ def clipGrid2StudyArea(studyArea, grid, studyAreacrs='', gridcrs=''):
 
     return grid
 
-
-def read_model_grid(studyArea, gridpath, nodataval=0, read_grid=True, node_bySpace=False, clip2SA=True, studyAreacrs=None, gridcrs=None):
+#Read the model grid into (rio)xarray
+def read_model_grid(study_area, gridpath, nodataval=0, read_grid=True, node_byspace=False, clip2studyarea=True, study_area_crs=None, grid_crs=None, log=False):
     """Reads in model grid to xarray data array
 
     Parameters
     ----------
-    studyArea : geopandas.GeoDataFrame
+    study_area : geopandas.GeoDataFrame
         Dataframe containing study area polygon
     gridpath : str
         Path to model grid file
@@ -468,43 +501,44 @@ def read_model_grid(studyArea, gridpath, nodataval=0, read_grid=True, node_bySpa
         value assigned to areas with no data
     readGrid : bool, default=True
         Whether function to either read grid or create grid
-    node_bySpace : bool, default=False
+    node_byspace : bool, default=False
         Denotes how to create grid
-    clip2SA : bool, default=True
+    clip2studyarea : bool, default=True
         Whether to clip grid to study area
-    studyAreacrs : str, default=None
+    study_area_crs : str, default=None
         Inputs study area crs
-    gridcrs : str, default=None
+    grid_crs : str, default=None
         Inputs grid crs
+    log : bool, default = False
+        Whether to log results to log file, by default False
 
     Returns
     -------
     modelGrid : xarray.DataArray
         Data array containing model grid
     """
-    read_grid = True
-    node_bySpace = False #False means by number of nodes
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     
     if read_grid:
         modelGridIN = rxr.open_rasterio(gridpath)
 
-        file = w4h.get_resource_path('isws_crs.txt')
+        file = w4h.read.__get_resource_path('isws_crs.txt')
         iswsCRS = w4h.read_dict(file, keytype=None)
 
-        if gridcrs is None:
+        if grid_crs is None:
             try:
-                gridcrs=modelGridIN.spatial_ref.crs_wkt
+                grid_crs=modelGridIN.spatial_ref.crs_wkt
             except:
                 modelGridIN.rio.write_crs(iswsCRS)
-        elif gridcrs.lower()=='isws':
+        elif grid_crs.lower()=='isws':
             modelGridIN.rio.write_crs(iswsCRS)
         
-        if clip2SA:                
-            if studyAreacrs is None:
-                studyAreacrs=studyArea.crs
-            studyArea = studyArea.to_crs(gridcrs)
-            studyAreacrs=studyArea.crs            
-            modelGrid = clipGrid2StudyArea(studyArea=studyArea, grid=modelGridIN, studyAreacrs=studyAreacrs, gridcrs=gridcrs)
+        if clip2studyarea:                
+            if study_area_crs is None:
+                study_area_crs=study_area.crs
+            study_area = study_area.to_crs(grid_crs)
+            study_area_crs=study_area.crs            
+            modelGrid = grid2study_area(study_area=study_area, grid=modelGridIN, study_area_crs=study_area_crs, grid_crs=grid_crs)
         try:
             noDataVal = float(modelGrid.attrs['_FillValue']) #Extract from dataset itsel
         except:
@@ -532,7 +566,7 @@ def read_model_grid(studyArea, gridpath, nodataval=0, read_grid=True, node_bySpa
             'spatial_ref': 'PROJCS["Clarke_1866_Lambert_Conformal_Conic",GEOGCS["NAD27",DATUM["North_American_Datum_1927",SPHEROID["Clarke 1866",6378206.4,294.978698199999,AUTHORITY["EPSG","7008"]],AUTHORITY["EPSG","6267"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4267"]],PROJECTION["Lambert_Conformal_Conic_2SP"],PARAMETER["latitude_of_origin",33],PARAMETER["central_meridian",-89.5],PARAMETER["standard_parallel_1",33],PARAMETER["standard_parallel_2",45],PARAMETER["false_easting",2999994],PARAMETER["false_northing",0],UNIT["US survey foot",0.304800609601219,AUTHORITY["EPSG","9003"]],AXIS["Easting",EAST],AXIS["Northing",NORTH]]',
             'GeoTransform': '2440250.0 625.0 0.0 3459750.0 0.0 -625.0'}
         
-        saExtent = studyArea.total_bounds
+        saExtent = study_area.total_bounds
 
         startX = saExtent[0] #Starting X Coordinate
         startY = saExtent[1] #starting Y Coordinate
@@ -540,7 +574,7 @@ def read_model_grid(studyArea, gridpath, nodataval=0, read_grid=True, node_bySpa
         endX = saExtent[2]
         endY = saExtent[3]
         
-        if node_bySpace:
+        if node_byspace:
             xSpacing = 625 #X Node spacing 
             ySpacing = xSpacing #Y Node spacing  
             
@@ -563,12 +597,13 @@ def read_model_grid(studyArea, gridpath, nodataval=0, read_grid=True, node_bySpa
         
         modelGrid = xr.DataArray(data=zz,coords=coords,attrs={'_FillValue':3.402823466e+38}, dims=dims)
         modelGrid.spatial_ref.attrs['spatial_ref'] = {}
-        if gridcrs is None or gridcrs=='isws' or gridcrs=='ISWS':
+        if grid_crs is None or grid_crs=='isws' or grid_crs=='ISWS':
             for k in spatRefDict:
                 modelGrid.spatial_ref.attrs[k] = spatRefDict[k]
     return modelGrid
 
-def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, studyArea='', clip2SA=True,  studyAreacrs=None, gridcrs=None, **kwargs):
+#Read a grid from a file in using rioxarray
+def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, study_area='', clip2studyarea=True,  study_area_crs=None, grid_crs=None, log=False, **kwargs):
     """Reads in grid
 
     Parameters
@@ -581,14 +616,16 @@ def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, st
         Sets the no data value of the grid
     use_service : str, default=False
         Sets which service the function uses
-    studyArea : geopandas.GeoDataFrame, default=''
+    study_area : geopandas.GeoDataFrame, default=''
         Dataframe containing study area polygon
-    clip2SA : bool, default=True
+    clip2studyarea : bool, default=True
         If function clips grid to study area
-    studyAreacrs : str, default=None
+    study_area_crs : str, default=None
         Sets specific crs if current crs is not wanted
-    gridcrs : str, default=None
+    grid_crs : str, default=None
         Sets crs to use if clipping to study area
+    log : bool, default = False
+        Whether to log results to log file, by default False
 
     Returns
     -------
@@ -596,39 +633,40 @@ def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, st
         Returns grid
     
     """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     if grid_type=='model':
         if 'read_grid' in list(kwargs.keys()):
             rgrid = kwargs['read_grid']
         else:
             rgrid=True
-        gridIN = read_model_grid(studyArea, gridpath=datapath, nodataval=0, read_grid=rgrid, clip2SA=clip2SA, studyAreacrs=studyAreacrs, gridcrs=gridcrs)
+        gridIN = read_model_grid(study_area, gridpath=datapath, nodataval=0, read_grid=rgrid, clip2studyarea=clip2studyarea, study_area_crs=study_area_crs, grid_crs=grid_crs)
     else:
         if use_service==False:
             gridIN = rxr.open_rasterio(datapath)
         elif use_service.lower()=='wcs':
-            gridIN = readWCS(studyArea, wcs_url=lidarURL, **kwargs)
+            gridIN = read_wcs(study_area, wcs_url=lidarURL, **kwargs)
         elif use_service.lower()=='wms':
             pass
-            gridIN = readWMS(studyArea, wcs_url=lidarURL, **kwargs)
+            gridIN = read_wms(study_area, wcs_url=lidarURL, **kwargs)
             
-        if clip2SA:
-            if gridcrs is None:
+        if clip2studyarea:
+            if grid_crs is None:
                 try:
-                    gridcrs=gridIN.spatial_ref.crs_wkt
+                    grid_crs=gridIN.spatial_ref.crs_wkt
                 except:
                     iswsCRS = w4h.read_dict(r'../resources/isws_crs')
                     gridIN.rio.write_crs(iswsCRS)
-            elif gridcrs.lower()=='isws':
+            elif grid_crs.lower()=='isws':
                 iswsCRS = w4h.read_dict(r'../resources/isws_crs')
                 gridIN.rio.write_crs(iswsCRS)
                 
-            if studyAreacrs is None:
-                studyAreacrs=studyArea.crs
-            studyArea = studyArea.to_crs(gridcrs)
-            studyAreacrs=studyArea.crs
+            if study_area_crs is None:
+                study_area_crs=study_area.crs
+            study_area = study_area.to_crs(grid_crs)
+            study_area_crs=study_area.crs
             
-            gridIN = clipGrid2StudyArea(studyArea=studyArea, grid=gridIN, studyAreacrs=studyAreacrs, gridcrs=gridcrs)
+            gridIN = grid2study_area(study_area=study_area, grid=gridIN, study_area_crs=study_area_crs, grid_crs=grid_crs)
         try:
             nodataval = gridIN.attrs['_FillValue'] #Extract from dataset itself
         except:
@@ -638,31 +676,31 @@ def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, st
 
     return gridIN
 
-def alignRasters(unalignedGrids, modelgrid, nodataval=0):
+#Align and coregister rasters
+def align_rasters(grids_unaligned, modelgrid, nodataval=0, log=False):
     """Reprojects two rasters to align their pixels
 
     Parameters
     ----------
-    unalignedGrids : list or xarray.DataArray
+    grids_unaligned : list or xarray.DataArray
         Contains a list of grids or one unaligned grid
     modelgrid : xarray.DataArray
         Contains model grid
     nodataval : int, default=0
         Sets value of no data pixels
+    log : bool, default = False
+        Whether to log results to log file, by default False
 
     Returns
     -------
     alignedGrids : list or xarray.DataArray
         Contains aligned grids
-
-    
-    
-    
     """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    if type(unalignedGrids) is list:
+    if type(grids_unaligned) is list:
         alignedGrids=[]
-        for g in unalignedGrids:
+        for g in grids_unaligned:
             alignedGrid = g.rio.reproject_match(modelgrid)
 
             try:
@@ -674,7 +712,7 @@ def alignRasters(unalignedGrids, modelgrid, nodataval=0):
             
             alignedGrids.append(alignedGrid)
     else:
-        alignedGrid = unalignedGrids.rio.reproject_match(modelgrid)
+        alignedGrid = grids_unaligned.rio.reproject_match(modelgrid)
 
         try:
             noDataVal = alignedGrid.attrs['_FillValue'] #Extract from dataset itself
@@ -685,7 +723,8 @@ def alignRasters(unalignedGrids, modelgrid, nodataval=0):
         
     return alignedGrids
 
-def get_drift_thick(surface, bedrock, noLayers=9, plotData=False):
+#Get drift and layer thickness, given a surface and bedrock grid
+def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
     """Finds the distance from surface to bedrock and then divides by number of layers to get layer thickness.
 
     Parameters
@@ -694,9 +733,9 @@ def get_drift_thick(surface, bedrock, noLayers=9, plotData=False):
         array holding surface elevation
     bedrock : rioxarray.DataArray
         array holding bedrock elevation
-    noLayers : int, default=9
+    layers : int, default=9
         number of layers needed to calculate thickness for
-    plotData : bool, default=False
+    plot : bool, default=False
         tells function to either plot the data or not
 
     Returns
@@ -707,11 +746,13 @@ def get_drift_thick(surface, bedrock, noLayers=9, plotData=False):
         Contains data array with layer thickness at each point
 
     """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
     xr.set_options(keep_attrs=True)
 
     driftThick = surface - bedrock
     driftThick = driftThick.clip(0,max=5000,keep_attrs=True)
-    if plotData:
+    if plot:
         driftThick.plot()
 
     try:
@@ -719,14 +760,11 @@ def get_drift_thick(surface, bedrock, noLayers=9, plotData=False):
     except:
         noDataVal = 100001
     
-
-
     driftThick = driftThick.where(driftThick <100000, other=np.nan)  #Replace no data values with NaNs
     driftThick = driftThick.where(driftThick >-100000, other=np.nan)  #Replace no data values with NaNs
 
-    layerThick = driftThick/noLayers
+    layerThick = driftThick/layers
     
     xr.set_options(keep_attrs='default')
 
     return driftThick, layerThick
-    
