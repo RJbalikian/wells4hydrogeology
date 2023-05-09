@@ -49,7 +49,9 @@ Required inputs include:
 
 ## Intended workflow 
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-
+<script>
+console.log(mermaid.version);
+</script>
 ```mermaid
 flowchart TD
     subgraph setup["Set up Files"]
