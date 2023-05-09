@@ -48,7 +48,6 @@ Required inputs include:
 - xyzData_yyyy-mm-dd.csv: most recent update of statewide wells with API, Latitude, Longitude, and surface elevation extracted from statewide lidar topography
 
 ## Intended workflow 
-<script>console.log(mermaid.version);</script>
 ```mermaid
 flowchart TD
     subgraph setup["Set up Files"]
