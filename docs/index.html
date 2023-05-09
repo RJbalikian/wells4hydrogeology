@@ -1,5 +1,6 @@
 <head>
-<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+	<script>console.log(mermaid.version);</script>
 </head>
 <h1>Wells 4 Hydrogeology (w4h)</h1>
 <p>The w4h Python package is a package designed jointly by the Illinois State Geological Survey and Illinois State Water Survey.</p>
@@ -43,8 +44,6 @@ Though the source code is split into separate modules, all functions are designe
 <li>xyzData_yyyy-mm-dd.csv: most recent update of statewide wells with API, Latitude, Longitude, and surface elevation extracted from statewide lidar topography</li>
 </ul>
 <h2>Intended workflow</h2>
-<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-<script>console.log(mermaid.version);</script>
 <p>```mermaid
 flowchart TD
     subgraph setup["Set up Files"]
