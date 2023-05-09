@@ -75,7 +75,7 @@ for each_file in repo_path.iterdir():
             html = html.replace("<pre><code>    A0((file_setup))", "    A0((file_setup))")
             html = html.replace("</code></pre>", "</pre>")
             html = html.replace("<p></pre></p>", '')
-            html = html.replace("&gt", '>')
+            html = html.replace("&gt;", '>')
 
             dst = pathlib.Path('index.html')
             with open(dst, 'w') as f:
