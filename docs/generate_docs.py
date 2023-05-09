@@ -1,19 +1,27 @@
 import os
-import pathlib 
+import pathlib
 import shutil
 import subprocess
+import sys
 
 #Whether to convert_md using markdown library (True), or let github do it (False)
-convert_md=True
+convert_md=False
+rtd_theme=True
 
 # Set the package name, subdirectory, and output directory
 subdir = '.\w4h'
 output_dir = 'docs'
 
-os.environ['PYTHONPATH'] = '..' + os.pathsep + os.environ.get('PYTHONPATH', '')
+venvPath = sys.executable
 
+os.environ['PYTHONPATH'] = '..' + os.pathsep + os.environ.get('PYTHONPATH', '')
+print(os.getcwd())
 # Run the pdoc command
-subprocess.run(['pdoc', '--html', subdir, '-o', output_dir, '--force'])
+if rtd_theme:
+    themePath = 'C:/Users/riley/LocalData/virtual_envs/w4h_venv/lib/site-packages/sphinx_rtd_theme/'
+    subprocess.run(['pdoc', '--html', '-o', output_dir, '--force', '--template-dir', themePath, subdir])
+else:
+    subprocess.run(['pdoc', '--html', '-o', output_dir, '--force', subdir ])
 
 workDir = pathlib.Path(os.getcwd())
 if workDir.stem == 'docs':
