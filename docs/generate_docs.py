@@ -6,7 +6,7 @@ import sys
 
 #Whether to convert_md using markdown library (True), or let github do it (False)
 convert_md=True
-rtd_theme=True #Not currently working
+rtd_theme=False #Not currently working
 
 # Set the package name, subdirectory, and output directory
 subdir = '.\w4h'
@@ -68,6 +68,13 @@ for each_file in repo_path.iterdir():
                 markdown_text = f.read()
 
             html = markdown.markdown(markdown_text)
+            
+            html = html.replace('```mermaid', '<pre class="mermaid">')
+            html = html.replace('```#', '</pre>')
+            html = html.replace("direction RL</p>", "direction RL")
+            html = html.replace("<pre><code>    A0((file_setup))", "    A0((file_setup))")
+            html = html.replace("</code></pre>", "</pre>")
+            html = html.replace("<p></pre></p>", '')
             
             dst = pathlib.Path('index.html')
             with open(dst, 'w') as f:
