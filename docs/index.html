@@ -56,10 +56,10 @@ flowchart TD
     A3{{verbose}}
     A4{{log}}
 
-    A1--&gt;A0
-    A2-.-&gt;A0
-    A3-.-&gt;A0
-    A4-.-&gt;A0
+    A1-->;A0
+    A2-.->;A0
+    A3-.->;A0
+    A4-.->;A0
 end
 
 subgraph read["Read Data"]
@@ -70,8 +70,8 @@ subgraph read["Read Data"]
         B1[(filepath)]
         B2{{"pd.read_csv(**kwargs)"}}
 
-        B1--&gt;B0
-        B2-.-&gt;B0
+        B1-->;B0
+        B2-.->;B0
     end
 
     subgraph defineDtypes["define_dtypes()"]
@@ -80,10 +80,10 @@ subgraph read["Read Data"]
         C1[(df)]
         C2{{"dtypes"}}
 
-        C1--&gt;C0
-        C2--&gt;C0
+        C1-->;C0
+        C2-->;C0
     end
-    readraw--&gt;defineDtypes
+    readraw-->;defineDtypes
 end
 
 subgraph readSA["Read Study Area"]
@@ -104,11 +104,11 @@ subgraph Read_Grids["Read Grids"]
     E4{{clip_to_studyarea}}
     E5{{use_service}}
 
-    E1--&gt;E0
-    E2-.-&gt;E0
-    E3-.-&gt;E0
-    E4-.-&gt;E0
-    E5-.-&gt;E0
+    E1-->;E0
+    E2-.->;E0
+    E3-.->;E0
+    E4-.->;E0
+    E5-.->;E0
 
 end
 
@@ -120,8 +120,8 @@ subgraph clipdatatoSA["Clip Data to Study Area"]
         F1((xyz))
         F2((metadata))
 
-        F1--&gt;F0
-        F2-.-&gt;F0
+        F1-->;F0
+        F2-.->;F0
     end
 
     subgraph coords2geometry
@@ -133,11 +133,11 @@ subgraph clipdatatoSA["Clip Data to Study Area"]
         G4{{zcol}}
         G5{{crs}}
 
-        G1--&gt;G0
-        G2-.-&gt;G0
-        G3-.-&gt;G0
-        G4-.-&gt;G0
-        G5-.-&gt;G0
+        G1-->;G0
+        G2-.->;G0
+        G3-.->;G0
+        G4-.->;G0
+        G5-.->;G0
 
     end
 
@@ -148,13 +148,13 @@ subgraph clipdatatoSA["Clip Data to Study Area"]
         H2[("gdf")]
         H3{{"gdf_crs"}}
 
-        H1--&gt;H0
-        H2-.-&gt;H0
-        H3-.-&gt;H0
+        H1-->;H0
+        H2-.->;H0
+        H3-.->;H0
     end
 
-    xyzmetaMerge --&gt; coords2geometry  
-    coords2geometry --&gt; clipdata  
+    xyzmetaMerge -->; coords2geometry  
+    coords2geometry -->; clipdata  
 end
 
 subgraph clean["Clean Data"]
@@ -166,8 +166,8 @@ subgraph clean["Clean Data"]
         I1[(df)]
         I2[(metadata_df)]
 
-        I1--&gt;I0
-        I2--&gt;I0
+        I1-->;I0
+        I2-->;I0
     end
 
     subgraph notopo
@@ -175,7 +175,7 @@ subgraph clean["Clean Data"]
         J0(("remove_no_topo()"))
         J1[(df)]
 
-        J1--&gt;J0
+        J1-->;J0
     end
 
     subgraph nodepth
@@ -183,7 +183,7 @@ subgraph clean["Clean Data"]
         K0(("drop_no_depth()"))
         K1[(df)]
 
-        K1--&gt;K0
+        K1-->;K0
     end
 
     subgraph baddepth
@@ -191,7 +191,7 @@ subgraph clean["Clean Data"]
         L0(("drop_bad_depth()"))
         L1[(df)]
 
-        L1--&gt;L0
+        L1-->;L0
     end
 
     subgraph noformation
@@ -199,7 +199,7 @@ subgraph clean["Clean Data"]
         M0(("drop_no_formation()"))
         M1[(df)]
 
-        M1--&gt;M0
+        M1-->;M0
     end
 
     subgraph merge["MERGE:NEEDED?"]
@@ -207,11 +207,11 @@ subgraph clean["Clean Data"]
         N0((merge))
     end
 
-    nonlocated--&gt; notopo
-    notopo--&gt;nodepth
-    nodepth--&gt;baddepth
-    baddepth--&gt;noformation
-    noformation--&gt;merge
+    nonlocated-->; notopo
+    notopo-->;nodepth
+    nodepth-->;baddepth
+    baddepth-->;noformation
+    noformation-->;merge
 end
 
 subgraph classify["Classify Well Descriptions"]
@@ -225,10 +225,10 @@ subgraph classify["Classify Well Descriptions"]
         O3[("start_dir()")]
         O4{{"start_glob_pattern()"}}
 
-        O1--&gt;O0
-        O2--&gt;O0
-        O3-.-&gt;O0
-        O4--&gt;O0
+        O1-->;O0
+        O2-->;O0
+        O3-.->;O0
+        O4-->;O0
     end
 
     subgraph readterms
@@ -236,7 +236,7 @@ subgraph classify["Classify Well Descriptions"]
         P0(("read_dictionary_terms()"))
         P1{{dict_file}}
 
-        P1--&gt;P0
+        P1-->;P0
     end
 
     readtermsIter[["Iterate read_terms() as needed"]]
@@ -250,8 +250,8 @@ subgraph classify["Classify Well Descriptions"]
             Q1[(df)]
             Q2[(terms_df)]
 
-            Q1--&gt;Q0
-            Q2--&gt;Q0
+            Q1-->;Q0
+            Q2-->;Q0
         end
 
         subgraph startdefine["Define Substring Matches"]
@@ -260,8 +260,8 @@ subgraph classify["Classify Well Descriptions"]
             R1[(df)]
             R2[(terms_df)]
 
-            R1--&gt;R0
-            R2--&gt;R0                
+            R1-->;R0
+            R2-->;R0                
         end
 
         subgraph depthdefine["Define by Depth"]
@@ -270,8 +270,8 @@ subgraph classify["Classify Well Descriptions"]
             S1[(df)]
             S2[(thresh)]
 
-            S1--&gt;S0
-            S2--&gt;S0                
+            S1-->;S0
+            S2-->;S0                
         end
 
         specdefine~~~startdefine
@@ -283,7 +283,7 @@ subgraph classify["Classify Well Descriptions"]
         T0(("fill_unclassified()"))
         T1[(df)]
 
-        T1--&gt;T0
+        T1-->;T0
     end
 
     subgraph readlith
@@ -297,16 +297,16 @@ subgraph classify["Classify Well Descriptions"]
         V1[(df)]
         V2[(targinterps_df)]
 
-        V1--&gt;V0
-        V2--&gt;V0
+        V1-->;V0
+        V2-->;V0
     end
 
-    getterms-.-&gt;readterms
-    readterms-.-&gt;readtermsIter
-    readtermsIter -.-&gt;define
-    define--&gt;fillunclass
-    fillunclass--&gt;readlith
-    readlith--&gt;mergelith
+    getterms-.->;readterms
+    readterms-.->;readtermsIter
+    readtermsIter -.->;define
+    define-->;fillunclass
+    fillunclass-->;readlith
+    readlith-->;mergelith
 end
 
 subgraph get_layers["Get (Hydro)geologic Layers"]
@@ -317,7 +317,7 @@ subgraph get_layers["Get (Hydro)geologic Layers"]
         W0(("get_unique_wells()"))
         W1[(df)]
 
-        W1--&gt;W0
+        W1-->;W0
     end
 
     subgraph sortdf
@@ -327,9 +327,9 @@ subgraph get_layers["Get (Hydro)geologic Layers"]
         X2{{sort_cols}}
         X3{{remove_nans}}
 
-        X1--&gt;X0
-        X2--&gt;X0
-        X3-.-&gt;X0
+        X1-->;X0
+        X2-->;X0
+        X3-.->;X0
     end
 
     subgraph alignrasters
@@ -338,8 +338,8 @@ subgraph get_layers["Get (Hydro)geologic Layers"]
         Y1[(grids_unaligned)]
         Y2[(modelgrid)]
 
-        Y1--&gt;Y0
-        Y2--&gt;Y0
+        Y1-->;Y0
+        Y2-->;Y0
     end
 
     subgraph driftthick
@@ -350,10 +350,10 @@ subgraph get_layers["Get (Hydro)geologic Layers"]
         Z3{{layers}}
         Z4{{plot}}
 
-        Z1--&gt;Z0
-        Z2--&gt;Z0
-        Z3-.-&gt;Z0
-        Z4-.-&gt;Z0
+        Z1-->;Z0
+        Z2-->;Z0
+        Z3-.->;Z0
+        Z4-.->;Z0
     end
 
     subgraph sampleraster
@@ -363,9 +363,9 @@ subgraph get_layers["Get (Hydro)geologic Layers"]
         AA2[(points_df)]
         AA3{{new_col}}
 
-        AA1--&gt;AA0
-        AA2--&gt;AA0
-        AA3-.-&gt;AA0
+        AA1-->;AA0
+        AA2-->;AA0
+        AA3-.->;AA0
     end
 
     sampleRasterIter[["Iterate sample_raster_points() as needed"]]
@@ -376,8 +376,8 @@ subgraph get_layers["Get (Hydro)geologic Layers"]
         BB1[(well_metadata)]
         BB2{{no_layers}}
 
-        BB1--&gt;BB0
-        BB2-.-&gt;BB0
+        BB1-->;BB0
+        BB2-.->;BB0
     end
 
     subgraph mergetables
@@ -390,12 +390,12 @@ subgraph get_layers["Get (Hydro)geologic Layers"]
         CC5{{auto_pick_cols}}
         CC6{{"pd.merge(**kwargs)"}}
 
-        CC1--&gt;CC0
-        CC2--&gt;CC0
-        CC3-.-&gt;CC0
-        CC4-.-&gt;CC0
-        CC5-.-&gt;CC0
-        CC6-.-&gt;CC0
+        CC1-->;CC0
+        CC2-->;CC0
+        CC3-.->;CC0
+        CC4-.->;CC0
+        CC5-.->;CC0
+        CC6-.->;CC0
     end
 
     subgraph layertarg
@@ -405,9 +405,9 @@ subgraph get_layers["Get (Hydro)geologic Layers"]
         DD2{{depth_top_col='TOP'}}
         DD3{{depth_bot_col='BOTTOM'}}
 
-        DD1--&gt;DD0
-        DD2-.-&gt;DD0
-        DD3-.-&gt;DD0
+        DD1-->;DD0
+        DD2-.->;DD0
+        DD3-.->;DD0
     end
 
     subgraph layerinterp
@@ -419,22 +419,22 @@ subgraph get_layers["Get (Hydro)geologic Layers"]
         EE4{{targetcol='TARG_THICK_PER'}}
         EE5{{"scipy.interpolate(**kwargs)"}}
 
-        EE1--&gt;EE0
-        EE2--&gt;EE0
-        EE3-.-&gt;EE0
-        EE4-.-&gt;EE0
-        EE5-.-&gt;EE0  
+        EE1-->;EE0
+        EE2-->;EE0
+        EE3-.->;EE0
+        EE4-.->;EE0
+        EE5-.->;EE0  
     end
 
-    uniquewells--&gt;sortdf
-    sortdf--&gt;alignrasters
-    alignrasters--&gt;driftthick
-    driftthick--&gt;sampleraster
-    sampleraster--&gt;sampleRasterIter
-    sampleRasterIter--&gt;layerdepths
-    layerdepths--&gt;mergetables
-    mergetables--&gt;layertarg
-    layertarg--&gt;layerinterp
+    uniquewells-->;sortdf
+    sortdf-->;alignrasters
+    alignrasters-->;driftthick
+    driftthick-->;sampleraster
+    sampleraster-->;sampleRasterIter
+    sampleRasterIter-->;layerdepths
+    layerdepths-->;mergetables
+    mergetables-->;layertarg
+    layertarg-->;layerinterp
 
 end
 
@@ -449,10 +449,10 @@ subgraph export["Export"]
         GG3{{filename}}
         GG4{{datestamp=True}}
 
-        GG1--&gt;GG0
-        GG2--&gt;GG0
-        GG3--&gt;GG0
-        GG4-.-&gt;GG0
+        GG1-->;GG0
+        GG2-->;GG0
+        GG3-->;GG0
+        GG4-.->;GG0
     end
 
     subgraph exportdata
@@ -465,23 +465,23 @@ subgraph export["Export"]
         HH5{{variable_sep=True}}
         HH6{{date_stamp=True}}
 
-        HH1--&gt;HH0
-        HH2--&gt;HH0
-        HH3-.-&gt;HH0
-        HH4-.-&gt;HH0
-        HH5-.-&gt;HH0
-        HH6-.-&gt;HH0
+        HH1-->;HH0
+        HH2-->;HH0
+        HH3-.->;HH0
+        HH4-.->;HH0
+        HH5-.->;HH0
+        HH6-.->;HH0
     end
 
     exportdf~~~exportdata
 end
 
-setup--&gt;read
-read--&gt;readSA
-readSA--&gt;Read_Grids
-Read_Grids--&gt;clipdatatoSA
-clipdatatoSA--&gt;clean
-clean--&gt;classify
-classify--&gt;get_layers
-get_layers--&gt;export
+setup-->;read
+read-->;readSA
+readSA-->;Read_Grids
+Read_Grids-->;clipdatatoSA
+clipdatatoSA-->;clean
+clean-->;classify
+classify-->;get_layers
+get_layers-->;export
 </pre>
