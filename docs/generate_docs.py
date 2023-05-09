@@ -3,6 +3,9 @@ import pathlib
 import shutil
 import subprocess
 
+#Whether to convert_md using markdown library (True), or let github do it (False)
+convert_md=True
+
 # Set the package name, subdirectory, and output directory
 subdir = '.\w4h'
 output_dir = 'docs'
@@ -39,9 +42,23 @@ for each_file in src_path.glob('*.*'): # grabs all files
         each_file.rename(mainhtmlFPath)
 os.rmdir('./w4h')
 
-#Copy main readme file into docs so github pages will read it
 repo_path = pathlib.Path('..')
-
 for each_file in repo_path.iterdir():
     if each_file.name == 'README.md':
-        shutil.copy(src=str(each_file), dst='.')
+        if convert_md:
+            import markdown
+
+            with open(each_file, 'r') as f:
+                markdown_text = f.read()
+
+            html = markdown.markdown(markdown_text)
+            
+            dst = pathlib.Path('index.html')
+            with open(dst, 'w') as f:
+                f.write(html)
+            print(dst)
+            break
+        else:
+            #Copy main readme file into docs so github pages will read it
+            shutil.copy(src=str(each_file), dst='.')
+            break
