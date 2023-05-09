@@ -55,6 +55,9 @@ for each_file in repo_path.iterdir():
             
             dst = pathlib.Path('index.html')
             with open(dst, 'w') as f:
+                f.write("<head>\n")
+                f.write('<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>\n')
+                f.write("</head>\n")                
                 f.write(html)
             print(dst)
             break

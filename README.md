@@ -12,7 +12,7 @@ The w4h module is designed to be flexible and customizable, allowing various kin
 Using well descriptions from these database tables, the code contained here extracts, manipulates, and organizes the data to be used for hydrogeologic modeling. The scripts here can be used for specific regions of interests/study areas within the state, or for the state as a whole.
 
 # API Documentation
-API Documentation <a href="main.html">here</a>
+API Documentation <a href="https://rjbalikian.github.io/wells4hydrogeology/main.html">here</a>
 
 # Dependencies
  The w4h module has the following dependencies:
@@ -48,10 +48,7 @@ Required inputs include:
 - xyzData_yyyy-mm-dd.csv: most recent update of statewide wells with API, Latitude, Longitude, and surface elevation extracted from statewide lidar topography
 
 ## Intended workflow 
-<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-<script>
-console.log(mermaid.version);
-</script>
+<script>console.log(mermaid.version);</script>
 ```mermaid
 flowchart TD
     subgraph setup["Set up Files"]
