@@ -5,20 +5,20 @@ import subprocess
 import sys
 
 #Whether to convert_md using markdown library (True), or let github do it (False)
-convert_md=False
-rtd_theme=True
+convert_md=True
+rtd_theme=True #Not currently working
 
 # Set the package name, subdirectory, and output directory
 subdir = '.\w4h'
 output_dir = 'docs'
 
-venvPath = sys.executable
+venvPath = pathlib.Path(sys.executable).parent.parent
 
 os.environ['PYTHONPATH'] = '..' + os.pathsep + os.environ.get('PYTHONPATH', '')
-print(os.getcwd())
+
 # Run the pdoc command
 if rtd_theme:
-    themePath = 'C:/Users/riley/LocalData/virtual_envs/w4h_venv/lib/site-packages/sphinx_rtd_theme/'
+    themePath = venvPath.as_posix()+'/lib/site-packages/sphinx_rtd_theme/'
     subprocess.run(['pdoc', '--html', '-o', output_dir, '--force', '--template-dir', themePath, subdir])
 else:
     subprocess.run(['pdoc', '--html', '-o', output_dir, '--force', subdir ])
@@ -37,6 +37,14 @@ else:
 
 src_path = pathlib.Path('./w4h')
 trg_path = src_path.parent # gets the parent of the folder 
+
+keepList = ['generate_docs', 'conf']
+
+for f in trg_path.iterdir():
+    if f.stem in keepList or f.is_dir():
+        pass
+    else:
+        os.remove(f)
 
 for each_file in src_path.glob('*.*'): # grabs all files
     destFilePath = trg_path.joinpath(each_file.name)
@@ -66,7 +74,11 @@ for each_file in repo_path.iterdir():
                 f.write("<head>\n")
                 f.write('\t<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>\n')
                 f.write('\t<script>console.log(mermaid.version);</script>\n')
-                f.write("</head>\n")     
+                f.write('<script type="module">')
+                f.write("\timport mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';")
+                f.write("\tmermaid.initialize({ startOnLoad: true });")
+                f.write("</script>")
+                f.write("</head>\n")
                 f.write(html)
             print(dst)
             break

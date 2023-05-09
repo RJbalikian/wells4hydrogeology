@@ -47,7 +47,8 @@ Required inputs include:
 - ISGS_DOWNHOLE_DATA_yyyy-mm-dd.TXT: tabular data exported from ISGS oracle database containing geologic information about wells in the state
 - xyzData_yyyy-mm-dd.csv: most recent update of statewide wells with API, Latitude, Longitude, and surface elevation extracted from statewide lidar topography
 
-## Intended workflow 
+## Intended workflow
+If diagram is not formatting properly, available on github here: <a href="https://github.com/RJbalikian/wells4hydrogeology#intended-workflow">here</a>
 ```mermaid
 flowchart TD
     subgraph setup["Set up Files"]
