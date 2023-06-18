@@ -83,3 +83,9 @@ def logger_function(logtocommence, parameters, func_name):
         else:
             pass
     return
+
+def run(well_data_file, well_data_columns, 
+                     well_metadata_file, well_metadata_columns, 
+                     xyz_file):
+    """Stil in progress"""
+    return
