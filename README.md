@@ -26,8 +26,10 @@ API Documentation <a href="https://rjbalikian.github.io/wells4hydrogeology/main.
 
 # Inputs
 Required inputs include:
-- ISGS_DOWNHOLE_DATA: A table in the ISGS database containing descriptions of well intervals for wells throughout the state.
+- Well Data: A table in the ISGS database containing descriptions of well intervals for wells throughout the state.
+    - This is intended for the ISGS_DOWNHOLE_DATA table in the main ISGS well database, but can be used with any table containing the proper columns 
 - ISGS_HEADER: A table in the ISGS database containing the metadata for all the wells, including API number, well location, and in some cases elevation.
+    - This is intended for the ISGS_HEADER table in the main ISGS well database, but can be used with any table containing the location information
 - XYZData (optional): A separate table containing updated location information for each well, particularly updated elevation data from Lidar products
 - Surface elevation: raster data containing the surface elevation of the study area or state.
 - Bedrock elevation: raster data containing the bedrock elevation of the study area or state.
@@ -37,10 +39,14 @@ Required inputs include:
 ## master_notebook contains an interactive jupyter notebook with all the steps for running the main body of the script
 
 ## w4h folder contains all scripts with functions used
-- readData: functions for reading in various files
-- mapping: functions for mapping or performing geospatial analysis
-- cleanData: functions for cleaning the data
 - classify: functions for classifying the data
+- clean: functions for cleaning the data
+- export: functions for exporting the data, both as tables and rasters
+- layers: functinos for generating layer(ed) models
+- mapping: functions for mapping or performing geospatial analysis
+- read: functions for reading in various files
+- utilities: general utility functions used throughout
+
 
 ## resources folder contains all the files that are read in/used by the scripts
 - ISGS_HEADER_yyyy-mm-dd.TXT: tabular data exported from ISGS oracle database containing "header" information (i.e., metadata) about all the wells

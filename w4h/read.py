@@ -66,7 +66,7 @@ def get_most_recent(dir=str(repoDir)+'/resources', glob_pattern='*', verbose=Tru
     return mostRecentFile
 
 #Function to setup files of interest
-def file_setup(db_dir, metadata_dir=None, xyz_dir=None, data_pattern='*ISGS_DOWNHOLE_DATA*.txt', metadata_pattern='*ISGS_HEADER*.txt', xyz_pattern= '*xyzData*', log_dir=None, verbose=False, log=False):
+def file_setup(db_dir, metadata_dir=None, xyz_dir=None, data_filename='*ISGS_DOWNHOLE_DATA*.txt', metadata_filename='*ISGS_HEADER*.txt', xyz_pattern= '*xyzData*', log_dir=None, verbose=False, log=False):
     """Function to setup files, assuming data, metadata, and elevation/location are in separate files (there should be one "key"/identifying column consistent across all files to join/merge them later)
 
     This function may not be useful if files are organized differently than this structure. If that is the case, it is recommended to use the get_most_recent() function for each individual file needed.
@@ -79,9 +79,9 @@ def file_setup(db_dir, metadata_dir=None, xyz_dir=None, data_pattern='*ISGS_DOWN
         Str or pathlib.Path to directory containing input metadata files, by default str(repoDir)+'/resources'
     xyz_dir : str or pathlib.Path object, optional
         Str or pathlib.Path to directory containing input metadata files, by default str(repoDir)+'/resources'
-    data_pattern : str, optional
+    data_filename : str, optional
         Pattern used by pathlib.glob() to get the most recent data file, by default '*ISGS_DOWNHOLE_DATA*.txt'
-    metadata_pattern : str, optional
+    metadata_filename : str, optional
         Pattern used by pathlib.glob() to get the most recent metadata file, by default '*ISGS_HEADER*.txt'
     xyz_pattern : str, optional
         Pattern used by pathlib.glob() to get the most recent elevation/location file, by default '*xyzData*'
@@ -109,8 +109,8 @@ def file_setup(db_dir, metadata_dir=None, xyz_dir=None, data_pattern='*ISGS_DOWN
     else:
         xyz_dir=pathlib.Path(xyz_dir)
 
-    downholeDataFILE = get_most_recent(raw_directory, data_pattern, verbose=verbose)
-    headerDataFILE = get_most_recent(metadata_dir, metadata_pattern, verbose=verbose)
+    downholeDataFILE = get_most_recent(raw_directory, data_filename, verbose=verbose)
+    headerDataFILE = get_most_recent(metadata_dir, metadata_filename, verbose=verbose)
     xyzInFILE = get_most_recent(xyz_dir,xyz_pattern, verbose=verbose)
 
     downholeDataPATH = pathlib.Path(downholeDataFILE)
@@ -363,11 +363,12 @@ def read_dictionary_terms(dict_file, cols=None, col_types=None, dictionary_type=
         Dictionary containing columns to be renamed. If None, see source code for renaming actions, by default None
     col_types : dict or None, default = None
         Dictionary containing column types to be set. If None, see source code for renaming actions, by default None, by default None
-    dictionary_type : str or None, {None, 'exact', 'start'}
-        Indicator of which kind of dictionary terms to be read in: None, 'exact' or 'start', by default None.
+    dictionary_type : str or None, {None, 'exact', 'start', 'wildcard',}
+        Indicator of which kind of dictionary terms to be read in: None, 'exact', 'start', or 'wildcard' (not yet implemented) by default None.
             - If None, uses name of file to try to determine. If it cannot, it will default to using the classification flag from class_flag
             - If 'exact', will be used to search for exact matches to geologic descriptions
             - If 'start', will be used as with the .startswith() string method to find inexact matches to geologic descriptions
+            - If 'wildcard', will be used to find any matching substring for inexact geologic matches (not yet implemented)
     class_flag : int, default = 1
         Classification flag to be used if dictionary_type is None and cannot be otherwise determined, by default 1
     rem_extra_cols : bool, default = True
