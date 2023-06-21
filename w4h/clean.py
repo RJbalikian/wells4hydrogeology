@@ -43,7 +43,7 @@ def remove_nonlocated(df, metadata_df, verbose=False, log=False):
 
 #Function to remove data (intended for headerData) without surface topography information
 ##THIS ASSUMES AND SHOULD ONLY BE RUN AFTER ALL DESIRED SURFACE TOPO DATASETS HAVE BEEN MERGED/ADDED
-def remove_no_topo(df, elev_column='ELEV_FT', no_data_val='', verbose=False, log=False):
+def remove_no_topo(df, zcol='ELEV_FT', no_data_val='', verbose=False, log=False):
     """Function to remove wells that do not have topography data (needed for layer selection later).
 
     This function is intended to be run on the metadata table after elevations have attempted to been added.
@@ -52,7 +52,7 @@ def remove_no_topo(df, elev_column='ELEV_FT', no_data_val='', verbose=False, log
     ----------
     df : pandas.DataFrame
         Pandas dataframe containing elevation information.
-    elev_column : str
+    zcol : str
         Name of elevation column
     no_data_val : any
         Value in dataset that indicates no data is present (replaced with np.nan)
@@ -70,8 +70,8 @@ def remove_no_topo(df, elev_column='ELEV_FT', no_data_val='', verbose=False, log
 
     before = df.shape[0]
     
-    df[elev_column].replace(no_data_val, np.nan, inplace=True)
-    df.dropna(subset=[elev_column], inplace=True)
+    df[zcol].replace(no_data_val, np.nan, inplace=True)
+    df.dropna(subset=[zcol], inplace=True)
     
     if verbose:
         after = df.shape[0]

@@ -23,7 +23,7 @@ from w4h import logger_function
 lidarURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
 
 #Read study area shapefile (or other file) into geopandas
-def read_study_area(studyareapath, crs='', log=False):
+def read_study_area(studyareapath, study_area_crs=None, log=False):
     """Read study area geospatial file into geopandas
 
     Parameters
@@ -44,10 +44,12 @@ def read_study_area(studyareapath, crs='', log=False):
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     studyAreaIN = gpd.read_file(studyareapath)
+    studyAreaIN.to_crs(study_area_crs, inplace=True)
+
     return studyAreaIN
 
 #Convert coords in columns to geometry in geopandas dataframe
-def coords2geometry(df, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', crs='EPSG:4269', use_z=False, log=False):
+def coords2geometry(df, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', input_coords_crs='EPSG:4269', use_z=False, log=False):
     """Adds geometry to points with xy coordinates in the specified coordinate reference system.
 
     Parameters
@@ -60,7 +62,7 @@ def coords2geometry(df, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', crs='
         Name of column holding y coordinate data in df
     zcol : str, default='ELEV_FT'
         Name of column holding z coordinate data in df
-    crs : str, default='EPSG:4269
+    input_coords_crs : str, default='EPSG:4269
         Name of crs used for geometry
     use_z : bool, default=False
         Whether to use z column in calculation
@@ -75,7 +77,7 @@ def coords2geometry(df, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', crs='
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    ptCRS=crs
+    ptCRS=input_coords_crs
 
     x = df[xcol].to_numpy()
     y = df[ycol].to_numpy()
@@ -91,7 +93,7 @@ def coords2geometry(df, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', crs='
     return gdf
 
 #Clip a geodataframe to a study area
-def clip_gdf2study_area(study_area, gdf, gdf_crs='EPSG:4269', log=False):
+def clip_gdf2study_area(study_area, gdf, input_coords_crs='EPSG:4269', log=False):
     """Clips dataframe to only include things within study area.
 
     Parameters
@@ -100,7 +102,7 @@ def clip_gdf2study_area(study_area, gdf, gdf_crs='EPSG:4269', log=False):
         Inputs study area polygon
     gdf : geopandas.GeoDataFrame
         Inputs point data
-    gdf_crs : str, default='EPSG:4269'
+    input_coords_crs : str, default='EPSG:4269'
         Inputs crs to project study area to
     log : bool, default = False
         Whether to log results to log file, by default False
@@ -113,8 +115,8 @@ def clip_gdf2study_area(study_area, gdf, gdf_crs='EPSG:4269', log=False):
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    studyArea_proj = study_area.to_crs(gdf_crs).copy()
-    gdfClip = gpd.clip(gdf, studyArea_proj) #Data from table is in EPSG:4269, easier to just project study area to ensure data fit
+    studyArea_proj = study_area.to_crs(input_coords_crs).copy()
+    gdfClip = gpd.clip(gdf, studyArea_proj) #Easier to project just study area to ensure data fit
     gdfClip.reset_index(inplace=True, drop=True) #Reset index
     
     return gdfClip
@@ -229,6 +231,10 @@ def read_wcs(study_area, wcs_url=lidarURL, res_x=30, res_y=30, log=False, **kwar
 
     #studyAreaPath = r"\\isgs-sinkhole.ad.uillinois.edu\geophysics\Balikian\ISWS_HydroGeo\WellDataAutoClassification\SampleData\ESL_StudyArea_5mi.shp"
     #study_area = gpd.read_file(studyAreaPath)
+    if study_area is None:
+        print('ERROR: study_area must be specified to use read_wcs (currently set to {})'.format(study_area))
+        return
+
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     if 'wcs_url' in kwargs:
@@ -346,6 +352,10 @@ def read_wms(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:None', wms_url=l
     wmsData_rxr : xarray.DataArray
         Holds the image from the WebMapService
     """
+    if study_area is None:
+        print('ERROR: study_area must be specified to use read_wms (currently set to {})'.format(study_area))
+        return
+    
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     from owslib.wms import WebMapService
@@ -487,15 +497,15 @@ def grid2study_area(study_area, grid, study_area_crs='', grid_crs='', log=False)
     return grid
 
 #Read the model grid into (rio)xarray
-def read_model_grid(study_area, gridpath, nodataval=0, read_grid=True, node_byspace=False, clip2studyarea=True, study_area_crs=None, grid_crs=None, log=False):
+def read_model_grid(gridpath, study_area=None, nodataval=0, read_grid=True, node_byspace=False, clip2studyarea=True, study_area_crs=None, grid_crs=None, log=False):
     """Reads in model grid to xarray data array
 
     Parameters
     ----------
-    study_area : geopandas.GeoDataFrame
-        Dataframe containing study area polygon
     gridpath : str
         Path to model grid file
+    study_area : geopandas.GeoDataFrame, default=None
+        Dataframe containing study area polygon
     nodataval : int, default=0
         value assigned to areas with no data
     readGrid : bool, default=True
@@ -532,12 +542,15 @@ def read_model_grid(study_area, gridpath, nodataval=0, read_grid=True, node_bysp
         elif grid_crs.lower()=='isws':
             modelGridIN.rio.write_crs(iswsCRS)
         
-        if clip2studyarea:                
+        if clip2studyarea and study_area is not None:                
             if study_area_crs is None:
                 study_area_crs=study_area.crs
             study_area = study_area.to_crs(grid_crs)
             study_area_crs=study_area.crs            
             modelGrid = grid2study_area(study_area=study_area, grid=modelGridIN, study_area_crs=study_area_crs, grid_crs=grid_crs)
+        else:
+            modelGrid = modelGridIN
+
         try:
             noDataVal = float(modelGrid.attrs['_FillValue']) #Extract from dataset itsel
         except:
@@ -602,7 +615,7 @@ def read_model_grid(study_area, gridpath, nodataval=0, read_grid=True, node_bysp
     return modelGrid
 
 #Read a grid from a file in using rioxarray
-def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, study_area='', clip2studyarea=True,  study_area_crs=None, grid_crs=None, log=False, **kwargs):
+def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, study_area=None, clip2studyarea=True,  study_area_crs=None, grid_crs=None, log=False, **kwargs):
     """Reads in grid
 
     Parameters
@@ -615,7 +628,7 @@ def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, st
         Sets the no data value of the grid
     use_service : str, default=False
         Sets which service the function uses
-    study_area : geopandas.GeoDataFrame, default=''
+    study_area : geopandas.GeoDataFrame, default=None
         Dataframe containing study area polygon
     clip2studyarea : bool, default=True
         If function clips grid to study area
@@ -649,7 +662,7 @@ def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, st
             pass
             gridIN = read_wms(study_area, wcs_url=lidarURL, **kwargs)
             
-        if clip2studyarea:
+        if clip2studyarea and study_area is not None:
             if grid_crs is None:
                 try:
                     grid_crs=gridIN.spatial_ref.crs_wkt
@@ -666,6 +679,7 @@ def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, st
             study_area_crs=study_area.crs
             
             gridIN = grid2study_area(study_area=study_area, grid=gridIN, study_area_crs=study_area_crs, grid_crs=grid_crs)
+
         try:
             nodataval = gridIN.attrs['_FillValue'] #Extract from dataset itself
         except:

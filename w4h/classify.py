@@ -11,7 +11,7 @@ from w4h import logger_function
 #- 2: wPermits bedrock top pick
 #- 3: Intervals >550' below ground surface
 #- 4: Wildcard match (startTerm) - no context
-#- 5: Wildcard match (startTerm) - more liberal
+#- 5: Wildcard match (any substring) - more liberal
 #- Top of well?
 
 #Define records with full search term
@@ -96,7 +96,6 @@ def split_defined(df, classification_col='CLASS_FLAG', verbose=False, log=False)
     return classifedDF, searchDF
 
 #Classify downhole data by the initial substring
-
 def start_define(df, terms_df, description_col='FORMATION', terms_col='FORMATION', verbose=False, log=False):
     """Function to classify descriptions according to starting substring. 
 
@@ -138,6 +137,52 @@ def start_define(df, terms_df, description_col='FORMATION', terms_col='FORMATION
     if verbose:
         print("Records classified with start search term: "+str(int(df['CLASS_FLAG'].count())))
         print("Records classified with start search term: "+str(round((df['CLASS_FLAG'].count()/df.shape[0])*100,2))+"% of remaining data")
+        #print("Records classified with both search terms: "+str(round(((df['CLASS_FLAG'].count()+specDF['CLASS_FLAG'].count())/downholeData_Interps.shape[0])*100,2))+"% of all data")
+        #This step usually takes about 5-6 minutes
+    return df
+
+#Classify downhole data by any substring
+def wildcard_define(df, terms_df, description_col='FORMATION', terms_col='FORMATION', verbose=False, log=False):
+    """Function to classify descriptions according to starting substring. 
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe containing all the well descriptions
+    terms_df : pandas.DataFrame
+        Dataframe containing all the startswith substrings to use for searching
+    description_col : str, default = 'FORMATION'
+        Name of column in df containing descriptions, by default 'FORMATION'
+    terms_col : str, default = 'FORMATION'
+        Name of column in terms_df containing startswith substring to match with description_col, by default 'FORMATION'
+    verbose : bool, default = False
+        Whether to print out results, by default False
+    log : bool, default = True
+        Whether to log results to log file
+
+    Returns
+    -------
+    df : pandas.DataFrame
+        Dataframe containing the original data and new classifications
+    """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
+    if verbose:
+        #Estimate when it will end, based on test run
+        estTime = df.shape[0]/3054409 * 6 #It took about 6 minutes to classify data with entire dataframe. This estimates the fraction of that it will take
+        nowTime = datetime.datetime.now()
+        endTime = nowTime+datetime.timedelta(minutes=estTime)
+        print("Wildcard Term process should be done by (?) {:d}:{:02d}".format(endTime.hour, endTime.minute))
+
+    #First, for each startterm, find all results in df that start with, add classification flag, and add interpretation.
+    for i,s in enumerate(terms_df[terms_col]):
+        df['CLASS_FLAG'].where(~df[description_col].str.contains(s, case=False, regex=False, na=False), 5, inplace=True)
+        df['INTERPRETATION'].where(~df[description_col].str.contains(s, case=False, regex=False, na=False),terms_df.loc[i,'INTERPRETATION'],inplace=True)
+    df['BEDROCK_FLAG'].loc[df["INTERPRETATION"] == 'BEDROCK']
+    
+    if verbose:
+        print("Records classified with wildcard search term: "+str(int(df['CLASS_FLAG'].count())))
+        print("Records classified with wildcard search term: "+str(round((df['CLASS_FLAG'].count()/df.shape[0])*100,2))+"% of remaining data")
         #print("Records classified with both search terms: "+str(round(((df['CLASS_FLAG'].count()+specDF['CLASS_FLAG'].count())/downholeData_Interps.shape[0])*100,2))+"% of all data")
         #This step usually takes about 5-6 minutes
     return df
