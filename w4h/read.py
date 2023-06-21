@@ -201,7 +201,7 @@ def read_raw_txt(data_filepath, metadata_filepath, data_cols=None, metadata_cols
 
     #Drop data with no or missing location information
     headerDataIN = headerDataIN.dropna(subset=[ycol]) 
-    headerDataIN = headerDataIN.dropna(subset=[x_col])
+    headerDataIN = headerDataIN.dropna(subset=[xcol])
     
     #Reset index so index goes from 0 in numerical/integer order
     headerDataIN.reset_index(inplace=True, drop=True)
