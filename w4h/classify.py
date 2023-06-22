@@ -43,7 +43,6 @@ def specific_define(df, terms_df, description_col='FORMATION', terms_col='FORMAT
         terms_df.rename(columns={terms_col:description_col}, inplace=True)
         terms_col = description_col
 
-
     df[description_col] = df[description_col].astype(str)
     terms_df[terms_col] = terms_df[terms_col].astype(str)
 
@@ -60,8 +59,8 @@ def specific_define(df, terms_df, description_col='FORMATION', terms_col='FORMAT
     df_Interps['BEDROCK_FLAG'] = df_Interps['INTERPRETATION'] == 'BEDROCK'
     
     if verbose:
-        print("Records Classified with full search term: "+str(int(df_Interps['CLASS_FLAG'].sum())))
-        print("Records Classified with full search term: "+str(round((df_Interps['CLASS_FLAG'].sum()/df_Interps.shape[0])*100,2))+"% of data")
+        print("Records Classified with full search term: "+str(int(df_Interps[df_Interps['CLASS_FLAG']==1]['CLASS_FLAG'].sum())))
+        print("Records Classified with full search term: "+str(round((df_Interps[df_Interps['CLASS_FLAG']==1]['CLASS_FLAG'].sum()/df_Interps.shape[0])*100,2))+"% of data")
 
     return df_Interps
 
@@ -285,7 +284,7 @@ def export_undefined(df, outdir):
     return stillNeededDF
 
 #Fill in unclassified rows' flags with 0
-def fill_unclassified(df):
+def fill_unclassified(df, classification_col='CLASS_FLAG'):
     """Fills unclassified rows in 'CLASS_FLAG' column with np.nan
 
     Parameters
@@ -298,7 +297,7 @@ def fill_unclassified(df):
     df : pandas.DataFrame
         Dataframe on which operation has been performed
     """
-    df['CLASS_FLAG'].fillna(0, inplace=True)
+    df[classification_col].fillna(0, inplace=True)
     return df
 
 #Merge lithologies to main df based on classifications
@@ -313,7 +312,7 @@ def merge_lithologies(df, targinterps_df, target_col='TARGET', target_class='boo
         Dataframe containing lithologies and their target interpretations, depending on what the target is for this analysis (often, coarse materials=1, fine=0)
     target_col : str, default = 'TARGET'
         Name of column in targinterps_df containing the target interpretations
-    target_class, default = True
+    target_class, default = 'bool'
         Whether the input column is using boolean values as its target indicator
         
     Returns
@@ -327,7 +326,6 @@ def merge_lithologies(df, targinterps_df, target_col='TARGET', target_class='boo
     if target_class=='bool':
         targinterps_df[target_col] = targinterps_df[target_col].where(targinterps_df[target_col]=='1', other='0').astype(int)
         targinterps_df[target_col].fillna(value=0, inplace=True)
-
     else:
         targinterps_df[target_col].replace('DoNotUse', value=-1, inplace=True)
         targinterps_df[target_col].fillna(value=-2, inplace=True)

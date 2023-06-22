@@ -506,7 +506,7 @@ def read_model_grid(gridpath, study_area=None, nodataval=0, read_grid=True, node
         Path to model grid file
     study_area : geopandas.GeoDataFrame, default=None
         Dataframe containing study area polygon
-    nodataval : int, default=0
+    no_data_val : int, default=0
         value assigned to areas with no data
     readGrid : bool, default=True
         Whether function to either read grid or create grid
@@ -615,7 +615,7 @@ def read_model_grid(gridpath, study_area=None, nodataval=0, read_grid=True, node
     return modelGrid
 
 #Read a grid from a file in using rioxarray
-def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, study_area=None, clip_to_study_area=True,  study_area_crs=None, grid_crs=None, log=False, **kwargs):
+def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, study_area=None, clip2studyarea=True,  study_area_crs=None, grid_crs=None, log=False, **kwargs):
     """Reads in grid
 
     Parameters
@@ -624,7 +624,7 @@ def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, st
         ontains data path to a grid file
     grid_type : str, default='model'
         Sets what type of grid to load in
-    nodataval : int, default=0
+    no_data_val : int, default=0
         Sets the no data value of the grid
     use_service : str, default=False
         Sets which service the function uses
@@ -652,8 +652,7 @@ def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, st
             rgrid = kwargs['read_grid']
         else:
             rgrid=True
-
-        gridIN = read_model_grid(gridpath=datapath, study_area=study_area, nodataval=0, read_grid=rgrid, clip_to_study_area=clip_to_study_area, study_area_crs=study_area_crs, grid_crs=grid_crs)
+        gridIN = read_model_grid(study_area, gridpath=datapath, nodataval=0, read_grid=rgrid, clip2studyarea=clip2studyarea, study_area_crs=study_area_crs, grid_crs=grid_crs)
     else:
         if use_service==False:
             gridIN = rxr.open_rasterio(datapath)
@@ -682,17 +681,17 @@ def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, st
             gridIN = grid2study_area(study_area=study_area, grid=gridIN, study_area_crs=study_area_crs, grid_crs=grid_crs)
 
         try:
-            nodataval = gridIN.attrs['_FillValue'] #Extract from dataset itself
+            no_data_val = gridIN.attrs['_FillValue'] #Extract from dataset itself
         except:
             pass
                 
-        gridIN = gridIN.where(gridIN != nodataval, other=np.nan)  #Replace no data values with NaNs
+        gridIN = gridIN.where(gridIN != no_data_val, other=np.nan)  #Replace no data values with NaNs
 
     return gridIN
 
 #Align and coregister rasters
-def align_rasters(grids_unaligned, modelgrid, nodataval=0, log=False):
-    """Reprojects two rasters to align their pixels
+def align_rasters(grids_unaligned, modelgrid, no_data_val=0, log=False):
+    """Reprojects two rasters and aligns their pixels
 
     Parameters
     ----------
@@ -700,7 +699,7 @@ def align_rasters(grids_unaligned, modelgrid, nodataval=0, log=False):
         Contains a list of grids or one unaligned grid
     modelgrid : xarray.DataArray
         Contains model grid
-    nodataval : int, default=0
+    no_data_val : int, default=0
         Sets value of no data pixels
     log : bool, default = False
         Whether to log results to log file, by default False
@@ -718,11 +717,11 @@ def align_rasters(grids_unaligned, modelgrid, nodataval=0, log=False):
             alignedGrid = g.rio.reproject_match(modelgrid)
 
             try:
-                nodataval = alignedGrid.attrs['_FillValue'] #Extract from dataset itself
+                no_data_val = alignedGrid.attrs['_FillValue'] #Extract from dataset itself
             except:
                 pass
             
-            alignedGrid = alignedGrid.where(alignedGrid != nodataval)  #Replace no data values with NaNs
+            alignedGrid = alignedGrid.where(alignedGrid != no_data_val)  #Replace no data values with NaNs
             
             alignedGrids.append(alignedGrid)
     else:
