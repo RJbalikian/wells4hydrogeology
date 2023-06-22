@@ -23,7 +23,7 @@ from w4h import logger_function
 lidarURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
 
 #Read study area shapefile (or other file) into geopandas
-def read_study_area(studyareapath, study_area_crs=None, log=False):
+def read_study_area(studyareapath, study_area_crs='EPSG:4269', log=False):
     """Read study area geospatial file into geopandas
 
     Parameters
@@ -497,7 +497,7 @@ def grid2study_area(study_area, grid, study_area_crs='', grid_crs='', log=False)
     return grid
 
 #Read the model grid into (rio)xarray
-def read_model_grid(gridpath, study_area=None, nodataval=0, read_grid=True, node_byspace=False, clip2studyarea=True, study_area_crs=None, grid_crs=None, log=False):
+def read_model_grid(gridpath, study_area=None, nodataval=0, read_grid=True, node_byspace=False, clip_to_study_area=True, study_area_crs=None, grid_crs=None, log=False):
     """Reads in model grid to xarray data array
 
     Parameters
@@ -512,7 +512,7 @@ def read_model_grid(gridpath, study_area=None, nodataval=0, read_grid=True, node
         Whether function to either read grid or create grid
     node_byspace : bool, default=False
         Denotes how to create grid
-    clip2studyarea : bool, default=True
+    clip_to_study_area : bool, default=True
         Whether to clip grid to study area
     study_area_crs : str, default=None
         Inputs study area crs
@@ -542,7 +542,7 @@ def read_model_grid(gridpath, study_area=None, nodataval=0, read_grid=True, node
         elif grid_crs.lower()=='isws':
             modelGridIN.rio.write_crs(iswsCRS)
         
-        if clip2studyarea and study_area is not None:                
+        if clip_to_study_area and study_area is not None:                
             if study_area_crs is None:
                 study_area_crs=study_area.crs
             study_area = study_area.to_crs(grid_crs)
@@ -615,7 +615,7 @@ def read_model_grid(gridpath, study_area=None, nodataval=0, read_grid=True, node
     return modelGrid
 
 #Read a grid from a file in using rioxarray
-def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, study_area=None, clip2studyarea=True,  study_area_crs=None, grid_crs=None, log=False, **kwargs):
+def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, study_area=None, clip_to_study_area=True,  study_area_crs=None, grid_crs=None, log=False, **kwargs):
     """Reads in grid
 
     Parameters
@@ -630,7 +630,7 @@ def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, st
         Sets which service the function uses
     study_area : geopandas.GeoDataFrame, default=None
         Dataframe containing study area polygon
-    clip2studyarea : bool, default=True
+    clip_to_study_area : bool, default=True
         If function clips grid to study area
     study_area_crs : str, default=None
         Sets specific crs if current crs is not wanted
@@ -652,7 +652,8 @@ def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, st
             rgrid = kwargs['read_grid']
         else:
             rgrid=True
-        gridIN = read_model_grid(study_area, gridpath=datapath, nodataval=0, read_grid=rgrid, clip2studyarea=clip2studyarea, study_area_crs=study_area_crs, grid_crs=grid_crs)
+
+        gridIN = read_model_grid(gridpath=datapath, study_area=study_area, nodataval=0, read_grid=rgrid, clip_to_study_area=clip_to_study_area, study_area_crs=study_area_crs, grid_crs=grid_crs)
     else:
         if use_service==False:
             gridIN = rxr.open_rasterio(datapath)
@@ -662,7 +663,7 @@ def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, st
             pass
             gridIN = read_wms(study_area, wcs_url=lidarURL, **kwargs)
             
-        if clip2studyarea and study_area is not None:
+        if clip_to_study_area and study_area is not None:
             if grid_crs is None:
                 try:
                     grid_crs=gridIN.spatial_ref.crs_wkt
