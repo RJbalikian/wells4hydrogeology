@@ -90,12 +90,12 @@ def logger_function(logtocommence, parameters, func_name):
 
 def run(well_data, well_data_cols=None, 
         well_metadata=None, well_metadata_cols=None, 
-        description_col='FORMATIoN', top_col='TOP', bottom_col='BOTTOM', depth_type='depth',
-        xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEVATION', idcol='API_NUMBER', output_crs='EPSG:4269',
+        description_col='FORMATION', top_col='TOP', bottom_col='BOTTOM', depth_type='depth',
+        study_area=None, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEVATION', idcol='API_NUMBER', output_crs='EPSG:4269',
         surf_elev_file=None, bedrock_elev_file=None, model_grid=None,
         lith_dict=None, lith_dict_start=None, lith_dict_wildcard=None,
         target_dict=None,
-        study_area=None,
+        target_name='CoarseFine',
         export_dir=None,
         verbose=False,
         log=False,
@@ -121,6 +121,8 @@ def run(well_data, well_data_cols=None,
         Name of column containing depth/elevation at bottom of well interval. This column should be in well_data.    
     depth_type : str, default = 'depth'
         Whether values top_col or bottom_col refer to depth or elevation.
+    study_area : str or pathlib.Path object, or geopandas.GeoDataFrame
+        _description_
     xcol : str, default = 'LONGITUDE' 
         Name of column containing x coordinates. This column should be in well_metadata unless well_metadata is not read, then it should be in well_data.
     ycol : str, default = 'LATITUDE'
@@ -143,8 +145,14 @@ def run(well_data, well_data_cols=None,
         _description_
     target_dict : str or pathlib.Path object, or pandas.DataFrame
         _description_
-    study_area : str or pathlib.Path object, or geopandas.GeoDataFrame
-        _description_
+    target_name : str, default = 'CoarseFine'
+        Name of target of interest, to be used on exported files
+    export_dir : str or pathlib.Path object, default = None
+        Directory to export output files
+    verbose : bool, default = False
+        Whether to print updates/results
+    log : bool, default = False
+        Whether to send parameters and outputs to log file, to be saved in export_dir, or the same directory as well_data if export_dir not defined.
     """
 
     #Get important information
@@ -236,7 +244,6 @@ def run(well_data, well_data_cols=None,
 
     #CLASSIFICATION
     #Read dictionary definitions and classify
-    #UPDATE: START HERE AGAIN, double checck and get kwargs for all functions ***
     get_search_terms_kwargs = {k: v for k, v in locals().items() if k in w4h.get_search_terms.__code__.co_varnames}
     specTermsPATH, startTermsPATH, wildcardTermsPATH, = w4h.get_search_terms(spec_dir=lith_dict, start_dir=lith_dict_start, wildcard_dir=lith_dict_wildcard, log=log, **get_search_terms_kwargs)
     read_dictionary_terms_kwargs = {k: v for k, v in locals().items() if k in w4h.read_dictionary_terms.__code__.co_varnames}
@@ -254,43 +261,49 @@ def run(well_data, well_data_cols=None,
     wildcardTerms.drop_duplicates(subset='FORMATION', inplace=True)
     wildcardTerms.reset_index(inplace=True, drop=True)
 
+    if verbose:
+        print('Search terms to be used:')
+        print('\t {} exact match term/definition pairs')
+        print('\t {} starting match term/definition pairs')
+        print('\t {} wildcard match term/definition pairs')
+
     #CLASSIFICATIONS
     #Exact match classifications
-    downholeData = w4h.specific_define(downholeData, specTerms, verbose=verbose, log=log)
+    downholeData = w4h.specific_define(downholeData, specTerms, description_col=description_col, verbose=verbose, log=log)
     
     #.startswith classifications
-    classifedDF, searchDF = w4h.split_defined(downholeData)
-    searchDF = w4h.start_define(df=searchDF, terms_df=startTerms, verbose=verbose, log=log)
+    classifedDF, searchDF = w4h.split_defined(downholeData, verbose=verbose, log=log)
+    searchDF = w4h.start_define(df=searchDF, terms_df=startTerms, description_col=description_col, verbose=verbose, log=log)
     downholeData = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
 
     #wildcard/any substring match classifications    
-    classifedDF, searchDF = w4h.split_defined(downholeData)
-    searchDF = w4h.wildcard_define(df=searchDF, terms_df=wildcardTerms, verbose=verbose, log=log)
+    classifedDF, searchDF = w4h.split_defined(downholeData, verbose=verbose, log=log)
+    searchDF = w4h.wildcard_define(df=searchDF, terms_df=wildcardTerms, description_col=description_col, verbose=verbose, log=log)
     downholeData = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
-    
+
     #Depth classification
-    classifedDF, searchDF = w4h.split_defined(downholeData)
+    classifedDF, searchDF = w4h.split_defined(downholeData, verbose=verbose, log=log)
     searchDF = w4h.depth_define(searchDF, thresh=550, verbose=verbose, log=log)
     downholeData = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***
     
     #Fill unclassified data
-    downholeData = w4h.fill_unclassified(downholeData)
+    downholeData = w4h.fill_unclassified(downholeData, classification_col='CLASS_FLAG')
     
     #Add target interpratations
-    targetInterpDF = w4h.read_lithologies(log=log)
-    downholeData = w4h.merge_lithologies(df=downholeData, targinterps_df=targetInterpDF)
+    read_lithologies_kwargs = {k: v for k, v in locals().items() if k in w4h.read_lithologies.__code__.co_varnames}
+    targetInterpDF = w4h.read_lithologies(lith_file=target_dict, log=log, **read_lithologies_kwargs)
+    downholeData = w4h.merge_lithologies(df=downholeData, targinterps_df=targetInterpDF, target_col='TARGET', target_class='bool')
     
     #Get ready for next steps
-    wellsDF = w4h.get_unique_wells(downholeData)
     downholeData = w4h.sort_dataframe(df=downholeData, sort_cols=['API_NUMBER','TOP'], remove_nans=True)
 
     #Analyze Surface(s) and grid(s)
-    bedrockGrid, surfaceGrid = w4h.align_rasters(grids_unaligned=[bedrockElevGridIN, surfaceElevGridIN], modelgrid=modelGrid, log=log)
-    driftThickGrid, layerThickGrid = w4h.get_drift_thick(surface=surfaceGrid, bedrock=bedrockGrid, layers=9, plot=False, log=log)
-    headerData = w4h.sample_raster_points(raster=bedrockGrid, points_df=headerData, new_col='BEDROCK_ELEV_FT', log=log)
-    headerData = w4h.sample_raster_points(raster=surfaceGrid, points_df=headerData, new_col='SURFACE_ELEV_FT', log=log)
-    headerData = w4h.sample_raster_points(raster=driftThickGrid, points_df=headerData, new_col='BEDROCK_DEPTH_FT', log=log)
-    headerData = w4h.sample_raster_points(raster=layerThickGrid, points_df=headerData, new_col='LAYER_THICK_FT', log=log)
+    bedrockGrid, surfaceGrid = w4h.align_rasters(grids_unaligned=[bedrockElevGridIN, surfaceElevGridIN], modelgrid=modelGrid, no_data_val=0, log=log)
+    driftThickGrid, layerThickGrid = w4h.get_drift_thick(surface=surfaceGrid, bedrock=bedrockGrid, layers=9, plot=verbose, log=log)
+    headerData = w4h.sample_raster_points(raster=bedrockGrid, points_df=headerData, xcol=xcol, ycol=ycol, new_col='BEDROCK_ELEV_FT', verbose=verbose, log=log)
+    headerData = w4h.sample_raster_points(raster=surfaceGrid, points_df=headerData, xcol=xcol, ycol=ycol, new_col='SURFACE_ELEV_FT', verbose=verbose, log=log)
+    headerData = w4h.sample_raster_points(raster=driftThickGrid, points_df=headerData, xcol=xcol, ycol=ycol, new_col='BEDROCK_DEPTH_FT', verbose=verbose, log=log)
+    headerData = w4h.sample_raster_points(raster=layerThickGrid, points_df=headerData, xcol=xcol, ycol=ycol, new_col='LAYER_THICK_FT', verbose=verbose, log=log)
     headerData = w4h.get_layer_depths(well_metadata=headerData, no_layers=9, log=log)
 
     #UPDATE: Check if this actually works, I think they should be copies of each other if well_metadata is not specified and not found using the metadata_filename pattern in file_setup() ***
@@ -301,9 +314,10 @@ def run(well_data, well_data_cols=None,
         #downholeData = pd.merge(left = downholeData, right = headerData, on=idcol)
         downholeData = w4h.merge_tables(data_df=downholeData,  header_df=headerData, data_cols=None, header_cols=None, on=idcol, how='inner', auto_pick_cols=True, log=log)
     
+    #UPDATE: START HERE AGAIN, double checck and get kwargs for all functions ***
     #downholeData = downholeData.copy()
     #UPDATE: Potentially need to remove duplicate columns here, I think I fixed that tho ***
-    resdf = w4h.layer_target_thick(downholeData, layers=9, outfile_prefix='CoarseFine', log=log)
+    resdf = w4h.layer_target_thick(downholeData, layers=9, return_all=False, outfile_prefix='CoarseFine', export_dir=export_dir, depth_top_col=top_col, depth_bot_col=bottom_col, log=log)
     layers_data = w4h.layer_interp(points=resdf, layers=9, grid=modelGrid, method='lin', log=log)
 
     if export_dir is None:

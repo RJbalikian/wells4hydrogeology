@@ -423,7 +423,12 @@ def read_dictionary_terms(dict_file, id_col='ID', search_col='FORMATION', defini
     dict_terms = []
     if type(dict_file) is list:
         for f in dict_file:
-            dict_terms.append(pd.read_csv(f))
+            if not f.exists():
+                df = pd.DataFrame(columns=['ID', 'FORMATION', 'INTERPRETATION', 'CLASS_FLAGS'])
+                dict_terms.append(df)
+            else:
+                dict_terms.append(pd.read_csv(f))
+
             if id_col in dict_terms.columns:
                 dict_terms.set_index(id_col, drop=True, inplace=True)
     else:
@@ -435,7 +440,9 @@ def read_dictionary_terms(dict_file, id_col='ID', search_col='FORMATION', defini
             dict_file = [dict_file]
         else:
             print('ERROR: dict_file ({}) does not exist.'.format(dict_file))
-            return
+            #Create empty dataframe to return
+            dict_terms = pd.DataFrame(columns=['ID', 'FORMATION', 'INTERPRETATION', "CLASS_FLAGS"])
+            return dict_terms
 
     #Rename important columns
     searchTermList = ['searchterm', 'search', 'exact']
@@ -488,15 +495,13 @@ def read_dictionary_terms(dict_file, id_col='ID', search_col='FORMATION', defini
     return dict_terms
 
 #Function to read lithology file into pandas dataframe
-def read_lithologies(litho_dir=None, lith_file=None, interp_col='LITHOLOGY', target_col='CODE', use_cols=None, log=False):
+def read_lithologies(lith_file=None, interp_col='LITHOLOGY', target_col='CODE', use_cols=None, log=False):
     """Function to read lithology file into pandas dataframe
 
     Parameters
     ----------
-    litho_dir : str or pathlib.Path object, default = None
-        Directory where lithology file is located. If None, default is in source coude, by default None
-    lith_file : str, default = None
-        Filename of lithology file. If None, default is in source coude, by default None
+    lith_file : str or pathlib.Path object, default = None
+        Filename of lithology file. If None, default is contained within repository, by default None
     interp_col : str, default = 'LITHOLOGY'
         Column to used to match interpretations
     target_col : str, default = 'CODE'
@@ -513,24 +518,16 @@ def read_lithologies(litho_dir=None, lith_file=None, interp_col='LITHOLOGY', tar
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    #dictDir = "\\\\isgs-sinkhole\\geophysics\\Balikian\\ISWS_HydroGeo\\WellDataAutoClassification\\SupportingDocs\\"
-    if litho_dir is None:
-        litho_dir=str(repoDir)+'/resources/'
-    elif isinstance(litho_dir, pathlib.PurePath):
-        litho_dir = litho_dir.as_posix()
-    
-    litho_dir.replace('\\', '/')
-    litho_dir.replace('\\'[-1], '/')
-    if litho_dir[-1] != '/':
-        litho_dir = litho_dir+'/'
-
     if lith_file is None:
+        #Find resources
         lith_file='Lithology_Interp_FineCoarse.csv'
     
+    if not isinstance(lith_file, pathlib.PurePath):
+        lith_file = pathlib.Path(lith_file)
+
     if use_cols is None:
         use_cols = ['LITHOLOGY', 'CODE']
 
-    lithFPath = pathlib.Path(litho_dir+lith_file)
     lithoDF = pd.read_csv(lithFPath, usecols=use_cols)
 
     lithoDF.rename(columns={interp_col:'INTERPRETATION', target_col:'TARGET'}, inplace=True)
