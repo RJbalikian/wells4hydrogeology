@@ -73,7 +73,7 @@ def get_most_recent(dir=str(repoDir)+'/resources', glob_pattern='*', verbose=Tru
     return mostRecentFile
 
 #Function to setup files of interest
-def file_setup(well_data, metadata_path=None, data_filename='*ISGS_DOWNHOLE_DATA*.txt', metadata_filename='*ISGS_HEADER*.txt', log_dir=None, verbose=False, log=False):
+def file_setup(well_data, metadata=None, data_filename='*ISGS_DOWNHOLE_DATA*.txt', metadata_filename='*ISGS_HEADER*.txt', log_dir=None, verbose=False, log=False):
     """Function to setup files, assuming data, metadata, and elevation/location are in separate files (there should be one "key"/identifying column consistent across all files to join/merge them later)
 
     This function may not be useful if files are organized differently than this structure. 
@@ -84,7 +84,7 @@ def file_setup(well_data, metadata_path=None, data_filename='*ISGS_DOWNHOLE_DATA
     ----------
     well_data : str or pathlib.Path object
         Str or pathlib.Path to directory containing input files, by default str(repoDir)+'/resources'
-    metadata_path : str or pathlib.Path object, optional
+    metadata : str or pathlib.Path object, optional
         Str or pathlib.Path to directory containing input metadata files, by default str(repoDir)+'/resources'
     data_filename : str, optional
         Pattern used by pathlib.glob() to get the most recent data file, by default '*ISGS_DOWNHOLE_DATA*.txt'
@@ -104,12 +104,12 @@ def file_setup(well_data, metadata_path=None, data_filename='*ISGS_DOWNHOLE_DATA
 
     #Define  filepath variables to be used later for reading/writing files
     data_path = pathlib.Path(well_data)
-    if metadata_path is None:
+    if metadata is None:
         origMetaPath = None
-        metadata_path=data_path
+        metadata=data_path
     else:
-        origMetaPath = metadata_path
-        metadata_path=pathlib.Path(metadata_path)
+        origMetaPath = metadata
+        metadata=pathlib.Path(metadata)
 
     #If input path is a directory, find most recent version of the file. If file, just read the file
     if data_path.is_dir():
@@ -117,15 +117,15 @@ def file_setup(well_data, metadata_path=None, data_filename='*ISGS_DOWNHOLE_DATA
     else:
         downholeDataFILE = data_path
     
-    if metadata_path.is_dir():
-        headerDataFILE = get_most_recent(metadata_path, metadata_filename, verbose=verbose)
+    if metadata.is_dir():
+        headerDataFILE = get_most_recent(metadata, metadata_filename, verbose=verbose)
         if headerDataFILE == []:
             headerDataFILE = downholeDataFILE
     else:
         if origMetaPath is None:
             headerDataFILE = downholeDataFILE
         else:
-            headerDataFILE = metadata_path
+            headerDataFILE = metadata
        #Set all input as pathlib.Path objects (may be redundant, but just in case)
     downholeDataPATH = pathlib.Path(downholeDataFILE)
     headerDataPATH = pathlib.Path(headerDataFILE)
@@ -427,13 +427,13 @@ def read_dictionary_terms(dict_file, cols=None, col_types=None, dictionary_type=
                 dict_terms.set_index('ID', drop=True, inplace=True)
     else:
         dict_file = pathlib.Path(dict_file)
-        if dict_file.exists():
+        if dict_file.exists() and dict_file.is_file():
             dict_terms.append(pd.read_csv(dict_file))
             if 'ID' in dict_terms[-1].columns:
                 dict_terms[-1].set_index('ID', drop=True, inplace=True)
             dict_file = [dict_file]
         else:
-            print('ERROR: dict_file ({}) does not exist.'.format(dict_file))
+            print('ERROR: dict_file ({}) does not exist. Skipping.'.format(dict_file))
             return
 
     #Rename important columns

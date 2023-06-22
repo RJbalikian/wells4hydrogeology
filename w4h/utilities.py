@@ -90,7 +90,7 @@ def logger_function(logtocommence, parameters, func_name):
 
 def run(well_data, well_data_cols=None, 
         well_metadata=None, well_metadata_cols=None, 
-        description_col='FORMATIoN', top_col='TOP', bottom_col='BOTTOM', depth_type='depth',
+        description_col='FORMATION', top_col='TOP', bottom_col='BOTTOM', depth_type='depth',
         xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEVATION', idcol='API_NUMBER', output_crs='EPSG:4269',
         surf_elev_file=None, bedrock_elev_file=None, model_grid=None,
         lith_dict=None, lith_dict_start=None, lith_dict_wildcard=None,
@@ -152,30 +152,38 @@ def run(well_data, well_data_cols=None,
     repoDir = pathlib.Path(os.getcwd()) #this will need to be updated for pypi packaging
 
     #Get data (files or otherwise)
-    file_setup_kwargs = {k: v for k, v in locals().items() if k in w4h.file_setup.__code__.co_varnames}
-    #Check how well_data was defined
+    file_setup_kwargs = {k: v for k, v in locals()['parameters'].items() if k in w4h.file_setup.__code__.co_varnames}
+    
+    #Check how well_data and well_metadata were defined
     if isinstance(well_data, pathlib.PurePath) or isinstance(well_data, str):
         #Convert well_data to pathlib.Path if not already
         if isinstance(well_data, str):
             well_data = pathlib.Path(well_data)
 
-        if isinstance(well_metadata, pathlib.PurePath) or isinstance(well_metadata, str):
+        if well_metadata is None:
+            if well_data.is_dir():
+                downholeDataPATH, headerDataPATH = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
+            elif well_data.exists():
+                downholeDataPATH, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
+            else:
+                print('ERROR: well_data file does not exist:{}'.format(well_data))
+        elif isinstance(well_metadata, pathlib.PurePath) or isinstance(well_metadata, str):
             if isinstance(well_metadata, str):
                 well_metadata = pathlib.Path(well_metadata)    
-            downholeDataPATH, headerDataPATH = w4h.file_setup(well_data_path=well_data, metadata_path=well_metadata, verbose=verbose, log=log, **file_setup_kwargs)                
+            downholeDataPATH, headerDataPATH = w4h.file_setup(well_data=well_data, metadata=well_metadata, **file_setup_kwargs)                
         else:
             if isinstance(well_metadata, pd.DataFrame):
-                downholeDataPATH, _ = w4h.file_setup(well_data_path=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
+                downholeDataPATH, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
                 headerDataPATH = well_metadata
             elif well_metadata is None:
-                downholeDataPATH, _ = w4h.file_setup(well_data_path=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
+                downholeDataPATH, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
 
     elif isinstance(well_data, pd.DataFrame):
         if isinstance(well_metadata, pd.DataFrame):
             downholeDataPATH = well_data
             headerDataPATH = well_metadata
         elif isinstance(well_metadata, pathlib.PurePath) or isinstance(well_metadata, str):
-            _, headerDataPATH = w4h.file_setup(well_data_path=well_metadata, metadata_path=well_metadata, verbose=verbose, log=log, **file_setup_kwargs)                
+            _, headerDataPATH = w4h.file_setup(well_data=well_metadata, metadata=well_metadata, verbose=verbose, log=log, **file_setup_kwargs)                
             downholeDataPATH = well_data
         else:
             print('ERROR: well_metadata must be a string filepath, a pathlib.Path object, or pandas.DataFrame')
@@ -183,7 +191,7 @@ def run(well_data, well_data_cols=None,
         print('ERROR: well_data must be a string filepath, a pathlib.Path object, or pandas.DataFrame')
 
     #Get pandas dataframes from input
-    read_raw_txt_kwargs = {k: v for k, v in locals().items() if k in w4h.read_raw_txt.__code__.co_varnames}
+    read_raw_txt_kwargs = {k: v for k, v in locals()['parameters'].items() if k in w4h.read_raw_txt.__code__.co_varnames}
     downholeDataIN, headerDataIN = w4h.read_raw_txt(data_filepath=downholeDataPATH, metadata_filepath=headerDataPATH, verbose=verbose, log=log, **read_raw_txt_kwargs) #Functions to read data into dataframes. Also excludes extraneous columns, and drops header data with no location information
 
     #Define data types (file will need to be udpated)
@@ -191,7 +199,7 @@ def run(well_data, well_data_cols=None,
     headerData = w4h.define_dtypes(df=headerDataIN, dtype_file='headerDataTypes.txt', log=log)
 
     #Get Study area
-    read_study_area_kwargs = {k: v for k, v in locals().items() if k in w4h.read_study_area.__code__.co_varnames}
+    read_study_area_kwargs = {k: v for k, v in locals()['parameters'].items() if k in w4h.read_study_area.__code__.co_varnames}
     if study_area is None:
         studyAreaIN = None
         use_study_area = False
@@ -200,15 +208,15 @@ def run(well_data, well_data_cols=None,
         use_study_area = True
 
     #Get surfaces and grid(s)
-    read_grid_kwargs = {k: v for k, v in locals().items() if k in w4h.read_grid_kwargs.__code__.co_varnames}
+    read_grid_kwargs = {k: v for k, v in locals()['parameters'].items() if k in w4h.read_grid.__code__.co_varnames}
 
     modelGridPath = model_grid
     surfaceElevPath = surf_elev_file
     bedrockElevPath = bedrock_elev_file
     #UPDATE: allow other types of model grid read ***
-    modelGrid = w4h.read_grid(datapath=modelGridPath, grid_type='model', study_area=studyAreaIN,  clip_to_studyarea=use_study_area, log=log, **read_grid_kwargs)
-    surfaceElevGridIN = w4h.read_grid(datapath=surfaceElevPath, grid_type='surface', study_area=studyAreaIN, clip_to_studyarea=use_study_area, log=log, **read_grid_kwargs)
-    bedrockElevGridIN = w4h.read_grid(datapath=bedrockElevPath, grid_type='bedrock', study_area=studyAreaIN, clip_to_studyarea=use_study_area, log=log, **read_grid_kwargs)
+    modelGrid = w4h.read_grid(datapath=modelGridPath, grid_type='model', study_area=studyAreaIN,  clip_to_study_area=use_study_area, log=log, **read_grid_kwargs)
+    surfaceElevGridIN = w4h.read_grid(datapath=surfaceElevPath, grid_type='surface', study_area=studyAreaIN, clip_to_study_area=use_study_area, log=log, **read_grid_kwargs)
+    bedrockElevGridIN = w4h.read_grid(datapath=bedrockElevPath, grid_type='bedrock', study_area=studyAreaIN, clip_to_study_area=use_study_area, log=log, **read_grid_kwargs)
 
     #Add control points
     #UPDATE: Code here for adding in control points ***
@@ -216,22 +224,22 @@ def run(well_data, well_data_cols=None,
     #UPDATE: MAKE SURE CRS's all align ***
 
     #Convert headerData to have geometry
-    coords2geometry_kwargs = {k: v for k, v in locals().items() if k in w4h.coords2geometry.__code__.co_varnames}
+    coords2geometry_kwargs = {k: v for k, v in locals()['parameters'].items() if k in w4h.coords2geometry.__code__.co_varnames}
     headerData = w4h.coords2geometry(df=headerData, xcol=xcol, ycol=ycol, zcol=zcol, log=log, **coords2geometry_kwargs)
-    clip_gdf2study_area_kwargs = {k: v for k, v in locals().items() if k in w4h.clip_gdf2study_area.__code__.co_varnames}
+    clip_gdf2study_area_kwargs = {k: v for k, v in locals()['parameters'].items() if k in w4h.clip_gdf2study_area.__code__.co_varnames}
     headerData = w4h.clip_gdf2study_area(study_area=studyAreaIN, gdf=headerData, log=log, **clip_gdf2study_area_kwargs)
 
     #Clean up data
     downholeData = w4h.remove_nonlocated(downholeData, headerData, log=log, verbose=verbose)
     headerData = w4h.remove_no_topo(df=headerData, zcol=zcol, verbose=verbose, log=log)
 
-    drop_no_depth_kwargs = {k: v for k, v in locals().items() if k in w4h.drop_no_depth.__code__.co_varnames}
+    drop_no_depth_kwargs = {k: v for k, v in locals()['parameters'].items() if k in w4h.drop_no_depth.__code__.co_varnames}
     donwholeData = w4h.drop_no_depth(downholeData, verbose=verbose, top_col=top_col, bottom_col=bottom_col, log=log, **drop_no_depth_kwargs) #Drop records with no depth information
 
-    drop_bad_depth_kwargs = {k: v for k, v in locals().items() if k in w4h.drop_bad_depth.__code__.co_varnames}
+    drop_bad_depth_kwargs = {k: v for k, v in locals()['parameters'].items() if k in w4h.drop_bad_depth.__code__.co_varnames}
     donwholeData = w4h.drop_bad_depth(downholeData, verbose=verbose, top_col=top_col, bottom_col=bottom_col, depth_type=depth_type, log=log, **drop_bad_depth_kwargs)#Drop records with bad depth information (i.e., top depth > bottom depth) (Also calculates thickness of each record)
 
-    drop_no_formation_kwargs = {k: v for k, v in locals().items() if k in w4h.drop_no_formation.__code__.co_varnames}
+    drop_no_formation_kwargs = {k: v for k, v in locals()['parameters'].items() if k in w4h.drop_no_formation.__code__.co_varnames}
     downholeData = w4h.drop_no_formation(downholeData, description_col=description_col, verbose=verbose, log=log, **drop_no_formation_kwargs)
 
     #CLASSIFICATION
