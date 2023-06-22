@@ -99,8 +99,8 @@ def run(well_data, well_data_cols=None,
         export_dir=None,
         verbose=False,
         log=False,
-        **parameters
-        ):
+        **keyword_parameters):
+    
     """Function to run entire process with one line of code
 
     Parameters
@@ -237,14 +237,22 @@ def run(well_data, well_data_cols=None,
     #CLASSIFICATION
     #Read dictionary definitions and classify
     #UPDATE: START HERE AGAIN, double checck and get kwargs for all functions ***
-    specTermsPATH, startTermsPATH, wildcardTermsPATH, = w4h.get_search_terms(spec_dir=str(repoDir)+'/resources/', spec_glob_pattern='*SearchTerms-Specific*', start_glob_pattern='*SearchTerms-Start*', log=log)
-    specTerms = w4h.read_dictionary_terms(dict_file=specTermsPATH, log=log)
-    startTerms = w4h.read_dictionary_terms(dict_file=startTermsPATH, log=log)
-    wildcardTerms = w4h.read_dictionary_terms(dict_file=wildcardTermsPATH, log=log)
+    get_search_terms_kwargs = {k: v for k, v in locals().items() if k in w4h.get_search_terms.__code__.co_varnames}
+    specTermsPATH, startTermsPATH, wildcardTermsPATH, = w4h.get_search_terms(spec_dir=lith_dict, start_dir=lith_dict_start, wildcard_dir=lith_dict_wildcard, log=log, **get_search_terms_kwargs)
+    read_dictionary_terms_kwargs = {k: v for k, v in locals().items() if k in w4h.read_dictionary_terms.__code__.co_varnames}
+    specTerms = w4h.read_dictionary_terms(dict_file=specTermsPATH, log=log, **read_dictionary_terms_kwargs)
+    startTerms = w4h.read_dictionary_terms(dict_file=startTermsPATH, log=log, **read_dictionary_terms_kwargs)
+    wildcardTerms = w4h.read_dictionary_terms(dict_file=wildcardTermsPATH, log=log, **read_dictionary_terms_kwargs)
 
     #Clean up dictionary terms
     specTerms.drop_duplicates(subset='FORMATION', inplace=True)
     specTerms.reset_index(inplace=True, drop=True)
+
+    startTerms.drop_duplicates(subset='FORMATION', inplace=True)
+    startTerms.reset_index(inplace=True, drop=True)
+
+    wildcardTerms.drop_duplicates(subset='FORMATION', inplace=True)
+    wildcardTerms.reset_index(inplace=True, drop=True)
 
     #CLASSIFICATIONS
     #Exact match classifications

@@ -53,6 +53,7 @@ def get_most_recent(dir=str(repoDir)+'/resources', glob_pattern='*', verbose=Tru
         fileDates.append(np.datetime64(datetime.datetime.fromtimestamp(os.path.getmtime(f))))
     
     if fileDates == []:
+        #If no files found that match pattern, return an empty pathlib.Path()
         if verbose:
             print('No file found in {} matching {} pattern'.format(dir, glob_pattern))
         mostRecentFile = pathlib.Path()
@@ -387,17 +388,17 @@ def get_search_terms(spec_dir=str(repoDir)+'/resources/', spec_glob_pattern='*Se
     return specTermsPath, startTermsPath, wilcardTermsPath
 
 #Read files into pandas dataframes
-def read_dictionary_terms(dict_file, cols=None, col_types=None, dictionary_type=None, class_flag=6, rem_extra_cols=True, log=False):
+def read_dictionary_terms(dict_file, id_col='ID', search_col='FORMATION', definition_col='INTERPRETATION', class_flag_col='CLASS_FLAG', dictionary_type=None, class_flag=6, rem_extra_cols=True, log=False):
     """Function to read dictionary terms from file into pandas dataframe
 
     Parameters
     ----------
     dict_file : str or pathlib.Path object, or list of these
         File or list of files to be read
-    cols : dict or None, default = None
-        Dictionary containing columns to be renamed. If None, see source code for renaming actions, by default None
-    col_types : dict or None, default = None
-        Dictionary containing column types to be set. If None, see source code for renaming actions, by default None, by default None
+    search_col : str, default = 'FORMATION'
+        Name of column containing search terms (geologic formations)
+    definition_col : str, default = 'INTERPRETATION'
+        Name of column containing interpretations of search terms (lithologies)
     dictionary_type : str or None, {None, 'exact', 'start', 'wildcard',}
         Indicator of which kind of dictionary terms to be read in: None, 'exact', 'start', or 'wildcard' by default None.
             - If None, uses name of file to try to determine. If it cannot, it will default to using the classification flag from class_flag
@@ -423,14 +424,14 @@ def read_dictionary_terms(dict_file, cols=None, col_types=None, dictionary_type=
     if type(dict_file) is list:
         for f in dict_file:
             dict_terms.append(pd.read_csv(f))
-            if 'ID' in dict_terms.columns:
-                dict_terms.set_index('ID', drop=True, inplace=True)
+            if id_col in dict_terms.columns:
+                dict_terms.set_index(id_col, drop=True, inplace=True)
     else:
         dict_file = pathlib.Path(dict_file)
         if dict_file.exists():
             dict_terms.append(pd.read_csv(dict_file))
-            if 'ID' in dict_terms[-1].columns:
-                dict_terms[-1].set_index('ID', drop=True, inplace=True)
+            if id_col in dict_terms[-1].columns:
+                dict_terms[-1].set_index(id_col, drop=True, inplace=True)
             dict_file = [dict_file]
         else:
             print('ERROR: dict_file ({}) does not exist.'.format(dict_file))
@@ -442,45 +443,38 @@ def read_dictionary_terms(dict_file, cols=None, col_types=None, dictionary_type=
     wildcardTermList = ['wildcard', 'substring', ]
 
     #Recast all columns to datatypes of headerData to defined types
-    dict_termDtypes = {'FORMATION':str,'INTERPRETATION':str, 'CLASS_FLAG':np.uint8}
+    dict_termDtypes = {search_col:str, definition_col:str, class_flag_col:np.uint8}
 
     if dictionary_type is None:
-        dictionary_type=''
+        dictionary_type='' #Allow string methods on this variable
 
     #Iterating, to allow reading of multiple dict file at once (also works with just one at at time)
     for i, d in enumerate(dict_terms):
         if dictionary_type.lower() in searchTermList or (dictionary_type=='' and 'spec' in str(dict_file[i]).lower()):
-            d['CLASS_FLAG'] = 1
+            d[class_flag_col] = 1
         elif dictionary_type.lower() in startTermList or (dictionary_type=='' and 'start' in str(dict_file[i]).lower()):
-            d['CLASS_FLAG'] = 4 #Start term classification flag
+            d[class_flag_col] = 4 #Start term classification flag
         elif dictionary_type.lower() in wildcardTermList or (dictionary_type=='' and 'wildcard' in str(dict_file[i]).lower()):
-            d['CLASS_FLAG'] = 5 #Wildcard term classification flag
+            d[class_flag_col] = 5 #Wildcard term classification flag
         else:
-            d['CLASS_FLAG'] = class_flag #Custom classification flag, defined as argument
+            d[class_flag_col] = class_flag #Custom classification flag, defined as argument
         #1: exact classification match, 2: (not defined...ML?), 3: bedrock classification for obvious bedrock, 4: start term, 5: wildcard/substring, 6: Undefined
 
-        if cols is None:
-            if 'SearchTerm' in d.columns:
-                d.rename(columns={'SearchTerm':'FORMATION'}, inplace=True)
-            if 'StartTerm' in d.columns:
-                d.rename(columns={'StartTerm':'FORMATION'}, inplace=True)        
-            if 'InterpUpdate' in d.columns:
-                d.rename(columns={'InterpUpdate':'INTERPRETATION'}, inplace=True)
-        else:
-            for k in list(cols.keys()):
-                d.rename(columns={k:cols[k]}, inplace=True)
-        if col_types is None:
-            pass
-        else:
-            for k in list(col_types.keys()):
-                d.rename(columns={k:col_types[k]}, inplace=True)
-    
+        #Rename columns so it is consistent through rest of code
+        if search_col != 'FORMATION':
+            d.rename(columns={search_col:'FORMATION'}, inplace=True)
+        if definition_col != 'INTERPRETATION':
+            d.rename(columns={definition_col:'INTERPRETATION'}, inplace=True)
+        if class_flag_col != 'CLASS_FLAG':
+            d.rename(columns={class_flag_col:'CLASS_FLAG'}, inplace=True)
+
+        #Cast all columns as type str, if not already
         for i in range(0, np.shape(d)[1]):
             if d.iloc[:,i].name in list(dict_termDtypes.keys()):
                 d.iloc[:,i] = d.iloc[:,i].astype(dict_termDtypes[d.iloc[:,i].name])
     
         #Delete duplicate definitions
-        d.drop_duplicates(subset='FORMATION',inplace=True) #Apparently, there are some duplicate definitions, which need to be deleted first
+        d.drop_duplicates(subset=search_col,inplace=True) #Apparently, there are some duplicate definitions, which need to be deleted first
         d.reset_index(inplace=True, drop=True)
 
     #If only one file designated, convert it so it's no longer a list, but just a dataframe
@@ -489,7 +483,7 @@ def read_dictionary_terms(dict_file, cols=None, col_types=None, dictionary_type=
     
     #Whether to remove extra columns that aren't needed from dataframe
     if rem_extra_cols:
-        dict_terms = dict_terms[['FORMATION', 'INTERPRETATION', 'CLASS_FLAG']]
+        dict_terms = dict_terms[[search_col, definition_col, class_flag_col]]
 
     return dict_terms
 
