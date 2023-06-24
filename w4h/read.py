@@ -439,15 +439,10 @@ def read_dictionary_terms(dict_file, id_col='ID', search_col='FORMATION', defini
                 dict_terms[-1].set_index(id_col, drop=True, inplace=True)
             dict_file = [dict_file]
         else:
-<<<<<<< HEAD
-            print('ERROR: dict_file ({}) does not exist. Skipping.'.format(dict_file))
-            return
-=======
             print('ERROR: dict_file ({}) does not exist.'.format(dict_file))
             #Create empty dataframe to return
             dict_terms = pd.DataFrame(columns=['ID', 'FORMATION', 'INTERPRETATION', "CLASS_FLAGS"])
             return dict_terms
->>>>>>> efdaf8620a92f2bf3daf57bb4684e5915cb4474b
 
     #Rename important columns
     searchTermList = ['searchterm', 'search', 'exact']
