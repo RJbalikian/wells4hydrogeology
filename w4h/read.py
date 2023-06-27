@@ -457,7 +457,7 @@ def read_dictionary_terms(dict_file, id_col='ID', search_col='DESCRIPTION', defi
     else:
         dict_file = pathlib.Path(dict_file)
         if dict_file.exists() and dict_file.is_file():
-            dict_terms.append(pd.read_csv(dict_file))
+            dict_terms.append(pd.read_csv(dict_file, low_memory=False))
             if id_col in dict_terms[-1].columns:
                 dict_terms[-1].set_index(id_col, drop=True, inplace=True)
             dict_file = [dict_file]
