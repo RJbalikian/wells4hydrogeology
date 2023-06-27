@@ -16,7 +16,7 @@ from w4h import logger_function
 
 #Define records with full search term
 
-def specific_define(df, terms_df, description_col='FORMATION', terms_col='FORMATION', verbose=False, log=False):
+def specific_define(df, terms_df, description_col='FORMATION', terms_col='DESCRIPTION', verbose=False, log=False):
     """Function to classify terms that have been specifically defined in the terms_df.
 
     Parameters
@@ -95,7 +95,7 @@ def split_defined(df, classification_col='CLASS_FLAG', verbose=False, log=False)
     return classifedDF, searchDF
 
 #Classify downhole data by the initial substring
-def start_define(df, terms_df, description_col='FORMATION', terms_col='FORMATION', verbose=False, log=False):
+def start_define(df, terms_df, description_col='FORMATION', terms_col='DESCRIPTION', verbose=False, log=False):
     """Function to classify descriptions according to starting substring. 
 
     Parameters
@@ -141,7 +141,7 @@ def start_define(df, terms_df, description_col='FORMATION', terms_col='FORMATION
     return df
 
 #Classify downhole data by any substring
-def wildcard_define(df, terms_df, description_col='FORMATION', terms_col='FORMATION', verbose=False, log=False):
+def wildcard_define(df, terms_df, description_col='FORMATION', terms_col='DESCRIPTION', verbose=False, log=False):
     """Function to classify descriptions according to starting substring. 
 
     Parameters
