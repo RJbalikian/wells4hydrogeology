@@ -71,7 +71,7 @@ def remove_nonlocated(df, metadata_df, verbose=False, log=False):
 
 #Function to remove data (intended for headerData) without surface topography information
 ##THIS ASSUMES AND SHOULD ONLY BE RUN AFTER ALL DESIRED SURFACE TOPO DATASETS HAVE BEEN MERGED/ADDED
-def remove_no_topo(df, elev_column=&#39;ELEV_FT&#39;, no_data_val=&#39;&#39;, verbose=False, log=False):
+def remove_no_topo(df, zcol=&#39;ELEV_FT&#39;, no_data_val=&#39;&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to remove wells that do not have topography data (needed for layer selection later).
 
     This function is intended to be run on the metadata table after elevations have attempted to been added.
@@ -80,7 +80,7 @@ def remove_no_topo(df, elev_column=&#39;ELEV_FT&#39;, no_data_val=&#39;&#39;, ve
     ----------
     df : pandas.DataFrame
         Pandas dataframe containing elevation information.
-    elev_column : str
+    zcol : str
         Name of elevation column
     no_data_val : any
         Value in dataset that indicates no data is present (replaced with np.nan)
@@ -98,8 +98,8 @@ def remove_no_topo(df, elev_column=&#39;ELEV_FT&#39;, no_data_val=&#39;&#39;, ve
 
     before = df.shape[0]
     
-    df[elev_column].replace(no_data_val, np.nan, inplace=True)
-    df.dropna(subset=[elev_column], inplace=True)
+    df[zcol].replace(no_data_val, np.nan, inplace=True)
+    df.dropna(subset=[zcol], inplace=True)
     
     if verbose:
         after = df.shape[0]
@@ -451,7 +451,7 @@ def drop_no_formation(df, description_col=&#39;FORMATION&#39;, no_data_val=&#39;
 </details>
 </dd>
 <dt id="w4h.clean.remove_no_topo"><code class="name flex">
-<span>def <span class="ident">remove_no_topo</span></span>(<span>df, elev_column='ELEV_FT', no_data_val='', verbose=False, log=False)</span>
+<span>def <span class="ident">remove_no_topo</span></span>(<span>df, zcol='ELEV_FT', no_data_val='', verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to remove wells that do not have topography data (needed for layer selection later).</p>
@@ -460,7 +460,7 @@ def drop_no_formation(df, description_col=&#39;FORMATION&#39;, no_data_val=&#39;
 <dl>
 <dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
 <dd>Pandas dataframe containing elevation information.</dd>
-<dt><strong><code>elev_column</code></strong> :&ensp;<code>str</code></dt>
+<dt><strong><code>zcol</code></strong> :&ensp;<code>str</code></dt>
 <dd>Name of elevation column</dd>
 <dt><strong><code>no_data_val</code></strong> :&ensp;<code>any</code></dt>
 <dd>Value in dataset that indicates no data is present (replaced with np.nan)</dd>
@@ -478,7 +478,7 @@ def drop_no_formation(df, description_col=&#39;FORMATION&#39;, no_data_val=&#39;
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def remove_no_topo(df, elev_column=&#39;ELEV_FT&#39;, no_data_val=&#39;&#39;, verbose=False, log=False):
+<pre><code class="python">def remove_no_topo(df, zcol=&#39;ELEV_FT&#39;, no_data_val=&#39;&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to remove wells that do not have topography data (needed for layer selection later).
 
     This function is intended to be run on the metadata table after elevations have attempted to been added.
@@ -487,7 +487,7 @@ def drop_no_formation(df, description_col=&#39;FORMATION&#39;, no_data_val=&#39;
     ----------
     df : pandas.DataFrame
         Pandas dataframe containing elevation information.
-    elev_column : str
+    zcol : str
         Name of elevation column
     no_data_val : any
         Value in dataset that indicates no data is present (replaced with np.nan)
@@ -505,8 +505,8 @@ def drop_no_formation(df, description_col=&#39;FORMATION&#39;, no_data_val=&#39;
 
     before = df.shape[0]
     
-    df[elev_column].replace(no_data_val, np.nan, inplace=True)
-    df.dropna(subset=[elev_column], inplace=True)
+    df[zcol].replace(no_data_val, np.nan, inplace=True)
+    df.dropna(subset=[zcol], inplace=True)
     
     if verbose:
         after = df.shape[0]

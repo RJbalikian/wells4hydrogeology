@@ -39,7 +39,7 @@ from w4h import logger_function
 #- 2: wPermits bedrock top pick
 #- 3: Intervals &gt;550&#39; below ground surface
 #- 4: Wildcard match (startTerm) - no context
-#- 5: Wildcard match (startTerm) - more liberal
+#- 5: Wildcard match (any substring) - more liberal
 #- Top of well?
 
 #Define records with full search term
@@ -71,7 +71,6 @@ def specific_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col
         terms_df.rename(columns={terms_col:description_col}, inplace=True)
         terms_col = description_col
 
-
     df[description_col] = df[description_col].astype(str)
     terms_df[terms_col] = terms_df[terms_col].astype(str)
 
@@ -88,8 +87,8 @@ def specific_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col
     df_Interps[&#39;BEDROCK_FLAG&#39;] = df_Interps[&#39;INTERPRETATION&#39;] == &#39;BEDROCK&#39;
     
     if verbose:
-        print(&#34;Records Classified with full search term: &#34;+str(int(df_Interps[&#39;CLASS_FLAG&#39;].sum())))
-        print(&#34;Records Classified with full search term: &#34;+str(round((df_Interps[&#39;CLASS_FLAG&#39;].sum()/df_Interps.shape[0])*100,2))+&#34;% of data&#34;)
+        print(&#34;Records Classified with full search term: &#34;+str(int(df_Interps[df_Interps[&#39;CLASS_FLAG&#39;]==1][&#39;CLASS_FLAG&#39;].sum())))
+        print(&#34;Records Classified with full search term: &#34;+str(round((df_Interps[df_Interps[&#39;CLASS_FLAG&#39;]==1][&#39;CLASS_FLAG&#39;].sum()/df_Interps.shape[0])*100,2))+&#34;% of data&#34;)
 
     return df_Interps
 
@@ -124,7 +123,6 @@ def split_defined(df, classification_col=&#39;CLASS_FLAG&#39;, verbose=False, lo
     return classifedDF, searchDF
 
 #Classify downhole data by the initial substring
-
 def start_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;FORMATION&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to classify descriptions according to starting substring. 
 
@@ -166,6 +164,52 @@ def start_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#
     if verbose:
         print(&#34;Records classified with start search term: &#34;+str(int(df[&#39;CLASS_FLAG&#39;].count())))
         print(&#34;Records classified with start search term: &#34;+str(round((df[&#39;CLASS_FLAG&#39;].count()/df.shape[0])*100,2))+&#34;% of remaining data&#34;)
+        #print(&#34;Records classified with both search terms: &#34;+str(round(((df[&#39;CLASS_FLAG&#39;].count()+specDF[&#39;CLASS_FLAG&#39;].count())/downholeData_Interps.shape[0])*100,2))+&#34;% of all data&#34;)
+        #This step usually takes about 5-6 minutes
+    return df
+
+#Classify downhole data by any substring
+def wildcard_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;FORMATION&#39;, verbose=False, log=False):
+    &#34;&#34;&#34;Function to classify descriptions according to starting substring. 
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe containing all the well descriptions
+    terms_df : pandas.DataFrame
+        Dataframe containing all the startswith substrings to use for searching
+    description_col : str, default = &#39;FORMATION&#39;
+        Name of column in df containing descriptions, by default &#39;FORMATION&#39;
+    terms_col : str, default = &#39;FORMATION&#39;
+        Name of column in terms_df containing startswith substring to match with description_col, by default &#39;FORMATION&#39;
+    verbose : bool, default = False
+        Whether to print out results, by default False
+    log : bool, default = True
+        Whether to log results to log file
+
+    Returns
+    -------
+    df : pandas.DataFrame
+        Dataframe containing the original data and new classifications
+    &#34;&#34;&#34;
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
+    if verbose:
+        #Estimate when it will end, based on test run
+        estTime = df.shape[0]/3054409 * 6 #It took about 6 minutes to classify data with entire dataframe. This estimates the fraction of that it will take
+        nowTime = datetime.datetime.now()
+        endTime = nowTime+datetime.timedelta(minutes=estTime)
+        print(&#34;Wildcard Term process should be done by (?) {:d}:{:02d}&#34;.format(endTime.hour, endTime.minute))
+
+    #First, for each startterm, find all results in df that start with, add classification flag, and add interpretation.
+    for i,s in enumerate(terms_df[terms_col]):
+        df[&#39;CLASS_FLAG&#39;].where(~df[description_col].str.contains(s, case=False, regex=False, na=False), 5, inplace=True)
+        df[&#39;INTERPRETATION&#39;].where(~df[description_col].str.contains(s, case=False, regex=False, na=False),terms_df.loc[i,&#39;INTERPRETATION&#39;],inplace=True)
+    df[&#39;BEDROCK_FLAG&#39;].loc[df[&#34;INTERPRETATION&#34;] == &#39;BEDROCK&#39;]
+    
+    if verbose:
+        print(&#34;Records classified with wildcard search term: &#34;+str(int(df[&#39;CLASS_FLAG&#39;].count())))
+        print(&#34;Records classified with wildcard search term: &#34;+str(round((df[&#39;CLASS_FLAG&#39;].count()/df.shape[0])*100,2))+&#34;% of remaining data&#34;)
         #print(&#34;Records classified with both search terms: &#34;+str(round(((df[&#39;CLASS_FLAG&#39;].count()+specDF[&#39;CLASS_FLAG&#39;].count())/downholeData_Interps.shape[0])*100,2))+&#34;% of all data&#34;)
         #This step usually takes about 5-6 minutes
     return df
@@ -268,7 +312,7 @@ def export_undefined(df, outdir):
     return stillNeededDF
 
 #Fill in unclassified rows&#39; flags with 0
-def fill_unclassified(df):
+def fill_unclassified(df, classification_col=&#39;CLASS_FLAG&#39;):
     &#34;&#34;&#34;Fills unclassified rows in &#39;CLASS_FLAG&#39; column with np.nan
 
     Parameters
@@ -281,7 +325,7 @@ def fill_unclassified(df):
     df : pandas.DataFrame
         Dataframe on which operation has been performed
     &#34;&#34;&#34;
-    df[&#39;CLASS_FLAG&#39;].fillna(0, inplace=True)
+    df[classification_col].fillna(0, inplace=True)
     return df
 
 #Merge lithologies to main df based on classifications
@@ -296,7 +340,7 @@ def merge_lithologies(df, targinterps_df, target_col=&#39;TARGET&#39;, target_cl
         Dataframe containing lithologies and their target interpretations, depending on what the target is for this analysis (often, coarse materials=1, fine=0)
     target_col : str, default = &#39;TARGET&#39;
         Name of column in targinterps_df containing the target interpretations
-    target_class, default = True
+    target_class, default = &#39;bool&#39;
         Whether the input column is using boolean values as its target indicator
         
     Returns
@@ -310,7 +354,6 @@ def merge_lithologies(df, targinterps_df, target_col=&#39;TARGET&#39;, target_cl
     if target_class==&#39;bool&#39;:
         targinterps_df[target_col] = targinterps_df[target_col].where(targinterps_df[target_col]==&#39;1&#39;, other=&#39;0&#39;).astype(int)
         targinterps_df[target_col].fillna(value=0, inplace=True)
-
     else:
         targinterps_df[target_col].replace(&#39;DoNotUse&#39;, value=-1, inplace=True)
         targinterps_df[target_col].fillna(value=-2, inplace=True)
@@ -509,7 +552,7 @@ def sort_dataframe(df, sort_cols=[&#39;API_NUMBER&#39;,&#39;TOP&#39;], remove_na
 </details>
 </dd>
 <dt id="w4h.classify.fill_unclassified"><code class="name flex">
-<span>def <span class="ident">fill_unclassified</span></span>(<span>df)</span>
+<span>def <span class="ident">fill_unclassified</span></span>(<span>df, classification_col='CLASS_FLAG')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Fills unclassified rows in 'CLASS_FLAG' column with np.nan</p>
@@ -527,7 +570,7 @@ def sort_dataframe(df, sort_cols=[&#39;API_NUMBER&#39;,&#39;TOP&#39;], remove_na
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fill_unclassified(df):
+<pre><code class="python">def fill_unclassified(df, classification_col=&#39;CLASS_FLAG&#39;):
     &#34;&#34;&#34;Fills unclassified rows in &#39;CLASS_FLAG&#39; column with np.nan
 
     Parameters
@@ -540,7 +583,7 @@ def sort_dataframe(df, sort_cols=[&#39;API_NUMBER&#39;,&#39;TOP&#39;], remove_na
     df : pandas.DataFrame
         Dataframe on which operation has been performed
     &#34;&#34;&#34;
-    df[&#39;CLASS_FLAG&#39;].fillna(0, inplace=True)
+    df[classification_col].fillna(0, inplace=True)
     return df</code></pre>
 </details>
 </dd>
@@ -610,7 +653,7 @@ def sort_dataframe(df, sort_cols=[&#39;API_NUMBER&#39;,&#39;TOP&#39;], remove_na
 <dt><strong><code>target_col</code></strong> :&ensp;<code>str</code>, default <code>= 'TARGET'</code></dt>
 <dd>Name of column in targinterps_df containing the target interpretations</dd>
 </dl>
-<p>target_class, default = True
+<p>target_class, default = 'bool'
 Whether the input column is using boolean values as its target indicator</p>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -632,7 +675,7 @@ Whether the input column is using boolean values as its target indicator</p>
         Dataframe containing lithologies and their target interpretations, depending on what the target is for this analysis (often, coarse materials=1, fine=0)
     target_col : str, default = &#39;TARGET&#39;
         Name of column in targinterps_df containing the target interpretations
-    target_class, default = True
+    target_class, default = &#39;bool&#39;
         Whether the input column is using boolean values as its target indicator
         
     Returns
@@ -646,7 +689,6 @@ Whether the input column is using boolean values as its target indicator</p>
     if target_class==&#39;bool&#39;:
         targinterps_df[target_col] = targinterps_df[target_col].where(targinterps_df[target_col]==&#39;1&#39;, other=&#39;0&#39;).astype(int)
         targinterps_df[target_col].fillna(value=0, inplace=True)
-
     else:
         targinterps_df[target_col].replace(&#39;DoNotUse&#39;, value=-1, inplace=True)
         targinterps_df[target_col].fillna(value=-2, inplace=True)
@@ -799,7 +841,6 @@ Whether the input column is using boolean values as its target indicator</p>
         terms_df.rename(columns={terms_col:description_col}, inplace=True)
         terms_col = description_col
 
-
     df[description_col] = df[description_col].astype(str)
     terms_df[terms_col] = terms_df[terms_col].astype(str)
 
@@ -816,8 +857,8 @@ Whether the input column is using boolean values as its target indicator</p>
     df_Interps[&#39;BEDROCK_FLAG&#39;] = df_Interps[&#39;INTERPRETATION&#39;] == &#39;BEDROCK&#39;
     
     if verbose:
-        print(&#34;Records Classified with full search term: &#34;+str(int(df_Interps[&#39;CLASS_FLAG&#39;].sum())))
-        print(&#34;Records Classified with full search term: &#34;+str(round((df_Interps[&#39;CLASS_FLAG&#39;].sum()/df_Interps.shape[0])*100,2))+&#34;% of data&#34;)
+        print(&#34;Records Classified with full search term: &#34;+str(int(df_Interps[df_Interps[&#39;CLASS_FLAG&#39;]==1][&#39;CLASS_FLAG&#39;].sum())))
+        print(&#34;Records Classified with full search term: &#34;+str(round((df_Interps[df_Interps[&#39;CLASS_FLAG&#39;]==1][&#39;CLASS_FLAG&#39;].sum()/df_Interps.shape[0])*100,2))+&#34;% of data&#34;)
 
     return df_Interps</code></pre>
 </details>
@@ -952,6 +993,81 @@ Whether the input column is using boolean values as its target indicator</p>
     return df</code></pre>
 </details>
 </dd>
+<dt id="w4h.classify.wildcard_define"><code class="name flex">
+<span>def <span class="ident">wildcard_define</span></span>(<span>df, terms_df, description_col='FORMATION', terms_col='FORMATION', verbose=False, log=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function to classify descriptions according to starting substring. </p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
+<dd>Dataframe containing all the well descriptions</dd>
+<dt><strong><code>terms_df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
+<dd>Dataframe containing all the startswith substrings to use for searching</dd>
+<dt><strong><code>description_col</code></strong> :&ensp;<code>str</code>, default <code>= 'FORMATION'</code></dt>
+<dd>Name of column in df containing descriptions, by default 'FORMATION'</dd>
+<dt><strong><code>terms_col</code></strong> :&ensp;<code>str</code>, default <code>= 'FORMATION'</code></dt>
+<dd>Name of column in terms_df containing startswith substring to match with description_col, by default 'FORMATION'</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
+<dd>Whether to print out results, by default False</dd>
+<dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= True</code></dt>
+<dd>Whether to log results to log file</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
+<dd>Dataframe containing the original data and new classifications</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def wildcard_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;FORMATION&#39;, verbose=False, log=False):
+    &#34;&#34;&#34;Function to classify descriptions according to starting substring. 
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe containing all the well descriptions
+    terms_df : pandas.DataFrame
+        Dataframe containing all the startswith substrings to use for searching
+    description_col : str, default = &#39;FORMATION&#39;
+        Name of column in df containing descriptions, by default &#39;FORMATION&#39;
+    terms_col : str, default = &#39;FORMATION&#39;
+        Name of column in terms_df containing startswith substring to match with description_col, by default &#39;FORMATION&#39;
+    verbose : bool, default = False
+        Whether to print out results, by default False
+    log : bool, default = True
+        Whether to log results to log file
+
+    Returns
+    -------
+    df : pandas.DataFrame
+        Dataframe containing the original data and new classifications
+    &#34;&#34;&#34;
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
+    if verbose:
+        #Estimate when it will end, based on test run
+        estTime = df.shape[0]/3054409 * 6 #It took about 6 minutes to classify data with entire dataframe. This estimates the fraction of that it will take
+        nowTime = datetime.datetime.now()
+        endTime = nowTime+datetime.timedelta(minutes=estTime)
+        print(&#34;Wildcard Term process should be done by (?) {:d}:{:02d}&#34;.format(endTime.hour, endTime.minute))
+
+    #First, for each startterm, find all results in df that start with, add classification flag, and add interpretation.
+    for i,s in enumerate(terms_df[terms_col]):
+        df[&#39;CLASS_FLAG&#39;].where(~df[description_col].str.contains(s, case=False, regex=False, na=False), 5, inplace=True)
+        df[&#39;INTERPRETATION&#39;].where(~df[description_col].str.contains(s, case=False, regex=False, na=False),terms_df.loc[i,&#39;INTERPRETATION&#39;],inplace=True)
+    df[&#39;BEDROCK_FLAG&#39;].loc[df[&#34;INTERPRETATION&#34;] == &#39;BEDROCK&#39;]
+    
+    if verbose:
+        print(&#34;Records classified with wildcard search term: &#34;+str(int(df[&#39;CLASS_FLAG&#39;].count())))
+        print(&#34;Records classified with wildcard search term: &#34;+str(round((df[&#39;CLASS_FLAG&#39;].count()/df.shape[0])*100,2))+&#34;% of remaining data&#34;)
+        #print(&#34;Records classified with both search terms: &#34;+str(round(((df[&#39;CLASS_FLAG&#39;].count()+specDF[&#39;CLASS_FLAG&#39;].count())/downholeData_Interps.shape[0])*100,2))+&#34;% of all data&#34;)
+        #This step usually takes about 5-6 minutes
+    return df</code></pre>
+</details>
+</dd>
 </dl>
 </section>
 <section>
@@ -980,6 +1096,7 @@ Whether the input column is using boolean values as its target indicator</p>
 <li><code><a title="w4h.classify.specific_define" href="#w4h.classify.specific_define">specific_define</a></code></li>
 <li><code><a title="w4h.classify.split_defined" href="#w4h.classify.split_defined">split_defined</a></code></li>
 <li><code><a title="w4h.classify.start_define" href="#w4h.classify.start_define">start_define</a></code></li>
+<li><code><a title="w4h.classify.wildcard_define" href="#w4h.classify.wildcard_define">wildcard_define</a></code></li>
 </ul>
 </li>
 </ul>

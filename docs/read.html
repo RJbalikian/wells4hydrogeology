@@ -79,7 +79,15 @@ def get_most_recent(dir=str(repoDir)+&#39;/resources&#39;, glob_pattern=&#39;*&#
     fileDates = []
     for f in files: #Get the file dates from their file modification times
         fileDates.append(np.datetime64(datetime.datetime.fromtimestamp(os.path.getmtime(f))))
-    globInd = np.argmin(np.datetime64(todayDateStr) - np.array(fileDates)) #Find the index of the most recent file
+    
+    if fileDates == []:
+        #If no files found that match pattern, return an empty pathlib.Path()
+        if verbose:
+            print(&#39;No file found in {} matching {} pattern&#39;.format(dir, glob_pattern))
+        mostRecentFile = pathlib.Path()
+        return mostRecentFile
+    else:
+        globInd = np.argmin(np.datetime64(todayDateStr) - np.array(fileDates)) #Find the index of the most recent file
 
     #Iterate through glob/files again (need to recreate glob)
     files = pathlib.Path(dir).rglob(glob_pattern)
@@ -94,25 +102,23 @@ def get_most_recent(dir=str(repoDir)+&#39;/resources&#39;, glob_pattern=&#39;*&#
     return mostRecentFile
 
 #Function to setup files of interest
-def file_setup(db_dir, metadata_dir=None, xyz_dir=None, data_pattern=&#39;*ISGS_DOWNHOLE_DATA*.txt&#39;, metadata_pattern=&#39;*ISGS_HEADER*.txt&#39;, xyz_pattern= &#39;*xyzData*&#39;, log_dir=None, verbose=False, log=False):
+def file_setup(well_data, metadata=None, data_filename=&#39;*ISGS_DOWNHOLE_DATA*.txt&#39;, metadata_filename=&#39;*ISGS_HEADER*.txt&#39;, log_dir=None, verbose=False, log=False):
     &#34;&#34;&#34;Function to setup files, assuming data, metadata, and elevation/location are in separate files (there should be one &#34;key&#34;/identifying column consistent across all files to join/merge them later)
 
-    This function may not be useful if files are organized differently than this structure. If that is the case, it is recommended to use the get_most_recent() function for each individual file needed.
+    This function may not be useful if files are organized differently than this structure. 
+    If that is the case, it is recommended to use the get_most_recent() function for each individual file if needed.
+    It may also be of use to simply skip this function altogether and directly define each filepath in a manner that can be used by pandas.read_csv()
 
     Parameters
     ----------
-    db_dir : str or pathlib.Path object, optional
+    well_data : str or pathlib.Path object
         Str or pathlib.Path to directory containing input files, by default str(repoDir)+&#39;/resources&#39;
-    metadata_dir : str or pathlib.Path object, optional
+    metadata : str or pathlib.Path object, optional
         Str or pathlib.Path to directory containing input metadata files, by default str(repoDir)+&#39;/resources&#39;
-    xyz_dir : str or pathlib.Path object, optional
-        Str or pathlib.Path to directory containing input metadata files, by default str(repoDir)+&#39;/resources&#39;
-    data_pattern : str, optional
+    data_filename : str, optional
         Pattern used by pathlib.glob() to get the most recent data file, by default &#39;*ISGS_DOWNHOLE_DATA*.txt&#39;
-    metadata_pattern : str, optional
+    metadata_filename : str, optional
         Pattern used by pathlib.glob() to get the most recent metadata file, by default &#39;*ISGS_HEADER*.txt&#39;
-    xyz_pattern : str, optional
-        Pattern used by pathlib.glob() to get the most recent elevation/location file, by default &#39;*xyzData*&#39;
     verbose : bool, default = False
         Whether to print name of files to terminal, by default True
     log : bool, default = True
@@ -121,43 +127,50 @@ def file_setup(db_dir, metadata_dir=None, xyz_dir=None, data_pattern=&#39;*ISGS_
     Returns
     -------
     tuple
-        Tuple with (well_data, metadata, xyz_location_data)
+        Tuple with (well_data, metadata)
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     #Define  filepath variables to be used later for reading/writing files
-    raw_directory = pathlib.Path(db_dir)
-    if metadata_dir is None:
-        metadata_dir=raw_directory
+    data_path = pathlib.Path(well_data)
+    if metadata is None:
+        origMetaPath = None
+        metadata=data_path
     else:
-        metadata_dir=pathlib.Path(metadata_dir)
+        origMetaPath = metadata
+        metadata=pathlib.Path(metadata)
 
-    if xyz_dir is None:
-        xyz_dir=raw_directory
+    #If input path is a directory, find most recent version of the file. If file, just read the file
+    if data_path.is_dir():
+        downholeDataFILE = get_most_recent(data_path, data_filename, verbose=verbose)
     else:
-        xyz_dir=pathlib.Path(xyz_dir)
-
-    downholeDataFILE = get_most_recent(raw_directory, data_pattern, verbose=verbose)
-    headerDataFILE = get_most_recent(metadata_dir, metadata_pattern, verbose=verbose)
-    xyzInFILE = get_most_recent(xyz_dir,xyz_pattern, verbose=verbose)
-
+        downholeDataFILE = data_path
+    
+    if metadata.is_dir():
+        headerDataFILE = get_most_recent(metadata, metadata_filename, verbose=verbose)
+        if headerDataFILE == []:
+            headerDataFILE = downholeDataFILE
+    else:
+        if origMetaPath is None:
+            headerDataFILE = downholeDataFILE
+        else:
+            headerDataFILE = metadata
+       #Set all input as pathlib.Path objects (may be redundant, but just in case)
     downholeDataPATH = pathlib.Path(downholeDataFILE)
     headerDataPATH = pathlib.Path(headerDataFILE)
-    xyzInPATH = pathlib.Path(xyzInFILE)
 
     if verbose:
         print(&#39;Using the following files:&#39;)
         print(&#39;\t&#39;, downholeDataFILE)
         print(&#39;\t&#39;, headerDataFILE)
-        print(&#39;\t&#39;, xyzInFILE)
 
     #Define datatypes, to use later
     #downholeDataDTYPES = {&#39;ID&#39;:np.uint32, &#34;API_NUMBER&#34;:np.uint64,&#34;TABLE_NAME&#34;:str,&#34;WHO&#34;:str,&#34;INTERPRET_DATE&#34;:str,&#34;FORMATION&#34;:str,&#34;THICKNESS&#34;:np.float64,&#34;TOP&#34;:np.float64,&#34;BOTTOM&#34;:np.float64}
     #headerDataDTYPES = {&#39;ID&#39;:np.uint32,&#39;API_NUMBER&#39;:np.uint64,&#34;TDFORMATION&#34;:str,&#34;PRODFORM&#34;:str,&#34;TOTAL_DEPTH&#34;:np.float64,&#34;SECTION&#34;:np.float64,&#34;TWP&#34;:np.float64,&#34;TDIR&#34;:str,&#34;RNG&#34;:np.float64,&#34;RDIR&#34;:str,&#34;MERIDIAN&#34;:np.float64,&#34;FARM_NAME&#34;:str,&#34;NSFOOT&#34;:np.float64,&#34;NSDIR&#34;:str,&#34;EWFOOT&#34;:np.float64,&#34;EWDIR&#34;:str,&#34;QUARTERS&#34;:str,&#34;ELEVATION&#34;:np.float64,&#34;ELEVREF&#34;:str,&#34;COMP_DATE&#34;:str,&#34;STATUS&#34;:str,&#34;FARM_NUM&#34;:str,&#34;COUNTY_CODE&#34;:np.float64,&#34;PERMIT_NUMBER&#34;:str,&#34;COMPANY_NAME&#34;:str,&#34;COMPANY_CODE&#34;:str,&#34;PERMIT_DATE&#34;:str,&#34;CORNER&#34;:str,&#34;LATITUDE&#34;:np.float64,&#34;LONGITUDE&#34;:np.float64,&#34;ENTERED_BY&#34;:str,&#34;UPDDATE&#34;:str,&#34;ELEVSOURCE&#34;:str, &#34;ELEV_FT&#34;:np.float64}
-    return downholeDataPATH, headerDataPATH, xyzInPATH
+    return downholeDataPATH, headerDataPATH
 
 #Read raw data by text
-def read_raw_txt(data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, x_col=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, id_col=&#39;API_NUMBER&#39;, encoding=&#39;latin-1&#39;, verbose=False, log=False):
+def read_raw_txt(data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, id_col=&#39;API_NUMBER&#39;, encoding=&#39;latin-1&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Easy function to read raw .txt files output from (for example), an Access database
 
     Parameters
@@ -200,8 +213,16 @@ def read_raw_txt(data_filepath, metadata_filepath, data_cols=None, metadata_cols
     else:
         metadata_useCols= metadata_cols
 
-    downholeDataIN = pd.read_csv(data_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=data_useCols)
-    headerDataIN = pd.read_csv(metadata_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=metadata_useCols)
+    #Check if input data is already 
+    if isinstance(data_filepath, pd.DataFrame):
+        downholeDataIN = data_filepath[data_useCols]
+    else:
+        downholeDataIN = pd.read_csv(data_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=data_useCols)
+    
+    if isinstance(metadata_filepath, pd.DataFrame):
+        headerDataIN = metadata_filepath[metadata_useCols]
+    else:
+        headerDataIN = pd.read_csv(metadata_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=metadata_useCols)
 
     #Drop data with no API        
     downholeDataIN = downholeDataIN.dropna(subset=[id_col]) #Drop data with no API
@@ -209,7 +230,7 @@ def read_raw_txt(data_filepath, metadata_filepath, data_cols=None, metadata_cols
 
     #Drop data with no or missing location information
     headerDataIN = headerDataIN.dropna(subset=[ycol]) 
-    headerDataIN = headerDataIN.dropna(subset=[x_col])
+    headerDataIN = headerDataIN.dropna(subset=[xcol])
     
     #Reset index so index goes from 0 in numerical/integer order
     headerDataIN.reset_index(inplace=True, drop=True)
@@ -345,7 +366,10 @@ def define_dtypes(df, dtypes=None, dtype_file=None, dtype_dir=str(repoDir)+&#39;
     return dfout
 
 #Define the search term filepaths
-def get_search_terms(spec_dir=str(repoDir)+&#39;/resources/&#39;, spec_glob_pattern=&#39;*SearchTerms-Specific*&#39;, start_dir=None, start_glob_pattern = &#39;*SearchTerms-Start*&#39;, log=False):
+def get_search_terms(spec_dir=str(repoDir)+&#39;/resources/&#39;, spec_glob_pattern=&#39;*SearchTerms-Specific*&#39;, 
+                     start_dir=None, start_glob_pattern = &#39;*SearchTerms-Start*&#39;, 
+                     wildcard_dir=None, wildcard_glob_pattern=&#39;*SearchTerms-Wildcard&#39;,
+                     log=False):
     &#34;&#34;&#34;Read in dictionary files for downhole data
 
     Parameters
@@ -358,13 +382,17 @@ def get_search_terms(spec_dir=str(repoDir)+&#39;/resources/&#39;, spec_glob_patt
         Directory where the file containing the start search terms is located, by default None
     start_glob_pattern : str, optional
         Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default &#39;*SearchTerms-Start*&#39;
+    wildcard_dir : str or pathlib.Path, default = None
+        Directory where the file containing the wildcard search terms is located, by default None    
+    wildcard_glob_pattern : str, default = &#39;*SearchTerms-Wildcard&#39;
+        Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default &#39;*SearchTerms-Wildcard*&#39;
     log : bool, default = True
         Whether to log inputs and outputs to log file.        
 
     Returns
     -------
-    (specTermsPath, startTermsPath) : tuple
-        Tuple containing the pandas dataframe with specific search terms and one with start search terms
+    (specTermsPath, startTermsPath, wilcardTermsPath) : tuple
+        Tuple containing the pandas dataframes with specific search terms,  with start search terms, and with wildcard search terms
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     
@@ -374,28 +402,37 @@ def get_search_terms(spec_dir=str(repoDir)+&#39;/resources/&#39;, spec_glob_patt
     if start_dir is None:
         start_dir = spec_dir
 
+    if wildcard_dir is None:
+        if start_dir is None:
+            wildcard_dir = spec_dir        
+        else:
+            wildcard_dir = start_dir        
+
+
     specTermsPath = get_most_recent(spec_dir, spec_glob_pattern)
     startTermsPath = get_most_recent(start_dir, start_glob_pattern)
+    wilcardTermsPath = get_most_recent(wildcard_dir, wildcard_glob_pattern)
     
-    return specTermsPath, startTermsPath
+    return specTermsPath, startTermsPath, wilcardTermsPath
 
 #Read files into pandas dataframes
-def read_dictionary_terms(dict_file, cols=None, col_types=None, dictionary_type=None, class_flag=1, rem_extra_cols=True, log=False):
+def read_dictionary_terms(dict_file, id_col=&#39;ID&#39;, search_col=&#39;FORMATION&#39;, definition_col=&#39;INTERPRETATION&#39;, class_flag_col=&#39;CLASS_FLAG&#39;, dictionary_type=None, class_flag=6, rem_extra_cols=True, log=False):
     &#34;&#34;&#34;Function to read dictionary terms from file into pandas dataframe
 
     Parameters
     ----------
     dict_file : str or pathlib.Path object, or list of these
         File or list of files to be read
-    cols : dict or None, default = None
-        Dictionary containing columns to be renamed. If None, see source code for renaming actions, by default None
-    col_types : dict or None, default = None
-        Dictionary containing column types to be set. If None, see source code for renaming actions, by default None, by default None
-    dictionary_type : str or None, {None, &#39;exact&#39;, &#39;start&#39;}
-        Indicator of which kind of dictionary terms to be read in: None, &#39;exact&#39; or &#39;start&#39;, by default None.
+    search_col : str, default = &#39;FORMATION&#39;
+        Name of column containing search terms (geologic formations)
+    definition_col : str, default = &#39;INTERPRETATION&#39;
+        Name of column containing interpretations of search terms (lithologies)
+    dictionary_type : str or None, {None, &#39;exact&#39;, &#39;start&#39;, &#39;wildcard&#39;,}
+        Indicator of which kind of dictionary terms to be read in: None, &#39;exact&#39;, &#39;start&#39;, or &#39;wildcard&#39; by default None.
             - If None, uses name of file to try to determine. If it cannot, it will default to using the classification flag from class_flag
             - If &#39;exact&#39;, will be used to search for exact matches to geologic descriptions
             - If &#39;start&#39;, will be used as with the .startswith() string method to find inexact matches to geologic descriptions
+            - If &#39;wildcard&#39;, will be used to find any matching substring for inexact geologic matches
     class_flag : int, default = 1
         Classification flag to be used if dictionary_type is None and cannot be otherwise determined, by default 1
     rem_extra_cols : bool, default = True
@@ -414,56 +451,65 @@ def read_dictionary_terms(dict_file, cols=None, col_types=None, dictionary_type=
     dict_terms = []
     if type(dict_file) is list:
         for f in dict_file:
-            dict_terms.append(pd.read_csv(f))
-            if &#39;ID&#39; in dict_terms.columns:
-                dict_terms.set_index(&#39;ID&#39;, drop=True, inplace=True)
+            if not f.exists():
+                df = pd.DataFrame(columns=[&#39;ID&#39;, &#39;FORMATION&#39;, &#39;INTERPRETATION&#39;, &#39;CLASS_FLAGS&#39;])
+                dict_terms.append(df)
+            else:
+                dict_terms.append(pd.read_csv(f))
+
+            if id_col in dict_terms.columns:
+                dict_terms.set_index(id_col, drop=True, inplace=True)
     else:
-        dict_terms.append(pd.read_csv(dict_file))
-        if &#39;ID&#39; in dict_terms[-1].columns:
-            dict_terms[-1].set_index(&#39;ID&#39;, drop=True, inplace=True)
-        dict_file = [dict_file]
+        dict_file = pathlib.Path(dict_file)
+        if dict_file.exists() and dict_file.is_file():
+            dict_terms.append(pd.read_csv(dict_file))
+            if id_col in dict_terms[-1].columns:
+                dict_terms[-1].set_index(id_col, drop=True, inplace=True)
+            dict_file = [dict_file]
+        else:
+            print(&#39;ERROR: dict_file ({}) does not exist.&#39;.format(dict_file))
+            #Create empty dataframe to return
+            dict_terms = pd.DataFrame(columns=[&#39;ID&#39;, &#39;FORMATION&#39;, &#39;INTERPRETATION&#39;, &#34;CLASS_FLAGS&#34;])
+            return dict_terms
 
     #Rename important columns
     searchTermList = [&#39;searchterm&#39;, &#39;search&#39;, &#39;exact&#39;]
     startTermList = [&#39;startterm&#39;, &#39;start&#39;, &#39;startswith&#39;]
-                
+    wildcardTermList = [&#39;wildcard&#39;, &#39;substring&#39;, ]
+
     #Recast all columns to datatypes of headerData to defined types
-    dict_termDtypes = {&#39;FORMATION&#39;:str,&#39;INTERPRETATION&#39;:str, &#39;CLASS_FLAG&#39;:np.uint8}
+    dict_termDtypes = {search_col:str, definition_col:str, class_flag_col:np.uint8}
 
     if dictionary_type is None:
-        dictionary_type=&#39;&#39;
+        dictionary_type=&#39;&#39; #Allow string methods on this variable
 
+    #Iterating, to allow reading of multiple dict file at once (also works with just one at at time)
     for i, d in enumerate(dict_terms):
         if dictionary_type.lower() in searchTermList or (dictionary_type==&#39;&#39; and &#39;spec&#39; in str(dict_file[i]).lower()):
-            d[&#39;CLASS_FLAG&#39;] = 1
+            d[class_flag_col] = 1
         elif dictionary_type.lower() in startTermList or (dictionary_type==&#39;&#39; and &#39;start&#39; in str(dict_file[i]).lower()):
-            d[&#39;CLASS_FLAG&#39;] = 4 #Start term classification flag
+            d[class_flag_col] = 4 #Start term classification flag
+        elif dictionary_type.lower() in wildcardTermList or (dictionary_type==&#39;&#39; and &#39;wildcard&#39; in str(dict_file[i]).lower()):
+            d[class_flag_col] = 5 #Wildcard term classification flag
         else:
-            d[&#39;CLASS_FLAG&#39;] = class_flag #Custom classification flag, defined as argument
-            #1=specific match,2 (not defined), 3: bedrock classification for obvious bedrock, 4: Wildcard/start term
+            d[class_flag_col] = class_flag #Custom classification flag, defined as argument
+        #1: exact classification match, 2: (not defined...ML?), 3: bedrock classification for obvious bedrock, 4: start term, 5: wildcard/substring, 6: Undefined
 
-        if cols is None:
-            if &#39;SearchTerm&#39; in d.columns:
-                d.rename(columns={&#39;SearchTerm&#39;:&#39;FORMATION&#39;}, inplace=True)
-            if &#39;StartTerm&#39; in d.columns:
-                d.rename(columns={&#39;StartTerm&#39;:&#39;FORMATION&#39;}, inplace=True)        
-            if &#39;InterpUpdate&#39; in d.columns:
-                d.rename(columns={&#39;InterpUpdate&#39;:&#39;INTERPRETATION&#39;}, inplace=True)
-        else:
-            for k in list(cols.keys()):
-                d.rename(columns={k:cols[k]}, inplace=True)
-        if col_types is None:
-            pass
-        else:
-            for k in list(col_types.keys()):
-                d.rename(columns={k:col_types[k]}, inplace=True)
-    
+        #Rename columns so it is consistent through rest of code
+        if search_col != &#39;FORMATION&#39;:
+            d.rename(columns={search_col:&#39;FORMATION&#39;}, inplace=True)
+        if definition_col != &#39;INTERPRETATION&#39;:
+            d.rename(columns={definition_col:&#39;INTERPRETATION&#39;}, inplace=True)
+        if class_flag_col != &#39;CLASS_FLAG&#39;:
+            d.rename(columns={class_flag_col:&#39;CLASS_FLAG&#39;}, inplace=True)
+
+        #Cast all columns as type str, if not already
         for i in range(0, np.shape(d)[1]):
             if d.iloc[:,i].name in list(dict_termDtypes.keys()):
                 d.iloc[:,i] = d.iloc[:,i].astype(dict_termDtypes[d.iloc[:,i].name])
     
         #Delete duplicate definitions
-        d.drop_duplicates(subset=&#39;FORMATION&#39;,inplace=True) #Apparently, there are some duplicate definitions, which need to be deleted first
+        d.drop_duplicates(subset=search_col,inplace=True) #Apparently, there are some duplicate definitions, which need to be deleted first
         d.reset_index(inplace=True, drop=True)
 
     #If only one file designated, convert it so it&#39;s no longer a list, but just a dataframe
@@ -472,20 +518,18 @@ def read_dictionary_terms(dict_file, cols=None, col_types=None, dictionary_type=
     
     #Whether to remove extra columns that aren&#39;t needed from dataframe
     if rem_extra_cols:
-        dict_terms = dict_terms[[&#39;FORMATION&#39;, &#39;INTERPRETATION&#39;, &#39;CLASS_FLAG&#39;]]
+        dict_terms = dict_terms[[search_col, definition_col, class_flag_col]]
 
     return dict_terms
 
 #Function to read lithology file into pandas dataframe
-def read_lithologies(litho_dir=None, lith_file=None, interp_col=&#39;LITHOLOGY&#39;, target_col=&#39;CODE&#39;, use_cols=None, log=False):
+def read_lithologies(lith_file=None, interp_col=&#39;LITHOLOGY&#39;, target_col=&#39;CODE&#39;, use_cols=None, log=False):
     &#34;&#34;&#34;Function to read lithology file into pandas dataframe
 
     Parameters
     ----------
-    litho_dir : str or pathlib.Path object, default = None
-        Directory where lithology file is located. If None, default is in source coude, by default None
-    lith_file : str, default = None
-        Filename of lithology file. If None, default is in source coude, by default None
+    lith_file : str or pathlib.Path object, default = None
+        Filename of lithology file. If None, default is contained within repository, by default None
     interp_col : str, default = &#39;LITHOLOGY&#39;
         Column to used to match interpretations
     target_col : str, default = &#39;CODE&#39;
@@ -502,24 +546,16 @@ def read_lithologies(litho_dir=None, lith_file=None, interp_col=&#39;LITHOLOGY&#
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    #dictDir = &#34;\\\\isgs-sinkhole\\geophysics\\Balikian\\ISWS_HydroGeo\\WellDataAutoClassification\\SupportingDocs\\&#34;
-    if litho_dir is None:
-        litho_dir=str(repoDir)+&#39;/resources/&#39;
-    elif isinstance(litho_dir, pathlib.PurePath):
-        litho_dir = litho_dir.as_posix()
-    
-    litho_dir.replace(&#39;\\&#39;, &#39;/&#39;)
-    litho_dir.replace(&#39;\\&#39;[-1], &#39;/&#39;)
-    if litho_dir[-1] != &#39;/&#39;:
-        litho_dir = litho_dir+&#39;/&#39;
-
     if lith_file is None:
+        #Find resources
         lith_file=&#39;Lithology_Interp_FineCoarse.csv&#39;
     
+    if not isinstance(lith_file, pathlib.PurePath):
+        lith_file = pathlib.Path(lith_file)
+
     if use_cols is None:
         use_cols = [&#39;LITHOLOGY&#39;, &#39;CODE&#39;]
 
-    lithFPath = pathlib.Path(litho_dir+lith_file)
     lithoDF = pd.read_csv(lithFPath, usecols=use_cols)
 
     lithoDF.rename(columns={interp_col:&#39;INTERPRETATION&#39;, target_col:&#39;TARGET&#39;}, inplace=True)
@@ -607,25 +643,23 @@ def read_lithologies(litho_dir=None, lith_file=None, interp_col=&#39;LITHOLOGY&#
 </details>
 </dd>
 <dt id="w4h.read.file_setup"><code class="name flex">
-<span>def <span class="ident">file_setup</span></span>(<span>db_dir, metadata_dir=None, xyz_dir=None, data_pattern='*ISGS_DOWNHOLE_DATA*.txt', metadata_pattern='*ISGS_HEADER*.txt', xyz_pattern='*xyzData*', log_dir=None, verbose=False, log=False)</span>
+<span>def <span class="ident">file_setup</span></span>(<span>well_data, metadata=None, data_filename='*ISGS_DOWNHOLE_DATA*.txt', metadata_filename='*ISGS_HEADER*.txt', log_dir=None, verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to setup files, assuming data, metadata, and elevation/location are in separate files (there should be one "key"/identifying column consistent across all files to join/merge them later)</p>
-<p>This function may not be useful if files are organized differently than this structure. If that is the case, it is recommended to use the get_most_recent() function for each individual file needed.</p>
+<p>This function may not be useful if files are organized differently than this structure.
+If that is the case, it is recommended to use the get_most_recent() function for each individual file if needed.
+It may also be of use to simply skip this function altogether and directly define each filepath in a manner that can be used by pandas.read_csv()</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>db_dir</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code>, optional</dt>
+<dt><strong><code>well_data</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code></dt>
 <dd>Str or pathlib.Path to directory containing input files, by default str(repoDir)+'/resources'</dd>
-<dt><strong><code>metadata_dir</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code>, optional</dt>
+<dt><strong><code>metadata</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code>, optional</dt>
 <dd>Str or pathlib.Path to directory containing input metadata files, by default str(repoDir)+'/resources'</dd>
-<dt><strong><code>xyz_dir</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code>, optional</dt>
-<dd>Str or pathlib.Path to directory containing input metadata files, by default str(repoDir)+'/resources'</dd>
-<dt><strong><code>data_pattern</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dt><strong><code>data_filename</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>Pattern used by pathlib.glob() to get the most recent data file, by default '<em>ISGS_DOWNHOLE_DATA</em>.txt'</dd>
-<dt><strong><code>metadata_pattern</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dt><strong><code>metadata_filename</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>Pattern used by pathlib.glob() to get the most recent metadata file, by default '<em>ISGS_HEADER</em>.txt'</dd>
-<dt><strong><code>xyz_pattern</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>Pattern used by pathlib.glob() to get the most recent elevation/location file, by default '<em>xyzData</em>'</dd>
 <dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
 <dd>Whether to print name of files to terminal, by default True</dd>
 <dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= True</code></dt>
@@ -634,31 +668,29 @@ def read_lithologies(litho_dir=None, lith_file=None, interp_col=&#39;LITHOLOGY&#
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>tuple</code></dt>
-<dd>Tuple with (well_data, metadata, xyz_location_data)</dd>
+<dd>Tuple with (well_data, metadata)</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def file_setup(db_dir, metadata_dir=None, xyz_dir=None, data_pattern=&#39;*ISGS_DOWNHOLE_DATA*.txt&#39;, metadata_pattern=&#39;*ISGS_HEADER*.txt&#39;, xyz_pattern= &#39;*xyzData*&#39;, log_dir=None, verbose=False, log=False):
+<pre><code class="python">def file_setup(well_data, metadata=None, data_filename=&#39;*ISGS_DOWNHOLE_DATA*.txt&#39;, metadata_filename=&#39;*ISGS_HEADER*.txt&#39;, log_dir=None, verbose=False, log=False):
     &#34;&#34;&#34;Function to setup files, assuming data, metadata, and elevation/location are in separate files (there should be one &#34;key&#34;/identifying column consistent across all files to join/merge them later)
 
-    This function may not be useful if files are organized differently than this structure. If that is the case, it is recommended to use the get_most_recent() function for each individual file needed.
+    This function may not be useful if files are organized differently than this structure. 
+    If that is the case, it is recommended to use the get_most_recent() function for each individual file if needed.
+    It may also be of use to simply skip this function altogether and directly define each filepath in a manner that can be used by pandas.read_csv()
 
     Parameters
     ----------
-    db_dir : str or pathlib.Path object, optional
+    well_data : str or pathlib.Path object
         Str or pathlib.Path to directory containing input files, by default str(repoDir)+&#39;/resources&#39;
-    metadata_dir : str or pathlib.Path object, optional
+    metadata : str or pathlib.Path object, optional
         Str or pathlib.Path to directory containing input metadata files, by default str(repoDir)+&#39;/resources&#39;
-    xyz_dir : str or pathlib.Path object, optional
-        Str or pathlib.Path to directory containing input metadata files, by default str(repoDir)+&#39;/resources&#39;
-    data_pattern : str, optional
+    data_filename : str, optional
         Pattern used by pathlib.glob() to get the most recent data file, by default &#39;*ISGS_DOWNHOLE_DATA*.txt&#39;
-    metadata_pattern : str, optional
+    metadata_filename : str, optional
         Pattern used by pathlib.glob() to get the most recent metadata file, by default &#39;*ISGS_HEADER*.txt&#39;
-    xyz_pattern : str, optional
-        Pattern used by pathlib.glob() to get the most recent elevation/location file, by default &#39;*xyzData*&#39;
     verbose : bool, default = False
         Whether to print name of files to terminal, by default True
     log : bool, default = True
@@ -667,40 +699,47 @@ def read_lithologies(litho_dir=None, lith_file=None, interp_col=&#39;LITHOLOGY&#
     Returns
     -------
     tuple
-        Tuple with (well_data, metadata, xyz_location_data)
+        Tuple with (well_data, metadata)
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     #Define  filepath variables to be used later for reading/writing files
-    raw_directory = pathlib.Path(db_dir)
-    if metadata_dir is None:
-        metadata_dir=raw_directory
+    data_path = pathlib.Path(well_data)
+    if metadata is None:
+        origMetaPath = None
+        metadata=data_path
     else:
-        metadata_dir=pathlib.Path(metadata_dir)
+        origMetaPath = metadata
+        metadata=pathlib.Path(metadata)
 
-    if xyz_dir is None:
-        xyz_dir=raw_directory
+    #If input path is a directory, find most recent version of the file. If file, just read the file
+    if data_path.is_dir():
+        downholeDataFILE = get_most_recent(data_path, data_filename, verbose=verbose)
     else:
-        xyz_dir=pathlib.Path(xyz_dir)
-
-    downholeDataFILE = get_most_recent(raw_directory, data_pattern, verbose=verbose)
-    headerDataFILE = get_most_recent(metadata_dir, metadata_pattern, verbose=verbose)
-    xyzInFILE = get_most_recent(xyz_dir,xyz_pattern, verbose=verbose)
-
+        downholeDataFILE = data_path
+    
+    if metadata.is_dir():
+        headerDataFILE = get_most_recent(metadata, metadata_filename, verbose=verbose)
+        if headerDataFILE == []:
+            headerDataFILE = downholeDataFILE
+    else:
+        if origMetaPath is None:
+            headerDataFILE = downholeDataFILE
+        else:
+            headerDataFILE = metadata
+       #Set all input as pathlib.Path objects (may be redundant, but just in case)
     downholeDataPATH = pathlib.Path(downholeDataFILE)
     headerDataPATH = pathlib.Path(headerDataFILE)
-    xyzInPATH = pathlib.Path(xyzInFILE)
 
     if verbose:
         print(&#39;Using the following files:&#39;)
         print(&#39;\t&#39;, downholeDataFILE)
         print(&#39;\t&#39;, headerDataFILE)
-        print(&#39;\t&#39;, xyzInFILE)
 
     #Define datatypes, to use later
     #downholeDataDTYPES = {&#39;ID&#39;:np.uint32, &#34;API_NUMBER&#34;:np.uint64,&#34;TABLE_NAME&#34;:str,&#34;WHO&#34;:str,&#34;INTERPRET_DATE&#34;:str,&#34;FORMATION&#34;:str,&#34;THICKNESS&#34;:np.float64,&#34;TOP&#34;:np.float64,&#34;BOTTOM&#34;:np.float64}
     #headerDataDTYPES = {&#39;ID&#39;:np.uint32,&#39;API_NUMBER&#39;:np.uint64,&#34;TDFORMATION&#34;:str,&#34;PRODFORM&#34;:str,&#34;TOTAL_DEPTH&#34;:np.float64,&#34;SECTION&#34;:np.float64,&#34;TWP&#34;:np.float64,&#34;TDIR&#34;:str,&#34;RNG&#34;:np.float64,&#34;RDIR&#34;:str,&#34;MERIDIAN&#34;:np.float64,&#34;FARM_NAME&#34;:str,&#34;NSFOOT&#34;:np.float64,&#34;NSDIR&#34;:str,&#34;EWFOOT&#34;:np.float64,&#34;EWDIR&#34;:str,&#34;QUARTERS&#34;:str,&#34;ELEVATION&#34;:np.float64,&#34;ELEVREF&#34;:str,&#34;COMP_DATE&#34;:str,&#34;STATUS&#34;:str,&#34;FARM_NUM&#34;:str,&#34;COUNTY_CODE&#34;:np.float64,&#34;PERMIT_NUMBER&#34;:str,&#34;COMPANY_NAME&#34;:str,&#34;COMPANY_CODE&#34;:str,&#34;PERMIT_DATE&#34;:str,&#34;CORNER&#34;:str,&#34;LATITUDE&#34;:np.float64,&#34;LONGITUDE&#34;:np.float64,&#34;ENTERED_BY&#34;:str,&#34;UPDDATE&#34;:str,&#34;ELEVSOURCE&#34;:str, &#34;ELEV_FT&#34;:np.float64}
-    return downholeDataPATH, headerDataPATH, xyzInPATH</code></pre>
+    return downholeDataPATH, headerDataPATH</code></pre>
 </details>
 </dd>
 <dt id="w4h.read.get_current_date"><code class="name flex">
@@ -784,7 +823,15 @@ def read_lithologies(litho_dir=None, lith_file=None, interp_col=&#39;LITHOLOGY&#
     fileDates = []
     for f in files: #Get the file dates from their file modification times
         fileDates.append(np.datetime64(datetime.datetime.fromtimestamp(os.path.getmtime(f))))
-    globInd = np.argmin(np.datetime64(todayDateStr) - np.array(fileDates)) #Find the index of the most recent file
+    
+    if fileDates == []:
+        #If no files found that match pattern, return an empty pathlib.Path()
+        if verbose:
+            print(&#39;No file found in {} matching {} pattern&#39;.format(dir, glob_pattern))
+        mostRecentFile = pathlib.Path()
+        return mostRecentFile
+    else:
+        globInd = np.argmin(np.datetime64(todayDateStr) - np.array(fileDates)) #Find the index of the most recent file
 
     #Iterate through glob/files again (need to recreate glob)
     files = pathlib.Path(dir).rglob(glob_pattern)
@@ -800,7 +847,7 @@ def read_lithologies(litho_dir=None, lith_file=None, interp_col=&#39;LITHOLOGY&#
 </details>
 </dd>
 <dt id="w4h.read.get_search_terms"><code class="name flex">
-<span>def <span class="ident">get_search_terms</span></span>(<span>spec_dir='C:\\Users\\riley\\LocalData\\Code\\Github\\wells4hydrogeology/resources/', spec_glob_pattern='*SearchTerms-Specific*', start_dir=None, start_glob_pattern='*SearchTerms-Start*', log=False)</span>
+<span>def <span class="ident">get_search_terms</span></span>(<span>spec_dir='C:\\Users\\riley\\LocalData\\Code\\Github\\wells4hydrogeology/resources/', spec_glob_pattern='*SearchTerms-Specific*', start_dir=None, start_glob_pattern='*SearchTerms-Start*', wildcard_dir=None, wildcard_glob_pattern='*SearchTerms-Wildcard', log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Read in dictionary files for downhole data</p>
@@ -814,17 +861,25 @@ def read_lithologies(litho_dir=None, lith_file=None, interp_col=&#39;LITHOLOGY&#
 <dd>Directory where the file containing the start search terms is located, by default None</dd>
 <dt><strong><code>start_glob_pattern</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default '<em>SearchTerms-Start</em>'</dd>
+<dt><strong><code>wildcard_dir</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path</code>, default <code>= None</code></dt>
+<dd>Directory where the file containing the wildcard search terms is located, by default None</dd>
+<dt><strong><code>wildcard_glob_pattern</code></strong> :&ensp;<code>str</code>, default <code>= '*SearchTerms-Wildcard'</code></dt>
+<dd>Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default '<em>SearchTerms-Wildcard</em>'</dd>
 <dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= True</code></dt>
 <dd>Whether to log inputs and outputs to log file.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<p>(specTermsPath, startTermsPath) : tuple
-Tuple containing the pandas dataframe with specific search terms and one with start search terms</p></div>
+<p>(specTermsPath, startTermsPath, wilcardTermsPath) : tuple
+Tuple containing the pandas dataframes with specific search terms,
+with start search terms, and with wildcard search terms</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_search_terms(spec_dir=str(repoDir)+&#39;/resources/&#39;, spec_glob_pattern=&#39;*SearchTerms-Specific*&#39;, start_dir=None, start_glob_pattern = &#39;*SearchTerms-Start*&#39;, log=False):
+<pre><code class="python">def get_search_terms(spec_dir=str(repoDir)+&#39;/resources/&#39;, spec_glob_pattern=&#39;*SearchTerms-Specific*&#39;, 
+                     start_dir=None, start_glob_pattern = &#39;*SearchTerms-Start*&#39;, 
+                     wildcard_dir=None, wildcard_glob_pattern=&#39;*SearchTerms-Wildcard&#39;,
+                     log=False):
     &#34;&#34;&#34;Read in dictionary files for downhole data
 
     Parameters
@@ -837,13 +892,17 @@ Tuple containing the pandas dataframe with specific search terms and one with st
         Directory where the file containing the start search terms is located, by default None
     start_glob_pattern : str, optional
         Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default &#39;*SearchTerms-Start*&#39;
+    wildcard_dir : str or pathlib.Path, default = None
+        Directory where the file containing the wildcard search terms is located, by default None    
+    wildcard_glob_pattern : str, default = &#39;*SearchTerms-Wildcard&#39;
+        Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default &#39;*SearchTerms-Wildcard*&#39;
     log : bool, default = True
         Whether to log inputs and outputs to log file.        
 
     Returns
     -------
-    (specTermsPath, startTermsPath) : tuple
-        Tuple containing the pandas dataframe with specific search terms and one with start search terms
+    (specTermsPath, startTermsPath, wilcardTermsPath) : tuple
+        Tuple containing the pandas dataframes with specific search terms,  with start search terms, and with wildcard search terms
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     
@@ -853,10 +912,18 @@ Tuple containing the pandas dataframe with specific search terms and one with st
     if start_dir is None:
         start_dir = spec_dir
 
+    if wildcard_dir is None:
+        if start_dir is None:
+            wildcard_dir = spec_dir        
+        else:
+            wildcard_dir = start_dir        
+
+
     specTermsPath = get_most_recent(spec_dir, spec_glob_pattern)
     startTermsPath = get_most_recent(start_dir, start_glob_pattern)
+    wilcardTermsPath = get_most_recent(wildcard_dir, wildcard_glob_pattern)
     
-    return specTermsPath, startTermsPath</code></pre>
+    return specTermsPath, startTermsPath, wilcardTermsPath</code></pre>
 </details>
 </dd>
 <dt id="w4h.read.read_dict"><code class="name flex">
@@ -908,7 +975,7 @@ Tuple containing the pandas dataframe with specific search terms and one with st
 </details>
 </dd>
 <dt id="w4h.read.read_dictionary_terms"><code class="name flex">
-<span>def <span class="ident">read_dictionary_terms</span></span>(<span>dict_file, cols=None, col_types=None, dictionary_type=None, class_flag=1, rem_extra_cols=True, log=False)</span>
+<span>def <span class="ident">read_dictionary_terms</span></span>(<span>dict_file, id_col='ID', search_col='FORMATION', definition_col='INTERPRETATION', class_flag_col='CLASS_FLAG', dictionary_type=None, class_flag=6, rem_extra_cols=True, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to read dictionary terms from file into pandas dataframe</p>
@@ -916,15 +983,16 @@ Tuple containing the pandas dataframe with specific search terms and one with st
 <dl>
 <dt><strong><code>dict_file</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object,</code> or <code>list</code> of <code>these</code></dt>
 <dd>File or list of files to be read</dd>
-<dt><strong><code>cols</code></strong> :&ensp;<code>dict</code> or <code>None</code>, default <code>= None</code></dt>
-<dd>Dictionary containing columns to be renamed. If None, see source code for renaming actions, by default None</dd>
-<dt><strong><code>col_types</code></strong> :&ensp;<code>dict</code> or <code>None</code>, default <code>= None</code></dt>
-<dd>Dictionary containing column types to be set. If None, see source code for renaming actions, by default None, by default None</dd>
-<dt><strong><code>dictionary_type</code></strong> :&ensp;<code>str</code> or <code>None, {None, 'exact', 'start'}</code></dt>
-<dd>Indicator of which kind of dictionary terms to be read in: None, 'exact' or 'start', by default None.
+<dt><strong><code>search_col</code></strong> :&ensp;<code>str</code>, default <code>= 'FORMATION'</code></dt>
+<dd>Name of column containing search terms (geologic formations)</dd>
+<dt><strong><code>definition_col</code></strong> :&ensp;<code>str</code>, default <code>= 'INTERPRETATION'</code></dt>
+<dd>Name of column containing interpretations of search terms (lithologies)</dd>
+<dt><strong><code>dictionary_type</code></strong> :&ensp;<code>str</code> or <code>None, {None, 'exact', 'start', 'wildcard',}</code></dt>
+<dd>Indicator of which kind of dictionary terms to be read in: None, 'exact', 'start', or 'wildcard' by default None.
 - If None, uses name of file to try to determine. If it cannot, it will default to using the classification flag from class_flag
 - If 'exact', will be used to search for exact matches to geologic descriptions
-- If 'start', will be used as with the .startswith() string method to find inexact matches to geologic descriptions</dd>
+- If 'start', will be used as with the .startswith() string method to find inexact matches to geologic descriptions
+- If 'wildcard', will be used to find any matching substring for inexact geologic matches</dd>
 <dt><strong><code>class_flag</code></strong> :&ensp;<code>int</code>, default <code>= 1</code></dt>
 <dd>Classification flag to be used if dictionary_type is None and cannot be otherwise determined, by default 1</dd>
 <dt><strong><code>rem_extra_cols</code></strong> :&ensp;<code>bool</code>, default <code>= True</code></dt>
@@ -941,22 +1009,23 @@ Tuple containing the pandas dataframe with specific search terms and one with st
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_dictionary_terms(dict_file, cols=None, col_types=None, dictionary_type=None, class_flag=1, rem_extra_cols=True, log=False):
+<pre><code class="python">def read_dictionary_terms(dict_file, id_col=&#39;ID&#39;, search_col=&#39;FORMATION&#39;, definition_col=&#39;INTERPRETATION&#39;, class_flag_col=&#39;CLASS_FLAG&#39;, dictionary_type=None, class_flag=6, rem_extra_cols=True, log=False):
     &#34;&#34;&#34;Function to read dictionary terms from file into pandas dataframe
 
     Parameters
     ----------
     dict_file : str or pathlib.Path object, or list of these
         File or list of files to be read
-    cols : dict or None, default = None
-        Dictionary containing columns to be renamed. If None, see source code for renaming actions, by default None
-    col_types : dict or None, default = None
-        Dictionary containing column types to be set. If None, see source code for renaming actions, by default None, by default None
-    dictionary_type : str or None, {None, &#39;exact&#39;, &#39;start&#39;}
-        Indicator of which kind of dictionary terms to be read in: None, &#39;exact&#39; or &#39;start&#39;, by default None.
+    search_col : str, default = &#39;FORMATION&#39;
+        Name of column containing search terms (geologic formations)
+    definition_col : str, default = &#39;INTERPRETATION&#39;
+        Name of column containing interpretations of search terms (lithologies)
+    dictionary_type : str or None, {None, &#39;exact&#39;, &#39;start&#39;, &#39;wildcard&#39;,}
+        Indicator of which kind of dictionary terms to be read in: None, &#39;exact&#39;, &#39;start&#39;, or &#39;wildcard&#39; by default None.
             - If None, uses name of file to try to determine. If it cannot, it will default to using the classification flag from class_flag
             - If &#39;exact&#39;, will be used to search for exact matches to geologic descriptions
             - If &#39;start&#39;, will be used as with the .startswith() string method to find inexact matches to geologic descriptions
+            - If &#39;wildcard&#39;, will be used to find any matching substring for inexact geologic matches
     class_flag : int, default = 1
         Classification flag to be used if dictionary_type is None and cannot be otherwise determined, by default 1
     rem_extra_cols : bool, default = True
@@ -975,56 +1044,65 @@ Tuple containing the pandas dataframe with specific search terms and one with st
     dict_terms = []
     if type(dict_file) is list:
         for f in dict_file:
-            dict_terms.append(pd.read_csv(f))
-            if &#39;ID&#39; in dict_terms.columns:
-                dict_terms.set_index(&#39;ID&#39;, drop=True, inplace=True)
+            if not f.exists():
+                df = pd.DataFrame(columns=[&#39;ID&#39;, &#39;FORMATION&#39;, &#39;INTERPRETATION&#39;, &#39;CLASS_FLAGS&#39;])
+                dict_terms.append(df)
+            else:
+                dict_terms.append(pd.read_csv(f))
+
+            if id_col in dict_terms.columns:
+                dict_terms.set_index(id_col, drop=True, inplace=True)
     else:
-        dict_terms.append(pd.read_csv(dict_file))
-        if &#39;ID&#39; in dict_terms[-1].columns:
-            dict_terms[-1].set_index(&#39;ID&#39;, drop=True, inplace=True)
-        dict_file = [dict_file]
+        dict_file = pathlib.Path(dict_file)
+        if dict_file.exists() and dict_file.is_file():
+            dict_terms.append(pd.read_csv(dict_file))
+            if id_col in dict_terms[-1].columns:
+                dict_terms[-1].set_index(id_col, drop=True, inplace=True)
+            dict_file = [dict_file]
+        else:
+            print(&#39;ERROR: dict_file ({}) does not exist.&#39;.format(dict_file))
+            #Create empty dataframe to return
+            dict_terms = pd.DataFrame(columns=[&#39;ID&#39;, &#39;FORMATION&#39;, &#39;INTERPRETATION&#39;, &#34;CLASS_FLAGS&#34;])
+            return dict_terms
 
     #Rename important columns
     searchTermList = [&#39;searchterm&#39;, &#39;search&#39;, &#39;exact&#39;]
     startTermList = [&#39;startterm&#39;, &#39;start&#39;, &#39;startswith&#39;]
-                
+    wildcardTermList = [&#39;wildcard&#39;, &#39;substring&#39;, ]
+
     #Recast all columns to datatypes of headerData to defined types
-    dict_termDtypes = {&#39;FORMATION&#39;:str,&#39;INTERPRETATION&#39;:str, &#39;CLASS_FLAG&#39;:np.uint8}
+    dict_termDtypes = {search_col:str, definition_col:str, class_flag_col:np.uint8}
 
     if dictionary_type is None:
-        dictionary_type=&#39;&#39;
+        dictionary_type=&#39;&#39; #Allow string methods on this variable
 
+    #Iterating, to allow reading of multiple dict file at once (also works with just one at at time)
     for i, d in enumerate(dict_terms):
         if dictionary_type.lower() in searchTermList or (dictionary_type==&#39;&#39; and &#39;spec&#39; in str(dict_file[i]).lower()):
-            d[&#39;CLASS_FLAG&#39;] = 1
+            d[class_flag_col] = 1
         elif dictionary_type.lower() in startTermList or (dictionary_type==&#39;&#39; and &#39;start&#39; in str(dict_file[i]).lower()):
-            d[&#39;CLASS_FLAG&#39;] = 4 #Start term classification flag
+            d[class_flag_col] = 4 #Start term classification flag
+        elif dictionary_type.lower() in wildcardTermList or (dictionary_type==&#39;&#39; and &#39;wildcard&#39; in str(dict_file[i]).lower()):
+            d[class_flag_col] = 5 #Wildcard term classification flag
         else:
-            d[&#39;CLASS_FLAG&#39;] = class_flag #Custom classification flag, defined as argument
-            #1=specific match,2 (not defined), 3: bedrock classification for obvious bedrock, 4: Wildcard/start term
+            d[class_flag_col] = class_flag #Custom classification flag, defined as argument
+        #1: exact classification match, 2: (not defined...ML?), 3: bedrock classification for obvious bedrock, 4: start term, 5: wildcard/substring, 6: Undefined
 
-        if cols is None:
-            if &#39;SearchTerm&#39; in d.columns:
-                d.rename(columns={&#39;SearchTerm&#39;:&#39;FORMATION&#39;}, inplace=True)
-            if &#39;StartTerm&#39; in d.columns:
-                d.rename(columns={&#39;StartTerm&#39;:&#39;FORMATION&#39;}, inplace=True)        
-            if &#39;InterpUpdate&#39; in d.columns:
-                d.rename(columns={&#39;InterpUpdate&#39;:&#39;INTERPRETATION&#39;}, inplace=True)
-        else:
-            for k in list(cols.keys()):
-                d.rename(columns={k:cols[k]}, inplace=True)
-        if col_types is None:
-            pass
-        else:
-            for k in list(col_types.keys()):
-                d.rename(columns={k:col_types[k]}, inplace=True)
-    
+        #Rename columns so it is consistent through rest of code
+        if search_col != &#39;FORMATION&#39;:
+            d.rename(columns={search_col:&#39;FORMATION&#39;}, inplace=True)
+        if definition_col != &#39;INTERPRETATION&#39;:
+            d.rename(columns={definition_col:&#39;INTERPRETATION&#39;}, inplace=True)
+        if class_flag_col != &#39;CLASS_FLAG&#39;:
+            d.rename(columns={class_flag_col:&#39;CLASS_FLAG&#39;}, inplace=True)
+
+        #Cast all columns as type str, if not already
         for i in range(0, np.shape(d)[1]):
             if d.iloc[:,i].name in list(dict_termDtypes.keys()):
                 d.iloc[:,i] = d.iloc[:,i].astype(dict_termDtypes[d.iloc[:,i].name])
     
         #Delete duplicate definitions
-        d.drop_duplicates(subset=&#39;FORMATION&#39;,inplace=True) #Apparently, there are some duplicate definitions, which need to be deleted first
+        d.drop_duplicates(subset=search_col,inplace=True) #Apparently, there are some duplicate definitions, which need to be deleted first
         d.reset_index(inplace=True, drop=True)
 
     #If only one file designated, convert it so it&#39;s no longer a list, but just a dataframe
@@ -1033,22 +1111,20 @@ Tuple containing the pandas dataframe with specific search terms and one with st
     
     #Whether to remove extra columns that aren&#39;t needed from dataframe
     if rem_extra_cols:
-        dict_terms = dict_terms[[&#39;FORMATION&#39;, &#39;INTERPRETATION&#39;, &#39;CLASS_FLAG&#39;]]
+        dict_terms = dict_terms[[search_col, definition_col, class_flag_col]]
 
     return dict_terms</code></pre>
 </details>
 </dd>
 <dt id="w4h.read.read_lithologies"><code class="name flex">
-<span>def <span class="ident">read_lithologies</span></span>(<span>litho_dir=None, lith_file=None, interp_col='LITHOLOGY', target_col='CODE', use_cols=None, log=False)</span>
+<span>def <span class="ident">read_lithologies</span></span>(<span>lith_file=None, interp_col='LITHOLOGY', target_col='CODE', use_cols=None, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to read lithology file into pandas dataframe</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>litho_dir</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code>, default <code>= None</code></dt>
-<dd>Directory where lithology file is located. If None, default is in source coude, by default None</dd>
-<dt><strong><code>lith_file</code></strong> :&ensp;<code>str</code>, default <code>= None</code></dt>
-<dd>Filename of lithology file. If None, default is in source coude, by default None</dd>
+<dt><strong><code>lith_file</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code>, default <code>= None</code></dt>
+<dd>Filename of lithology file. If None, default is contained within repository, by default None</dd>
 <dt><strong><code>interp_col</code></strong> :&ensp;<code>str</code>, default <code>= 'LITHOLOGY'</code></dt>
 <dd>Column to used to match interpretations</dd>
 <dt><strong><code>target_col</code></strong> :&ensp;<code>str</code>, default <code>= 'CODE'</code></dt>
@@ -1067,15 +1143,13 @@ Tuple containing the pandas dataframe with specific search terms and one with st
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_lithologies(litho_dir=None, lith_file=None, interp_col=&#39;LITHOLOGY&#39;, target_col=&#39;CODE&#39;, use_cols=None, log=False):
+<pre><code class="python">def read_lithologies(lith_file=None, interp_col=&#39;LITHOLOGY&#39;, target_col=&#39;CODE&#39;, use_cols=None, log=False):
     &#34;&#34;&#34;Function to read lithology file into pandas dataframe
 
     Parameters
     ----------
-    litho_dir : str or pathlib.Path object, default = None
-        Directory where lithology file is located. If None, default is in source coude, by default None
-    lith_file : str, default = None
-        Filename of lithology file. If None, default is in source coude, by default None
+    lith_file : str or pathlib.Path object, default = None
+        Filename of lithology file. If None, default is contained within repository, by default None
     interp_col : str, default = &#39;LITHOLOGY&#39;
         Column to used to match interpretations
     target_col : str, default = &#39;CODE&#39;
@@ -1092,24 +1166,16 @@ Tuple containing the pandas dataframe with specific search terms and one with st
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    #dictDir = &#34;\\\\isgs-sinkhole\\geophysics\\Balikian\\ISWS_HydroGeo\\WellDataAutoClassification\\SupportingDocs\\&#34;
-    if litho_dir is None:
-        litho_dir=str(repoDir)+&#39;/resources/&#39;
-    elif isinstance(litho_dir, pathlib.PurePath):
-        litho_dir = litho_dir.as_posix()
-    
-    litho_dir.replace(&#39;\\&#39;, &#39;/&#39;)
-    litho_dir.replace(&#39;\\&#39;[-1], &#39;/&#39;)
-    if litho_dir[-1] != &#39;/&#39;:
-        litho_dir = litho_dir+&#39;/&#39;
-
     if lith_file is None:
+        #Find resources
         lith_file=&#39;Lithology_Interp_FineCoarse.csv&#39;
     
+    if not isinstance(lith_file, pathlib.PurePath):
+        lith_file = pathlib.Path(lith_file)
+
     if use_cols is None:
         use_cols = [&#39;LITHOLOGY&#39;, &#39;CODE&#39;]
 
-    lithFPath = pathlib.Path(litho_dir+lith_file)
     lithoDF = pd.read_csv(lithFPath, usecols=use_cols)
 
     lithoDF.rename(columns={interp_col:&#39;INTERPRETATION&#39;, target_col:&#39;TARGET&#39;}, inplace=True)
@@ -1118,7 +1184,7 @@ Tuple containing the pandas dataframe with specific search terms and one with st
 </details>
 </dd>
 <dt id="w4h.read.read_raw_txt"><code class="name flex">
-<span>def <span class="ident">read_raw_txt</span></span>(<span>data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, x_col='LONGITUDE', ycol='LATITUDE', id_col='API_NUMBER', encoding='latin-1', verbose=False, log=False)</span>
+<span>def <span class="ident">read_raw_txt</span></span>(<span>data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, xcol='LONGITUDE', ycol='LATITUDE', id_col='API_NUMBER', encoding='latin-1', verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Easy function to read raw .txt files output from (for example), an Access database</p>
@@ -1152,7 +1218,7 @@ Tuple/list with two pandas dataframes: (data, metadata)</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_raw_txt(data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, x_col=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, id_col=&#39;API_NUMBER&#39;, encoding=&#39;latin-1&#39;, verbose=False, log=False):
+<pre><code class="python">def read_raw_txt(data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, id_col=&#39;API_NUMBER&#39;, encoding=&#39;latin-1&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Easy function to read raw .txt files output from (for example), an Access database
 
     Parameters
@@ -1195,8 +1261,16 @@ Tuple/list with two pandas dataframes: (data, metadata)</p></div>
     else:
         metadata_useCols= metadata_cols
 
-    downholeDataIN = pd.read_csv(data_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=data_useCols)
-    headerDataIN = pd.read_csv(metadata_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=metadata_useCols)
+    #Check if input data is already 
+    if isinstance(data_filepath, pd.DataFrame):
+        downholeDataIN = data_filepath[data_useCols]
+    else:
+        downholeDataIN = pd.read_csv(data_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=data_useCols)
+    
+    if isinstance(metadata_filepath, pd.DataFrame):
+        headerDataIN = metadata_filepath[metadata_useCols]
+    else:
+        headerDataIN = pd.read_csv(metadata_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=metadata_useCols)
 
     #Drop data with no API        
     downholeDataIN = downholeDataIN.dropna(subset=[id_col]) #Drop data with no API
@@ -1204,7 +1278,7 @@ Tuple/list with two pandas dataframes: (data, metadata)</p></div>
 
     #Drop data with no or missing location information
     headerDataIN = headerDataIN.dropna(subset=[ycol]) 
-    headerDataIN = headerDataIN.dropna(subset=[x_col])
+    headerDataIN = headerDataIN.dropna(subset=[xcol])
     
     #Reset index so index goes from 0 in numerical/integer order
     headerDataIN.reset_index(inplace=True, drop=True)

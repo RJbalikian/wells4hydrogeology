@@ -24,8 +24,10 @@ Though the source code is split into separate modules, all functions are designe
 - owslib</p>
 <h1>Inputs</h1>
 <p>Required inputs include:
-- ISGS_DOWNHOLE_DATA: A table in the ISGS database containing descriptions of well intervals for wells throughout the state.
+- Well Data: A table in the ISGS database containing descriptions of well intervals for wells throughout the state.
+    - This is intended for the ISGS_DOWNHOLE_DATA table in the main ISGS well database, but can be used with any table containing the proper columns 
 - ISGS_HEADER: A table in the ISGS database containing the metadata for all the wells, including API number, well location, and in some cases elevation.
+    - This is intended for the ISGS_HEADER table in the main ISGS well database, but can be used with any table containing the location information
 - XYZData (optional): A separate table containing updated location information for each well, particularly updated elevation data from Lidar products
 - Surface elevation: raster data containing the surface elevation of the study area or state.
 - Bedrock elevation: raster data containing the bedrock elevation of the study area or state.
@@ -34,10 +36,13 @@ Though the source code is split into separate modules, all functions are designe
 <h2>master_notebook contains an interactive jupyter notebook with all the steps for running the main body of the script</h2>
 <h2>w4h folder contains all scripts with functions used</h2>
 <ul>
-<li>readData: functions for reading in various files</li>
-<li>mapping: functions for mapping or performing geospatial analysis</li>
-<li>cleanData: functions for cleaning the data</li>
 <li>classify: functions for classifying the data</li>
+<li>clean: functions for cleaning the data</li>
+<li>export: functions for exporting the data, both as tables and rasters</li>
+<li>layers: functinos for generating layer(ed) models</li>
+<li>mapping: functions for mapping or performing geospatial analysis</li>
+<li>read: functions for reading in various files</li>
+<li>utilities: general utility functions used throughout</li>
 </ul>
 <h2>resources folder contains all the files that are read in/used by the scripts</h2>
 <ul>
