@@ -443,6 +443,7 @@ def read_dictionary_terms(dict_file, id_col='ID', search_col='DESCRIPTION', defi
     if dict_file is None:
         df = pd.DataFrame(columns=['ID', 'DESCRIPTION', 'LITHOLOGY', 'CLASS_FLAGS'])
         dict_terms.append(df)
+        dict_file = ['']
     elif type(dict_file) is list:
         for f in dict_file:
             if not f.exists():
