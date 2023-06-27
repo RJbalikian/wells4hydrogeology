@@ -497,7 +497,7 @@ def grid2study_area(study_area, grid, study_area_crs='', grid_crs='', log=False)
     return grid
 
 #Read the model grid into (rio)xarray
-def read_model_grid(gridpath, study_area=None, nodataval=0, read_grid=True, node_byspace=False, study_area_crs=None, grid_crs=None, log=False):
+def read_model_grid(gridpath, study_area=None, no_data_val=0, read_grid=True, node_byspace=False, study_area_crs=None, grid_crs=None, log=False):
     """Reads in model grid to xarray data array
 
     Parameters
@@ -613,7 +613,7 @@ def read_model_grid(gridpath, study_area=None, nodataval=0, read_grid=True, node
     return modelGrid
 
 #Read a grid from a file in using rioxarray
-def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, log=False, **kwargs):
+def read_grid(datapath='', grid_type='model', no_data_val=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, log=False, **kwargs):
     """Reads in grid
 
     Parameters
@@ -648,7 +648,7 @@ def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, st
             rgrid = kwargs['read_grid']
         else:
             rgrid=True
-        gridIN = read_model_grid(gridpath=datapath, study_area=study_area,  nodataval=0, read_grid=rgrid, clip2studyarea=clip2studyarea, study_area_crs=study_area_crs, grid_crs=grid_crs)
+        gridIN = read_model_grid(gridpath=datapath, study_area=study_area,  no_data_val=0, read_grid=rgrid, study_area_crs=study_area_crs, grid_crs=grid_crs)
     else:
         if use_service==False:
             gridIN = rxr.open_rasterio(datapath)

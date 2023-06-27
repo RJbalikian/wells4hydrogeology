@@ -252,21 +252,21 @@ def run(well_data, well_data_cols=None,
 
     #CLASSIFICATION
     #Read dictionary definitions and classify
-    get_search_terms_kwargs = {k: v for k, v in locals().items() if k in w4h.get_search_terms.__code__.co_varnames}
-    specTermsPATH, startTermsPATH, wildcardTermsPATH, = w4h.get_search_terms(spec_dir=lith_dict, start_dir=lith_dict_start, wildcard_dir=lith_dict_wildcard, log=log, **get_search_terms_kwargs)
-    read_dictionary_terms_kwargs = {k: v for k, v in locals().items() if k in w4h.read_dictionary_terms.__code__.co_varnames}
+    get_search_terms_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.get_search_terms.__code__.co_varnames}
+    specTermsPATH, startTermsPATH, wildcardTermsPATH, = w4h.get_search_terms(spec_path=lith_dict, start_path=lith_dict_start, wildcard_path=lith_dict_wildcard, log=log, **get_search_terms_kwargs)
+    read_dictionary_terms_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.read_dictionary_terms.__code__.co_varnames}
     specTerms = w4h.read_dictionary_terms(dict_file=specTermsPATH, log=log, **read_dictionary_terms_kwargs)
     startTerms = w4h.read_dictionary_terms(dict_file=startTermsPATH, log=log, **read_dictionary_terms_kwargs)
     wildcardTerms = w4h.read_dictionary_terms(dict_file=wildcardTermsPATH, log=log, **read_dictionary_terms_kwargs)
 
     #Clean up dictionary terms
-    specTerms.drop_duplicates(subset='FORMATION', inplace=True)
+    specTerms.drop_duplicates(subset='DESCRIPTION', inplace=True)
     specTerms.reset_index(inplace=True, drop=True)
 
-    startTerms.drop_duplicates(subset='FORMATION', inplace=True)
+    startTerms.drop_duplicates(subset='DESCRIPTION', inplace=True)
     startTerms.reset_index(inplace=True, drop=True)
 
-    wildcardTerms.drop_duplicates(subset='FORMATION', inplace=True)
+    wildcardTerms.drop_duplicates(subset='DESCRIPTION', inplace=True)
     wildcardTerms.reset_index(inplace=True, drop=True)
 
     if verbose:
@@ -298,7 +298,7 @@ def run(well_data, well_data_cols=None,
     downholeData = w4h.fill_unclassified(downholeData, classification_col='CLASS_FLAG')
     
     #Add target interpratations
-    read_lithologies_kwargs = {k: v for k, v in locals().items() if k in w4h.read_lithologies.__code__.co_varnames}
+    read_lithologies_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.read_lithologies.__code__.co_varnames}
     targetInterpDF = w4h.read_lithologies(lith_file=target_dict, log=log, **read_lithologies_kwargs)
     downholeData = w4h.merge_lithologies(df=downholeData, targinterps_df=targetInterpDF, target_col='TARGET', target_class='bool')
     
