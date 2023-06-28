@@ -17,44 +17,51 @@ API Documentation <a href="https://rjbalikian.github.io/wells4hydrogeology/main.
 # Dependencies
  The w4h module has the following dependencies:
 - numpy
-- pandas
+- geopandas (and therefore pandas)
 - rioxarray (and therefore xarray)
-- geopandas
 - matplotlib
 - scipy
 - owslib
 
 # Inputs
+## Required Inputs
 Required inputs include:
-- Well Data: A table in the ISGS database containing descriptions of well intervals for wells throughout the state.
-    - This is intended for the ISGS_DOWNHOLE_DATA table in the main ISGS well database, but can be used with any table containing the proper columns 
-- ISGS_HEADER: A table in the ISGS database containing the metadata for all the wells, including API number, well location, and in some cases elevation.
+- Well Data: A table containing descriptions of well intervals for wells throughout the area of interest.
+    - This is intended for the ISGS_DOWNHOLE_DATA table in the ISGS well database, but can be used with any table containing the proper column types.
+- Metadata: A table containing the metadata for all the wells, including unique identifier (e.g., API number), well location, and elevation.
     - This is intended for the ISGS_HEADER table in the main ISGS well database, but can be used with any table containing the location information
-- XYZData (optional): A separate table containing updated location information for each well, particularly updated elevation data from Lidar products
-- Surface elevation: raster data containing the surface elevation of the study area or state.
-- Bedrock elevation: raster data containing the bedrock elevation of the study area or state.
+- Surface elevation: raster data containing the surface elevation of the study area or state, to be read by rioxarray/rasterio
+- Bedrock elevation: raster data containing the bedrock elevation of the study area or state, to be read by rioxarray/rasterio
 - Model grid: raster data whose resolution and cell locations align with that of the hydrogeologic model (i.e., in MODFLOW)
+    - Can either be read by rioxarray/rasterio or grid parameters can be set manually
 - Lithology data: "definitions" to convert raw, manual well descriptions to broad lithological categories and then to a target lithology (e.g., coarse sediment).
 
-## master_notebook contains an interactive jupyter notebook with all the steps for running the main body of the script
+## Optional inputs
+- Column names: 
+    - Column names for the fields containing well description, top depth/elevation, bottom depth/elevation, x location, y location, z location
+    - Other column names can be specified as well, see <a href="https://rjbalikian.github.io/wells4hydrogeology/main.html">API Documentation</a> for more information.
+- Study Area
+    - A file or other input that can be read by geopandas containing an area of interest (this can be used to clip larger datasets)
 
-## w4h folder contains all scripts with functions used
+# Organization
+## Modules
+The package is organized by module, but all functions can be accessed directly using w4h.function_name() as well.
+- core: general utility functions used throughout
 - classify: functions for classifying the data
 - clean: functions for cleaning the data
 - export: functions for exporting the data, both as tables and rasters
 - layers: functinos for generating layer(ed) models
 - mapping: functions for mapping or performing geospatial analysis
 - read: functions for reading in various files
-- utilities: general utility functions used throughout
 
-
-## resources folder contains all the files that are read in/used by the scripts
+# Included resources
+The w4h package "ships" with some definition files that are read in/used by the scripts
 - ISGS_HEADER_yyyy-mm-dd.TXT: tabular data exported from ISGS oracle database containing "header" information (i.e., metadata) about all the wells
 - ISGS_DOWNHOLE_DATA_yyyy-mm-dd.TXT: tabular data exported from ISGS oracle database containing geologic information about wells in the state
 - xyzData_yyyy-mm-dd.csv: most recent update of statewide wells with API, Latitude, Longitude, and surface elevation extracted from statewide lidar topography
 
-## Intended workflow
-If diagram is not formatting properly, available on github here: <a href="https://github.com/RJbalikian/wells4hydrogeology#intended-workflow">here</a>
+# Intended workflow
+If diagram is not formatting properly, it is also available on github here: <a href="https://github.com/RJbalikian/wells4hydrogeology#intended-workflow">here</a>
 ```mermaid
 flowchart TD
     subgraph setup["Set up Files"]
