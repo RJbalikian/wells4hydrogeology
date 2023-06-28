@@ -7,42 +7,9 @@ import pandas as pd
 
 import w4h
 
-#log_filename = None
-
-#Log data to file
-"""def logger(func):
-    def wrapper(*args, **kwargs):
-        global log_filename
-        #log parameter should be false by default on all. If true, will show up in kwargs
-            #Is there a way to do this so all can be set at once?
-        if 'log' in kwargs.keys():
-            log_file = kwargs.pop('log', None)
-        else:
-            log_file = None
-        if log_file == True and (func.__name__ == 'file_setup' or func.__name__ == 'new_logfile'):
-            out_dir = kwargs.pop('out_dir', None)
-            if out_dir is None:
-                out_dir = kwargs['db_dir']
-            timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-            log_filename = f"log_{timestamp}.txt"
-            logging.basicConfig(filename=log_filename, level=logging.INFO)
-        elif log_file == True:
-            if log_filename:
-                logging.basicConfig(filename=log_filename, level=logging.INFO)
-            else:
-                timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-                log_filename = f"log_{timestamp}.txt"
-                logging.basicConfig(filename=log_filename, level=logging.INFO)
-        else:
-            pass
-        result = func(*args, **kwargs)
-        print('logged', func.__name__)
-        print('fname', log_filename)
-        return result
-    return wrapper"""
-
 def run(well_data, well_data_cols=None, 
-        well_metadata=None, well_metadata_cols=None, 
+        metadata=None, well_metadata_cols=None, 
+        layers = 9,
         description_col='FORMATION', top_col='TOP', bottom_col='BOTTOM', depth_type='depth',
         study_area=None, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEVATION', idcol='API_NUMBER', output_crs='EPSG:4269',
         surf_elev_file=None, bedrock_elev_file=None, model_grid=None,
@@ -54,7 +21,9 @@ def run(well_data, well_data_cols=None,
         log=False,
         **keyword_parameters):
     
-    """Function to run entire process with one line of code
+    """Function to run entire process with one line of code. 
+    
+    NOTE: verbose and log are boolean parameters used for most of the functions. verbose=True prints information to terminal, log=True logs to a file in the log_dir, which defaults to the export_dir
 
     Parameters
     ----------
@@ -62,10 +31,12 @@ def run(well_data, well_data_cols=None,
         Filepath to file or directory containing well data.
     well_data_cols : List or list-like
         Columns to 
-    well_metadata : str or pathlib.Path object
+    metadata : str or pathlib.Path object
         Filepath to file or directory containing well metadata, such as location and elevation.
     well_metadata_cols : List or list-like
         _description_
+    layers : int, default = 9
+        The number of layers in the model grid
     description_col : str, default = 'FORMATION'
         Name of column containing geologic descriptions of the well interval. This column should be in well_data.
     top_col : str, default = 'TOP'
@@ -77,11 +48,11 @@ def run(well_data, well_data_cols=None,
     study_area : str or pathlib.Path object, or geopandas.GeoDataFrame
         _description_
     xcol : str, default = 'LONGITUDE' 
-        Name of column containing x coordinates. This column should be in well_metadata unless well_metadata is not read, then it should be in well_data.
+        Name of column containing x coordinates. This column should be in metadata unless metadata is not read, then it should be in well_data.
     ycol : str, default = 'LATITUDE'
-        Name of column containing y coordinates. This column should be in well_metadata unless well_metadata is not read, then it should be in well_data.
+        Name of column containing y coordinates. This column should be in metadata unless metadata is not read, then it should be in well_data.
     zcol : str, default = 'ELEVATION' 
-        Name of column containing z coordinates. This column should be in well_metadata unless well_metadata is not read, then it should be in well_data.
+        Name of column containing z coordinates. This column should be in metadata unless metadata is not read, then it should be in well_data.
     output_crs : crs definition accepted by pyproj, default = 'EPSG:4269'
         CRS to output all of the data into
     surf_elev_file : str or pathlib.Path object
@@ -106,58 +77,57 @@ def run(well_data, well_data_cols=None,
         Whether to print updates/results
     log : bool, default = False
         Whether to send parameters and outputs to log file, to be saved in export_dir, or the same directory as well_data if export_dir not defined.
+    **keyword_parameters
+        Keyword parameters used by any of the functions throughout the process. See list of functions above, and the API documentation for their possible parameters
     """
-
-    #Get important information
-    todayDate, dateSuffix = w4h.get_current_date() 
-    repoDir = pathlib.Path(os.getcwd()) #this will need to be updated for pypi packaging
 
     #Get data (files or otherwise)
     file_setup_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.file_setup.__code__.co_varnames}
     
-    #Check how well_data and well_metadata were defined
+    #Check how well_data and metadata were defined
     if isinstance(well_data, pathlib.PurePath) or isinstance(well_data, str):
         #Convert well_data to pathlib.Path if not already
         if isinstance(well_data, str):
             well_data = pathlib.Path(well_data)
 
-        if well_metadata is None:
+        if metadata is None:
             if well_data.is_dir():
                 downholeDataPATH, headerDataPATH = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
             elif well_data.exists():
                 downholeDataPATH, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
             else:
                 print('ERROR: well_data file does not exist:{}'.format(well_data))
-        elif isinstance(well_metadata, pathlib.PurePath) or isinstance(well_metadata, str):
-            if isinstance(well_metadata, str):
-                well_metadata = pathlib.Path(well_metadata)    
-            downholeDataPATH, headerDataPATH = w4h.file_setup(well_data=well_data, metadata=well_metadata, **file_setup_kwargs)                
+        elif isinstance(metadata, pathlib.PurePath) or isinstance(metadata, str):
+            if isinstance(metadata, str):
+                metadata = pathlib.Path(metadata)    
+            downholeDataPATH, headerDataPATH = w4h.file_setup(well_data=well_data, metadata=metadata, **file_setup_kwargs)                
         else:
-            if isinstance(well_metadata, pd.DataFrame):
+            if isinstance(metadata, pd.DataFrame):
                 downholeDataPATH, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
-                headerDataPATH = well_metadata
-            elif well_metadata is None:
+                headerDataPATH = metadata
+            elif metadata is None:
                 downholeDataPATH, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
 
     elif isinstance(well_data, pd.DataFrame):
-        if isinstance(well_metadata, pd.DataFrame):
+        if isinstance(metadata, pd.DataFrame):
             downholeDataPATH = well_data
-            headerDataPATH = well_metadata
-        elif isinstance(well_metadata, pathlib.PurePath) or isinstance(well_metadata, str):
-            _, headerDataPATH = w4h.file_setup(well_data=well_metadata, metadata=well_metadata, verbose=verbose, log=log, **file_setup_kwargs)                
+            headerDataPATH = metadata
+        elif isinstance(metadata, pathlib.PurePath) or isinstance(metadata, str):
+            _, headerDataPATH = w4h.file_setup(well_data=metadata, metadata=metadata, verbose=verbose, log=log, **file_setup_kwargs)                
             downholeDataPATH = well_data
         else:
-            print('ERROR: well_metadata must be a string filepath, a pathlib.Path object, or pandas.DataFrame')
+            print('ERROR: metadata must be a string filepath, a pathlib.Path object, or pandas.DataFrame')
     else:
         print('ERROR: well_data must be a string filepath, a pathlib.Path object, or pandas.DataFrame')
 
     #Get pandas dataframes from input
     read_raw_txt_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.read_raw_txt.__code__.co_varnames}
-    downholeDataIN, headerDataIN = w4h.read_raw_txt(data_filepath=downholeDataPATH, metadata_filepath=headerDataPATH, verbose=verbose, log=log, **read_raw_txt_kwargs) #Functions to read data into dataframes. Also excludes extraneous columns, and drops header data with no location information
+    downholeDataIN, headerDataIN = w4h.read_raw_txt(data_filepath=downholeDataPATH, metadata_filepath=headerDataPATH, verbose=verbose, log=log, **read_raw_txt_kwargs) 
+    #Functions to read data into dataframes. Also excludes extraneous columns, and drops header data with no location information
 
     #Define data types (file will need to be udpated)
-    downholeData = w4h.define_dtypes(df=downholeDataIN, dtype_file='downholeDataTypes.txt', log=log)
-    headerData = w4h.define_dtypes(df=headerDataIN, dtype_file='headerDataTypes.txt', log=log)
+    downholeData = w4h.define_dtypes(undefined_df=downholeDataIN, datatypes='./resources/downholeDataTypes.txt', verbose=verbose, log=log)
+    headerData = w4h.define_dtypes(undefined_df=headerDataIN, datatypes='./resources/headerDataTypes.txt', verbose=verbose, log=log)
 
     #Get Study area
     read_study_area_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.read_study_area.__code__.co_varnames}
@@ -165,7 +135,7 @@ def run(well_data, well_data_cols=None,
         studyAreaIN = None
         use_study_area = False
     else:
-        studyAreaIN = w4h.read_study_area(studyareapath=study_area, log=log, **read_study_area_kwargs)
+        studyAreaIN = w4h.read_study_area(study_area_path=study_area, log=log, **read_study_area_kwargs)
         use_study_area = True
 
     #Get surfaces and grid(s)
@@ -175,9 +145,9 @@ def run(well_data, well_data_cols=None,
     surfaceElevPath = surf_elev_file
     bedrockElevPath = bedrock_elev_file
     #UPDATE: allow other types of model grid read ***
-    modelGrid = w4h.read_grid(datapath=modelGridPath, grid_type='model', study_area=studyAreaIN,  clip_to_study_area=use_study_area, log=log, **read_grid_kwargs)
-    surfaceElevGridIN = w4h.read_grid(datapath=surfaceElevPath, grid_type='surface', study_area=studyAreaIN, clip_to_study_area=use_study_area, log=log, **read_grid_kwargs)
-    bedrockElevGridIN = w4h.read_grid(datapath=bedrockElevPath, grid_type='bedrock', study_area=studyAreaIN, clip_to_study_area=use_study_area, log=log, **read_grid_kwargs)
+    modelGrid = w4h.read_grid(grid_path=modelGridPath, grid_type='model', study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
+    surfaceElevGridIN = w4h.read_grid(grid_path=surfaceElevPath, grid_type='surface', study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
+    bedrockElevGridIN = w4h.read_grid(grid_path=bedrockElevPath, grid_type='bedrock', study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
 
     #Add control points
     #UPDATE: Code here for adding in control points ***
@@ -255,19 +225,24 @@ def run(well_data, well_data_cols=None,
     targetInterpDF = w4h.read_lithologies(lith_file=target_dict, log=log, **read_lithologies_kwargs)
     downholeData = w4h.merge_lithologies(df=downholeData, targinterps_df=targetInterpDF, target_col='TARGET', target_class='bool')
     
-    #Get ready for next steps
-    downholeData = w4h.sort_dataframe(df=downholeData, sort_cols=['API_NUMBER','TOP'], remove_nans=True)
+    #Sort dataframe to prepare for next steps
+    #downholeData = w4h.sort_dataframe(df=downholeData, sort_cols=['API_NUMBER','TOP'], remove_nans=True)
+    downholeData = downholeData.sort_values(sort_cols=[idcol, top_col])
+    downholeData.reset_index(inplace=True, drop=True)
+    #UPDATE: Option to remove nans?
+    downholeData = downholeData[pd.notna(downholeData["LITHOLOGY"])]
 
     #Analyze Surface(s) and grid(s)
     bedrockGrid, surfaceGrid = w4h.align_rasters(grids_unaligned=[bedrockElevGridIN, surfaceElevGridIN], modelgrid=modelGrid, no_data_val=0, log=log)
-    driftThickGrid, layerThickGrid = w4h.get_drift_thick(surface=surfaceGrid, bedrock=bedrockGrid, layers=9, plot=verbose, log=log)
+    driftThickGrid, layerThickGrid = w4h.get_drift_thick(surface=surfaceGrid, bedrock=bedrockGrid, layers=layers, plot=verbose, log=log)
+    #UPDATE: LAYER NAMES SO DON"T INCLUDE FT
     headerData = w4h.sample_raster_points(raster=bedrockGrid, points_df=headerData, xcol=xcol, ycol=ycol, new_col='BEDROCK_ELEV_FT', verbose=verbose, log=log)
     headerData = w4h.sample_raster_points(raster=surfaceGrid, points_df=headerData, xcol=xcol, ycol=ycol, new_col='SURFACE_ELEV_FT', verbose=verbose, log=log)
     headerData = w4h.sample_raster_points(raster=driftThickGrid, points_df=headerData, xcol=xcol, ycol=ycol, new_col='BEDROCK_DEPTH_FT', verbose=verbose, log=log)
     headerData = w4h.sample_raster_points(raster=layerThickGrid, points_df=headerData, xcol=xcol, ycol=ycol, new_col='LAYER_THICK_FT', verbose=verbose, log=log)
-    headerData = w4h.get_layer_depths(well_metadata=headerData, no_layers=9, log=log)
+    headerData = w4h.get_layer_depths(metadata=headerData, no_layers=layers, log=log)
 
-    #UPDATE: Check if this actually works, I think they should be copies of each other if well_metadata is not specified and not found using the metadata_filename pattern in file_setup() ***
+    #UPDATE: Check if this actually works, I think they should be copies of each other if metadata is not specified and not found using the metadata_filename pattern in file_setup() ***
     #Merge header and data into one df, if applicable
     if downholeData.values.base is headerData.values.base:
         pass
@@ -294,11 +269,11 @@ def run(well_data, well_data_cols=None,
                 pass
 
     w4h.export_grids(grid_data=layers_data, out_path=export_dir, file_id='',filetype='tif', variable_sep=True, date_stamp=True, log=log)
+    #UPDATE: export points?
     return resdf, layers_data
 
 
-log_filename=None
-
+log_filename=None #Set up so exists but is None
 def logger_function(logtocommence, parameters, func_name):
     """Function to log other functions, to be called from within other functions
 
@@ -314,32 +289,53 @@ def logger_function(logtocommence, parameters, func_name):
     if logtocommence:
         global log_filename
         #log parameter should be false by default on all. If true, will show up in kwargs
-            #Is there a way to do this so all can be set at once?
+        
+        #Get the log parameter value
         if 'log' in parameters.keys():
             log_file = parameters.pop('log', None)
         else:
+            #If it wasn't set, default to None
             log_file = None
         
+        #Get currenet time and setup format for log messages
         curr_time = datetime.datetime.now()
         FORMAT = '%(asctime)s  %(message)s'
+
+        #Check if we are starting a new logfile (only does this during run of file_setup() or (currently non-existent) new_logfile() functions)
         if log_file == True and (func_name == 'file_setup' or func_name == 'new_logfile'):
+
+            #Get the log_dir variable set as a file_setup() parameter, or default to None if not specified
             out_dir = parameters.pop('log_dir', None)
             if out_dir is None:
-                out_dir = parameters['db_dir']
+                #If output directory not specified, default to the input directory
+                out_dir = parameters['well_data']
+            
+            #Get the timestamp for the filename (this won't change, so represents the start of logging)
             timestamp = curr_time.strftime('%Y-%m-%d_%H-%M-%S')
             log_filename = pathlib.Path(out_dir).joinpath(f"log_{timestamp}.txt")
-            print('Logging data to', log_filename)
+            if 'verbose' in parameters.keys():
+                print('Logging data to', log_filename)
+
+            #Set up logging stream using logging module
             logging.basicConfig(filename=log_filename, level=logging.INFO, format=FORMAT, filemode='w')
-            logging.info(f"Called {func_name} with args: {parameters}")
+
+            #Log 
+            logging.info(f"{func_name} CALLED WITH PARAMETERS:\n\t {parameters}")
         elif log_file == True:
+            #Run this for functions that aren't setting up logging file
             if log_filename:
+                #Get the log stream and log this function's call with parameters
                 logging.basicConfig(filename=log_filename, level=logging.INFO, format=FORMAT)
-                logging.info(f"Called {func_name} with args: {parameters}")
+                logging.info(f"{func_name} CALLED WITH PARAMETERS: \n\t{parameters}")
             else:
+                #If log file has not already been set up, set it up
                 timestamp = curr_time.strftime('%Y-%m-%d_%H-%M-%S')
                 log_filename = f"log_{timestamp}.txt"
+
+                #Now, get the log stream and log this function's call with parameters
                 logging.basicConfig(filename=log_filename, level=logging.INFO, format=FORMAT)
-                logging.info(f"Called {func_name} with args: {parameters}")
+                logging.info(f"{func_name} CALLED WITH PARAMETERS: \n\t{parameters}")
         else:
+            #Don't log if log=False
             pass
     return

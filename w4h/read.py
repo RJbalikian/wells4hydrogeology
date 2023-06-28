@@ -91,6 +91,8 @@ def file_setup(well_data, metadata=None, data_filename='*ISGS_DOWNHOLE_DATA*.txt
         Pattern used by pathlib.glob() to get the most recent data file, by default '*ISGS_DOWNHOLE_DATA*.txt'
     metadata_filename : str, optional
         Pattern used by pathlib.glob() to get the most recent metadata file, by default '*ISGS_HEADER*.txt'
+    log_dir : str or pathlib.PurePath() or None, default=None
+        Directory to place log file in. This is not read directly, but is used indirectly by w4h.logger_function()
     verbose : bool, default = False
         Whether to print name of files to terminal, by default True
     log : bool, default = True
@@ -99,7 +101,7 @@ def file_setup(well_data, metadata=None, data_filename='*ISGS_DOWNHOLE_DATA*.txt
     Returns
     -------
     tuple
-        Tuple with (well_data, metadata)
+        Tuple with paths to (well_data, metadata)
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
@@ -140,7 +142,7 @@ def file_setup(well_data, metadata=None, data_filename='*ISGS_DOWNHOLE_DATA*.txt
     #downholeDataDTYPES = {'ID':np.uint32, "API_NUMBER":np.uint64,"TABLE_NAME":str,"WHO":str,"INTERPRET_DATE":str,"FORMATION":str,"THICKNESS":np.float64,"TOP":np.float64,"BOTTOM":np.float64}
     #headerDataDTYPES = {'ID':np.uint32,'API_NUMBER':np.uint64,"TDFORMATION":str,"PRODFORM":str,"TOTAL_DEPTH":np.float64,"SECTION":np.float64,"TWP":np.float64,"TDIR":str,"RNG":np.float64,"RDIR":str,"MERIDIAN":np.float64,"FARM_NAME":str,"NSFOOT":np.float64,"NSDIR":str,"EWFOOT":np.float64,"EWDIR":str,"QUARTERS":str,"ELEVATION":np.float64,"ELEVREF":str,"COMP_DATE":str,"STATUS":str,"FARM_NUM":str,"COUNTY_CODE":np.float64,"PERMIT_NUMBER":str,"COMPANY_NAME":str,"COMPANY_CODE":str,"PERMIT_DATE":str,"CORNER":str,"LATITUDE":np.float64,"LONGITUDE":np.float64,"ENTERED_BY":str,"UPDDATE":str,"ELEVSOURCE":str, "ELEV_FT":np.float64}
     return downholeDataPATH, headerDataPATH
-
+    
 #Read raw data by text
 def read_raw_txt(data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, xcol='LONGITUDE', ycol='LATITUDE', id_col='API_NUMBER', encoding='latin-1', verbose=False, log=False):
     """Easy function to read raw .txt files output from (for example), an Access database
@@ -216,14 +218,14 @@ def read_raw_txt(data_filepath, metadata_filepath, data_cols=None, metadata_cols
     return downholeDataIN, headerDataIN
 
 #Read file with xyz data
-def read_xyz(xyzpath, dtypes=None, verbose=False, log=False):
+def read_xyz(xyzpath, datatypes=None, verbose=False, log=False):
     """Function to read file containing xyz data (elevation/location)
 
     Parameters
     ----------
     xyzpath : str or pathlib.Path
         Filepath of the xyz file, including extension
-    dtypes : dict, default = None
+    datatypes : dict, default = None
         Dictionary containing the datatypes for the columns int he xyz file. If None, {'ID':np.uint32,'API_NUMBER':np.uint64,'LATITUDE':np.float64,'LONGITUDE':np.float64,'ELEV_FT':np.float64}, by default None
     verbose : bool, default = False
         Whether to print the number of xyz records to the terminal, by default False
@@ -237,7 +239,7 @@ def read_xyz(xyzpath, dtypes=None, verbose=False, log=False):
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    if dtypes is None:
+    if datatypes is None:
         xyzDTypes = {'ID':np.uint32,'API_NUMBER':np.uint64,'LATITUDE':np.float64,'LONGITUDE':np.float64,'ELEV_FT':np.float64}
 
     xyzDataIN = pd.read_csv(xyzpath, sep=',', header='infer', dtype=xyzDTypes, index_col='ID')
@@ -293,19 +295,15 @@ def read_dict(file, keytype='np'):
     return jsDict
 
 #Define the datatypes for a dataframe
-def define_dtypes(df, dtypes=None, dtype_file=None, dtype_dir=str(repoDir)+'/resources/', log=False):
+def define_dtypes(undefined_df, datatypes=None, verbose=False, log=False):
     """Function to define datatypes of a dataframe, especially with file-indicated dyptes
 
     Parameters
     ----------
-    df : pandas.DataFrame
+    undefined_df : pd.DataFrame
         Pandas dataframe with columns whose datatypes need to be (re)defined
-    dtypes : dict or None, default = None
+    datatypes : dict, str, pathlib.PurePath() object, or None, default = None
         Dictionary containing datatypes, to be used in pandas.DataFrame.astype() function. If None, will read from file indicated by dtype_file (which must be defined, along with dtype_dir), by default None
-    dtype_file : str or None, default = None
-        Filename of file containing datatypes (txt file in dictionary format). If None, dtypes must be defined, by default None.
-    dtype_dir : str or pathlib.Path obejct, default = str(repoDir)+'/resources/'
-        Directory containing dtype_file, by default 
     log : bool, default = False
         Whether to log inputs and outputs to log file.
 
@@ -316,24 +314,36 @@ def define_dtypes(df, dtypes=None, dtype_file=None, dtype_dir=str(repoDir)+'/res
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    dfout = df.copy()
+    dfout = undefined_df.copy()
     
-    if dtypes is None:
-        if isinstance(dtype_dir, pathlib.PurePath):
-            dtype_dir = dtype_dir.as_posix()
-        if dtype_dir[-1] != '/':
-            dtype_dir = dtype_dir + '/'
+    if isinstance(datatypes, pathlib.PurePath) or isinstance(datatypes, str):
+        datatypes = pathlib.Path(datatypes)
 
-        if dtype_file is None:
-            print('ERROR: Either dtype_file (and dtype_dir) or dtypes must be defined')
-            return 
-        
-        dtype_file = pathlib.Path(dtype_dir).joinpath(dtype_file)
-        dtypes = read_dict(file=dtype_file)
+        if not datatypes.exists():
+            if verbose:
+                print('ERROR: datatypes ({}) does not exist'.format(datatypes))
+            return dfout
+        elif datatypes.is_dir():
+            if verbose:
+                print('ERROR: datatypes must be either dict or filepath (path to directories not allowed)')
+            return dfout
+
+        datatypes = read_dict(file=datatypes)
+        dfout = dfout.astype(datatypes)
+
+    elif isinstance(datatypes, dict):
+        if verbose:
+            print('datatypes is None, not updating datatypes')
+        dfout = dfout.astype(datatypes)
+    else:
+        if verbose:
+            print('ERROR: datatypes must be either dict or a filepath, not {}'.format(type(datatypes)))
+        return dfout
     
+    #This is likely redundant
     dfcols = dfout.columns
     for i in range(0, np.shape(dfout)[1]):
-        dfout.iloc[:,i] = df.iloc[:,i].astype(dtypes[dfcols[i]])
+        dfout.iloc[:,i] = undefined_df.iloc[:,i].astype(datatypes[dfcols[i]])
 
     return dfout
 
