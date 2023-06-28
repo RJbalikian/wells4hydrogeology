@@ -525,7 +525,7 @@ def grid2study_area(study_area, grid, study_area_crs=&#39;&#39;, grid_crs=&#39;&
     return grid
 
 #Read the model grid into (rio)xarray
-def read_model_grid(gridpath, study_area=None, nodataval=0, read_grid=True, node_byspace=False, clip_to_study_area=True, study_area_crs=None, grid_crs=None, log=False):
+def read_model_grid(gridpath, study_area=None, no_data_val=0, read_grid=True, node_byspace=False, study_area_crs=None, grid_crs=None, log=False):
     &#34;&#34;&#34;Reads in model grid to xarray data array
 
     Parameters
@@ -540,8 +540,6 @@ def read_model_grid(gridpath, study_area=None, nodataval=0, read_grid=True, node
         Whether function to either read grid or create grid
     node_byspace : bool, default=False
         Denotes how to create grid
-    clip_to_study_area : bool, default=True
-        Whether to clip grid to study area
     study_area_crs : str, default=None
         Inputs study area crs
     grid_crs : str, default=None
@@ -570,7 +568,7 @@ def read_model_grid(gridpath, study_area=None, nodataval=0, read_grid=True, node
         elif grid_crs.lower()==&#39;isws&#39;:
             modelGridIN.rio.write_crs(iswsCRS)
         
-        if clip_to_study_area and study_area is not None:                
+        if study_area is not None:                
             if study_area_crs is None:
                 study_area_crs=study_area.crs
             study_area = study_area.to_crs(grid_crs)
@@ -643,7 +641,7 @@ def read_model_grid(gridpath, study_area=None, nodataval=0, read_grid=True, node
     return modelGrid
 
 #Read a grid from a file in using rioxarray
-def read_grid(datapath=&#39;&#39;, grid_type=&#39;model&#39;, nodataval=0, use_service=False, study_area=None, clip2studyarea=True,  study_area_crs=None, grid_crs=None, log=False, **kwargs):
+def read_grid(datapath=&#39;&#39;, grid_type=&#39;model&#39;, no_data_val=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, log=False, **kwargs):
     &#34;&#34;&#34;Reads in grid
 
     Parameters
@@ -658,8 +656,6 @@ def read_grid(datapath=&#39;&#39;, grid_type=&#39;model&#39;, nodataval=0, use_s
         Sets which service the function uses
     study_area : geopandas.GeoDataFrame, default=None
         Dataframe containing study area polygon
-    clip_to_study_area : bool, default=True
-        If function clips grid to study area
     study_area_crs : str, default=None
         Sets specific crs if current crs is not wanted
     grid_crs : str, default=None
@@ -680,7 +676,7 @@ def read_grid(datapath=&#39;&#39;, grid_type=&#39;model&#39;, nodataval=0, use_s
             rgrid = kwargs[&#39;read_grid&#39;]
         else:
             rgrid=True
-        gridIN = read_model_grid(study_area, gridpath=datapath, nodataval=0, read_grid=rgrid, clip2studyarea=clip2studyarea, study_area_crs=study_area_crs, grid_crs=grid_crs)
+        gridIN = read_model_grid(gridpath=datapath, study_area=study_area,  no_data_val=0, read_grid=rgrid, study_area_crs=study_area_crs, grid_crs=grid_crs)
     else:
         if use_service==False:
             gridIN = rxr.open_rasterio(datapath)
@@ -690,7 +686,7 @@ def read_grid(datapath=&#39;&#39;, grid_type=&#39;model&#39;, nodataval=0, use_s
             pass
             gridIN = read_wms(study_area, wcs_url=lidarURL, **kwargs)
             
-        if clip_to_study_area and study_area is not None:
+        if study_area is not None:
             if grid_crs is None:
                 try:
                     grid_crs=gridIN.spatial_ref.crs_wkt
@@ -1180,7 +1176,7 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
 </details>
 </dd>
 <dt id="w4h.mapping.read_grid"><code class="name flex">
-<span>def <span class="ident">read_grid</span></span>(<span>datapath='', grid_type='model', nodataval=0, use_service=False, study_area=None, clip2studyarea=True, study_area_crs=None, grid_crs=None, log=False, **kwargs)</span>
+<span>def <span class="ident">read_grid</span></span>(<span>datapath='', grid_type='model', no_data_val=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, log=False, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Reads in grid</p>
@@ -1196,8 +1192,6 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
 <dd>Sets which service the function uses</dd>
 <dt><strong><code>study_area</code></strong> :&ensp;<code>geopandas.GeoDataFrame</code>, default=<code>None</code></dt>
 <dd>Dataframe containing study area polygon</dd>
-<dt><strong><code>clip_to_study_area</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
-<dd>If function clips grid to study area</dd>
 <dt><strong><code>study_area_crs</code></strong> :&ensp;<code>str</code>, default=<code>None</code></dt>
 <dd>Sets specific crs if current crs is not wanted</dd>
 <dt><strong><code>grid_crs</code></strong> :&ensp;<code>str</code>, default=<code>None</code></dt>
@@ -1214,7 +1208,7 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_grid(datapath=&#39;&#39;, grid_type=&#39;model&#39;, nodataval=0, use_service=False, study_area=None, clip2studyarea=True,  study_area_crs=None, grid_crs=None, log=False, **kwargs):
+<pre><code class="python">def read_grid(datapath=&#39;&#39;, grid_type=&#39;model&#39;, no_data_val=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, log=False, **kwargs):
     &#34;&#34;&#34;Reads in grid
 
     Parameters
@@ -1229,8 +1223,6 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
         Sets which service the function uses
     study_area : geopandas.GeoDataFrame, default=None
         Dataframe containing study area polygon
-    clip_to_study_area : bool, default=True
-        If function clips grid to study area
     study_area_crs : str, default=None
         Sets specific crs if current crs is not wanted
     grid_crs : str, default=None
@@ -1251,7 +1243,7 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
             rgrid = kwargs[&#39;read_grid&#39;]
         else:
             rgrid=True
-        gridIN = read_model_grid(study_area, gridpath=datapath, nodataval=0, read_grid=rgrid, clip2studyarea=clip2studyarea, study_area_crs=study_area_crs, grid_crs=grid_crs)
+        gridIN = read_model_grid(gridpath=datapath, study_area=study_area,  no_data_val=0, read_grid=rgrid, study_area_crs=study_area_crs, grid_crs=grid_crs)
     else:
         if use_service==False:
             gridIN = rxr.open_rasterio(datapath)
@@ -1261,7 +1253,7 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
             pass
             gridIN = read_wms(study_area, wcs_url=lidarURL, **kwargs)
             
-        if clip_to_study_area and study_area is not None:
+        if study_area is not None:
             if grid_crs is None:
                 try:
                     grid_crs=gridIN.spatial_ref.crs_wkt
@@ -1290,7 +1282,7 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
 </details>
 </dd>
 <dt id="w4h.mapping.read_model_grid"><code class="name flex">
-<span>def <span class="ident">read_model_grid</span></span>(<span>gridpath, study_area=None, nodataval=0, read_grid=True, node_byspace=False, clip_to_study_area=True, study_area_crs=None, grid_crs=None, log=False)</span>
+<span>def <span class="ident">read_model_grid</span></span>(<span>gridpath, study_area=None, no_data_val=0, read_grid=True, node_byspace=False, study_area_crs=None, grid_crs=None, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Reads in model grid to xarray data array</p>
@@ -1306,8 +1298,6 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
 <dd>Whether function to either read grid or create grid</dd>
 <dt><strong><code>node_byspace</code></strong> :&ensp;<code>bool</code>, default=<code>False</code></dt>
 <dd>Denotes how to create grid</dd>
-<dt><strong><code>clip_to_study_area</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
-<dd>Whether to clip grid to study area</dd>
 <dt><strong><code>study_area_crs</code></strong> :&ensp;<code>str</code>, default=<code>None</code></dt>
 <dd>Inputs study area crs</dd>
 <dt><strong><code>grid_crs</code></strong> :&ensp;<code>str</code>, default=<code>None</code></dt>
@@ -1324,7 +1314,7 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_model_grid(gridpath, study_area=None, nodataval=0, read_grid=True, node_byspace=False, clip_to_study_area=True, study_area_crs=None, grid_crs=None, log=False):
+<pre><code class="python">def read_model_grid(gridpath, study_area=None, no_data_val=0, read_grid=True, node_byspace=False, study_area_crs=None, grid_crs=None, log=False):
     &#34;&#34;&#34;Reads in model grid to xarray data array
 
     Parameters
@@ -1339,8 +1329,6 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
         Whether function to either read grid or create grid
     node_byspace : bool, default=False
         Denotes how to create grid
-    clip_to_study_area : bool, default=True
-        Whether to clip grid to study area
     study_area_crs : str, default=None
         Inputs study area crs
     grid_crs : str, default=None
@@ -1369,7 +1357,7 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
         elif grid_crs.lower()==&#39;isws&#39;:
             modelGridIN.rio.write_crs(iswsCRS)
         
-        if clip_to_study_area and study_area is not None:                
+        if study_area is not None:                
             if study_area_crs is None:
                 study_area_crs=study_area.crs
             study_area = study_area.to_crs(grid_crs)

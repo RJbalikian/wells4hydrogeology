@@ -44,7 +44,7 @@ from w4h import logger_function
 
 #Define records with full search term
 
-def specific_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;FORMATION&#39;, verbose=False, log=False):
+def specific_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;DESCRIPTION&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to classify terms that have been specifically defined in the terms_df.
 
     Parameters
@@ -84,7 +84,7 @@ def specific_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col
     
     df_Interps = pd.merge(df, terms_df.set_index(terms_col), on=description_col, how=&#39;left&#39;)
     df_Interps.rename(columns={description_col:&#39;FORMATION&#39;}, inplace=True)
-    df_Interps[&#39;BEDROCK_FLAG&#39;] = df_Interps[&#39;INTERPRETATION&#39;] == &#39;BEDROCK&#39;
+    df_Interps[&#39;BEDROCK_FLAG&#39;] = df_Interps[&#39;LITHOLOGY&#39;] == &#39;BEDROCK&#39;
     
     if verbose:
         print(&#34;Records Classified with full search term: &#34;+str(int(df_Interps[df_Interps[&#39;CLASS_FLAG&#39;]==1][&#39;CLASS_FLAG&#39;].sum())))
@@ -123,7 +123,7 @@ def split_defined(df, classification_col=&#39;CLASS_FLAG&#39;, verbose=False, lo
     return classifedDF, searchDF
 
 #Classify downhole data by the initial substring
-def start_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;FORMATION&#39;, verbose=False, log=False):
+def start_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;DESCRIPTION&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to classify descriptions according to starting substring. 
 
     Parameters
@@ -158,8 +158,8 @@ def start_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#
     #First, for each startterm, find all results in df that start with, add classification flag, and add interpretation.
     for i,s in enumerate(terms_df[terms_col]):
         df[&#39;CLASS_FLAG&#39;].where(~df[description_col].str.startswith(s,na=False),4,inplace=True)
-        df[&#39;INTERPRETATION&#39;].where(~df[description_col].str.startswith(s,na=False),terms_df.loc[i,&#39;INTERPRETATION&#39;],inplace=True)
-    df[&#39;BEDROCK_FLAG&#39;].loc[df[&#34;INTERPRETATION&#34;] == &#39;BEDROCK&#39;]
+        df[&#39;LITHOLOGY&#39;].where(~df[description_col].str.startswith(s,na=False),terms_df.loc[i,&#39;LITHOLOGY&#39;],inplace=True)
+    df[&#39;BEDROCK_FLAG&#39;].loc[df[&#34;LITHOLOGY&#34;] == &#39;BEDROCK&#39;]
     
     if verbose:
         print(&#34;Records classified with start search term: &#34;+str(int(df[&#39;CLASS_FLAG&#39;].count())))
@@ -169,7 +169,7 @@ def start_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#
     return df
 
 #Classify downhole data by any substring
-def wildcard_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;FORMATION&#39;, verbose=False, log=False):
+def wildcard_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;DESCRIPTION&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to classify descriptions according to starting substring. 
 
     Parameters
@@ -204,8 +204,8 @@ def wildcard_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col
     #First, for each startterm, find all results in df that start with, add classification flag, and add interpretation.
     for i,s in enumerate(terms_df[terms_col]):
         df[&#39;CLASS_FLAG&#39;].where(~df[description_col].str.contains(s, case=False, regex=False, na=False), 5, inplace=True)
-        df[&#39;INTERPRETATION&#39;].where(~df[description_col].str.contains(s, case=False, regex=False, na=False),terms_df.loc[i,&#39;INTERPRETATION&#39;],inplace=True)
-    df[&#39;BEDROCK_FLAG&#39;].loc[df[&#34;INTERPRETATION&#34;] == &#39;BEDROCK&#39;]
+        df[&#39;LITHOLOGY&#39;].where(~df[description_col].str.contains(s, case=False, regex=False, na=False),terms_df.loc[i,&#39;LITHOLOGY&#39;],inplace=True)
+    df[&#39;BEDROCK_FLAG&#39;].loc[df[&#34;LITHOLOGY&#34;] == &#39;BEDROCK&#39;]
     
     if verbose:
         print(&#34;Records classified with wildcard search term: &#34;+str(int(df[&#39;CLASS_FLAG&#39;].count())))
@@ -359,7 +359,7 @@ def merge_lithologies(df, targinterps_df, target_col=&#39;TARGET&#39;, target_cl
         targinterps_df[target_col].fillna(value=-2, inplace=True)
         targinterps_df[target_col].astype(np.int8)
 
-    df_targ = pd.merge(df, targinterps_df.set_index(&#39;INTERPRETATION&#39;), right_on=&#39;INTERPRETATION&#39;,left_on=&#39;INTERPRETATION&#39;, how=&#39;left&#39;)
+    df_targ = pd.merge(df, targinterps_df.set_index(&#39;INTERPRETATION&#39;), right_on=&#39;INTERPRETATION&#39;,left_on=&#39;LITHOLOGY&#39;, how=&#39;left&#39;)
     
     return df_targ
 
@@ -415,7 +415,7 @@ def sort_dataframe(df, sort_cols=[&#39;API_NUMBER&#39;,&#39;TOP&#39;], remove_na
     df_sorted = df.sort_values(sort_cols)
     df_sorted.reset_index(inplace=True, drop=True)
     if remove_nans:
-        df_sorted = df_sorted[pd.notna(df_sorted[&#34;INTERPRETATION&#34;])]
+        df_sorted = df_sorted[pd.notna(df_sorted[&#34;LITHOLOGY&#34;])]
     return df_sorted</code></pre>
 </details>
 </section>
@@ -694,7 +694,7 @@ Whether the input column is using boolean values as its target indicator</p>
         targinterps_df[target_col].fillna(value=-2, inplace=True)
         targinterps_df[target_col].astype(np.int8)
 
-    df_targ = pd.merge(df, targinterps_df.set_index(&#39;INTERPRETATION&#39;), right_on=&#39;INTERPRETATION&#39;,left_on=&#39;INTERPRETATION&#39;, how=&#39;left&#39;)
+    df_targ = pd.merge(df, targinterps_df.set_index(&#39;INTERPRETATION&#39;), right_on=&#39;INTERPRETATION&#39;,left_on=&#39;LITHOLOGY&#39;, how=&#39;left&#39;)
     
     return df_targ</code></pre>
 </details>
@@ -783,12 +783,12 @@ Whether the input column is using boolean values as its target indicator</p>
     df_sorted = df.sort_values(sort_cols)
     df_sorted.reset_index(inplace=True, drop=True)
     if remove_nans:
-        df_sorted = df_sorted[pd.notna(df_sorted[&#34;INTERPRETATION&#34;])]
+        df_sorted = df_sorted[pd.notna(df_sorted[&#34;LITHOLOGY&#34;])]
     return df_sorted</code></pre>
 </details>
 </dd>
 <dt id="w4h.classify.specific_define"><code class="name flex">
-<span>def <span class="ident">specific_define</span></span>(<span>df, terms_df, description_col='FORMATION', terms_col='FORMATION', verbose=False, log=False)</span>
+<span>def <span class="ident">specific_define</span></span>(<span>df, terms_df, description_col='FORMATION', terms_col='DESCRIPTION', verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to classify terms that have been specifically defined in the terms_df.</p>
@@ -814,7 +814,7 @@ Whether the input column is using boolean values as its target indicator</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def specific_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;FORMATION&#39;, verbose=False, log=False):
+<pre><code class="python">def specific_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;DESCRIPTION&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to classify terms that have been specifically defined in the terms_df.
 
     Parameters
@@ -854,7 +854,7 @@ Whether the input column is using boolean values as its target indicator</p>
     
     df_Interps = pd.merge(df, terms_df.set_index(terms_col), on=description_col, how=&#39;left&#39;)
     df_Interps.rename(columns={description_col:&#39;FORMATION&#39;}, inplace=True)
-    df_Interps[&#39;BEDROCK_FLAG&#39;] = df_Interps[&#39;INTERPRETATION&#39;] == &#39;BEDROCK&#39;
+    df_Interps[&#39;BEDROCK_FLAG&#39;] = df_Interps[&#39;LITHOLOGY&#39;] == &#39;BEDROCK&#39;
     
     if verbose:
         print(&#34;Records Classified with full search term: &#34;+str(int(df_Interps[df_Interps[&#39;CLASS_FLAG&#39;]==1][&#39;CLASS_FLAG&#39;].sum())))
@@ -919,7 +919,7 @@ Whether the input column is using boolean values as its target indicator</p>
 </details>
 </dd>
 <dt id="w4h.classify.start_define"><code class="name flex">
-<span>def <span class="ident">start_define</span></span>(<span>df, terms_df, description_col='FORMATION', terms_col='FORMATION', verbose=False, log=False)</span>
+<span>def <span class="ident">start_define</span></span>(<span>df, terms_df, description_col='FORMATION', terms_col='DESCRIPTION', verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to classify descriptions according to starting substring. </p>
@@ -947,7 +947,7 @@ Whether the input column is using boolean values as its target indicator</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def start_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;FORMATION&#39;, verbose=False, log=False):
+<pre><code class="python">def start_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;DESCRIPTION&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to classify descriptions according to starting substring. 
 
     Parameters
@@ -982,8 +982,8 @@ Whether the input column is using boolean values as its target indicator</p>
     #First, for each startterm, find all results in df that start with, add classification flag, and add interpretation.
     for i,s in enumerate(terms_df[terms_col]):
         df[&#39;CLASS_FLAG&#39;].where(~df[description_col].str.startswith(s,na=False),4,inplace=True)
-        df[&#39;INTERPRETATION&#39;].where(~df[description_col].str.startswith(s,na=False),terms_df.loc[i,&#39;INTERPRETATION&#39;],inplace=True)
-    df[&#39;BEDROCK_FLAG&#39;].loc[df[&#34;INTERPRETATION&#34;] == &#39;BEDROCK&#39;]
+        df[&#39;LITHOLOGY&#39;].where(~df[description_col].str.startswith(s,na=False),terms_df.loc[i,&#39;LITHOLOGY&#39;],inplace=True)
+    df[&#39;BEDROCK_FLAG&#39;].loc[df[&#34;LITHOLOGY&#34;] == &#39;BEDROCK&#39;]
     
     if verbose:
         print(&#34;Records classified with start search term: &#34;+str(int(df[&#39;CLASS_FLAG&#39;].count())))
@@ -994,7 +994,7 @@ Whether the input column is using boolean values as its target indicator</p>
 </details>
 </dd>
 <dt id="w4h.classify.wildcard_define"><code class="name flex">
-<span>def <span class="ident">wildcard_define</span></span>(<span>df, terms_df, description_col='FORMATION', terms_col='FORMATION', verbose=False, log=False)</span>
+<span>def <span class="ident">wildcard_define</span></span>(<span>df, terms_df, description_col='FORMATION', terms_col='DESCRIPTION', verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to classify descriptions according to starting substring. </p>
@@ -1022,7 +1022,7 @@ Whether the input column is using boolean values as its target indicator</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def wildcard_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;FORMATION&#39;, verbose=False, log=False):
+<pre><code class="python">def wildcard_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;DESCRIPTION&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to classify descriptions according to starting substring. 
 
     Parameters
@@ -1057,8 +1057,8 @@ Whether the input column is using boolean values as its target indicator</p>
     #First, for each startterm, find all results in df that start with, add classification flag, and add interpretation.
     for i,s in enumerate(terms_df[terms_col]):
         df[&#39;CLASS_FLAG&#39;].where(~df[description_col].str.contains(s, case=False, regex=False, na=False), 5, inplace=True)
-        df[&#39;INTERPRETATION&#39;].where(~df[description_col].str.contains(s, case=False, regex=False, na=False),terms_df.loc[i,&#39;INTERPRETATION&#39;],inplace=True)
-    df[&#39;BEDROCK_FLAG&#39;].loc[df[&#34;INTERPRETATION&#34;] == &#39;BEDROCK&#39;]
+        df[&#39;LITHOLOGY&#39;].where(~df[description_col].str.contains(s, case=False, regex=False, na=False),terms_df.loc[i,&#39;LITHOLOGY&#39;],inplace=True)
+    df[&#39;BEDROCK_FLAG&#39;].loc[df[&#34;LITHOLOGY&#34;] == &#39;BEDROCK&#39;]
     
     if verbose:
         print(&#34;Records classified with wildcard search term: &#34;+str(int(df[&#39;CLASS_FLAG&#39;].count())))

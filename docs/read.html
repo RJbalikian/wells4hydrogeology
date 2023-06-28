@@ -366,23 +366,23 @@ def define_dtypes(df, dtypes=None, dtype_file=None, dtype_dir=str(repoDir)+&#39;
     return dfout
 
 #Define the search term filepaths
-def get_search_terms(spec_dir=str(repoDir)+&#39;/resources/&#39;, spec_glob_pattern=&#39;*SearchTerms-Specific*&#39;, 
-                     start_dir=None, start_glob_pattern = &#39;*SearchTerms-Start*&#39;, 
-                     wildcard_dir=None, wildcard_glob_pattern=&#39;*SearchTerms-Wildcard&#39;,
+def get_search_terms(spec_path=str(repoDir)+&#39;/resources/&#39;, spec_glob_pattern=&#39;*SearchTerms-Specific*&#39;, 
+                     start_path=None, start_glob_pattern = &#39;*SearchTerms-Start*&#39;, 
+                     wildcard_path=None, wildcard_glob_pattern=&#39;*SearchTerms-Wildcard&#39;,
                      log=False):
     &#34;&#34;&#34;Read in dictionary files for downhole data
 
     Parameters
     ----------
-    spec_dir : str or pathlib.Path, optional
+    spec_path : str or pathlib.Path, optional
         Directory where the file containing the specific search terms is located, by default str(repoDir)+&#39;/resources/&#39;
     spec_glob_pattern : str, optional
         Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default &#39;*SearchTerms-Specific*&#39;
-    start_dir : str or None, optional
+    start_path : str or None, optional
         Directory where the file containing the start search terms is located, by default None
     start_glob_pattern : str, optional
         Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default &#39;*SearchTerms-Start*&#39;
-    wildcard_dir : str or pathlib.Path, default = None
+    wildcard_path : str or pathlib.Path, default = None
         Directory where the file containing the wildcard search terms is located, by default None    
     wildcard_glob_pattern : str, default = &#39;*SearchTerms-Wildcard&#39;
         Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default &#39;*SearchTerms-Wildcard*&#39;
@@ -398,34 +398,53 @@ def get_search_terms(spec_dir=str(repoDir)+&#39;/resources/&#39;, spec_glob_patt
     
     #specTermsFile = &#34;SearchTerms-Specific_BedrockOrNo_2022-09.csv&#34; #Specific matches
     #startTermsFile = &#34;SearchTerms-Start_BedrockOrNo.csv&#34; #Wildcard matches for the start of the description
-    
-    if start_dir is None:
-        start_dir = spec_dir
 
-    if wildcard_dir is None:
-        if start_dir is None:
-            wildcard_dir = spec_dir        
+    #Exact match path
+    if spec_path is None:
+        specTermsPath = spec_path        
+    else:
+        spec_path = pathlib.Path(spec_path)
+
+        if spec_path.is_dir():
+            specTermsPath = get_most_recent(spec_path, spec_glob_pattern)
         else:
-            wildcard_dir = start_dir        
+            specTermsPath = spec_path
 
+    #Startswith path
+    if start_path is None:
+        startTermsPath = start_path        
+    else:
+        start_path = pathlib.Path(start_path)
 
-    specTermsPath = get_most_recent(spec_dir, spec_glob_pattern)
-    startTermsPath = get_most_recent(start_dir, start_glob_pattern)
-    wilcardTermsPath = get_most_recent(wildcard_dir, wildcard_glob_pattern)
+        if start_path.is_dir():
+            startTermsPath = get_most_recent(start_path, start_glob_pattern)
+        else:
+            startTermsPath = start_path
+
+    #Wildcard Path
+    if wildcard_path is None:
+        wilcardTermsPath = wildcard_path        
+    else:
+        wildcard_path = pathlib.Path(wildcard_path)
+
+        if wildcard_path.is_dir():
+            wilcardTermsPath = get_most_recent(wildcard_path, wildcard_glob_pattern)
+        else:
+            wilcardTermsPath = wildcard_path
     
     return specTermsPath, startTermsPath, wilcardTermsPath
 
 #Read files into pandas dataframes
-def read_dictionary_terms(dict_file, id_col=&#39;ID&#39;, search_col=&#39;FORMATION&#39;, definition_col=&#39;INTERPRETATION&#39;, class_flag_col=&#39;CLASS_FLAG&#39;, dictionary_type=None, class_flag=6, rem_extra_cols=True, log=False):
+def read_dictionary_terms(dict_file, id_col=&#39;ID&#39;, search_col=&#39;DESCRIPTION&#39;, definition_col=&#39;LITHOLOGY&#39;, class_flag_col=&#39;CLASS_FLAG&#39;, dictionary_type=None, class_flag=6, rem_extra_cols=True, log=False):
     &#34;&#34;&#34;Function to read dictionary terms from file into pandas dataframe
 
     Parameters
     ----------
     dict_file : str or pathlib.Path object, or list of these
         File or list of files to be read
-    search_col : str, default = &#39;FORMATION&#39;
+    search_col : str, default = &#39;DESCRIPTION&#39;
         Name of column containing search terms (geologic formations)
-    definition_col : str, default = &#39;INTERPRETATION&#39;
+    definition_col : str, default = &#39;LITHOLOGY&#39;
         Name of column containing interpretations of search terms (lithologies)
     dictionary_type : str or None, {None, &#39;exact&#39;, &#39;start&#39;, &#39;wildcard&#39;,}
         Indicator of which kind of dictionary terms to be read in: None, &#39;exact&#39;, &#39;start&#39;, or &#39;wildcard&#39; by default None.
@@ -449,10 +468,14 @@ def read_dictionary_terms(dict_file, id_col=&#39;ID&#39;, search_col=&#39;FORMAT
 
     #Read files into pandas dataframes
     dict_terms = []
-    if type(dict_file) is list:
+    if dict_file is None:
+        df = pd.DataFrame(columns=[&#39;ID&#39;, &#39;DESCRIPTION&#39;, &#39;LITHOLOGY&#39;, &#39;CLASS_FLAGS&#39;])
+        dict_terms.append(df)
+        dict_file = [&#39;&#39;]
+    elif type(dict_file) is list:
         for f in dict_file:
             if not f.exists():
-                df = pd.DataFrame(columns=[&#39;ID&#39;, &#39;FORMATION&#39;, &#39;INTERPRETATION&#39;, &#39;CLASS_FLAGS&#39;])
+                df = pd.DataFrame(columns=[&#39;ID&#39;, &#39;DESCRIPTION&#39;, &#39;LITHOLOGY&#39;, &#39;CLASS_FLAGS&#39;])
                 dict_terms.append(df)
             else:
                 dict_terms.append(pd.read_csv(f))
@@ -462,14 +485,14 @@ def read_dictionary_terms(dict_file, id_col=&#39;ID&#39;, search_col=&#39;FORMAT
     else:
         dict_file = pathlib.Path(dict_file)
         if dict_file.exists() and dict_file.is_file():
-            dict_terms.append(pd.read_csv(dict_file))
+            dict_terms.append(pd.read_csv(dict_file, low_memory=False))
             if id_col in dict_terms[-1].columns:
                 dict_terms[-1].set_index(id_col, drop=True, inplace=True)
             dict_file = [dict_file]
         else:
             print(&#39;ERROR: dict_file ({}) does not exist.&#39;.format(dict_file))
             #Create empty dataframe to return
-            dict_terms = pd.DataFrame(columns=[&#39;ID&#39;, &#39;FORMATION&#39;, &#39;INTERPRETATION&#39;, &#34;CLASS_FLAGS&#34;])
+            dict_terms = pd.DataFrame(columns=[&#39;ID&#39;, &#39;DESCRIPTION&#39;, &#39;LITHOLOGY&#39;, &#34;CLASS_FLAGS&#34;])
             return dict_terms
 
     #Rename important columns
@@ -496,10 +519,10 @@ def read_dictionary_terms(dict_file, id_col=&#39;ID&#39;, search_col=&#39;FORMAT
         #1: exact classification match, 2: (not defined...ML?), 3: bedrock classification for obvious bedrock, 4: start term, 5: wildcard/substring, 6: Undefined
 
         #Rename columns so it is consistent through rest of code
-        if search_col != &#39;FORMATION&#39;:
-            d.rename(columns={search_col:&#39;FORMATION&#39;}, inplace=True)
-        if definition_col != &#39;INTERPRETATION&#39;:
-            d.rename(columns={definition_col:&#39;INTERPRETATION&#39;}, inplace=True)
+        if search_col != &#39;DESCRIPTION&#39;:
+            d.rename(columns={search_col:&#39;DESCRIPTION&#39;}, inplace=True)
+        if definition_col != &#39;LITHOLOGY&#39;:
+            d.rename(columns={definition_col:&#39;LITHOLOGY&#39;}, inplace=True)
         if class_flag_col != &#39;CLASS_FLAG&#39;:
             d.rename(columns={class_flag_col:&#39;CLASS_FLAG&#39;}, inplace=True)
 
@@ -507,18 +530,19 @@ def read_dictionary_terms(dict_file, id_col=&#39;ID&#39;, search_col=&#39;FORMAT
         for i in range(0, np.shape(d)[1]):
             if d.iloc[:,i].name in list(dict_termDtypes.keys()):
                 d.iloc[:,i] = d.iloc[:,i].astype(dict_termDtypes[d.iloc[:,i].name])
-    
+        
         #Delete duplicate definitions
-        d.drop_duplicates(subset=search_col,inplace=True) #Apparently, there are some duplicate definitions, which need to be deleted first
+        d.drop_duplicates(subset=&#39;DESCRIPTION&#39;,inplace=True) #Apparently, there are some duplicate definitions, which need to be deleted first
         d.reset_index(inplace=True, drop=True)
 
+        #Whether to remove extra columns that aren&#39;t needed from dataframe
+        if rem_extra_cols:
+            d = d[[&#39;DESCRIPTION&#39;, &#39;LITHOLOGY&#39;, &#39;CLASS_FLAG&#39;]]
+
     #If only one file designated, convert it so it&#39;s no longer a list, but just a dataframe
+
     if len(dict_terms) == 1:
         dict_terms = dict_terms[0]
-    
-    #Whether to remove extra columns that aren&#39;t needed from dataframe
-    if rem_extra_cols:
-        dict_terms = dict_terms[[search_col, definition_col, class_flag_col]]
 
     return dict_terms
 
@@ -556,7 +580,7 @@ def read_lithologies(lith_file=None, interp_col=&#39;LITHOLOGY&#39;, target_col=
     if use_cols is None:
         use_cols = [&#39;LITHOLOGY&#39;, &#39;CODE&#39;]
 
-    lithoDF = pd.read_csv(lithFPath, usecols=use_cols)
+    lithoDF = pd.read_csv(lith_file, usecols=use_cols)
 
     lithoDF.rename(columns={interp_col:&#39;INTERPRETATION&#39;, target_col:&#39;TARGET&#39;}, inplace=True)
 
@@ -847,21 +871,21 @@ It may also be of use to simply skip this function altogether and directly defin
 </details>
 </dd>
 <dt id="w4h.read.get_search_terms"><code class="name flex">
-<span>def <span class="ident">get_search_terms</span></span>(<span>spec_dir='C:\\Users\\riley\\LocalData\\Code\\Github\\wells4hydrogeology/resources/', spec_glob_pattern='*SearchTerms-Specific*', start_dir=None, start_glob_pattern='*SearchTerms-Start*', wildcard_dir=None, wildcard_glob_pattern='*SearchTerms-Wildcard', log=False)</span>
+<span>def <span class="ident">get_search_terms</span></span>(<span>spec_path='C:\\Users\\riley\\LocalData\\Code\\Github\\wells4hydrogeology/resources/', spec_glob_pattern='*SearchTerms-Specific*', start_path=None, start_glob_pattern='*SearchTerms-Start*', wildcard_path=None, wildcard_glob_pattern='*SearchTerms-Wildcard', log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Read in dictionary files for downhole data</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>spec_dir</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path</code>, optional</dt>
+<dt><strong><code>spec_path</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path</code>, optional</dt>
 <dd>Directory where the file containing the specific search terms is located, by default str(repoDir)+'/resources/'</dd>
 <dt><strong><code>spec_glob_pattern</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default '<em>SearchTerms-Specific</em>'</dd>
-<dt><strong><code>start_dir</code></strong> :&ensp;<code>str</code> or <code>None</code>, optional</dt>
+<dt><strong><code>start_path</code></strong> :&ensp;<code>str</code> or <code>None</code>, optional</dt>
 <dd>Directory where the file containing the start search terms is located, by default None</dd>
 <dt><strong><code>start_glob_pattern</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default '<em>SearchTerms-Start</em>'</dd>
-<dt><strong><code>wildcard_dir</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path</code>, default <code>= None</code></dt>
+<dt><strong><code>wildcard_path</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path</code>, default <code>= None</code></dt>
 <dd>Directory where the file containing the wildcard search terms is located, by default None</dd>
 <dt><strong><code>wildcard_glob_pattern</code></strong> :&ensp;<code>str</code>, default <code>= '*SearchTerms-Wildcard'</code></dt>
 <dd>Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default '<em>SearchTerms-Wildcard</em>'</dd>
@@ -876,23 +900,23 @@ with start search terms, and with wildcard search terms</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_search_terms(spec_dir=str(repoDir)+&#39;/resources/&#39;, spec_glob_pattern=&#39;*SearchTerms-Specific*&#39;, 
-                     start_dir=None, start_glob_pattern = &#39;*SearchTerms-Start*&#39;, 
-                     wildcard_dir=None, wildcard_glob_pattern=&#39;*SearchTerms-Wildcard&#39;,
+<pre><code class="python">def get_search_terms(spec_path=str(repoDir)+&#39;/resources/&#39;, spec_glob_pattern=&#39;*SearchTerms-Specific*&#39;, 
+                     start_path=None, start_glob_pattern = &#39;*SearchTerms-Start*&#39;, 
+                     wildcard_path=None, wildcard_glob_pattern=&#39;*SearchTerms-Wildcard&#39;,
                      log=False):
     &#34;&#34;&#34;Read in dictionary files for downhole data
 
     Parameters
     ----------
-    spec_dir : str or pathlib.Path, optional
+    spec_path : str or pathlib.Path, optional
         Directory where the file containing the specific search terms is located, by default str(repoDir)+&#39;/resources/&#39;
     spec_glob_pattern : str, optional
         Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default &#39;*SearchTerms-Specific*&#39;
-    start_dir : str or None, optional
+    start_path : str or None, optional
         Directory where the file containing the start search terms is located, by default None
     start_glob_pattern : str, optional
         Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default &#39;*SearchTerms-Start*&#39;
-    wildcard_dir : str or pathlib.Path, default = None
+    wildcard_path : str or pathlib.Path, default = None
         Directory where the file containing the wildcard search terms is located, by default None    
     wildcard_glob_pattern : str, default = &#39;*SearchTerms-Wildcard&#39;
         Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default &#39;*SearchTerms-Wildcard*&#39;
@@ -908,20 +932,39 @@ with start search terms, and with wildcard search terms</p></div>
     
     #specTermsFile = &#34;SearchTerms-Specific_BedrockOrNo_2022-09.csv&#34; #Specific matches
     #startTermsFile = &#34;SearchTerms-Start_BedrockOrNo.csv&#34; #Wildcard matches for the start of the description
-    
-    if start_dir is None:
-        start_dir = spec_dir
 
-    if wildcard_dir is None:
-        if start_dir is None:
-            wildcard_dir = spec_dir        
+    #Exact match path
+    if spec_path is None:
+        specTermsPath = spec_path        
+    else:
+        spec_path = pathlib.Path(spec_path)
+
+        if spec_path.is_dir():
+            specTermsPath = get_most_recent(spec_path, spec_glob_pattern)
         else:
-            wildcard_dir = start_dir        
+            specTermsPath = spec_path
 
+    #Startswith path
+    if start_path is None:
+        startTermsPath = start_path        
+    else:
+        start_path = pathlib.Path(start_path)
 
-    specTermsPath = get_most_recent(spec_dir, spec_glob_pattern)
-    startTermsPath = get_most_recent(start_dir, start_glob_pattern)
-    wilcardTermsPath = get_most_recent(wildcard_dir, wildcard_glob_pattern)
+        if start_path.is_dir():
+            startTermsPath = get_most_recent(start_path, start_glob_pattern)
+        else:
+            startTermsPath = start_path
+
+    #Wildcard Path
+    if wildcard_path is None:
+        wilcardTermsPath = wildcard_path        
+    else:
+        wildcard_path = pathlib.Path(wildcard_path)
+
+        if wildcard_path.is_dir():
+            wilcardTermsPath = get_most_recent(wildcard_path, wildcard_glob_pattern)
+        else:
+            wilcardTermsPath = wildcard_path
     
     return specTermsPath, startTermsPath, wilcardTermsPath</code></pre>
 </details>
@@ -975,7 +1018,7 @@ with start search terms, and with wildcard search terms</p></div>
 </details>
 </dd>
 <dt id="w4h.read.read_dictionary_terms"><code class="name flex">
-<span>def <span class="ident">read_dictionary_terms</span></span>(<span>dict_file, id_col='ID', search_col='FORMATION', definition_col='INTERPRETATION', class_flag_col='CLASS_FLAG', dictionary_type=None, class_flag=6, rem_extra_cols=True, log=False)</span>
+<span>def <span class="ident">read_dictionary_terms</span></span>(<span>dict_file, id_col='ID', search_col='DESCRIPTION', definition_col='LITHOLOGY', class_flag_col='CLASS_FLAG', dictionary_type=None, class_flag=6, rem_extra_cols=True, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to read dictionary terms from file into pandas dataframe</p>
@@ -983,9 +1026,9 @@ with start search terms, and with wildcard search terms</p></div>
 <dl>
 <dt><strong><code>dict_file</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object,</code> or <code>list</code> of <code>these</code></dt>
 <dd>File or list of files to be read</dd>
-<dt><strong><code>search_col</code></strong> :&ensp;<code>str</code>, default <code>= 'FORMATION'</code></dt>
+<dt><strong><code>search_col</code></strong> :&ensp;<code>str</code>, default <code>= 'DESCRIPTION'</code></dt>
 <dd>Name of column containing search terms (geologic formations)</dd>
-<dt><strong><code>definition_col</code></strong> :&ensp;<code>str</code>, default <code>= 'INTERPRETATION'</code></dt>
+<dt><strong><code>definition_col</code></strong> :&ensp;<code>str</code>, default <code>= 'LITHOLOGY'</code></dt>
 <dd>Name of column containing interpretations of search terms (lithologies)</dd>
 <dt><strong><code>dictionary_type</code></strong> :&ensp;<code>str</code> or <code>None, {None, 'exact', 'start', 'wildcard',}</code></dt>
 <dd>Indicator of which kind of dictionary terms to be read in: None, 'exact', 'start', or 'wildcard' by default None.
@@ -1009,16 +1052,16 @@ with start search terms, and with wildcard search terms</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_dictionary_terms(dict_file, id_col=&#39;ID&#39;, search_col=&#39;FORMATION&#39;, definition_col=&#39;INTERPRETATION&#39;, class_flag_col=&#39;CLASS_FLAG&#39;, dictionary_type=None, class_flag=6, rem_extra_cols=True, log=False):
+<pre><code class="python">def read_dictionary_terms(dict_file, id_col=&#39;ID&#39;, search_col=&#39;DESCRIPTION&#39;, definition_col=&#39;LITHOLOGY&#39;, class_flag_col=&#39;CLASS_FLAG&#39;, dictionary_type=None, class_flag=6, rem_extra_cols=True, log=False):
     &#34;&#34;&#34;Function to read dictionary terms from file into pandas dataframe
 
     Parameters
     ----------
     dict_file : str or pathlib.Path object, or list of these
         File or list of files to be read
-    search_col : str, default = &#39;FORMATION&#39;
+    search_col : str, default = &#39;DESCRIPTION&#39;
         Name of column containing search terms (geologic formations)
-    definition_col : str, default = &#39;INTERPRETATION&#39;
+    definition_col : str, default = &#39;LITHOLOGY&#39;
         Name of column containing interpretations of search terms (lithologies)
     dictionary_type : str or None, {None, &#39;exact&#39;, &#39;start&#39;, &#39;wildcard&#39;,}
         Indicator of which kind of dictionary terms to be read in: None, &#39;exact&#39;, &#39;start&#39;, or &#39;wildcard&#39; by default None.
@@ -1042,10 +1085,14 @@ with start search terms, and with wildcard search terms</p></div>
 
     #Read files into pandas dataframes
     dict_terms = []
-    if type(dict_file) is list:
+    if dict_file is None:
+        df = pd.DataFrame(columns=[&#39;ID&#39;, &#39;DESCRIPTION&#39;, &#39;LITHOLOGY&#39;, &#39;CLASS_FLAGS&#39;])
+        dict_terms.append(df)
+        dict_file = [&#39;&#39;]
+    elif type(dict_file) is list:
         for f in dict_file:
             if not f.exists():
-                df = pd.DataFrame(columns=[&#39;ID&#39;, &#39;FORMATION&#39;, &#39;INTERPRETATION&#39;, &#39;CLASS_FLAGS&#39;])
+                df = pd.DataFrame(columns=[&#39;ID&#39;, &#39;DESCRIPTION&#39;, &#39;LITHOLOGY&#39;, &#39;CLASS_FLAGS&#39;])
                 dict_terms.append(df)
             else:
                 dict_terms.append(pd.read_csv(f))
@@ -1055,14 +1102,14 @@ with start search terms, and with wildcard search terms</p></div>
     else:
         dict_file = pathlib.Path(dict_file)
         if dict_file.exists() and dict_file.is_file():
-            dict_terms.append(pd.read_csv(dict_file))
+            dict_terms.append(pd.read_csv(dict_file, low_memory=False))
             if id_col in dict_terms[-1].columns:
                 dict_terms[-1].set_index(id_col, drop=True, inplace=True)
             dict_file = [dict_file]
         else:
             print(&#39;ERROR: dict_file ({}) does not exist.&#39;.format(dict_file))
             #Create empty dataframe to return
-            dict_terms = pd.DataFrame(columns=[&#39;ID&#39;, &#39;FORMATION&#39;, &#39;INTERPRETATION&#39;, &#34;CLASS_FLAGS&#34;])
+            dict_terms = pd.DataFrame(columns=[&#39;ID&#39;, &#39;DESCRIPTION&#39;, &#39;LITHOLOGY&#39;, &#34;CLASS_FLAGS&#34;])
             return dict_terms
 
     #Rename important columns
@@ -1089,10 +1136,10 @@ with start search terms, and with wildcard search terms</p></div>
         #1: exact classification match, 2: (not defined...ML?), 3: bedrock classification for obvious bedrock, 4: start term, 5: wildcard/substring, 6: Undefined
 
         #Rename columns so it is consistent through rest of code
-        if search_col != &#39;FORMATION&#39;:
-            d.rename(columns={search_col:&#39;FORMATION&#39;}, inplace=True)
-        if definition_col != &#39;INTERPRETATION&#39;:
-            d.rename(columns={definition_col:&#39;INTERPRETATION&#39;}, inplace=True)
+        if search_col != &#39;DESCRIPTION&#39;:
+            d.rename(columns={search_col:&#39;DESCRIPTION&#39;}, inplace=True)
+        if definition_col != &#39;LITHOLOGY&#39;:
+            d.rename(columns={definition_col:&#39;LITHOLOGY&#39;}, inplace=True)
         if class_flag_col != &#39;CLASS_FLAG&#39;:
             d.rename(columns={class_flag_col:&#39;CLASS_FLAG&#39;}, inplace=True)
 
@@ -1100,18 +1147,19 @@ with start search terms, and with wildcard search terms</p></div>
         for i in range(0, np.shape(d)[1]):
             if d.iloc[:,i].name in list(dict_termDtypes.keys()):
                 d.iloc[:,i] = d.iloc[:,i].astype(dict_termDtypes[d.iloc[:,i].name])
-    
+        
         #Delete duplicate definitions
-        d.drop_duplicates(subset=search_col,inplace=True) #Apparently, there are some duplicate definitions, which need to be deleted first
+        d.drop_duplicates(subset=&#39;DESCRIPTION&#39;,inplace=True) #Apparently, there are some duplicate definitions, which need to be deleted first
         d.reset_index(inplace=True, drop=True)
 
+        #Whether to remove extra columns that aren&#39;t needed from dataframe
+        if rem_extra_cols:
+            d = d[[&#39;DESCRIPTION&#39;, &#39;LITHOLOGY&#39;, &#39;CLASS_FLAG&#39;]]
+
     #If only one file designated, convert it so it&#39;s no longer a list, but just a dataframe
+
     if len(dict_terms) == 1:
         dict_terms = dict_terms[0]
-    
-    #Whether to remove extra columns that aren&#39;t needed from dataframe
-    if rem_extra_cols:
-        dict_terms = dict_terms[[search_col, definition_col, class_flag_col]]
 
     return dict_terms</code></pre>
 </details>
@@ -1176,7 +1224,7 @@ with start search terms, and with wildcard search terms</p></div>
     if use_cols is None:
         use_cols = [&#39;LITHOLOGY&#39;, &#39;CODE&#39;]
 
-    lithoDF = pd.read_csv(lithFPath, usecols=use_cols)
+    lithoDF = pd.read_csv(lith_file, usecols=use_cols)
 
     lithoDF.rename(columns={interp_col:&#39;INTERPRETATION&#39;, target_col:&#39;TARGET&#39;}, inplace=True)
 
