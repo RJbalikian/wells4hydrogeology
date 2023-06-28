@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>w4h.utilities API documentation</title>
+<title>w4h.core API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,7 +19,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>w4h.utilities</code></h1>
+<h1 class="title">Module <code>w4h.core</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
@@ -68,53 +68,6 @@ import w4h
         print(&#39;fname&#39;, log_filename)
         return result
     return wrapper&#34;&#34;&#34;
-
-log_filename=None
-
-def logger_function(logtocommence, parameters, func_name):
-    &#34;&#34;&#34;Function to log other functions, to be called from within other functions
-
-    Parameters
-    ----------
-    logtocommence : bool
-        Whether to perform logging steps
-    parameters : dict
-        Dictionary containing parameters and their values, from function
-    func_name : str
-        Name of function within which this is called
-    &#34;&#34;&#34;
-    if logtocommence:
-        global log_filename
-        #log parameter should be false by default on all. If true, will show up in kwargs
-            #Is there a way to do this so all can be set at once?
-        if &#39;log&#39; in parameters.keys():
-            log_file = parameters.pop(&#39;log&#39;, None)
-        else:
-            log_file = None
-        
-        curr_time = datetime.datetime.now()
-        FORMAT = &#39;%(asctime)s  %(message)s&#39;
-        if log_file == True and (func_name == &#39;file_setup&#39; or func_name == &#39;new_logfile&#39;):
-            out_dir = parameters.pop(&#39;log_dir&#39;, None)
-            if out_dir is None:
-                out_dir = parameters[&#39;db_dir&#39;]
-            timestamp = curr_time.strftime(&#39;%Y-%m-%d_%H-%M-%S&#39;)
-            log_filename = pathlib.Path(out_dir).joinpath(f&#34;log_{timestamp}.txt&#34;)
-            print(&#39;Logging data to&#39;, log_filename)
-            logging.basicConfig(filename=log_filename, level=logging.INFO, format=FORMAT, filemode=&#39;w&#39;)
-            logging.info(f&#34;Called {func_name} with args: {parameters}&#34;)
-        elif log_file == True:
-            if log_filename:
-                logging.basicConfig(filename=log_filename, level=logging.INFO, format=FORMAT)
-                logging.info(f&#34;Called {func_name} with args: {parameters}&#34;)
-            else:
-                timestamp = curr_time.strftime(&#39;%Y-%m-%d_%H-%M-%S&#39;)
-                log_filename = f&#34;log_{timestamp}.txt&#34;
-                logging.basicConfig(filename=log_filename, level=logging.INFO, format=FORMAT)
-                logging.info(f&#34;Called {func_name} with args: {parameters}&#34;)
-        else:
-            pass
-    return
 
 def run(well_data, well_data_cols=None, 
         well_metadata=None, well_metadata_cols=None, 
@@ -369,7 +322,55 @@ def run(well_data, well_data_cols=None,
                 pass
 
     w4h.export_grids(grid_data=layers_data, out_path=export_dir, file_id=&#39;&#39;,filetype=&#39;tif&#39;, variable_sep=True, date_stamp=True, log=log)
-    return resdf, layers_data</code></pre>
+    return resdf, layers_data
+
+
+log_filename=None
+
+def logger_function(logtocommence, parameters, func_name):
+    &#34;&#34;&#34;Function to log other functions, to be called from within other functions
+
+    Parameters
+    ----------
+    logtocommence : bool
+        Whether to perform logging steps
+    parameters : dict
+        Dictionary containing parameters and their values, from function
+    func_name : str
+        Name of function within which this is called
+    &#34;&#34;&#34;
+    if logtocommence:
+        global log_filename
+        #log parameter should be false by default on all. If true, will show up in kwargs
+            #Is there a way to do this so all can be set at once?
+        if &#39;log&#39; in parameters.keys():
+            log_file = parameters.pop(&#39;log&#39;, None)
+        else:
+            log_file = None
+        
+        curr_time = datetime.datetime.now()
+        FORMAT = &#39;%(asctime)s  %(message)s&#39;
+        if log_file == True and (func_name == &#39;file_setup&#39; or func_name == &#39;new_logfile&#39;):
+            out_dir = parameters.pop(&#39;log_dir&#39;, None)
+            if out_dir is None:
+                out_dir = parameters[&#39;db_dir&#39;]
+            timestamp = curr_time.strftime(&#39;%Y-%m-%d_%H-%M-%S&#39;)
+            log_filename = pathlib.Path(out_dir).joinpath(f&#34;log_{timestamp}.txt&#34;)
+            print(&#39;Logging data to&#39;, log_filename)
+            logging.basicConfig(filename=log_filename, level=logging.INFO, format=FORMAT, filemode=&#39;w&#39;)
+            logging.info(f&#34;Called {func_name} with args: {parameters}&#34;)
+        elif log_file == True:
+            if log_filename:
+                logging.basicConfig(filename=log_filename, level=logging.INFO, format=FORMAT)
+                logging.info(f&#34;Called {func_name} with args: {parameters}&#34;)
+            else:
+                timestamp = curr_time.strftime(&#39;%Y-%m-%d_%H-%M-%S&#39;)
+                log_filename = f&#34;log_{timestamp}.txt&#34;
+                logging.basicConfig(filename=log_filename, level=logging.INFO, format=FORMAT)
+                logging.info(f&#34;Called {func_name} with args: {parameters}&#34;)
+        else:
+            pass
+    return</code></pre>
 </details>
 </section>
 <section>
@@ -379,7 +380,7 @@ def run(well_data, well_data_cols=None,
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="w4h.utilities.logger_function"><code class="name flex">
+<dt id="w4h.core.logger_function"><code class="name flex">
 <span>def <span class="ident">logger_function</span></span>(<span>logtocommence, parameters, func_name)</span>
 </code></dt>
 <dd>
@@ -443,7 +444,7 @@ def run(well_data, well_data_cols=None,
     return</code></pre>
 </details>
 </dd>
-<dt id="w4h.utilities.run"><code class="name flex">
+<dt id="w4h.core.run"><code class="name flex">
 <span>def <span class="ident">run</span></span>(<span>well_data, well_data_cols=None, well_metadata=None, well_metadata_cols=None, description_col='FORMATION', top_col='TOP', bottom_col='BOTTOM', depth_type='depth', study_area=None, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEVATION', idcol='API_NUMBER', output_crs='EPSG:4269', surf_elev_file=None, bedrock_elev_file=None, model_grid=None, lith_dict=None, lith_dict_start=None, lith_dict_wildcard=None, target_dict=None, target_name='CoarseFine', export_dir=None, verbose=False, log=False, **keyword_parameters)</span>
 </code></dt>
 <dd>
@@ -777,8 +778,8 @@ def run(well_data, well_data_cols=None,
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="w4h.utilities.logger_function" href="#w4h.utilities.logger_function">logger_function</a></code></li>
-<li><code><a title="w4h.utilities.run" href="#w4h.utilities.run">run</a></code></li>
+<li><code><a title="w4h.core.logger_function" href="#w4h.core.logger_function">logger_function</a></code></li>
+<li><code><a title="w4h.core.run" href="#w4h.core.run">run</a></code></li>
 </ul>
 </li>
 </ul>

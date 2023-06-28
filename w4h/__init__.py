@@ -3,7 +3,7 @@
 
 #from w4h import classify, clean, export, layers, mapping, read
 
-from w4h.utilities import(logger_function,
+from w4h.core import(logger_function,
                           run)
 
 from w4h.classify import (specific_define, 
