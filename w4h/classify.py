@@ -142,7 +142,7 @@ def start_define(df, terms_df, description_col='FORMATION', terms_col='DESCRIPTI
 
 #Classify downhole data by any substring
 def wildcard_define(df, terms_df, description_col='FORMATION', terms_col='DESCRIPTION', verbose=False, log=False):
-    """Function to classify descriptions according to starting substring. 
+    """Function to classify descriptions according to any substring. 
 
     Parameters
     ----------
