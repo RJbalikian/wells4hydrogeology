@@ -121,8 +121,8 @@ def run(well_data, well_data_cols=None,
         print('ERROR: well_data must be a string filepath, a pathlib.Path object, or pandas.DataFrame')
 
     #Get pandas dataframes from input
-    read_raw_txt_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.read_raw_txt.__code__.co_varnames}
-    downholeDataIN, headerDataIN = w4h.read_raw_txt(data_filepath=downholeDataPATH, metadata_filepath=headerDataPATH, verbose=verbose, log=log, **read_raw_txt_kwargs) 
+    read_raw_txt_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.read_raw_csv .__code__.co_varnames}
+    downholeDataIN, headerDataIN = w4h.read_raw_csv (data_filepath=downholeDataPATH, metadata_filepath=headerDataPATH, verbose=verbose, log=log, **read_raw_txt_kwargs) 
     #Functions to read data into dataframes. Also excludes extraneous columns, and drops header data with no location information
 
     #Define data types (file will need to be udpated)
@@ -164,14 +164,14 @@ def run(well_data, well_data_cols=None,
     downholeData = w4h.remove_nonlocated(downholeData, headerData, log=log, verbose=verbose)
     headerData = w4h.remove_no_topo(df=headerData, zcol=zcol, verbose=verbose, log=log)
 
-    drop_no_depth_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.drop_no_depth.__code__.co_varnames}
-    donwholeData = w4h.drop_no_depth(downholeData, verbose=verbose, top_col=top_col, bottom_col=bottom_col, log=log, **drop_no_depth_kwargs) #Drop records with no depth information
+    remove_no_depth_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.remove_no_depth.__code__.co_varnames}
+    donwholeData = w4h.remove_no_depth(downholeData, verbose=verbose, top_col=top_col, bottom_col=bottom_col, log=log, **remove_no_depth_kwargs) #Drop records with no depth information
 
-    drop_bad_depth_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.drop_bad_depth.__code__.co_varnames}
-    donwholeData = w4h.drop_bad_depth(downholeData, verbose=verbose, top_col=top_col, bottom_col=bottom_col, depth_type=depth_type, log=log, **drop_bad_depth_kwargs)#Drop records with bad depth information (i.e., top depth > bottom depth) (Also calculates thickness of each record)
+    remove_bad_depth_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.remove_bad_depth.__code__.co_varnames}
+    donwholeData = w4h.remove_bad_depth(downholeData, verbose=verbose, top_col=top_col, bottom_col=bottom_col, depth_type=depth_type, log=log, **remove_bad_depth_kwargs)#Drop records with bad depth information (i.e., top depth > bottom depth) (Also calculates thickness of each record)
 
-    drop_no_formation_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.drop_no_formation.__code__.co_varnames}
-    downholeData = w4h.drop_no_formation(downholeData, description_col=description_col, verbose=verbose, log=log, **drop_no_formation_kwargs)
+    remove_no_formation_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.remove_no_formation.__code__.co_varnames}
+    downholeData = w4h.remove_no_formation(downholeData, description_col=description_col, verbose=verbose, log=log, **remove_no_formation_kwargs)
 
     #CLASSIFICATION
     #Read dictionary definitions and classify

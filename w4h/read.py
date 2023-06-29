@@ -144,7 +144,7 @@ def file_setup(well_data, metadata=None, data_filename='*ISGS_DOWNHOLE_DATA*.txt
     return downholeDataPATH, headerDataPATH
     
 #Read raw data by text
-def read_raw_txt(data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, xcol='LONGITUDE', ycol='LATITUDE', id_col='API_NUMBER', encoding='latin-1', verbose=False, log=False):
+def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, xcol='LONGITUDE', ycol='LATITUDE', id_col='API_NUMBER', encoding='latin-1', verbose=False, log=False, **read_csv_kwargs):
     """Easy function to read raw .txt files output from (for example), an Access database
 
     Parameters
@@ -169,6 +169,8 @@ def read_raw_txt(data_filepath, metadata_filepath, data_cols=None, metadata_cols
         Whether to print the number of rows in the input columns, by default False
     log : bool, default = False
         Whether to log inputs and outputs to log file.
+    **read_csv_kwargs
+        **kwargs that get passed to pd.read_csv()
 
     Returns
     -------
@@ -191,12 +193,12 @@ def read_raw_txt(data_filepath, metadata_filepath, data_cols=None, metadata_cols
     if isinstance(data_filepath, pd.DataFrame):
         downholeDataIN = data_filepath[data_useCols]
     else:
-        downholeDataIN = pd.read_csv(data_filepath, sep=',', header='infer', encoding=encoding, usecols=data_useCols)
+        downholeDataIN = pd.read_csv(data_filepath, sep=',', header='infer', encoding=encoding, usecols=data_useCols, **read_csv_kwargs)
     
     if isinstance(metadata_filepath, pd.DataFrame):
         headerDataIN = metadata_filepath[metadata_useCols]
     else:
-        headerDataIN = pd.read_csv(metadata_filepath, sep=',', header='infer', encoding=encoding, usecols=metadata_useCols)
+        headerDataIN = pd.read_csv(metadata_filepath, sep=',', header='infer', encoding=encoding, usecols=metadata_useCols, **read_csv_kwargs)
 
     #Drop data with no API        
     downholeDataIN = downholeDataIN.dropna(subset=[id_col]) #Drop data with no API
