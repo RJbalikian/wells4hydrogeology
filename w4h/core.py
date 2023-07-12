@@ -122,7 +122,7 @@ def run(well_data, well_data_cols=None,
 
     #Get pandas dataframes from input
     read_raw_txt_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.read_raw_csv .__code__.co_varnames}
-    downholeDataIN, headerDataIN = w4h.read_raw_csv (data_filepath=downholeDataPATH, metadata_filepath=headerDataPATH, verbose=verbose, log=log, **read_raw_txt_kwargs) 
+    downholeDataIN, headerDataIN = w4h.read_raw_csv(data_filepath=downholeDataPATH, metadata_filepath=headerDataPATH, verbose=verbose, log=log, **read_raw_txt_kwargs) 
     #Functions to read data into dataframes. Also excludes extraneous columns, and drops header data with no location information
 
     #Define data types (file will need to be udpated)
@@ -340,15 +340,17 @@ def logger_function(logtocommence, parameters, func_name):
             pass
     return
 
-def __check_parameter_names():
+def __check_parameter_names(verbose=True):
     #Check parameters are unique
     import inspect
     import w4h
+    import pandas as pd
     function_list = [w4h.file_setup,
                  w4h.read_raw_csv,
                  w4h.define_dtypes,
                  w4h.read_study_area,
                  w4h.read_grid,
+                 w4h.add_control_points,
                  w4h.coords2geometry,
                  w4h.clip_gdf2study_area,
                  w4h.remove_nonlocated,
@@ -372,5 +374,23 @@ def __check_parameter_names():
                  w4h.layer_target_thick,
                  w4h.layer_interp,
                  w4h.export_grids]
+    
+    paramDF = pd.DataFrame()
     for f in function_list:
-        print(inspect.getfullargspec(f)[0])
+        currParamList = inspect.getfullargspec(f)[0]
+        fList = []
+        for p in currParamList:
+            fList.append(f.__name__)
+        currParamDF = pd.DataFrame({'Function':fList, 'Parameter':currParamList})
+        paramDF = pd.concat([paramDF, currParamDF])
+
+    uniqueDF = paramDF.drop_duplicates(subset='Parameter').copy()
+
+    for up in uniqueDF['Parameter']:
+        if up != 'verbose' and up!='log':
+            matchDF = paramDF[paramDF['Parameter']==up].copy()
+            if verbose:
+                if matchDF.shape[0] > 1:
+                    print(matchDF)
+    
+    return paramDF

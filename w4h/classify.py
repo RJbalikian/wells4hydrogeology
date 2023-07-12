@@ -301,7 +301,7 @@ def fill_unclassified(df, classification_col='CLASS_FLAG'):
     return df
 
 #Merge lithologies to main df based on classifications
-def merge_lithologies(df, targinterps_df, target_col='TARGET', target_class='bool'):
+def merge_lithologies(df, targinterps_df, interp_col='INTERPRETATION', target_col='TARGET', target_class='bool'):
     """Function to merge lithologies and target booleans based on classifications
     
     Parameters
@@ -331,7 +331,7 @@ def merge_lithologies(df, targinterps_df, target_col='TARGET', target_class='boo
         targinterps_df[target_col].fillna(value=-2, inplace=True)
         targinterps_df[target_col].astype(np.int8)
 
-    df_targ = pd.merge(df, targinterps_df.set_index('INTERPRETATION'), right_on='INTERPRETATION',left_on='LITHOLOGY', how='left')
+    df_targ = pd.merge(df, targinterps_df.set_index(interp_col), right_on=interp_col, left_on='LITHOLOGY', how='left')
     
     return df_targ
 

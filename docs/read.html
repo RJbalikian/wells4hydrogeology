@@ -596,7 +596,21 @@ def read_lithologies(lith_file=None, interp_col=&#39;LITHOLOGY&#39;, target_col=
 
     lithoDF.rename(columns={interp_col:&#39;INTERPRETATION&#39;, target_col:&#39;TARGET&#39;}, inplace=True)
 
-    return lithoDF</code></pre>
+    return lithoDF
+
+def add_control_points(df, df_control, well_key=&#39;API_NUMBER&#39;, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEV_FT&#39;, controlpoints_crs=&#39;EPSG:4269&#39;, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, description_col=&#39;FORMATION&#39;, interp_col=&#39;INTERPRETATION&#39;, target_col=&#39;TARGET&#39;, verbose=False, log=False, **read_csv_kwargs):
+    import geopandas as gpd
+
+    if isinstance(df_control, pd.DataFrame) or isinstance(df_control, gpd.GeoDataFrame):
+        pass
+    else:
+        df_control = pd.read_csv(df_control, **read_csv_kwargs)
+
+    from w4h import coords2geometry
+    df_control = coords2geometry(df_no_geometry=df_control, xcol=xcol, ycol=ycol, zcol=zcol, input_coords_crs=controlpoints_crs, log=log)
+
+    df_control = pd.concat([df, df_control])
+    return df_control</code></pre>
 </details>
 </section>
 <section>
@@ -606,6 +620,30 @@ def read_lithologies(lith_file=None, interp_col=&#39;LITHOLOGY&#39;, target_col=
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="w4h.read.add_control_points"><code class="name flex">
+<span>def <span class="ident">add_control_points</span></span>(<span>df, df_control, well_key='API_NUMBER', xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', controlpoints_crs='EPSG:4269', top_col='TOP', bottom_col='BOTTOM', description_col='FORMATION', interp_col='INTERPRETATION', target_col='TARGET', verbose=False, log=False, **read_csv_kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_control_points(df, df_control, well_key=&#39;API_NUMBER&#39;, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEV_FT&#39;, controlpoints_crs=&#39;EPSG:4269&#39;, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, description_col=&#39;FORMATION&#39;, interp_col=&#39;INTERPRETATION&#39;, target_col=&#39;TARGET&#39;, verbose=False, log=False, **read_csv_kwargs):
+    import geopandas as gpd
+
+    if isinstance(df_control, pd.DataFrame) or isinstance(df_control, gpd.GeoDataFrame):
+        pass
+    else:
+        df_control = pd.read_csv(df_control, **read_csv_kwargs)
+
+    from w4h import coords2geometry
+    df_control = coords2geometry(df_no_geometry=df_control, xcol=xcol, ycol=ycol, zcol=zcol, input_coords_crs=controlpoints_crs, log=log)
+
+    df_control = pd.concat([df, df_control])
+    return df_control</code></pre>
+</details>
+</dd>
 <dt id="w4h.read.define_dtypes"><code class="name flex">
 <span>def <span class="ident">define_dtypes</span></span>(<span>undefined_df, datatypes=None, verbose=False, log=False)</span>
 </code></dt>
@@ -1438,6 +1476,7 @@ Tuple/list with two pandas dataframes: (data, metadata)</p></div>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="w4h.read.add_control_points" href="#w4h.read.add_control_points">add_control_points</a></code></li>
 <li><code><a title="w4h.read.define_dtypes" href="#w4h.read.define_dtypes">define_dtypes</a></code></li>
 <li><code><a title="w4h.read.file_setup" href="#w4h.read.file_setup">file_setup</a></code></li>
 <li><code><a title="w4h.read.get_current_date" href="#w4h.read.get_current_date">get_current_date</a></code></li>

@@ -569,3 +569,17 @@ def read_lithologies(lith_file=None, interp_col='LITHOLOGY', target_col='CODE', 
     lithoDF.rename(columns={interp_col:'INTERPRETATION', target_col:'TARGET'}, inplace=True)
 
     return lithoDF
+
+def add_control_points(df, df_control, well_key='API_NUMBER', xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', controlpoints_crs='EPSG:4269', top_col='TOP', bottom_col='BOTTOM', description_col='FORMATION', interp_col='INTERPRETATION', target_col='TARGET', verbose=False, log=False, **read_csv_kwargs):
+    import geopandas as gpd
+
+    if isinstance(df_control, pd.DataFrame) or isinstance(df_control, gpd.GeoDataFrame):
+        pass
+    else:
+        df_control = pd.read_csv(df_control, **read_csv_kwargs)
+
+    from w4h import coords2geometry
+    df_control = coords2geometry(df_no_geometry=df_control, xcol=xcol, ycol=ycol, zcol=zcol, input_coords_crs=controlpoints_crs, log=log)
+
+    df_control = pd.concat([df, df_control])
+    return df_control

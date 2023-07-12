@@ -329,7 +329,7 @@ def fill_unclassified(df, classification_col=&#39;CLASS_FLAG&#39;):
     return df
 
 #Merge lithologies to main df based on classifications
-def merge_lithologies(df, targinterps_df, target_col=&#39;TARGET&#39;, target_class=&#39;bool&#39;):
+def merge_lithologies(df, targinterps_df, interp_col=&#39;INTERPRETATION&#39;, target_col=&#39;TARGET&#39;, target_class=&#39;bool&#39;):
     &#34;&#34;&#34;Function to merge lithologies and target booleans based on classifications
     
     Parameters
@@ -359,7 +359,7 @@ def merge_lithologies(df, targinterps_df, target_col=&#39;TARGET&#39;, target_cl
         targinterps_df[target_col].fillna(value=-2, inplace=True)
         targinterps_df[target_col].astype(np.int8)
 
-    df_targ = pd.merge(df, targinterps_df.set_index(&#39;INTERPRETATION&#39;), right_on=&#39;INTERPRETATION&#39;,left_on=&#39;LITHOLOGY&#39;, how=&#39;left&#39;)
+    df_targ = pd.merge(df, targinterps_df.set_index(interp_col), right_on=interp_col, left_on=&#39;LITHOLOGY&#39;, how=&#39;left&#39;)
     
     return df_targ
 
@@ -640,7 +640,7 @@ def sort_dataframe(df, sort_cols=[&#39;API_NUMBER&#39;,&#39;TOP&#39;], remove_na
 </details>
 </dd>
 <dt id="w4h.classify.merge_lithologies"><code class="name flex">
-<span>def <span class="ident">merge_lithologies</span></span>(<span>df, targinterps_df, target_col='TARGET', target_class='bool')</span>
+<span>def <span class="ident">merge_lithologies</span></span>(<span>df, targinterps_df, interp_col='INTERPRETATION', target_col='TARGET', target_class='bool')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to merge lithologies and target booleans based on classifications</p>
@@ -664,7 +664,7 @@ Whether the input column is using boolean values as its target indicator</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def merge_lithologies(df, targinterps_df, target_col=&#39;TARGET&#39;, target_class=&#39;bool&#39;):
+<pre><code class="python">def merge_lithologies(df, targinterps_df, interp_col=&#39;INTERPRETATION&#39;, target_col=&#39;TARGET&#39;, target_class=&#39;bool&#39;):
     &#34;&#34;&#34;Function to merge lithologies and target booleans based on classifications
     
     Parameters
@@ -694,7 +694,7 @@ Whether the input column is using boolean values as its target indicator</p>
         targinterps_df[target_col].fillna(value=-2, inplace=True)
         targinterps_df[target_col].astype(np.int8)
 
-    df_targ = pd.merge(df, targinterps_df.set_index(&#39;INTERPRETATION&#39;), right_on=&#39;INTERPRETATION&#39;,left_on=&#39;LITHOLOGY&#39;, how=&#39;left&#39;)
+    df_targ = pd.merge(df, targinterps_df.set_index(interp_col), right_on=interp_col, left_on=&#39;LITHOLOGY&#39;, how=&#39;left&#39;)
     
     return df_targ</code></pre>
 </details>

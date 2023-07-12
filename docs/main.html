@@ -83,10 +83,11 @@ from w4h.read import (get_current_date,
                       define_dtypes,
                       get_search_terms,
                       read_dictionary_terms,
-                      read_lithologies)
+                      read_lithologies,
+                      add_control_points)
 
 
-__all__=(
+__all__=(&#39;logger_function&#39;,&#39;run&#39;,
         &#39;specific_define&#39;, 
         &#39;split_defined&#39;, 
         &#39;start_define&#39;,
@@ -132,8 +133,8 @@ __all__=(
          &#39;get_search_terms&#39;,
          &#39;read_dictionary_terms&#39;,
          &#39;read_lithologies&#39;,
-        &#39;logger_function&#39;,
-        &#39;run&#39;)
+         &#39;add_control_points&#39;
+         )
 
 __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</code></pre>
 </details>
@@ -176,6 +177,30 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="w4h.add_control_points"><code class="name flex">
+<span>def <span class="ident">add_control_points</span></span>(<span>df, df_control, well_key='API_NUMBER', xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', controlpoints_crs='EPSG:4269', top_col='TOP', bottom_col='BOTTOM', description_col='FORMATION', interp_col='INTERPRETATION', target_col='TARGET', verbose=False, log=False, **read_csv_kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_control_points(df, df_control, well_key=&#39;API_NUMBER&#39;, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEV_FT&#39;, controlpoints_crs=&#39;EPSG:4269&#39;, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, description_col=&#39;FORMATION&#39;, interp_col=&#39;INTERPRETATION&#39;, target_col=&#39;TARGET&#39;, verbose=False, log=False, **read_csv_kwargs):
+    import geopandas as gpd
+
+    if isinstance(df_control, pd.DataFrame) or isinstance(df_control, gpd.GeoDataFrame):
+        pass
+    else:
+        df_control = pd.read_csv(df_control, **read_csv_kwargs)
+
+    from w4h import coords2geometry
+    df_control = coords2geometry(df_no_geometry=df_control, xcol=xcol, ycol=ycol, zcol=zcol, input_coords_crs=controlpoints_crs, log=log)
+
+    df_control = pd.concat([df, df_control])
+    return df_control</code></pre>
+</details>
+</dd>
 <dt id="w4h.align_rasters"><code class="name flex">
 <span>def <span class="ident">align_rasters</span></span>(<span>grids_unaligned, modelgrid, no_data_val_grid=0, log=False)</span>
 </code></dt>
@@ -1940,7 +1965,7 @@ If False, return list of geopandas.geodataframes with only essential information
 </details>
 </dd>
 <dt id="w4h.merge_lithologies"><code class="name flex">
-<span>def <span class="ident">merge_lithologies</span></span>(<span>df, targinterps_df, target_col='TARGET', target_class='bool')</span>
+<span>def <span class="ident">merge_lithologies</span></span>(<span>df, targinterps_df, interp_col='INTERPRETATION', target_col='TARGET', target_class='bool')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to merge lithologies and target booleans based on classifications</p>
@@ -1964,7 +1989,7 @@ Whether the input column is using boolean values as its target indicator</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def merge_lithologies(df, targinterps_df, target_col=&#39;TARGET&#39;, target_class=&#39;bool&#39;):
+<pre><code class="python">def merge_lithologies(df, targinterps_df, interp_col=&#39;INTERPRETATION&#39;, target_col=&#39;TARGET&#39;, target_class=&#39;bool&#39;):
     &#34;&#34;&#34;Function to merge lithologies and target booleans based on classifications
     
     Parameters
@@ -1994,7 +2019,7 @@ Whether the input column is using boolean values as its target indicator</p>
         targinterps_df[target_col].fillna(value=-2, inplace=True)
         targinterps_df[target_col].astype(np.int8)
 
-    df_targ = pd.merge(df, targinterps_df.set_index(&#39;INTERPRETATION&#39;), right_on=&#39;INTERPRETATION&#39;,left_on=&#39;LITHOLOGY&#39;, how=&#39;left&#39;)
+    df_targ = pd.merge(df, targinterps_df.set_index(interp_col), right_on=interp_col, left_on=&#39;LITHOLOGY&#39;, how=&#39;left&#39;)
     
     return df_targ</code></pre>
 </details>
@@ -3700,7 +3725,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 
     #Get pandas dataframes from input
     read_raw_txt_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_raw_csv .__code__.co_varnames}
-    downholeDataIN, headerDataIN = w4h.read_raw_csv (data_filepath=downholeDataPATH, metadata_filepath=headerDataPATH, verbose=verbose, log=log, **read_raw_txt_kwargs) 
+    downholeDataIN, headerDataIN = w4h.read_raw_csv(data_filepath=downholeDataPATH, metadata_filepath=headerDataPATH, verbose=verbose, log=log, **read_raw_txt_kwargs) 
     #Functions to read data into dataframes. Also excludes extraneous columns, and drops header data with no location information
 
     #Define data types (file will need to be udpated)
@@ -4339,6 +4364,7 @@ new_col : str, optional</dd>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="w4h.add_control_points" href="#w4h.add_control_points">add_control_points</a></code></li>
 <li><code><a title="w4h.align_rasters" href="#w4h.align_rasters">align_rasters</a></code></li>
 <li><code><a title="w4h.clip_gdf2study_area" href="#w4h.clip_gdf2study_area">clip_gdf2study_area</a></code></li>
 <li><code><a title="w4h.combine_dataset" href="#w4h.combine_dataset">combine_dataset</a></code></li>

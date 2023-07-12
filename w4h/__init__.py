@@ -55,10 +55,11 @@ from w4h.read import (get_current_date,
                       define_dtypes,
                       get_search_terms,
                       read_dictionary_terms,
-                      read_lithologies)
+                      read_lithologies,
+                      add_control_points)
 
 
-__all__=(
+__all__=('logger_function','run',
         'specific_define', 
         'split_defined', 
         'start_define',
@@ -104,7 +105,7 @@ __all__=(
          'get_search_terms',
          'read_dictionary_terms',
          'read_lithologies',
-        'logger_function',
-        'run')
+         'add_control_points'
+         )
 
 __author__='Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski'
