@@ -51,12 +51,12 @@ from w4h import logger_function
 lidarURL = r&#39;https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&amp;service=WCS&#39;
 
 #Read study area shapefile (or other file) into geopandas
-def read_study_area(studyareapath, study_area_crs=&#39;EPSG:4269&#39;, log=False):
+def read_study_area(study_area_path, study_area_crs=&#39;EPSG:4269&#39;, log=False):
     &#34;&#34;&#34;Read study area geospatial file into geopandas
 
     Parameters
     ----------
-    studyareapath : str or pathlib.Path
+    study_area_path : str or pathlib.Path
         Filepath to any geospatial file readable by geopandas. 
         Polygon is best, but may work with other types if extent is correct.
     crs : str, tuple, dict, optional
@@ -71,25 +71,25 @@ def read_study_area(studyareapath, study_area_crs=&#39;EPSG:4269&#39;, log=False
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    studyAreaIN = gpd.read_file(studyareapath)
+    studyAreaIN = gpd.read_file(study_area_path)
     studyAreaIN.to_crs(study_area_crs, inplace=True)
 
     return studyAreaIN
 
 #Convert coords in columns to geometry in geopandas dataframe
-def coords2geometry(df, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEV_FT&#39;, input_coords_crs=&#39;EPSG:4269&#39;, use_z=False, log=False):
+def coords2geometry(df_no_geometry, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEV_FT&#39;, input_coords_crs=&#39;EPSG:4269&#39;, use_z=False, log=False):
     &#34;&#34;&#34;Adds geometry to points with xy coordinates in the specified coordinate reference system.
 
     Parameters
     ----------
-    df : pandas.Dataframe
+    df_no_geometry : pandas.Dataframe
         a Pandas dataframe containing points
     xcol : str, default=&#39;LONGITUDE&#39;
-        Name of column holding x coordinate data in df
+        Name of column holding x coordinate data in df_no_geometry
     ycol : str, default=&#39;LATITUDE&#39;
-        Name of column holding y coordinate data in df
+        Name of column holding y coordinate data in df_no_geometry
     zcol : str, default=&#39;ELEV_FT&#39;
-        Name of column holding z coordinate data in df
+        Name of column holding z coordinate data in df_no_geometry
     input_coords_crs : str, default=&#39;EPSG:4269
         Name of crs used for geometry
     use_z : bool, default=False
@@ -104,6 +104,8 @@ def coords2geometry(df, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=
 
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
+    df = df_no_geometry.copy()
 
     ptCRS=input_coords_crs
 
@@ -525,12 +527,12 @@ def grid2study_area(study_area, grid, study_area_crs=&#39;&#39;, grid_crs=&#39;&
     return grid
 
 #Read the model grid into (rio)xarray
-def read_model_grid(gridpath, study_area=None, no_data_val=0, read_grid=True, node_byspace=False, study_area_crs=None, grid_crs=None, log=False):
+def read_model_grid(model_grid_path, study_area=None, no_data_val=0, read_grid=True, node_byspace=True, study_area_crs=None, grid_crs=None, verbose=False, log=False):
     &#34;&#34;&#34;Reads in model grid to xarray data array
 
     Parameters
     ----------
-    gridpath : str
+    grid_path : str
         Path to model grid file
     study_area : geopandas.GeoDataFrame, default=None
         Dataframe containing study area polygon
@@ -554,8 +556,8 @@ def read_model_grid(gridpath, study_area=None, no_data_val=0, read_grid=True, no
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     
-    if read_grid:
-        modelGridIN = rxr.open_rasterio(gridpath)
+    if read_grid and model_grid_path is not None:
+        modelGridIN = rxr.open_rasterio(model_grid_path)
 
         file = w4h.read.__get_resource_path(&#39;isws_crs.txt&#39;)
         iswsCRS = w4h.read_dict(file, keytype=None)
@@ -584,6 +586,9 @@ def read_model_grid(gridpath, study_area=None, no_data_val=0, read_grid=True, no
 
         modelGrid = modelGrid.where(modelGrid != noDataVal, other=np.nan)   #Replace no data values with NaNs
         modelGrid.rio.reproject(iswsCRS, inplace=True)
+    elif model_grid_path is None and study_area is None:
+        if verbose:
+            print(&#34;ERROR: Either model_grid_path or study_area must be defined.&#34;)
     else:
         spatRefDict = {&#39;crs_wkt&#39;: &#39;PROJCS[&#34;Clarke_1866_Lambert_Conformal_Conic&#34;,GEOGCS[&#34;NAD27&#34;,DATUM[&#34;North_American_Datum_1927&#34;,SPHEROID[&#34;Clarke 1866&#34;,6378206.4,294.978698199999,AUTHORITY[&#34;EPSG&#34;,&#34;7008&#34;]],AUTHORITY[&#34;EPSG&#34;,&#34;6267&#34;]],PRIMEM[&#34;Greenwich&#34;,0],UNIT[&#34;degree&#34;,0.0174532925199433,AUTHORITY[&#34;EPSG&#34;,&#34;9122&#34;]],AUTHORITY[&#34;EPSG&#34;,&#34;4267&#34;]],PROJECTION[&#34;Lambert_Conformal_Conic_2SP&#34;],PARAMETER[&#34;latitude_of_origin&#34;,33],PARAMETER[&#34;central_meridian&#34;,-89.5],PARAMETER[&#34;standard_parallel_1&#34;,33],PARAMETER[&#34;standard_parallel_2&#34;,45],PARAMETER[&#34;false_easting&#34;,2999994],PARAMETER[&#34;false_northing&#34;,0],UNIT[&#34;US survey foot&#34;,0.304800609601219,AUTHORITY[&#34;EPSG&#34;,&#34;9003&#34;]],AXIS[&#34;Easting&#34;,EAST],AXIS[&#34;Northing&#34;,NORTH]]&#39;,
             &#39;semi_major_axis&#39;: 6378206.4,
@@ -641,13 +646,13 @@ def read_model_grid(gridpath, study_area=None, no_data_val=0, read_grid=True, no
     return modelGrid
 
 #Read a grid from a file in using rioxarray
-def read_grid(datapath=&#39;&#39;, grid_type=&#39;model&#39;, no_data_val=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, log=False, **kwargs):
+def read_grid(grid_path=None, grid_type=&#39;model&#39;, no_data_val=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, verbose=False, log=False, **kwargs):
     &#34;&#34;&#34;Reads in grid
 
     Parameters
     ----------
-    datapath : str, default=&#39;&#39;
-        ontains data path to a grid file
+    grid_path : str or pathlib.Path, default=None
+        Path to a grid file
     grid_type : str, default=&#39;model&#39;
         Sets what type of grid to load in
     no_data_val : int, default=0
@@ -676,10 +681,10 @@ def read_grid(datapath=&#39;&#39;, grid_type=&#39;model&#39;, no_data_val=0, use
             rgrid = kwargs[&#39;read_grid&#39;]
         else:
             rgrid=True
-        gridIN = read_model_grid(gridpath=datapath, study_area=study_area,  no_data_val=0, read_grid=rgrid, study_area_crs=study_area_crs, grid_crs=grid_crs)
+        gridIN = read_model_grid(model_grid_path=grid_path, study_area=study_area,  no_data_val=0, read_grid=rgrid, study_area_crs=study_area_crs, grid_crs=grid_crs, verbose=verbose)
     else:
         if use_service==False:
-            gridIN = rxr.open_rasterio(datapath)
+            gridIN = rxr.open_rasterio(grid_path)
         elif use_service.lower()==&#39;wcs&#39;:
             gridIN = read_wcs(study_area, wcs_url=lidarURL, **kwargs)
         elif use_service.lower()==&#39;wms&#39;:
@@ -941,20 +946,20 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
 </details>
 </dd>
 <dt id="w4h.mapping.coords2geometry"><code class="name flex">
-<span>def <span class="ident">coords2geometry</span></span>(<span>df, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', input_coords_crs='EPSG:4269', use_z=False, log=False)</span>
+<span>def <span class="ident">coords2geometry</span></span>(<span>df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', input_coords_crs='EPSG:4269', use_z=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Adds geometry to points with xy coordinates in the specified coordinate reference system.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>df</code></strong> :&ensp;<code>pandas.Dataframe</code></dt>
+<dt><strong><code>df_no_geometry</code></strong> :&ensp;<code>pandas.Dataframe</code></dt>
 <dd>a Pandas dataframe containing points</dd>
 <dt><strong><code>xcol</code></strong> :&ensp;<code>str</code>, default=<code>'LONGITUDE'</code></dt>
-<dd>Name of column holding x coordinate data in df</dd>
+<dd>Name of column holding x coordinate data in df_no_geometry</dd>
 <dt><strong><code>ycol</code></strong> :&ensp;<code>str</code>, default=<code>'LATITUDE'</code></dt>
-<dd>Name of column holding y coordinate data in df</dd>
+<dd>Name of column holding y coordinate data in df_no_geometry</dd>
 <dt><strong><code>zcol</code></strong> :&ensp;<code>str</code>, default=<code>'ELEV_FT'</code></dt>
-<dd>Name of column holding z coordinate data in df</dd>
+<dd>Name of column holding z coordinate data in df_no_geometry</dd>
 <dt><strong><code>input_coords_crs</code></strong> :&ensp;<code>str</code>, default=<code>'EPSG:4269</code></dt>
 <dd>Name of crs used for geometry</dd>
 <dt><strong><code>use_z</code></strong> :&ensp;<code>bool</code>, default=<code>False</code></dt>
@@ -971,19 +976,19 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def coords2geometry(df, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEV_FT&#39;, input_coords_crs=&#39;EPSG:4269&#39;, use_z=False, log=False):
+<pre><code class="python">def coords2geometry(df_no_geometry, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEV_FT&#39;, input_coords_crs=&#39;EPSG:4269&#39;, use_z=False, log=False):
     &#34;&#34;&#34;Adds geometry to points with xy coordinates in the specified coordinate reference system.
 
     Parameters
     ----------
-    df : pandas.Dataframe
+    df_no_geometry : pandas.Dataframe
         a Pandas dataframe containing points
     xcol : str, default=&#39;LONGITUDE&#39;
-        Name of column holding x coordinate data in df
+        Name of column holding x coordinate data in df_no_geometry
     ycol : str, default=&#39;LATITUDE&#39;
-        Name of column holding y coordinate data in df
+        Name of column holding y coordinate data in df_no_geometry
     zcol : str, default=&#39;ELEV_FT&#39;
-        Name of column holding z coordinate data in df
+        Name of column holding z coordinate data in df_no_geometry
     input_coords_crs : str, default=&#39;EPSG:4269
         Name of crs used for geometry
     use_z : bool, default=False
@@ -998,6 +1003,8 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
 
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
+    df = df_no_geometry.copy()
 
     ptCRS=input_coords_crs
 
@@ -1176,14 +1183,14 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
 </details>
 </dd>
 <dt id="w4h.mapping.read_grid"><code class="name flex">
-<span>def <span class="ident">read_grid</span></span>(<span>datapath='', grid_type='model', no_data_val=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, log=False, **kwargs)</span>
+<span>def <span class="ident">read_grid</span></span>(<span>grid_path=None, grid_type='model', no_data_val=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, verbose=False, log=False, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Reads in grid</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>datapath</code></strong> :&ensp;<code>str</code>, default=<code>''</code></dt>
-<dd>ontains data path to a grid file</dd>
+<dt><strong><code>grid_path</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path</code>, default=<code>None</code></dt>
+<dd>Path to a grid file</dd>
 <dt><strong><code>grid_type</code></strong> :&ensp;<code>str</code>, default=<code>'model'</code></dt>
 <dd>Sets what type of grid to load in</dd>
 <dt><strong><code>no_data_val</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
@@ -1208,13 +1215,13 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_grid(datapath=&#39;&#39;, grid_type=&#39;model&#39;, no_data_val=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, log=False, **kwargs):
+<pre><code class="python">def read_grid(grid_path=None, grid_type=&#39;model&#39;, no_data_val=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, verbose=False, log=False, **kwargs):
     &#34;&#34;&#34;Reads in grid
 
     Parameters
     ----------
-    datapath : str, default=&#39;&#39;
-        ontains data path to a grid file
+    grid_path : str or pathlib.Path, default=None
+        Path to a grid file
     grid_type : str, default=&#39;model&#39;
         Sets what type of grid to load in
     no_data_val : int, default=0
@@ -1243,10 +1250,10 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
             rgrid = kwargs[&#39;read_grid&#39;]
         else:
             rgrid=True
-        gridIN = read_model_grid(gridpath=datapath, study_area=study_area,  no_data_val=0, read_grid=rgrid, study_area_crs=study_area_crs, grid_crs=grid_crs)
+        gridIN = read_model_grid(model_grid_path=grid_path, study_area=study_area,  no_data_val=0, read_grid=rgrid, study_area_crs=study_area_crs, grid_crs=grid_crs, verbose=verbose)
     else:
         if use_service==False:
-            gridIN = rxr.open_rasterio(datapath)
+            gridIN = rxr.open_rasterio(grid_path)
         elif use_service.lower()==&#39;wcs&#39;:
             gridIN = read_wcs(study_area, wcs_url=lidarURL, **kwargs)
         elif use_service.lower()==&#39;wms&#39;:
@@ -1282,13 +1289,13 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
 </details>
 </dd>
 <dt id="w4h.mapping.read_model_grid"><code class="name flex">
-<span>def <span class="ident">read_model_grid</span></span>(<span>gridpath, study_area=None, no_data_val=0, read_grid=True, node_byspace=False, study_area_crs=None, grid_crs=None, log=False)</span>
+<span>def <span class="ident">read_model_grid</span></span>(<span>model_grid_path, study_area=None, no_data_val=0, read_grid=True, node_byspace=True, study_area_crs=None, grid_crs=None, verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Reads in model grid to xarray data array</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>gridpath</code></strong> :&ensp;<code>str</code></dt>
+<dt><strong><code>grid_path</code></strong> :&ensp;<code>str</code></dt>
 <dd>Path to model grid file</dd>
 <dt><strong><code>study_area</code></strong> :&ensp;<code>geopandas.GeoDataFrame</code>, default=<code>None</code></dt>
 <dd>Dataframe containing study area polygon</dd>
@@ -1314,12 +1321,12 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_model_grid(gridpath, study_area=None, no_data_val=0, read_grid=True, node_byspace=False, study_area_crs=None, grid_crs=None, log=False):
+<pre><code class="python">def read_model_grid(model_grid_path, study_area=None, no_data_val=0, read_grid=True, node_byspace=True, study_area_crs=None, grid_crs=None, verbose=False, log=False):
     &#34;&#34;&#34;Reads in model grid to xarray data array
 
     Parameters
     ----------
-    gridpath : str
+    grid_path : str
         Path to model grid file
     study_area : geopandas.GeoDataFrame, default=None
         Dataframe containing study area polygon
@@ -1343,8 +1350,8 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     
-    if read_grid:
-        modelGridIN = rxr.open_rasterio(gridpath)
+    if read_grid and model_grid_path is not None:
+        modelGridIN = rxr.open_rasterio(model_grid_path)
 
         file = w4h.read.__get_resource_path(&#39;isws_crs.txt&#39;)
         iswsCRS = w4h.read_dict(file, keytype=None)
@@ -1373,6 +1380,9 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
 
         modelGrid = modelGrid.where(modelGrid != noDataVal, other=np.nan)   #Replace no data values with NaNs
         modelGrid.rio.reproject(iswsCRS, inplace=True)
+    elif model_grid_path is None and study_area is None:
+        if verbose:
+            print(&#34;ERROR: Either model_grid_path or study_area must be defined.&#34;)
     else:
         spatRefDict = {&#39;crs_wkt&#39;: &#39;PROJCS[&#34;Clarke_1866_Lambert_Conformal_Conic&#34;,GEOGCS[&#34;NAD27&#34;,DATUM[&#34;North_American_Datum_1927&#34;,SPHEROID[&#34;Clarke 1866&#34;,6378206.4,294.978698199999,AUTHORITY[&#34;EPSG&#34;,&#34;7008&#34;]],AUTHORITY[&#34;EPSG&#34;,&#34;6267&#34;]],PRIMEM[&#34;Greenwich&#34;,0],UNIT[&#34;degree&#34;,0.0174532925199433,AUTHORITY[&#34;EPSG&#34;,&#34;9122&#34;]],AUTHORITY[&#34;EPSG&#34;,&#34;4267&#34;]],PROJECTION[&#34;Lambert_Conformal_Conic_2SP&#34;],PARAMETER[&#34;latitude_of_origin&#34;,33],PARAMETER[&#34;central_meridian&#34;,-89.5],PARAMETER[&#34;standard_parallel_1&#34;,33],PARAMETER[&#34;standard_parallel_2&#34;,45],PARAMETER[&#34;false_easting&#34;,2999994],PARAMETER[&#34;false_northing&#34;,0],UNIT[&#34;US survey foot&#34;,0.304800609601219,AUTHORITY[&#34;EPSG&#34;,&#34;9003&#34;]],AXIS[&#34;Easting&#34;,EAST],AXIS[&#34;Northing&#34;,NORTH]]&#39;,
             &#39;semi_major_axis&#39;: 6378206.4,
@@ -1431,13 +1441,13 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
 </details>
 </dd>
 <dt id="w4h.mapping.read_study_area"><code class="name flex">
-<span>def <span class="ident">read_study_area</span></span>(<span>studyareapath, study_area_crs='EPSG:4269', log=False)</span>
+<span>def <span class="ident">read_study_area</span></span>(<span>study_area_path, study_area_crs='EPSG:4269', log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Read study area geospatial file into geopandas</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>studyareapath</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path</code></dt>
+<dt><strong><code>study_area_path</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path</code></dt>
 <dd>Filepath to any geospatial file readable by geopandas.
 Polygon is best, but may work with other types if extent is correct.</dd>
 <dt><strong><code>crs</code></strong> :&ensp;<code>str, tuple, dict</code>, optional</dt>
@@ -1454,12 +1464,12 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_study_area(studyareapath, study_area_crs=&#39;EPSG:4269&#39;, log=False):
+<pre><code class="python">def read_study_area(study_area_path, study_area_crs=&#39;EPSG:4269&#39;, log=False):
     &#34;&#34;&#34;Read study area geospatial file into geopandas
 
     Parameters
     ----------
-    studyareapath : str or pathlib.Path
+    study_area_path : str or pathlib.Path
         Filepath to any geospatial file readable by geopandas. 
         Polygon is best, but may work with other types if extent is correct.
     crs : str, tuple, dict, optional
@@ -1474,7 +1484,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    studyAreaIN = gpd.read_file(studyareapath)
+    studyAreaIN = gpd.read_file(study_area_path)
     studyAreaIN.to_crs(study_area_crs, inplace=True)
 
     return studyAreaIN</code></pre>

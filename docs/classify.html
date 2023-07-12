@@ -170,7 +170,7 @@ def start_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#
 
 #Classify downhole data by any substring
 def wildcard_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;DESCRIPTION&#39;, verbose=False, log=False):
-    &#34;&#34;&#34;Function to classify descriptions according to starting substring. 
+    &#34;&#34;&#34;Function to classify descriptions according to any substring. 
 
     Parameters
     ----------
@@ -997,7 +997,7 @@ Whether the input column is using boolean values as its target indicator</p>
 <span>def <span class="ident">wildcard_define</span></span>(<span>df, terms_df, description_col='FORMATION', terms_col='DESCRIPTION', verbose=False, log=False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Function to classify descriptions according to starting substring. </p>
+<div class="desc"><p>Function to classify descriptions according to any substring. </p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
@@ -1023,7 +1023,7 @@ Whether the input column is using boolean values as its target indicator</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def wildcard_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;DESCRIPTION&#39;, verbose=False, log=False):
-    &#34;&#34;&#34;Function to classify descriptions according to starting substring. 
+    &#34;&#34;&#34;Function to classify descriptions according to any substring. 
 
     Parameters
     ----------
