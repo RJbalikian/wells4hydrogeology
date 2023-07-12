@@ -172,7 +172,7 @@ def file_setup(well_data, metadata=None, data_filename=&#39;*ISGS_DOWNHOLE_DATA*
     return downholeDataPATH, headerDataPATH
     
 #Read raw data by text
-def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, id_col=&#39;API_NUMBER&#39;, encoding=&#39;latin-1&#39;, verbose=False, log=False, **read_csv_kwargs):
+def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, well_key=&#39;API_NUMBER&#39;, encoding=&#39;latin-1&#39;, verbose=False, log=False, **read_csv_kwargs):
     &#34;&#34;&#34;Easy function to read raw .txt files output from (for example), an Access database
 
     Parameters
@@ -189,7 +189,7 @@ def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols
         Name of column in metadata file indicating the x-location of the well, by default &#39;LONGITUDE&#39;
     ycol : str, default = &#39;LATITUDE&#39;
         Name of the column in metadata file indicating the y-location of the well, by default &#39;LATITUDE&#39;
-    id_col : str, default = &#39;API_NUMBER&#39;
+    well_key : str, default = &#39;API_NUMBER&#39;
         Name of the column with the key/identifier that will be used to merge data later, by default &#39;API_NUMBER&#39;
     encoding : str, default = &#39;latin-1&#39;
         Encoding of the data in the input files, by default &#39;latin-1&#39;
@@ -229,8 +229,8 @@ def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols
         headerDataIN = pd.read_csv(metadata_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=metadata_useCols, **read_csv_kwargs)
 
     #Drop data with no API        
-    downholeDataIN = downholeDataIN.dropna(subset=[id_col]) #Drop data with no API
-    headerDataIN = headerDataIN.dropna(subset=[id_col]) #Drop metadata with no API
+    downholeDataIN = downholeDataIN.dropna(subset=[well_key]) #Drop data with no API
+    headerDataIN = headerDataIN.dropna(subset=[well_key]) #Drop metadata with no API
 
     #Drop data with no or missing location information
     headerDataIN = headerDataIN.dropna(subset=[ycol]) 
@@ -1252,7 +1252,7 @@ with start search terms, and with wildcard search terms</p></div>
 </details>
 </dd>
 <dt id="w4h.read.read_raw_csv"><code class="name flex">
-<span>def <span class="ident">read_raw_csv</span></span>(<span>data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, xcol='LONGITUDE', ycol='LATITUDE', id_col='API_NUMBER', encoding='latin-1', verbose=False, log=False, **read_csv_kwargs)</span>
+<span>def <span class="ident">read_raw_csv</span></span>(<span>data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, xcol='LONGITUDE', ycol='LATITUDE', well_key='API_NUMBER', encoding='latin-1', verbose=False, log=False, **read_csv_kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Easy function to read raw .txt files output from (for example), an Access database</p>
@@ -1270,7 +1270,7 @@ with start search terms, and with wildcard search terms</p></div>
 <dd>Name of column in metadata file indicating the x-location of the well, by default 'LONGITUDE'</dd>
 <dt><strong><code>ycol</code></strong> :&ensp;<code>str</code>, default <code>= 'LATITUDE'</code></dt>
 <dd>Name of the column in metadata file indicating the y-location of the well, by default 'LATITUDE'</dd>
-<dt><strong><code>id_col</code></strong> :&ensp;<code>str</code>, default <code>= 'API_NUMBER'</code></dt>
+<dt><strong><code>well_key</code></strong> :&ensp;<code>str</code>, default <code>= 'API_NUMBER'</code></dt>
 <dd>Name of the column with the key/identifier that will be used to merge data later, by default 'API_NUMBER'</dd>
 <dt><strong><code>encoding</code></strong> :&ensp;<code>str</code>, default <code>= 'latin-1'</code></dt>
 <dd>Encoding of the data in the input files, by default 'latin-1'</dd>
@@ -1288,7 +1288,7 @@ Tuple/list with two pandas dataframes: (data, metadata)</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, id_col=&#39;API_NUMBER&#39;, encoding=&#39;latin-1&#39;, verbose=False, log=False, **read_csv_kwargs):
+<pre><code class="python">def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, well_key=&#39;API_NUMBER&#39;, encoding=&#39;latin-1&#39;, verbose=False, log=False, **read_csv_kwargs):
     &#34;&#34;&#34;Easy function to read raw .txt files output from (for example), an Access database
 
     Parameters
@@ -1305,7 +1305,7 @@ Tuple/list with two pandas dataframes: (data, metadata)</p></div>
         Name of column in metadata file indicating the x-location of the well, by default &#39;LONGITUDE&#39;
     ycol : str, default = &#39;LATITUDE&#39;
         Name of the column in metadata file indicating the y-location of the well, by default &#39;LATITUDE&#39;
-    id_col : str, default = &#39;API_NUMBER&#39;
+    well_key : str, default = &#39;API_NUMBER&#39;
         Name of the column with the key/identifier that will be used to merge data later, by default &#39;API_NUMBER&#39;
     encoding : str, default = &#39;latin-1&#39;
         Encoding of the data in the input files, by default &#39;latin-1&#39;
@@ -1345,8 +1345,8 @@ Tuple/list with two pandas dataframes: (data, metadata)</p></div>
         headerDataIN = pd.read_csv(metadata_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=metadata_useCols, **read_csv_kwargs)
 
     #Drop data with no API        
-    downholeDataIN = downholeDataIN.dropna(subset=[id_col]) #Drop data with no API
-    headerDataIN = headerDataIN.dropna(subset=[id_col]) #Drop metadata with no API
+    downholeDataIN = downholeDataIN.dropna(subset=[well_key]) #Drop data with no API
+    headerDataIN = headerDataIN.dropna(subset=[well_key]) #Drop metadata with no API
 
     #Drop data with no or missing location information
     headerDataIN = headerDataIN.dropna(subset=[ycol]) 

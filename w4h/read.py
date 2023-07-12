@@ -144,7 +144,7 @@ def file_setup(well_data, metadata=None, data_filename='*ISGS_DOWNHOLE_DATA*.txt
     return downholeDataPATH, headerDataPATH
     
 #Read raw data by text
-def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, xcol='LONGITUDE', ycol='LATITUDE', id_col='API_NUMBER', encoding='latin-1', verbose=False, log=False, **read_csv_kwargs):
+def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, xcol='LONGITUDE', ycol='LATITUDE', well_key='API_NUMBER', encoding='latin-1', verbose=False, log=False, **read_csv_kwargs):
     """Easy function to read raw .txt files output from (for example), an Access database
 
     Parameters
@@ -161,7 +161,7 @@ def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols
         Name of column in metadata file indicating the x-location of the well, by default 'LONGITUDE'
     ycol : str, default = 'LATITUDE'
         Name of the column in metadata file indicating the y-location of the well, by default 'LATITUDE'
-    id_col : str, default = 'API_NUMBER'
+    well_key : str, default = 'API_NUMBER'
         Name of the column with the key/identifier that will be used to merge data later, by default 'API_NUMBER'
     encoding : str, default = 'latin-1'
         Encoding of the data in the input files, by default 'latin-1'
@@ -201,8 +201,8 @@ def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols
         headerDataIN = pd.read_csv(metadata_filepath, sep=',', header='infer', encoding=encoding, usecols=metadata_useCols, **read_csv_kwargs)
 
     #Drop data with no API        
-    downholeDataIN = downholeDataIN.dropna(subset=[id_col]) #Drop data with no API
-    headerDataIN = headerDataIN.dropna(subset=[id_col]) #Drop metadata with no API
+    downholeDataIN = downholeDataIN.dropna(subset=[well_key]) #Drop data with no API
+    headerDataIN = headerDataIN.dropna(subset=[well_key]) #Drop metadata with no API
 
     #Drop data with no or missing location information
     headerDataIN = headerDataIN.dropna(subset=[ycol]) 

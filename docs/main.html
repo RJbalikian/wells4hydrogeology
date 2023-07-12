@@ -177,7 +177,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="w4h.align_rasters"><code class="name flex">
-<span>def <span class="ident">align_rasters</span></span>(<span>grids_unaligned, modelgrid, no_data_val=0, log=False)</span>
+<span>def <span class="ident">align_rasters</span></span>(<span>grids_unaligned, modelgrid, no_data_val_grid=0, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Reprojects two rasters and aligns their pixels</p>
@@ -187,7 +187,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 <dd>Contains a list of grids or one unaligned grid</dd>
 <dt><strong><code>modelgrid</code></strong> :&ensp;<code>xarray.DataArray</code></dt>
 <dd>Contains model grid</dd>
-<dt><strong><code>no_data_val</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
+<dt><strong><code>no_data_val_grid</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
 <dd>Sets value of no data pixels</dd>
 <dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
 <dd>Whether to log results to log file, by default False</dd>
@@ -201,7 +201,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def align_rasters(grids_unaligned, modelgrid, no_data_val=0, log=False):
+<pre><code class="python">def align_rasters(grids_unaligned, modelgrid, no_data_val_grid=0, log=False):
     &#34;&#34;&#34;Reprojects two rasters and aligns their pixels
 
     Parameters
@@ -210,7 +210,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
         Contains a list of grids or one unaligned grid
     modelgrid : xarray.DataArray
         Contains model grid
-    no_data_val : int, default=0
+    no_data_val_grid : int, default=0
         Sets value of no data pixels
     log : bool, default = False
         Whether to log results to log file, by default False
@@ -228,11 +228,11 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
             alignedGrid = g.rio.reproject_match(modelgrid)
 
             try:
-                no_data_val = alignedGrid.attrs[&#39;_FillValue&#39;] #Extract from dataset itself
+                no_data_val_grid = alignedGrid.attrs[&#39;_FillValue&#39;] #Extract from dataset itself
             except:
                 pass
             
-            alignedGrid = alignedGrid.where(alignedGrid != no_data_val)  #Replace no data values with NaNs
+            alignedGrid = alignedGrid.where(alignedGrid != no_data_val_grid)  #Replace no data values with NaNs
             
             alignedGrids.append(alignedGrid)
     else:
@@ -249,7 +249,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 </details>
 </dd>
 <dt id="w4h.clip_gdf2study_area"><code class="name flex">
-<span>def <span class="ident">clip_gdf2study_area</span></span>(<span>study_area, gdf, input_coords_crs='EPSG:4269', log=False)</span>
+<span>def <span class="ident">clip_gdf2study_area</span></span>(<span>study_area, gdf, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Clips dataframe to only include things within study area.</p>
@@ -259,8 +259,6 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 <dd>Inputs study area polygon</dd>
 <dt><strong><code>gdf</code></strong> :&ensp;<code>geopandas.GeoDataFrame</code></dt>
 <dd>Inputs point data</dd>
-<dt><strong><code>input_coords_crs</code></strong> :&ensp;<code>str</code>, default=<code>'EPSG:4269'</code></dt>
-<dd>Inputs crs to project study area to</dd>
 <dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
 <dd>Whether to log results to log file, by default False</dd>
 </dl>
@@ -273,7 +271,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def clip_gdf2study_area(study_area, gdf, input_coords_crs=&#39;EPSG:4269&#39;, log=False):
+<pre><code class="python">def clip_gdf2study_area(study_area, gdf, log=False):
     &#34;&#34;&#34;Clips dataframe to only include things within study area.
 
     Parameters
@@ -282,8 +280,6 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
         Inputs study area polygon
     gdf : geopandas.GeoDataFrame
         Inputs point data
-    input_coords_crs : str, default=&#39;EPSG:4269&#39;
-        Inputs crs to project study area to
     log : bool, default = False
         Whether to log results to log file, by default False
 
@@ -295,7 +291,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    studyArea_proj = study_area.to_crs(input_coords_crs).copy()
+    studyArea_proj = study_area.to_crs(gdf.crs).copy()
     gdfClip = gpd.clip(gdf, studyArea_proj) #Easier to project just study area to ensure data fit
     gdfClip.reset_index(inplace=True, drop=True) #Reset index
     
@@ -2302,7 +2298,7 @@ Whether the input column is using boolean values as its target indicator</p>
 </details>
 </dd>
 <dt id="w4h.read_grid"><code class="name flex">
-<span>def <span class="ident">read_grid</span></span>(<span>grid_path=None, grid_type='model', no_data_val=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, verbose=False, log=False, **kwargs)</span>
+<span>def <span class="ident">read_grid</span></span>(<span>grid_path=None, grid_type='model', no_data_val_grid=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, verbose=False, log=False, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Reads in grid</p>
@@ -2312,7 +2308,7 @@ Whether the input column is using boolean values as its target indicator</p>
 <dd>Path to a grid file</dd>
 <dt><strong><code>grid_type</code></strong> :&ensp;<code>str</code>, default=<code>'model'</code></dt>
 <dd>Sets what type of grid to load in</dd>
-<dt><strong><code>no_data_val</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
+<dt><strong><code>no_data_val_grid</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
 <dd>Sets the no data value of the grid</dd>
 <dt><strong><code>use_service</code></strong> :&ensp;<code>str</code>, default=<code>False</code></dt>
 <dd>Sets which service the function uses</dd>
@@ -2334,7 +2330,7 @@ Whether the input column is using boolean values as its target indicator</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_grid(grid_path=None, grid_type=&#39;model&#39;, no_data_val=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, verbose=False, log=False, **kwargs):
+<pre><code class="python">def read_grid(grid_path=None, grid_type=&#39;model&#39;, no_data_val_grid=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, verbose=False, log=False, **kwargs):
     &#34;&#34;&#34;Reads in grid
 
     Parameters
@@ -2343,7 +2339,7 @@ Whether the input column is using boolean values as its target indicator</p>
         Path to a grid file
     grid_type : str, default=&#39;model&#39;
         Sets what type of grid to load in
-    no_data_val : int, default=0
+    no_data_val_grid : int, default=0
         Sets the no data value of the grid
     use_service : str, default=False
         Sets which service the function uses
@@ -2369,7 +2365,7 @@ Whether the input column is using boolean values as its target indicator</p>
             rgrid = kwargs[&#39;read_grid&#39;]
         else:
             rgrid=True
-        gridIN = read_model_grid(model_grid_path=grid_path, study_area=study_area,  no_data_val=0, read_grid=rgrid, study_area_crs=study_area_crs, grid_crs=grid_crs, verbose=verbose)
+        gridIN = read_model_grid(model_grid_path=grid_path, study_area=study_area,  no_data_val_grid=0, read_grid=rgrid, study_area_crs=study_area_crs, grid_crs=grid_crs, verbose=verbose)
     else:
         if use_service==False:
             gridIN = rxr.open_rasterio(grid_path)
@@ -2398,11 +2394,11 @@ Whether the input column is using boolean values as its target indicator</p>
             gridIN = grid2study_area(study_area=study_area, grid=gridIN, study_area_crs=study_area_crs, grid_crs=grid_crs)
 
         try:
-            no_data_val = gridIN.attrs[&#39;_FillValue&#39;] #Extract from dataset itself
+            no_data_val_grid = gridIN.attrs[&#39;_FillValue&#39;] #Extract from dataset itself
         except:
             pass
                 
-        gridIN = gridIN.where(gridIN != no_data_val, other=np.nan)  #Replace no data values with NaNs
+        gridIN = gridIN.where(gridIN != no_data_val_grid, other=np.nan)  #Replace no data values with NaNs
 
     return gridIN</code></pre>
 </details>
@@ -2475,7 +2471,7 @@ Whether the input column is using boolean values as its target indicator</p>
 </details>
 </dd>
 <dt id="w4h.read_model_grid"><code class="name flex">
-<span>def <span class="ident">read_model_grid</span></span>(<span>model_grid_path, study_area=None, no_data_val=0, read_grid=True, node_byspace=True, study_area_crs=None, grid_crs=None, verbose=False, log=False)</span>
+<span>def <span class="ident">read_model_grid</span></span>(<span>model_grid_path, study_area=None, no_data_val_grid=0, read_grid=True, node_byspace=True, study_area_crs=None, grid_crs=None, verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Reads in model grid to xarray data array</p>
@@ -2485,7 +2481,7 @@ Whether the input column is using boolean values as its target indicator</p>
 <dd>Path to model grid file</dd>
 <dt><strong><code>study_area</code></strong> :&ensp;<code>geopandas.GeoDataFrame</code>, default=<code>None</code></dt>
 <dd>Dataframe containing study area polygon</dd>
-<dt><strong><code>no_data_val</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
+<dt><strong><code>no_data_val_grid</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
 <dd>value assigned to areas with no data</dd>
 <dt><strong><code>readGrid</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
 <dd>Whether function to either read grid or create grid</dd>
@@ -2507,7 +2503,7 @@ Whether the input column is using boolean values as its target indicator</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_model_grid(model_grid_path, study_area=None, no_data_val=0, read_grid=True, node_byspace=True, study_area_crs=None, grid_crs=None, verbose=False, log=False):
+<pre><code class="python">def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_grid=True, node_byspace=True, study_area_crs=None, grid_crs=None, verbose=False, log=False):
     &#34;&#34;&#34;Reads in model grid to xarray data array
 
     Parameters
@@ -2516,7 +2512,7 @@ Whether the input column is using boolean values as its target indicator</p>
         Path to model grid file
     study_area : geopandas.GeoDataFrame, default=None
         Dataframe containing study area polygon
-    no_data_val : int, default=0
+    no_data_val_grid : int, default=0
         value assigned to areas with no data
     readGrid : bool, default=True
         Whether function to either read grid or create grid
@@ -2627,7 +2623,7 @@ Whether the input column is using boolean values as its target indicator</p>
 </details>
 </dd>
 <dt id="w4h.read_raw_csv"><code class="name flex">
-<span>def <span class="ident">read_raw_csv</span></span>(<span>data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, xcol='LONGITUDE', ycol='LATITUDE', id_col='API_NUMBER', encoding='latin-1', verbose=False, log=False, **read_csv_kwargs)</span>
+<span>def <span class="ident">read_raw_csv</span></span>(<span>data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, xcol='LONGITUDE', ycol='LATITUDE', well_key='API_NUMBER', encoding='latin-1', verbose=False, log=False, **read_csv_kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Easy function to read raw .txt files output from (for example), an Access database</p>
@@ -2645,7 +2641,7 @@ Whether the input column is using boolean values as its target indicator</p>
 <dd>Name of column in metadata file indicating the x-location of the well, by default 'LONGITUDE'</dd>
 <dt><strong><code>ycol</code></strong> :&ensp;<code>str</code>, default <code>= 'LATITUDE'</code></dt>
 <dd>Name of the column in metadata file indicating the y-location of the well, by default 'LATITUDE'</dd>
-<dt><strong><code>id_col</code></strong> :&ensp;<code>str</code>, default <code>= 'API_NUMBER'</code></dt>
+<dt><strong><code>well_key</code></strong> :&ensp;<code>str</code>, default <code>= 'API_NUMBER'</code></dt>
 <dd>Name of the column with the key/identifier that will be used to merge data later, by default 'API_NUMBER'</dd>
 <dt><strong><code>encoding</code></strong> :&ensp;<code>str</code>, default <code>= 'latin-1'</code></dt>
 <dd>Encoding of the data in the input files, by default 'latin-1'</dd>
@@ -2663,7 +2659,7 @@ Tuple/list with two pandas dataframes: (data, metadata)</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, id_col=&#39;API_NUMBER&#39;, encoding=&#39;latin-1&#39;, verbose=False, log=False, **read_csv_kwargs):
+<pre><code class="python">def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, well_key=&#39;API_NUMBER&#39;, encoding=&#39;latin-1&#39;, verbose=False, log=False, **read_csv_kwargs):
     &#34;&#34;&#34;Easy function to read raw .txt files output from (for example), an Access database
 
     Parameters
@@ -2680,7 +2676,7 @@ Tuple/list with two pandas dataframes: (data, metadata)</p></div>
         Name of column in metadata file indicating the x-location of the well, by default &#39;LONGITUDE&#39;
     ycol : str, default = &#39;LATITUDE&#39;
         Name of the column in metadata file indicating the y-location of the well, by default &#39;LATITUDE&#39;
-    id_col : str, default = &#39;API_NUMBER&#39;
+    well_key : str, default = &#39;API_NUMBER&#39;
         Name of the column with the key/identifier that will be used to merge data later, by default &#39;API_NUMBER&#39;
     encoding : str, default = &#39;latin-1&#39;
         Encoding of the data in the input files, by default &#39;latin-1&#39;
@@ -2720,8 +2716,8 @@ Tuple/list with two pandas dataframes: (data, metadata)</p></div>
         headerDataIN = pd.read_csv(metadata_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=metadata_useCols, **read_csv_kwargs)
 
     #Drop data with no API        
-    downholeDataIN = downholeDataIN.dropna(subset=[id_col]) #Drop data with no API
-    headerDataIN = headerDataIN.dropna(subset=[id_col]) #Drop metadata with no API
+    downholeDataIN = downholeDataIN.dropna(subset=[well_key]) #Drop data with no API
+    headerDataIN = headerDataIN.dropna(subset=[well_key]) #Drop metadata with no API
 
     #Drop data with no or missing location information
     headerDataIN = headerDataIN.dropna(subset=[ycol]) 
@@ -3259,7 +3255,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 </details>
 </dd>
 <dt id="w4h.remove_no_depth"><code class="name flex">
-<span>def <span class="ident">remove_no_depth</span></span>(<span>df, top_col='TOP', bottom_col='BOTTOM', no_data_val='', verbose=False, log=False)</span>
+<span>def <span class="ident">remove_no_depth</span></span>(<span>df, top_col='TOP', bottom_col='BOTTOM', no_data_val_table='', verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to remove well intervals with no depth information</p>
@@ -3271,7 +3267,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 <dd>Name of column containing information on the top of the well intervals, by default 'TOP'</dd>
 <dt><strong><code>bottom_col</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>Name of column containing information on the bottom of the well intervals, by default 'BOTTOM'</dd>
-<dt><strong><code>no_data_val</code></strong> :&ensp;<code>any</code>, optional</dt>
+<dt><strong><code>no_data_val_table</code></strong> :&ensp;<code>any</code>, optional</dt>
 <dd>No data value in the input data, used by this function to indicate that depth data is not there, to be replaced by np.nan, by default ''</dd>
 <dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, optional</dt>
 <dd>Whether to print results to console, by default False</dd>
@@ -3287,7 +3283,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def remove_no_depth(df, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, no_data_val=&#39;&#39;, verbose=False, log=False):
+<pre><code class="python">def remove_no_depth(df, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, no_data_val_table=&#39;&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to remove well intervals with no depth information
 
     Parameters
@@ -3298,7 +3294,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
         Name of column containing information on the top of the well intervals, by default &#39;TOP&#39;
     bottom_col : str, optional
         Name of column containing information on the bottom of the well intervals, by default &#39;BOTTOM&#39;
-    no_data_val : any, optional
+    no_data_val_table : any, optional
         No data value in the input data, used by this function to indicate that depth data is not there, to be replaced by np.nan, by default &#39;&#39;
     verbose : bool, optional
         Whether to print results to console, by default False
@@ -3313,8 +3309,8 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     #Replace empty cells in top and bottom columns with nan
-    df[top_col] = df[top_col].replace(no_data_val, np.nan)
-    df[bottom_col] = df[bottom_col].replace(no_data_val, np.nan)
+    df[top_col] = df[top_col].replace(no_data_val_table, np.nan)
+    df[bottom_col] = df[bottom_col].replace(no_data_val_table, np.nan)
     
     #Calculate number of rows before dropping
     before = df.shape[0]
@@ -3333,7 +3329,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 </details>
 </dd>
 <dt id="w4h.remove_no_formation"><code class="name flex">
-<span>def <span class="ident">remove_no_formation</span></span>(<span>df, description_col='FORMATION', no_data_val='', verbose=False, log=False)</span>
+<span>def <span class="ident">remove_no_formation</span></span>(<span>df, description_col='FORMATION', no_data_val_table='', verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function that removes all records in the dataframe containing the well descriptions where no description is given.</p>
@@ -3343,7 +3339,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 <dd>Pandas dataframe containing the well records with their individual descriptions</dd>
 <dt><strong><code>description_col</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>Name of the column containing the geologic description of each interval, by default 'FORMATION'</dd>
-<dt><strong><code>no_data_val</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dt><strong><code>no_data_val_table</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>The value expected if the column is empty or there is no data. These will be replaced by np.nan before being removed, by default ''</dd>
 <dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, optional</dt>
 <dd>Whether to print the results of this step to the terminal, by default False</dd>
@@ -3359,7 +3355,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def remove_no_formation(df, description_col=&#39;FORMATION&#39;, no_data_val=&#39;&#39;, verbose=False, log=False):
+<pre><code class="python">def remove_no_formation(df, description_col=&#39;FORMATION&#39;, no_data_val_table=&#39;&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function that removes all records in the dataframe containing the well descriptions where no description is given.
 
     Parameters
@@ -3368,7 +3364,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
         Pandas dataframe containing the well records with their individual descriptions
     description_col : str, optional
         Name of the column containing the geologic description of each interval, by default &#39;FORMATION&#39;
-    no_data_val : str, optional
+    no_data_val_table : str, optional
         The value expected if the column is empty or there is no data. These will be replaced by np.nan before being removed, by default &#39;&#39;
     verbose : bool, optional
         Whether to print the results of this step to the terminal, by default False
@@ -3383,7 +3379,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     #Replace empty cells in formation column with nans
-    df[description_col] = df[description_col].replace(no_data_val, np.nan) 
+    df[description_col] = df[description_col].replace(no_data_val_table, np.nan) 
     before = df.shape[0] #Calculate number of rows before dropping
 
     #Drop records without FORMATION information
@@ -3399,7 +3395,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 </details>
 </dd>
 <dt id="w4h.remove_no_topo"><code class="name flex">
-<span>def <span class="ident">remove_no_topo</span></span>(<span>df, zcol='ELEV_FT', no_data_val='', verbose=False, log=False)</span>
+<span>def <span class="ident">remove_no_topo</span></span>(<span>df, zcol='ELEV_FT', no_data_val_table='', verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to remove wells that do not have topography data (needed for layer selection later).</p>
@@ -3410,7 +3406,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 <dd>Pandas dataframe containing elevation information.</dd>
 <dt><strong><code>zcol</code></strong> :&ensp;<code>str</code></dt>
 <dd>Name of elevation column</dd>
-<dt><strong><code>no_data_val</code></strong> :&ensp;<code>any</code></dt>
+<dt><strong><code>no_data_val_table</code></strong> :&ensp;<code>any</code></dt>
 <dd>Value in dataset that indicates no data is present (replaced with np.nan)</dd>
 <dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, optional</dt>
 <dd>Whether to print outputs, by default True</dd>
@@ -3426,7 +3422,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def remove_no_topo(df, zcol=&#39;ELEV_FT&#39;, no_data_val=&#39;&#39;, verbose=False, log=False):
+<pre><code class="python">def remove_no_topo(df, zcol=&#39;ELEV_FT&#39;, no_data_val_table=&#39;&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to remove wells that do not have topography data (needed for layer selection later).
 
     This function is intended to be run on the metadata table after elevations have attempted to been added.
@@ -3437,7 +3433,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
         Pandas dataframe containing elevation information.
     zcol : str
         Name of elevation column
-    no_data_val : any
+    no_data_val_table : any
         Value in dataset that indicates no data is present (replaced with np.nan)
     verbose : bool, optional
         Whether to print outputs, by default True
@@ -3453,7 +3449,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 
     before = df.shape[0]
     
-    df[zcol].replace(no_data_val, np.nan, inplace=True)
+    df[zcol].replace(no_data_val_table, np.nan, inplace=True)
     df.dropna(subset=[zcol], inplace=True)
     
     if verbose:

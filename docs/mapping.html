@@ -123,7 +123,7 @@ def coords2geometry(df_no_geometry, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE
     return gdf
 
 #Clip a geodataframe to a study area
-def clip_gdf2study_area(study_area, gdf, input_coords_crs=&#39;EPSG:4269&#39;, log=False):
+def clip_gdf2study_area(study_area, gdf, log=False):
     &#34;&#34;&#34;Clips dataframe to only include things within study area.
 
     Parameters
@@ -132,8 +132,6 @@ def clip_gdf2study_area(study_area, gdf, input_coords_crs=&#39;EPSG:4269&#39;, l
         Inputs study area polygon
     gdf : geopandas.GeoDataFrame
         Inputs point data
-    input_coords_crs : str, default=&#39;EPSG:4269&#39;
-        Inputs crs to project study area to
     log : bool, default = False
         Whether to log results to log file, by default False
 
@@ -145,7 +143,7 @@ def clip_gdf2study_area(study_area, gdf, input_coords_crs=&#39;EPSG:4269&#39;, l
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    studyArea_proj = study_area.to_crs(input_coords_crs).copy()
+    studyArea_proj = study_area.to_crs(gdf.crs).copy()
     gdfClip = gpd.clip(gdf, studyArea_proj) #Easier to project just study area to ensure data fit
     gdfClip.reset_index(inplace=True, drop=True) #Reset index
     
@@ -527,7 +525,7 @@ def grid2study_area(study_area, grid, study_area_crs=&#39;&#39;, grid_crs=&#39;&
     return grid
 
 #Read the model grid into (rio)xarray
-def read_model_grid(model_grid_path, study_area=None, no_data_val=0, read_grid=True, node_byspace=True, study_area_crs=None, grid_crs=None, verbose=False, log=False):
+def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_grid=True, node_byspace=True, study_area_crs=None, grid_crs=None, verbose=False, log=False):
     &#34;&#34;&#34;Reads in model grid to xarray data array
 
     Parameters
@@ -536,7 +534,7 @@ def read_model_grid(model_grid_path, study_area=None, no_data_val=0, read_grid=T
         Path to model grid file
     study_area : geopandas.GeoDataFrame, default=None
         Dataframe containing study area polygon
-    no_data_val : int, default=0
+    no_data_val_grid : int, default=0
         value assigned to areas with no data
     readGrid : bool, default=True
         Whether function to either read grid or create grid
@@ -646,7 +644,7 @@ def read_model_grid(model_grid_path, study_area=None, no_data_val=0, read_grid=T
     return modelGrid
 
 #Read a grid from a file in using rioxarray
-def read_grid(grid_path=None, grid_type=&#39;model&#39;, no_data_val=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, verbose=False, log=False, **kwargs):
+def read_grid(grid_path=None, grid_type=&#39;model&#39;, no_data_val_grid=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, verbose=False, log=False, **kwargs):
     &#34;&#34;&#34;Reads in grid
 
     Parameters
@@ -655,7 +653,7 @@ def read_grid(grid_path=None, grid_type=&#39;model&#39;, no_data_val=0, use_serv
         Path to a grid file
     grid_type : str, default=&#39;model&#39;
         Sets what type of grid to load in
-    no_data_val : int, default=0
+    no_data_val_grid : int, default=0
         Sets the no data value of the grid
     use_service : str, default=False
         Sets which service the function uses
@@ -681,7 +679,7 @@ def read_grid(grid_path=None, grid_type=&#39;model&#39;, no_data_val=0, use_serv
             rgrid = kwargs[&#39;read_grid&#39;]
         else:
             rgrid=True
-        gridIN = read_model_grid(model_grid_path=grid_path, study_area=study_area,  no_data_val=0, read_grid=rgrid, study_area_crs=study_area_crs, grid_crs=grid_crs, verbose=verbose)
+        gridIN = read_model_grid(model_grid_path=grid_path, study_area=study_area,  no_data_val_grid=0, read_grid=rgrid, study_area_crs=study_area_crs, grid_crs=grid_crs, verbose=verbose)
     else:
         if use_service==False:
             gridIN = rxr.open_rasterio(grid_path)
@@ -710,16 +708,16 @@ def read_grid(grid_path=None, grid_type=&#39;model&#39;, no_data_val=0, use_serv
             gridIN = grid2study_area(study_area=study_area, grid=gridIN, study_area_crs=study_area_crs, grid_crs=grid_crs)
 
         try:
-            no_data_val = gridIN.attrs[&#39;_FillValue&#39;] #Extract from dataset itself
+            no_data_val_grid = gridIN.attrs[&#39;_FillValue&#39;] #Extract from dataset itself
         except:
             pass
                 
-        gridIN = gridIN.where(gridIN != no_data_val, other=np.nan)  #Replace no data values with NaNs
+        gridIN = gridIN.where(gridIN != no_data_val_grid, other=np.nan)  #Replace no data values with NaNs
 
     return gridIN
 
 #Align and coregister rasters
-def align_rasters(grids_unaligned, modelgrid, no_data_val=0, log=False):
+def align_rasters(grids_unaligned, modelgrid, no_data_val_grid=0, log=False):
     &#34;&#34;&#34;Reprojects two rasters and aligns their pixels
 
     Parameters
@@ -728,7 +726,7 @@ def align_rasters(grids_unaligned, modelgrid, no_data_val=0, log=False):
         Contains a list of grids or one unaligned grid
     modelgrid : xarray.DataArray
         Contains model grid
-    no_data_val : int, default=0
+    no_data_val_grid : int, default=0
         Sets value of no data pixels
     log : bool, default = False
         Whether to log results to log file, by default False
@@ -746,11 +744,11 @@ def align_rasters(grids_unaligned, modelgrid, no_data_val=0, log=False):
             alignedGrid = g.rio.reproject_match(modelgrid)
 
             try:
-                no_data_val = alignedGrid.attrs[&#39;_FillValue&#39;] #Extract from dataset itself
+                no_data_val_grid = alignedGrid.attrs[&#39;_FillValue&#39;] #Extract from dataset itself
             except:
                 pass
             
-            alignedGrid = alignedGrid.where(alignedGrid != no_data_val)  #Replace no data values with NaNs
+            alignedGrid = alignedGrid.where(alignedGrid != no_data_val_grid)  #Replace no data values with NaNs
             
             alignedGrids.append(alignedGrid)
     else:
@@ -820,7 +818,7 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="w4h.mapping.align_rasters"><code class="name flex">
-<span>def <span class="ident">align_rasters</span></span>(<span>grids_unaligned, modelgrid, no_data_val=0, log=False)</span>
+<span>def <span class="ident">align_rasters</span></span>(<span>grids_unaligned, modelgrid, no_data_val_grid=0, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Reprojects two rasters and aligns their pixels</p>
@@ -830,7 +828,7 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
 <dd>Contains a list of grids or one unaligned grid</dd>
 <dt><strong><code>modelgrid</code></strong> :&ensp;<code>xarray.DataArray</code></dt>
 <dd>Contains model grid</dd>
-<dt><strong><code>no_data_val</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
+<dt><strong><code>no_data_val_grid</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
 <dd>Sets value of no data pixels</dd>
 <dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
 <dd>Whether to log results to log file, by default False</dd>
@@ -844,7 +842,7 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def align_rasters(grids_unaligned, modelgrid, no_data_val=0, log=False):
+<pre><code class="python">def align_rasters(grids_unaligned, modelgrid, no_data_val_grid=0, log=False):
     &#34;&#34;&#34;Reprojects two rasters and aligns their pixels
 
     Parameters
@@ -853,7 +851,7 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
         Contains a list of grids or one unaligned grid
     modelgrid : xarray.DataArray
         Contains model grid
-    no_data_val : int, default=0
+    no_data_val_grid : int, default=0
         Sets value of no data pixels
     log : bool, default = False
         Whether to log results to log file, by default False
@@ -871,11 +869,11 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
             alignedGrid = g.rio.reproject_match(modelgrid)
 
             try:
-                no_data_val = alignedGrid.attrs[&#39;_FillValue&#39;] #Extract from dataset itself
+                no_data_val_grid = alignedGrid.attrs[&#39;_FillValue&#39;] #Extract from dataset itself
             except:
                 pass
             
-            alignedGrid = alignedGrid.where(alignedGrid != no_data_val)  #Replace no data values with NaNs
+            alignedGrid = alignedGrid.where(alignedGrid != no_data_val_grid)  #Replace no data values with NaNs
             
             alignedGrids.append(alignedGrid)
     else:
@@ -892,7 +890,7 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
 </details>
 </dd>
 <dt id="w4h.mapping.clip_gdf2study_area"><code class="name flex">
-<span>def <span class="ident">clip_gdf2study_area</span></span>(<span>study_area, gdf, input_coords_crs='EPSG:4269', log=False)</span>
+<span>def <span class="ident">clip_gdf2study_area</span></span>(<span>study_area, gdf, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Clips dataframe to only include things within study area.</p>
@@ -902,8 +900,6 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
 <dd>Inputs study area polygon</dd>
 <dt><strong><code>gdf</code></strong> :&ensp;<code>geopandas.GeoDataFrame</code></dt>
 <dd>Inputs point data</dd>
-<dt><strong><code>input_coords_crs</code></strong> :&ensp;<code>str</code>, default=<code>'EPSG:4269'</code></dt>
-<dd>Inputs crs to project study area to</dd>
 <dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
 <dd>Whether to log results to log file, by default False</dd>
 </dl>
@@ -916,7 +912,7 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def clip_gdf2study_area(study_area, gdf, input_coords_crs=&#39;EPSG:4269&#39;, log=False):
+<pre><code class="python">def clip_gdf2study_area(study_area, gdf, log=False):
     &#34;&#34;&#34;Clips dataframe to only include things within study area.
 
     Parameters
@@ -925,8 +921,6 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
         Inputs study area polygon
     gdf : geopandas.GeoDataFrame
         Inputs point data
-    input_coords_crs : str, default=&#39;EPSG:4269&#39;
-        Inputs crs to project study area to
     log : bool, default = False
         Whether to log results to log file, by default False
 
@@ -938,7 +932,7 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    studyArea_proj = study_area.to_crs(input_coords_crs).copy()
+    studyArea_proj = study_area.to_crs(gdf.crs).copy()
     gdfClip = gpd.clip(gdf, studyArea_proj) #Easier to project just study area to ensure data fit
     gdfClip.reset_index(inplace=True, drop=True) #Reset index
     
@@ -1183,7 +1177,7 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
 </details>
 </dd>
 <dt id="w4h.mapping.read_grid"><code class="name flex">
-<span>def <span class="ident">read_grid</span></span>(<span>grid_path=None, grid_type='model', no_data_val=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, verbose=False, log=False, **kwargs)</span>
+<span>def <span class="ident">read_grid</span></span>(<span>grid_path=None, grid_type='model', no_data_val_grid=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, verbose=False, log=False, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Reads in grid</p>
@@ -1193,7 +1187,7 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
 <dd>Path to a grid file</dd>
 <dt><strong><code>grid_type</code></strong> :&ensp;<code>str</code>, default=<code>'model'</code></dt>
 <dd>Sets what type of grid to load in</dd>
-<dt><strong><code>no_data_val</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
+<dt><strong><code>no_data_val_grid</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
 <dd>Sets the no data value of the grid</dd>
 <dt><strong><code>use_service</code></strong> :&ensp;<code>str</code>, default=<code>False</code></dt>
 <dd>Sets which service the function uses</dd>
@@ -1215,7 +1209,7 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_grid(grid_path=None, grid_type=&#39;model&#39;, no_data_val=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, verbose=False, log=False, **kwargs):
+<pre><code class="python">def read_grid(grid_path=None, grid_type=&#39;model&#39;, no_data_val_grid=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, verbose=False, log=False, **kwargs):
     &#34;&#34;&#34;Reads in grid
 
     Parameters
@@ -1224,7 +1218,7 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
         Path to a grid file
     grid_type : str, default=&#39;model&#39;
         Sets what type of grid to load in
-    no_data_val : int, default=0
+    no_data_val_grid : int, default=0
         Sets the no data value of the grid
     use_service : str, default=False
         Sets which service the function uses
@@ -1250,7 +1244,7 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
             rgrid = kwargs[&#39;read_grid&#39;]
         else:
             rgrid=True
-        gridIN = read_model_grid(model_grid_path=grid_path, study_area=study_area,  no_data_val=0, read_grid=rgrid, study_area_crs=study_area_crs, grid_crs=grid_crs, verbose=verbose)
+        gridIN = read_model_grid(model_grid_path=grid_path, study_area=study_area,  no_data_val_grid=0, read_grid=rgrid, study_area_crs=study_area_crs, grid_crs=grid_crs, verbose=verbose)
     else:
         if use_service==False:
             gridIN = rxr.open_rasterio(grid_path)
@@ -1279,17 +1273,17 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
             gridIN = grid2study_area(study_area=study_area, grid=gridIN, study_area_crs=study_area_crs, grid_crs=grid_crs)
 
         try:
-            no_data_val = gridIN.attrs[&#39;_FillValue&#39;] #Extract from dataset itself
+            no_data_val_grid = gridIN.attrs[&#39;_FillValue&#39;] #Extract from dataset itself
         except:
             pass
                 
-        gridIN = gridIN.where(gridIN != no_data_val, other=np.nan)  #Replace no data values with NaNs
+        gridIN = gridIN.where(gridIN != no_data_val_grid, other=np.nan)  #Replace no data values with NaNs
 
     return gridIN</code></pre>
 </details>
 </dd>
 <dt id="w4h.mapping.read_model_grid"><code class="name flex">
-<span>def <span class="ident">read_model_grid</span></span>(<span>model_grid_path, study_area=None, no_data_val=0, read_grid=True, node_byspace=True, study_area_crs=None, grid_crs=None, verbose=False, log=False)</span>
+<span>def <span class="ident">read_model_grid</span></span>(<span>model_grid_path, study_area=None, no_data_val_grid=0, read_grid=True, node_byspace=True, study_area_crs=None, grid_crs=None, verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Reads in model grid to xarray data array</p>
@@ -1299,7 +1293,7 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
 <dd>Path to model grid file</dd>
 <dt><strong><code>study_area</code></strong> :&ensp;<code>geopandas.GeoDataFrame</code>, default=<code>None</code></dt>
 <dd>Dataframe containing study area polygon</dd>
-<dt><strong><code>no_data_val</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
+<dt><strong><code>no_data_val_grid</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
 <dd>value assigned to areas with no data</dd>
 <dt><strong><code>readGrid</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
 <dd>Whether function to either read grid or create grid</dd>
@@ -1321,7 +1315,7 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_model_grid(model_grid_path, study_area=None, no_data_val=0, read_grid=True, node_byspace=True, study_area_crs=None, grid_crs=None, verbose=False, log=False):
+<pre><code class="python">def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_grid=True, node_byspace=True, study_area_crs=None, grid_crs=None, verbose=False, log=False):
     &#34;&#34;&#34;Reads in model grid to xarray data array
 
     Parameters
@@ -1330,7 +1324,7 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
         Path to model grid file
     study_area : geopandas.GeoDataFrame, default=None
         Dataframe containing study area polygon
-    no_data_val : int, default=0
+    no_data_val_grid : int, default=0
         value assigned to areas with no data
     readGrid : bool, default=True
         Whether function to either read grid or create grid

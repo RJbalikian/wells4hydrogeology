@@ -43,7 +43,7 @@ def remove_nonlocated(df, metadata_df, verbose=False, log=False):
 
 #Function to remove data (intended for headerData) without surface topography information
 ##THIS ASSUMES AND SHOULD ONLY BE RUN AFTER ALL DESIRED SURFACE TOPO DATASETS HAVE BEEN MERGED/ADDED
-def remove_no_topo(df, zcol='ELEV_FT', no_data_val='', verbose=False, log=False):
+def remove_no_topo(df, zcol='ELEV_FT', no_data_val_table='', verbose=False, log=False):
     """Function to remove wells that do not have topography data (needed for layer selection later).
 
     This function is intended to be run on the metadata table after elevations have attempted to been added.
@@ -54,7 +54,7 @@ def remove_no_topo(df, zcol='ELEV_FT', no_data_val='', verbose=False, log=False)
         Pandas dataframe containing elevation information.
     zcol : str
         Name of elevation column
-    no_data_val : any
+    no_data_val_table : any
         Value in dataset that indicates no data is present (replaced with np.nan)
     verbose : bool, optional
         Whether to print outputs, by default True
@@ -70,7 +70,7 @@ def remove_no_topo(df, zcol='ELEV_FT', no_data_val='', verbose=False, log=False)
 
     before = df.shape[0]
     
-    df[zcol].replace(no_data_val, np.nan, inplace=True)
+    df[zcol].replace(no_data_val_table, np.nan, inplace=True)
     df.dropna(subset=[zcol], inplace=True)
     
     if verbose:
@@ -82,7 +82,7 @@ def remove_no_topo(df, zcol='ELEV_FT', no_data_val='', verbose=False, log=False)
     return df
 
 #This function drops all records in the downholedata with no depth information (either top or bottom depth of well interval)
-def remove_no_depth(df, top_col='TOP', bottom_col='BOTTOM', no_data_val='', verbose=False, log=False):
+def remove_no_depth(df, top_col='TOP', bottom_col='BOTTOM', no_data_val_table='', verbose=False, log=False):
     """Function to remove well intervals with no depth information
 
     Parameters
@@ -93,7 +93,7 @@ def remove_no_depth(df, top_col='TOP', bottom_col='BOTTOM', no_data_val='', verb
         Name of column containing information on the top of the well intervals, by default 'TOP'
     bottom_col : str, optional
         Name of column containing information on the bottom of the well intervals, by default 'BOTTOM'
-    no_data_val : any, optional
+    no_data_val_table : any, optional
         No data value in the input data, used by this function to indicate that depth data is not there, to be replaced by np.nan, by default ''
     verbose : bool, optional
         Whether to print results to console, by default False
@@ -108,8 +108,8 @@ def remove_no_depth(df, top_col='TOP', bottom_col='BOTTOM', no_data_val='', verb
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     #Replace empty cells in top and bottom columns with nan
-    df[top_col] = df[top_col].replace(no_data_val, np.nan)
-    df[bottom_col] = df[bottom_col].replace(no_data_val, np.nan)
+    df[top_col] = df[top_col].replace(no_data_val_table, np.nan)
+    df[bottom_col] = df[bottom_col].replace(no_data_val_table, np.nan)
     
     #Calculate number of rows before dropping
     before = df.shape[0]
@@ -167,7 +167,7 @@ def remove_bad_depth(df, top_col='TOP', bottom_col='BOTTOM', depth_type='depth',
     return df
 
 #This function drops all records in downholeData with no formation in formation in the description fiel
-def remove_no_formation(df, description_col='FORMATION', no_data_val='', verbose=False, log=False):
+def remove_no_formation(df, description_col='FORMATION', no_data_val_table='', verbose=False, log=False):
     """Function that removes all records in the dataframe containing the well descriptions where no description is given.
 
     Parameters
@@ -176,7 +176,7 @@ def remove_no_formation(df, description_col='FORMATION', no_data_val='', verbose
         Pandas dataframe containing the well records with their individual descriptions
     description_col : str, optional
         Name of the column containing the geologic description of each interval, by default 'FORMATION'
-    no_data_val : str, optional
+    no_data_val_table : str, optional
         The value expected if the column is empty or there is no data. These will be replaced by np.nan before being removed, by default ''
     verbose : bool, optional
         Whether to print the results of this step to the terminal, by default False
@@ -191,7 +191,7 @@ def remove_no_formation(df, description_col='FORMATION', no_data_val='', verbose
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     #Replace empty cells in formation column with nans
-    df[description_col] = df[description_col].replace(no_data_val, np.nan) 
+    df[description_col] = df[description_col].replace(no_data_val_table, np.nan) 
     before = df.shape[0] #Calculate number of rows before dropping
 
     #Drop records without FORMATION information

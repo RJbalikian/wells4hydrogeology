@@ -366,7 +366,42 @@ def logger_function(logtocommence, parameters, func_name):
         else:
             #Don&#39;t log if log=False
             pass
-    return</code></pre>
+    return
+
+def __check_parameter_names():
+    #Check parameters are unique
+    import inspect
+    import w4h
+    function_list = [w4h.file_setup,
+                 w4h.read_raw_csv,
+                 w4h.define_dtypes,
+                 w4h.read_study_area,
+                 w4h.read_grid,
+                 w4h.coords2geometry,
+                 w4h.clip_gdf2study_area,
+                 w4h.remove_nonlocated,
+                 w4h.remove_no_topo,
+                 w4h.remove_no_depth,
+                 w4h.remove_bad_depth,
+                 w4h.remove_no_formation,
+                 w4h.get_search_terms,
+                 w4h.read_dictionary_terms,
+                 w4h.specific_define,
+                 w4h.start_define,
+                 w4h.wildcard_define,
+                 w4h.depth_define,
+                 w4h.fill_unclassified,
+                 w4h.read_lithologies,
+                 w4h.merge_lithologies,
+                 w4h.align_rasters,
+                 w4h.get_drift_thick,
+                 w4h.sample_raster_points,
+                 w4h.get_layer_depths,
+                 w4h.layer_target_thick,
+                 w4h.layer_interp,
+                 w4h.export_grids]
+    for f in function_list:
+        print(inspect.getfullargspec(f)[0])</code></pre>
 </details>
 </section>
 <section>

@@ -95,7 +95,7 @@ def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELE
     return gdf
 
 #Clip a geodataframe to a study area
-def clip_gdf2study_area(study_area, gdf, input_coords_crs='EPSG:4269', log=False):
+def clip_gdf2study_area(study_area, gdf, log=False):
     """Clips dataframe to only include things within study area.
 
     Parameters
@@ -104,8 +104,6 @@ def clip_gdf2study_area(study_area, gdf, input_coords_crs='EPSG:4269', log=False
         Inputs study area polygon
     gdf : geopandas.GeoDataFrame
         Inputs point data
-    input_coords_crs : str, default='EPSG:4269'
-        Inputs crs to project study area to
     log : bool, default = False
         Whether to log results to log file, by default False
 
@@ -117,7 +115,7 @@ def clip_gdf2study_area(study_area, gdf, input_coords_crs='EPSG:4269', log=False
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    studyArea_proj = study_area.to_crs(input_coords_crs).copy()
+    studyArea_proj = study_area.to_crs(gdf.crs).copy()
     gdfClip = gpd.clip(gdf, studyArea_proj) #Easier to project just study area to ensure data fit
     gdfClip.reset_index(inplace=True, drop=True) #Reset index
     
@@ -499,7 +497,7 @@ def grid2study_area(study_area, grid, study_area_crs='', grid_crs='', log=False)
     return grid
 
 #Read the model grid into (rio)xarray
-def read_model_grid(model_grid_path, study_area=None, no_data_val=0, read_grid=True, node_byspace=True, study_area_crs=None, grid_crs=None, verbose=False, log=False):
+def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_grid=True, node_byspace=True, study_area_crs=None, grid_crs=None, verbose=False, log=False):
     """Reads in model grid to xarray data array
 
     Parameters
@@ -508,7 +506,7 @@ def read_model_grid(model_grid_path, study_area=None, no_data_val=0, read_grid=T
         Path to model grid file
     study_area : geopandas.GeoDataFrame, default=None
         Dataframe containing study area polygon
-    no_data_val : int, default=0
+    no_data_val_grid : int, default=0
         value assigned to areas with no data
     readGrid : bool, default=True
         Whether function to either read grid or create grid
@@ -618,7 +616,7 @@ def read_model_grid(model_grid_path, study_area=None, no_data_val=0, read_grid=T
     return modelGrid
 
 #Read a grid from a file in using rioxarray
-def read_grid(grid_path=None, grid_type='model', no_data_val=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, verbose=False, log=False, **kwargs):
+def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, verbose=False, log=False, **kwargs):
     """Reads in grid
 
     Parameters
@@ -627,7 +625,7 @@ def read_grid(grid_path=None, grid_type='model', no_data_val=0, use_service=Fals
         Path to a grid file
     grid_type : str, default='model'
         Sets what type of grid to load in
-    no_data_val : int, default=0
+    no_data_val_grid : int, default=0
         Sets the no data value of the grid
     use_service : str, default=False
         Sets which service the function uses
@@ -653,7 +651,7 @@ def read_grid(grid_path=None, grid_type='model', no_data_val=0, use_service=Fals
             rgrid = kwargs['read_grid']
         else:
             rgrid=True
-        gridIN = read_model_grid(model_grid_path=grid_path, study_area=study_area,  no_data_val=0, read_grid=rgrid, study_area_crs=study_area_crs, grid_crs=grid_crs, verbose=verbose)
+        gridIN = read_model_grid(model_grid_path=grid_path, study_area=study_area,  no_data_val_grid=0, read_grid=rgrid, study_area_crs=study_area_crs, grid_crs=grid_crs, verbose=verbose)
     else:
         if use_service==False:
             gridIN = rxr.open_rasterio(grid_path)
@@ -682,16 +680,16 @@ def read_grid(grid_path=None, grid_type='model', no_data_val=0, use_service=Fals
             gridIN = grid2study_area(study_area=study_area, grid=gridIN, study_area_crs=study_area_crs, grid_crs=grid_crs)
 
         try:
-            no_data_val = gridIN.attrs['_FillValue'] #Extract from dataset itself
+            no_data_val_grid = gridIN.attrs['_FillValue'] #Extract from dataset itself
         except:
             pass
                 
-        gridIN = gridIN.where(gridIN != no_data_val, other=np.nan)  #Replace no data values with NaNs
+        gridIN = gridIN.where(gridIN != no_data_val_grid, other=np.nan)  #Replace no data values with NaNs
 
     return gridIN
 
 #Align and coregister rasters
-def align_rasters(grids_unaligned, modelgrid, no_data_val=0, log=False):
+def align_rasters(grids_unaligned, modelgrid, no_data_val_grid=0, log=False):
     """Reprojects two rasters and aligns their pixels
 
     Parameters
@@ -700,7 +698,7 @@ def align_rasters(grids_unaligned, modelgrid, no_data_val=0, log=False):
         Contains a list of grids or one unaligned grid
     modelgrid : xarray.DataArray
         Contains model grid
-    no_data_val : int, default=0
+    no_data_val_grid : int, default=0
         Sets value of no data pixels
     log : bool, default = False
         Whether to log results to log file, by default False
@@ -718,11 +716,11 @@ def align_rasters(grids_unaligned, modelgrid, no_data_val=0, log=False):
             alignedGrid = g.rio.reproject_match(modelgrid)
 
             try:
-                no_data_val = alignedGrid.attrs['_FillValue'] #Extract from dataset itself
+                no_data_val_grid = alignedGrid.attrs['_FillValue'] #Extract from dataset itself
             except:
                 pass
             
-            alignedGrid = alignedGrid.where(alignedGrid != no_data_val)  #Replace no data values with NaNs
+            alignedGrid = alignedGrid.where(alignedGrid != no_data_val_grid)  #Replace no data values with NaNs
             
             alignedGrids.append(alignedGrid)
     else:
