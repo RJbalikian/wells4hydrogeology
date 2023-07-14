@@ -265,8 +265,12 @@ def __get_resource_path(res):
         _description_
     """
     repoPath = pathlib.Path(__file__).parent.parent
-    repoPathStr = str(repoPath).replace('\\', '/').replace('\\'[0], '/')
-    resource = repoPathStr+'/resources/'+res
+    try:
+        resource = repoPath/ "resources" / "sample_data"/ res
+        if not resource.exists():
+            raise FileNotFoundError('File not found')
+    except:
+        resource = repoPath/ "resources" / res
     return resource
 
 #Read dictionary file into dictionary variable
