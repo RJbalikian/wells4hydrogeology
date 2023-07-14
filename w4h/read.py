@@ -571,6 +571,44 @@ def read_lithologies(lith_file=None, interp_col='LITHOLOGY', target_col='CODE', 
     return lithoDF
 
 def add_control_points(df, df_control, well_key='API_NUMBER', xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', controlpoints_crs='EPSG:4269', top_col='TOP', bottom_col='BOTTOM', description_col='FORMATION', interp_col='INTERPRETATION', target_col='TARGET', verbose=False, log=False, **read_csv_kwargs):
+    """Function to add control points, primarily to aid in interpolation. This may be useful when conditions are known but do not exist in input well database
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe with current working data
+    df_control : str, pathlib.Purepath, or pandas.DataFrame
+        Pandas dataframe with control points
+    well_key : str, optional
+        The column containing the "key" (unique identifier) for each well, by default 'API_NUMBER'
+    xcol : str, optional
+        The column in df_control containing the x coordinates for each control point, by default 'LONGITUDE'
+    ycol : str, optional
+        The column in df_control containing the y coordinates for each control point, by default 'LATITUDE'
+    zcol : str, optional
+        The column in df_control containing the z coordinates for each control point, by default 'ELEV_FT'
+    controlpoints_crs : str, optional
+        The column in df_control containing the crs of points, by default 'EPSG:4269'
+    top_col : str, optional
+        The column in df_control containing the top depth/elevation of the control point 'interval', by default 'TOP'
+    bottom_col : str, optional
+        The column in df_control containing the bottom depth/elevation of the control point 'interval', by default 'BOTTOM'
+    description_col : str, optional
+        The column in df_control with the description (if this is used), by default 'FORMATION'
+    interp_col : str, optional
+        The column in df_control with the interpretation (if this is used), by default 'INTERPRETATION'
+    target_col : str, optional
+        The column in df_control with the target code (if this is used), by default 'TARGET'
+    verbose : bool, optional
+        Whether to print information to terminal, by default False
+    log : bool, optional
+        Whether to log information in log file, by default False
+
+    Returns
+    -------
+    pandas.DataFrame
+        Pandas DataFrame with original data and control points formatted the same way and concatenated together
+    """
     import geopandas as gpd
 
     if isinstance(df_control, pd.DataFrame) or isinstance(df_control, gpd.GeoDataFrame):
@@ -578,8 +616,9 @@ def add_control_points(df, df_control, well_key='API_NUMBER', xcol='LONGITUDE', 
     else:
         df_control = pd.read_csv(df_control, **read_csv_kwargs)
 
-    from w4h import coords2geometry
-    df_control = coords2geometry(df_no_geometry=df_control, xcol=xcol, ycol=ycol, zcol=zcol, input_coords_crs=controlpoints_crs, log=log)
+    if isinstance(df, gpd.GeoDataFrame):
+        from w4h import coords2geometry
+        df_control = coords2geometry(df_no_geometry=df_control, xcol=xcol, ycol=ycol, zcol=zcol, input_coords_crs=controlpoints_crs, log=log)
 
     df_control = pd.concat([df, df_control])
     return df_control
