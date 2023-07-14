@@ -16,7 +16,7 @@ from w4h import logger_function
 
 #Define records with full search term
 
-def specific_define(df, terms_df, description_col='FORMATION', terms_col='FORMATION', verbose=False, log=False):
+def specific_define(df, terms_df, description_col='FORMATION', terms_col='DESCRIPTION', verbose=False, log=False):
     """Function to classify terms that have been specifically defined in the terms_df.
 
     Parameters
@@ -56,7 +56,7 @@ def specific_define(df, terms_df, description_col='FORMATION', terms_col='FORMAT
     
     df_Interps = pd.merge(df, terms_df.set_index(terms_col), on=description_col, how='left')
     df_Interps.rename(columns={description_col:'FORMATION'}, inplace=True)
-    df_Interps['BEDROCK_FLAG'] = df_Interps['INTERPRETATION'] == 'BEDROCK'
+    df_Interps['BEDROCK_FLAG'] = df_Interps['LITHOLOGY'] == 'BEDROCK'
     
     if verbose:
         print("Records Classified with full search term: "+str(int(df_Interps[df_Interps['CLASS_FLAG']==1]['CLASS_FLAG'].sum())))
@@ -95,7 +95,7 @@ def split_defined(df, classification_col='CLASS_FLAG', verbose=False, log=False)
     return classifedDF, searchDF
 
 #Classify downhole data by the initial substring
-def start_define(df, terms_df, description_col='FORMATION', terms_col='FORMATION', verbose=False, log=False):
+def start_define(df, terms_df, description_col='FORMATION', terms_col='DESCRIPTION', verbose=False, log=False):
     """Function to classify descriptions according to starting substring. 
 
     Parameters
@@ -130,8 +130,8 @@ def start_define(df, terms_df, description_col='FORMATION', terms_col='FORMATION
     #First, for each startterm, find all results in df that start with, add classification flag, and add interpretation.
     for i,s in enumerate(terms_df[terms_col]):
         df['CLASS_FLAG'].where(~df[description_col].str.startswith(s,na=False),4,inplace=True)
-        df['INTERPRETATION'].where(~df[description_col].str.startswith(s,na=False),terms_df.loc[i,'INTERPRETATION'],inplace=True)
-    df['BEDROCK_FLAG'].loc[df["INTERPRETATION"] == 'BEDROCK']
+        df['LITHOLOGY'].where(~df[description_col].str.startswith(s,na=False),terms_df.loc[i,'LITHOLOGY'],inplace=True)
+    df['BEDROCK_FLAG'].loc[df["LITHOLOGY"] == 'BEDROCK']
     
     if verbose:
         print("Records classified with start search term: "+str(int(df['CLASS_FLAG'].count())))
@@ -141,8 +141,8 @@ def start_define(df, terms_df, description_col='FORMATION', terms_col='FORMATION
     return df
 
 #Classify downhole data by any substring
-def wildcard_define(df, terms_df, description_col='FORMATION', terms_col='FORMATION', verbose=False, log=False):
-    """Function to classify descriptions according to starting substring. 
+def wildcard_define(df, terms_df, description_col='FORMATION', terms_col='DESCRIPTION', verbose=False, log=False):
+    """Function to classify descriptions according to any substring. 
 
     Parameters
     ----------
@@ -176,8 +176,8 @@ def wildcard_define(df, terms_df, description_col='FORMATION', terms_col='FORMAT
     #First, for each startterm, find all results in df that start with, add classification flag, and add interpretation.
     for i,s in enumerate(terms_df[terms_col]):
         df['CLASS_FLAG'].where(~df[description_col].str.contains(s, case=False, regex=False, na=False), 5, inplace=True)
-        df['INTERPRETATION'].where(~df[description_col].str.contains(s, case=False, regex=False, na=False),terms_df.loc[i,'INTERPRETATION'],inplace=True)
-    df['BEDROCK_FLAG'].loc[df["INTERPRETATION"] == 'BEDROCK']
+        df['LITHOLOGY'].where(~df[description_col].str.contains(s, case=False, regex=False, na=False),terms_df.loc[i,'LITHOLOGY'],inplace=True)
+    df['BEDROCK_FLAG'].loc[df["LITHOLOGY"] == 'BEDROCK']
     
     if verbose:
         print("Records classified with wildcard search term: "+str(int(df['CLASS_FLAG'].count())))
@@ -301,7 +301,7 @@ def fill_unclassified(df, classification_col='CLASS_FLAG'):
     return df
 
 #Merge lithologies to main df based on classifications
-def merge_lithologies(df, targinterps_df, target_col='TARGET', target_class='bool'):
+def merge_lithologies(df, targinterps_df, interp_col='INTERPRETATION', target_col='TARGET', target_class='bool'):
     """Function to merge lithologies and target booleans based on classifications
     
     Parameters
@@ -331,7 +331,7 @@ def merge_lithologies(df, targinterps_df, target_col='TARGET', target_class='boo
         targinterps_df[target_col].fillna(value=-2, inplace=True)
         targinterps_df[target_col].astype(np.int8)
 
-    df_targ = pd.merge(df, targinterps_df.set_index('INTERPRETATION'), right_on='INTERPRETATION',left_on='INTERPRETATION', how='left')
+    df_targ = pd.merge(df, targinterps_df.set_index(interp_col), right_on=interp_col, left_on='LITHOLOGY', how='left')
     
     return df_targ
 
@@ -387,5 +387,5 @@ def sort_dataframe(df, sort_cols=['API_NUMBER','TOP'], remove_nans=True):
     df_sorted = df.sort_values(sort_cols)
     df_sorted.reset_index(inplace=True, drop=True)
     if remove_nans:
-        df_sorted = df_sorted[pd.notna(df_sorted["INTERPRETATION"])]
+        df_sorted = df_sorted[pd.notna(df_sorted["LITHOLOGY"])]
     return df_sorted

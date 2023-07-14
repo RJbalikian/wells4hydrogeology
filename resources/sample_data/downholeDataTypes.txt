@@ -1,0 +1,9 @@
+{"ID":"uintc", 
+    "API_NUMBER":"uintc",
+    "TABLE_NAME":"str_",
+    "WHO":"str_",
+    "INTERPRET_DATE":"str_",
+    "FORMATION":"str_",
+    "THICKNESS":"single",
+    "TOP":"single",
+    "BOTTOM":"single"}

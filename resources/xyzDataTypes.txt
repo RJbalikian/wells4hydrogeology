@@ -1,5 +1,0 @@
-{"ID":"uintc", 
-    "API_NUMBER":"uintc", 
-    "LATITUDE":"single", 
-    "LONGITUDE":"single", 
-    "ELEV_FT":"single"}

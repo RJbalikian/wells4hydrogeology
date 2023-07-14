@@ -23,12 +23,12 @@ from w4h import logger_function
 lidarURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
 
 #Read study area shapefile (or other file) into geopandas
-def read_study_area(studyareapath, study_area_crs='EPSG:4269', log=False):
+def read_study_area(study_area_path, study_area_crs='EPSG:4269', log=False):
     """Read study area geospatial file into geopandas
 
     Parameters
     ----------
-    studyareapath : str or pathlib.Path
+    study_area_path : str or pathlib.Path
         Filepath to any geospatial file readable by geopandas. 
         Polygon is best, but may work with other types if extent is correct.
     crs : str, tuple, dict, optional
@@ -43,25 +43,25 @@ def read_study_area(studyareapath, study_area_crs='EPSG:4269', log=False):
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    studyAreaIN = gpd.read_file(studyareapath)
+    studyAreaIN = gpd.read_file(study_area_path)
     studyAreaIN.to_crs(study_area_crs, inplace=True)
 
     return studyAreaIN
 
 #Convert coords in columns to geometry in geopandas dataframe
-def coords2geometry(df, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', input_coords_crs='EPSG:4269', use_z=False, log=False):
+def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', input_coords_crs='EPSG:4269', use_z=False, log=False):
     """Adds geometry to points with xy coordinates in the specified coordinate reference system.
 
     Parameters
     ----------
-    df : pandas.Dataframe
+    df_no_geometry : pandas.Dataframe
         a Pandas dataframe containing points
     xcol : str, default='LONGITUDE'
-        Name of column holding x coordinate data in df
+        Name of column holding x coordinate data in df_no_geometry
     ycol : str, default='LATITUDE'
-        Name of column holding y coordinate data in df
+        Name of column holding y coordinate data in df_no_geometry
     zcol : str, default='ELEV_FT'
-        Name of column holding z coordinate data in df
+        Name of column holding z coordinate data in df_no_geometry
     input_coords_crs : str, default='EPSG:4269
         Name of crs used for geometry
     use_z : bool, default=False
@@ -76,6 +76,8 @@ def coords2geometry(df, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', input
 
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
+    df = df_no_geometry.copy()
 
     ptCRS=input_coords_crs
 
@@ -93,7 +95,7 @@ def coords2geometry(df, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', input
     return gdf
 
 #Clip a geodataframe to a study area
-def clip_gdf2study_area(study_area, gdf, input_coords_crs='EPSG:4269', log=False):
+def clip_gdf2study_area(study_area, gdf, log=False):
     """Clips dataframe to only include things within study area.
 
     Parameters
@@ -102,8 +104,6 @@ def clip_gdf2study_area(study_area, gdf, input_coords_crs='EPSG:4269', log=False
         Inputs study area polygon
     gdf : geopandas.GeoDataFrame
         Inputs point data
-    input_coords_crs : str, default='EPSG:4269'
-        Inputs crs to project study area to
     log : bool, default = False
         Whether to log results to log file, by default False
 
@@ -115,7 +115,7 @@ def clip_gdf2study_area(study_area, gdf, input_coords_crs='EPSG:4269', log=False
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    studyArea_proj = study_area.to_crs(input_coords_crs).copy()
+    studyArea_proj = study_area.to_crs(gdf.crs).copy()
     gdfClip = gpd.clip(gdf, studyArea_proj) #Easier to project just study area to ensure data fit
     gdfClip.reset_index(inplace=True, drop=True) #Reset index
     
@@ -497,16 +497,16 @@ def grid2study_area(study_area, grid, study_area_crs='', grid_crs='', log=False)
     return grid
 
 #Read the model grid into (rio)xarray
-def read_model_grid(gridpath, study_area=None, nodataval=0, read_grid=True, node_byspace=False, study_area_crs=None, grid_crs=None, log=False):
+def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_grid=True, node_byspace=True, study_area_crs=None, grid_crs=None, verbose=False, log=False):
     """Reads in model grid to xarray data array
 
     Parameters
     ----------
-    gridpath : str
+    grid_path : str
         Path to model grid file
     study_area : geopandas.GeoDataFrame, default=None
         Dataframe containing study area polygon
-    no_data_val : int, default=0
+    no_data_val_grid : int, default=0
         value assigned to areas with no data
     readGrid : bool, default=True
         Whether function to either read grid or create grid
@@ -526,8 +526,8 @@ def read_model_grid(gridpath, study_area=None, nodataval=0, read_grid=True, node
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     
-    if read_grid:
-        modelGridIN = rxr.open_rasterio(gridpath)
+    if read_grid and model_grid_path is not None:
+        modelGridIN = rxr.open_rasterio(model_grid_path)
 
         file = w4h.read.__get_resource_path('isws_crs.txt')
         iswsCRS = w4h.read_dict(file, keytype=None)
@@ -556,6 +556,9 @@ def read_model_grid(gridpath, study_area=None, nodataval=0, read_grid=True, node
 
         modelGrid = modelGrid.where(modelGrid != noDataVal, other=np.nan)   #Replace no data values with NaNs
         modelGrid.rio.reproject(iswsCRS, inplace=True)
+    elif model_grid_path is None and study_area is None:
+        if verbose:
+            print("ERROR: Either model_grid_path or study_area must be defined.")
     else:
         spatRefDict = {'crs_wkt': 'PROJCS["Clarke_1866_Lambert_Conformal_Conic",GEOGCS["NAD27",DATUM["North_American_Datum_1927",SPHEROID["Clarke 1866",6378206.4,294.978698199999,AUTHORITY["EPSG","7008"]],AUTHORITY["EPSG","6267"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4267"]],PROJECTION["Lambert_Conformal_Conic_2SP"],PARAMETER["latitude_of_origin",33],PARAMETER["central_meridian",-89.5],PARAMETER["standard_parallel_1",33],PARAMETER["standard_parallel_2",45],PARAMETER["false_easting",2999994],PARAMETER["false_northing",0],UNIT["US survey foot",0.304800609601219,AUTHORITY["EPSG","9003"]],AXIS["Easting",EAST],AXIS["Northing",NORTH]]',
             'semi_major_axis': 6378206.4,
@@ -613,16 +616,16 @@ def read_model_grid(gridpath, study_area=None, nodataval=0, read_grid=True, node
     return modelGrid
 
 #Read a grid from a file in using rioxarray
-def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, log=False, **kwargs):
+def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, verbose=False, log=False, **kwargs):
     """Reads in grid
 
     Parameters
     ----------
-    datapath : str, default=''
-        ontains data path to a grid file
+    grid_path : str or pathlib.Path, default=None
+        Path to a grid file
     grid_type : str, default='model'
         Sets what type of grid to load in
-    no_data_val : int, default=0
+    no_data_val_grid : int, default=0
         Sets the no data value of the grid
     use_service : str, default=False
         Sets which service the function uses
@@ -648,10 +651,10 @@ def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, st
             rgrid = kwargs['read_grid']
         else:
             rgrid=True
-        gridIN = read_model_grid(gridpath=datapath, study_area=study_area, nodataval=0, read_grid=rgrid, study_area_crs=study_area_crs, grid_crs=grid_crs)
+        gridIN = read_model_grid(model_grid_path=grid_path, study_area=study_area,  no_data_val_grid=0, read_grid=rgrid, study_area_crs=study_area_crs, grid_crs=grid_crs, verbose=verbose)
     else:
         if use_service==False:
-            gridIN = rxr.open_rasterio(datapath)
+            gridIN = rxr.open_rasterio(grid_path)
         elif use_service.lower()=='wcs':
             gridIN = read_wcs(study_area, wcs_url=lidarURL, **kwargs)
         elif use_service.lower()=='wms':
@@ -677,16 +680,16 @@ def read_grid(datapath='', grid_type='model', nodataval=0, use_service=False, st
             gridIN = grid2study_area(study_area=study_area, grid=gridIN, study_area_crs=study_area_crs, grid_crs=grid_crs)
 
         try:
-            no_data_val = gridIN.attrs['_FillValue'] #Extract from dataset itself
+            no_data_val_grid = gridIN.attrs['_FillValue'] #Extract from dataset itself
         except:
             pass
                 
-        gridIN = gridIN.where(gridIN != no_data_val, other=np.nan)  #Replace no data values with NaNs
+        gridIN = gridIN.where(gridIN != no_data_val_grid, other=np.nan)  #Replace no data values with NaNs
 
     return gridIN
 
 #Align and coregister rasters
-def align_rasters(grids_unaligned, modelgrid, no_data_val=0, log=False):
+def align_rasters(grids_unaligned, modelgrid, no_data_val_grid=0, log=False):
     """Reprojects two rasters and aligns their pixels
 
     Parameters
@@ -695,7 +698,7 @@ def align_rasters(grids_unaligned, modelgrid, no_data_val=0, log=False):
         Contains a list of grids or one unaligned grid
     modelgrid : xarray.DataArray
         Contains model grid
-    no_data_val : int, default=0
+    no_data_val_grid : int, default=0
         Sets value of no data pixels
     log : bool, default = False
         Whether to log results to log file, by default False
@@ -713,11 +716,11 @@ def align_rasters(grids_unaligned, modelgrid, no_data_val=0, log=False):
             alignedGrid = g.rio.reproject_match(modelgrid)
 
             try:
-                no_data_val = alignedGrid.attrs['_FillValue'] #Extract from dataset itself
+                no_data_val_grid = alignedGrid.attrs['_FillValue'] #Extract from dataset itself
             except:
                 pass
             
-            alignedGrid = alignedGrid.where(alignedGrid != no_data_val)  #Replace no data values with NaNs
+            alignedGrid = alignedGrid.where(alignedGrid != no_data_val_grid)  #Replace no data values with NaNs
             
             alignedGrids.append(alignedGrid)
     else:

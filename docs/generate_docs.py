@@ -88,9 +88,9 @@ for each_file in repo_path.iterdir():
                 f.write('<script>console.log(mermaid.version);</script>\n')
                 f.write("</head>\n")
                 f.write(html)
-            print(dst)
             break
         else:
             #Copy main readme file into docs so github pages will read it
             shutil.copy(src=str(each_file), dst='.')
             break
+print('docs updated')

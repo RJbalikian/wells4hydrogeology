@@ -91,6 +91,8 @@ def file_setup(well_data, metadata=None, data_filename='*ISGS_DOWNHOLE_DATA*.txt
         Pattern used by pathlib.glob() to get the most recent data file, by default '*ISGS_DOWNHOLE_DATA*.txt'
     metadata_filename : str, optional
         Pattern used by pathlib.glob() to get the most recent metadata file, by default '*ISGS_HEADER*.txt'
+    log_dir : str or pathlib.PurePath() or None, default=None
+        Directory to place log file in. This is not read directly, but is used indirectly by w4h.logger_function()
     verbose : bool, default = False
         Whether to print name of files to terminal, by default True
     log : bool, default = True
@@ -99,7 +101,7 @@ def file_setup(well_data, metadata=None, data_filename='*ISGS_DOWNHOLE_DATA*.txt
     Returns
     -------
     tuple
-        Tuple with (well_data, metadata)
+        Tuple with paths to (well_data, metadata)
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
@@ -140,9 +142,9 @@ def file_setup(well_data, metadata=None, data_filename='*ISGS_DOWNHOLE_DATA*.txt
     #downholeDataDTYPES = {'ID':np.uint32, "API_NUMBER":np.uint64,"TABLE_NAME":str,"WHO":str,"INTERPRET_DATE":str,"FORMATION":str,"THICKNESS":np.float64,"TOP":np.float64,"BOTTOM":np.float64}
     #headerDataDTYPES = {'ID':np.uint32,'API_NUMBER':np.uint64,"TDFORMATION":str,"PRODFORM":str,"TOTAL_DEPTH":np.float64,"SECTION":np.float64,"TWP":np.float64,"TDIR":str,"RNG":np.float64,"RDIR":str,"MERIDIAN":np.float64,"FARM_NAME":str,"NSFOOT":np.float64,"NSDIR":str,"EWFOOT":np.float64,"EWDIR":str,"QUARTERS":str,"ELEVATION":np.float64,"ELEVREF":str,"COMP_DATE":str,"STATUS":str,"FARM_NUM":str,"COUNTY_CODE":np.float64,"PERMIT_NUMBER":str,"COMPANY_NAME":str,"COMPANY_CODE":str,"PERMIT_DATE":str,"CORNER":str,"LATITUDE":np.float64,"LONGITUDE":np.float64,"ENTERED_BY":str,"UPDDATE":str,"ELEVSOURCE":str, "ELEV_FT":np.float64}
     return downholeDataPATH, headerDataPATH
-
+    
 #Read raw data by text
-def read_raw_txt(data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, xcol='LONGITUDE', ycol='LATITUDE', id_col='API_NUMBER', encoding='latin-1', verbose=False, log=False):
+def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, xcol='LONGITUDE', ycol='LATITUDE', well_key='API_NUMBER', encoding='latin-1', verbose=False, log=False, **read_csv_kwargs):
     """Easy function to read raw .txt files output from (for example), an Access database
 
     Parameters
@@ -159,7 +161,7 @@ def read_raw_txt(data_filepath, metadata_filepath, data_cols=None, metadata_cols
         Name of column in metadata file indicating the x-location of the well, by default 'LONGITUDE'
     ycol : str, default = 'LATITUDE'
         Name of the column in metadata file indicating the y-location of the well, by default 'LATITUDE'
-    id_col : str, default = 'API_NUMBER'
+    well_key : str, default = 'API_NUMBER'
         Name of the column with the key/identifier that will be used to merge data later, by default 'API_NUMBER'
     encoding : str, default = 'latin-1'
         Encoding of the data in the input files, by default 'latin-1'
@@ -167,6 +169,8 @@ def read_raw_txt(data_filepath, metadata_filepath, data_cols=None, metadata_cols
         Whether to print the number of rows in the input columns, by default False
     log : bool, default = False
         Whether to log inputs and outputs to log file.
+    **read_csv_kwargs
+        **kwargs that get passed to pd.read_csv()
 
     Returns
     -------
@@ -189,16 +193,16 @@ def read_raw_txt(data_filepath, metadata_filepath, data_cols=None, metadata_cols
     if isinstance(data_filepath, pd.DataFrame):
         downholeDataIN = data_filepath[data_useCols]
     else:
-        downholeDataIN = pd.read_csv(data_filepath, sep=',', header='infer', encoding=encoding, usecols=data_useCols)
+        downholeDataIN = pd.read_csv(data_filepath, sep=',', header='infer', encoding=encoding, usecols=data_useCols, **read_csv_kwargs)
     
     if isinstance(metadata_filepath, pd.DataFrame):
         headerDataIN = metadata_filepath[metadata_useCols]
     else:
-        headerDataIN = pd.read_csv(metadata_filepath, sep=',', header='infer', encoding=encoding, usecols=metadata_useCols)
+        headerDataIN = pd.read_csv(metadata_filepath, sep=',', header='infer', encoding=encoding, usecols=metadata_useCols, **read_csv_kwargs)
 
     #Drop data with no API        
-    downholeDataIN = downholeDataIN.dropna(subset=[id_col]) #Drop data with no API
-    headerDataIN = headerDataIN.dropna(subset=[id_col]) #Drop metadata with no API
+    downholeDataIN = downholeDataIN.dropna(subset=[well_key]) #Drop data with no API
+    headerDataIN = headerDataIN.dropna(subset=[well_key]) #Drop metadata with no API
 
     #Drop data with no or missing location information
     headerDataIN = headerDataIN.dropna(subset=[ycol]) 
@@ -216,14 +220,14 @@ def read_raw_txt(data_filepath, metadata_filepath, data_cols=None, metadata_cols
     return downholeDataIN, headerDataIN
 
 #Read file with xyz data
-def read_xyz(xyzpath, dtypes=None, verbose=False, log=False):
+def read_xyz(xyzpath, datatypes=None, verbose=False, log=False):
     """Function to read file containing xyz data (elevation/location)
 
     Parameters
     ----------
     xyzpath : str or pathlib.Path
         Filepath of the xyz file, including extension
-    dtypes : dict, default = None
+    datatypes : dict, default = None
         Dictionary containing the datatypes for the columns int he xyz file. If None, {'ID':np.uint32,'API_NUMBER':np.uint64,'LATITUDE':np.float64,'LONGITUDE':np.float64,'ELEV_FT':np.float64}, by default None
     verbose : bool, default = False
         Whether to print the number of xyz records to the terminal, by default False
@@ -237,7 +241,7 @@ def read_xyz(xyzpath, dtypes=None, verbose=False, log=False):
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    if dtypes is None:
+    if datatypes is None:
         xyzDTypes = {'ID':np.uint32,'API_NUMBER':np.uint64,'LATITUDE':np.float64,'LONGITUDE':np.float64,'ELEV_FT':np.float64}
 
     xyzDataIN = pd.read_csv(xyzpath, sep=',', header='infer', dtype=xyzDTypes, index_col='ID')
@@ -293,19 +297,15 @@ def read_dict(file, keytype='np'):
     return jsDict
 
 #Define the datatypes for a dataframe
-def define_dtypes(df, dtypes=None, dtype_file=None, dtype_dir=str(repoDir)+'/resources/', log=False):
+def define_dtypes(undefined_df, datatypes=None, verbose=False, log=False):
     """Function to define datatypes of a dataframe, especially with file-indicated dyptes
 
     Parameters
     ----------
-    df : pandas.DataFrame
+    undefined_df : pd.DataFrame
         Pandas dataframe with columns whose datatypes need to be (re)defined
-    dtypes : dict or None, default = None
+    datatypes : dict, str, pathlib.PurePath() object, or None, default = None
         Dictionary containing datatypes, to be used in pandas.DataFrame.astype() function. If None, will read from file indicated by dtype_file (which must be defined, along with dtype_dir), by default None
-    dtype_file : str or None, default = None
-        Filename of file containing datatypes (txt file in dictionary format). If None, dtypes must be defined, by default None.
-    dtype_dir : str or pathlib.Path obejct, default = str(repoDir)+'/resources/'
-        Directory containing dtype_file, by default 
     log : bool, default = False
         Whether to log inputs and outputs to log file.
 
@@ -316,45 +316,57 @@ def define_dtypes(df, dtypes=None, dtype_file=None, dtype_dir=str(repoDir)+'/res
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    dfout = df.copy()
+    dfout = undefined_df.copy()
     
-    if dtypes is None:
-        if isinstance(dtype_dir, pathlib.PurePath):
-            dtype_dir = dtype_dir.as_posix()
-        if dtype_dir[-1] != '/':
-            dtype_dir = dtype_dir + '/'
+    if isinstance(datatypes, pathlib.PurePath) or isinstance(datatypes, str):
+        datatypes = pathlib.Path(datatypes)
 
-        if dtype_file is None:
-            print('ERROR: Either dtype_file (and dtype_dir) or dtypes must be defined')
-            return 
-        
-        dtype_file = pathlib.Path(dtype_dir).joinpath(dtype_file)
-        dtypes = read_dict(file=dtype_file)
+        if not datatypes.exists():
+            if verbose:
+                print('ERROR: datatypes ({}) does not exist'.format(datatypes))
+            return dfout
+        elif datatypes.is_dir():
+            if verbose:
+                print('ERROR: datatypes must be either dict or filepath (path to directories not allowed)')
+            return dfout
+
+        datatypes = read_dict(file=datatypes)
+        dfout = dfout.astype(datatypes)
+
+    elif isinstance(datatypes, dict):
+        if verbose:
+            print('datatypes is None, not updating datatypes')
+        dfout = dfout.astype(datatypes)
+    else:
+        if verbose:
+            print('ERROR: datatypes must be either dict or a filepath, not {}'.format(type(datatypes)))
+        return dfout
     
+    #This is likely redundant
     dfcols = dfout.columns
     for i in range(0, np.shape(dfout)[1]):
-        dfout.iloc[:,i] = df.iloc[:,i].astype(dtypes[dfcols[i]])
+        dfout.iloc[:,i] = undefined_df.iloc[:,i].astype(datatypes[dfcols[i]])
 
     return dfout
 
 #Define the search term filepaths
-def get_search_terms(spec_dir=str(repoDir)+'/resources/', spec_glob_pattern='*SearchTerms-Specific*', 
-                     start_dir=None, start_glob_pattern = '*SearchTerms-Start*', 
-                     wildcard_dir=None, wildcard_glob_pattern='*SearchTerms-Wildcard',
+def get_search_terms(spec_path=str(repoDir)+'/resources/', spec_glob_pattern='*SearchTerms-Specific*', 
+                     start_path=None, start_glob_pattern = '*SearchTerms-Start*', 
+                     wildcard_path=None, wildcard_glob_pattern='*SearchTerms-Wildcard',
                      log=False):
     """Read in dictionary files for downhole data
 
     Parameters
     ----------
-    spec_dir : str or pathlib.Path, optional
+    spec_path : str or pathlib.Path, optional
         Directory where the file containing the specific search terms is located, by default str(repoDir)+'/resources/'
     spec_glob_pattern : str, optional
         Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default '*SearchTerms-Specific*'
-    start_dir : str or None, optional
+    start_path : str or None, optional
         Directory where the file containing the start search terms is located, by default None
     start_glob_pattern : str, optional
         Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default '*SearchTerms-Start*'
-    wildcard_dir : str or pathlib.Path, default = None
+    wildcard_path : str or pathlib.Path, default = None
         Directory where the file containing the wildcard search terms is located, by default None    
     wildcard_glob_pattern : str, default = '*SearchTerms-Wildcard'
         Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default '*SearchTerms-Wildcard*'
@@ -370,34 +382,53 @@ def get_search_terms(spec_dir=str(repoDir)+'/resources/', spec_glob_pattern='*Se
     
     #specTermsFile = "SearchTerms-Specific_BedrockOrNo_2022-09.csv" #Specific matches
     #startTermsFile = "SearchTerms-Start_BedrockOrNo.csv" #Wildcard matches for the start of the description
-    
-    if start_dir is None:
-        start_dir = spec_dir
 
-    if wildcard_dir is None:
-        if start_dir is None:
-            wildcard_dir = spec_dir        
+    #Exact match path
+    if spec_path is None:
+        specTermsPath = spec_path        
+    else:
+        spec_path = pathlib.Path(spec_path)
+
+        if spec_path.is_dir():
+            specTermsPath = get_most_recent(spec_path, spec_glob_pattern)
         else:
-            wildcard_dir = start_dir        
+            specTermsPath = spec_path
 
+    #Startswith path
+    if start_path is None:
+        startTermsPath = start_path        
+    else:
+        start_path = pathlib.Path(start_path)
 
-    specTermsPath = get_most_recent(spec_dir, spec_glob_pattern)
-    startTermsPath = get_most_recent(start_dir, start_glob_pattern)
-    wilcardTermsPath = get_most_recent(wildcard_dir, wildcard_glob_pattern)
+        if start_path.is_dir():
+            startTermsPath = get_most_recent(start_path, start_glob_pattern)
+        else:
+            startTermsPath = start_path
+
+    #Wildcard Path
+    if wildcard_path is None:
+        wilcardTermsPath = wildcard_path        
+    else:
+        wildcard_path = pathlib.Path(wildcard_path)
+
+        if wildcard_path.is_dir():
+            wilcardTermsPath = get_most_recent(wildcard_path, wildcard_glob_pattern)
+        else:
+            wilcardTermsPath = wildcard_path
     
     return specTermsPath, startTermsPath, wilcardTermsPath
 
 #Read files into pandas dataframes
-def read_dictionary_terms(dict_file, id_col='ID', search_col='FORMATION', definition_col='INTERPRETATION', class_flag_col='CLASS_FLAG', dictionary_type=None, class_flag=6, rem_extra_cols=True, log=False):
+def read_dictionary_terms(dict_file, id_col='ID', search_col='DESCRIPTION', definition_col='LITHOLOGY', class_flag_col='CLASS_FLAG', dictionary_type=None, class_flag=6, rem_extra_cols=True, log=False):
     """Function to read dictionary terms from file into pandas dataframe
 
     Parameters
     ----------
     dict_file : str or pathlib.Path object, or list of these
         File or list of files to be read
-    search_col : str, default = 'FORMATION'
+    search_col : str, default = 'DESCRIPTION'
         Name of column containing search terms (geologic formations)
-    definition_col : str, default = 'INTERPRETATION'
+    definition_col : str, default = 'LITHOLOGY'
         Name of column containing interpretations of search terms (lithologies)
     dictionary_type : str or None, {None, 'exact', 'start', 'wildcard',}
         Indicator of which kind of dictionary terms to be read in: None, 'exact', 'start', or 'wildcard' by default None.
@@ -421,10 +452,14 @@ def read_dictionary_terms(dict_file, id_col='ID', search_col='FORMATION', defini
 
     #Read files into pandas dataframes
     dict_terms = []
-    if type(dict_file) is list:
+    if dict_file is None:
+        df = pd.DataFrame(columns=['ID', 'DESCRIPTION', 'LITHOLOGY', 'CLASS_FLAGS'])
+        dict_terms.append(df)
+        dict_file = ['']
+    elif type(dict_file) is list:
         for f in dict_file:
             if not f.exists():
-                df = pd.DataFrame(columns=['ID', 'FORMATION', 'INTERPRETATION', 'CLASS_FLAGS'])
+                df = pd.DataFrame(columns=['ID', 'DESCRIPTION', 'LITHOLOGY', 'CLASS_FLAGS'])
                 dict_terms.append(df)
             else:
                 dict_terms.append(pd.read_csv(f))
@@ -434,14 +469,14 @@ def read_dictionary_terms(dict_file, id_col='ID', search_col='FORMATION', defini
     else:
         dict_file = pathlib.Path(dict_file)
         if dict_file.exists() and dict_file.is_file():
-            dict_terms.append(pd.read_csv(dict_file))
+            dict_terms.append(pd.read_csv(dict_file, low_memory=False))
             if id_col in dict_terms[-1].columns:
                 dict_terms[-1].set_index(id_col, drop=True, inplace=True)
             dict_file = [dict_file]
         else:
             print('ERROR: dict_file ({}) does not exist.'.format(dict_file))
             #Create empty dataframe to return
-            dict_terms = pd.DataFrame(columns=['ID', 'FORMATION', 'INTERPRETATION', "CLASS_FLAGS"])
+            dict_terms = pd.DataFrame(columns=['ID', 'DESCRIPTION', 'LITHOLOGY', "CLASS_FLAGS"])
             return dict_terms
 
     #Rename important columns
@@ -468,10 +503,10 @@ def read_dictionary_terms(dict_file, id_col='ID', search_col='FORMATION', defini
         #1: exact classification match, 2: (not defined...ML?), 3: bedrock classification for obvious bedrock, 4: start term, 5: wildcard/substring, 6: Undefined
 
         #Rename columns so it is consistent through rest of code
-        if search_col != 'FORMATION':
-            d.rename(columns={search_col:'FORMATION'}, inplace=True)
-        if definition_col != 'INTERPRETATION':
-            d.rename(columns={definition_col:'INTERPRETATION'}, inplace=True)
+        if search_col != 'DESCRIPTION':
+            d.rename(columns={search_col:'DESCRIPTION'}, inplace=True)
+        if definition_col != 'LITHOLOGY':
+            d.rename(columns={definition_col:'LITHOLOGY'}, inplace=True)
         if class_flag_col != 'CLASS_FLAG':
             d.rename(columns={class_flag_col:'CLASS_FLAG'}, inplace=True)
 
@@ -479,18 +514,19 @@ def read_dictionary_terms(dict_file, id_col='ID', search_col='FORMATION', defini
         for i in range(0, np.shape(d)[1]):
             if d.iloc[:,i].name in list(dict_termDtypes.keys()):
                 d.iloc[:,i] = d.iloc[:,i].astype(dict_termDtypes[d.iloc[:,i].name])
-    
+        
         #Delete duplicate definitions
-        d.drop_duplicates(subset=search_col,inplace=True) #Apparently, there are some duplicate definitions, which need to be deleted first
+        d.drop_duplicates(subset='DESCRIPTION',inplace=True) #Apparently, there are some duplicate definitions, which need to be deleted first
         d.reset_index(inplace=True, drop=True)
 
+        #Whether to remove extra columns that aren't needed from dataframe
+        if rem_extra_cols:
+            d = d[['DESCRIPTION', 'LITHOLOGY', 'CLASS_FLAG']]
+
     #If only one file designated, convert it so it's no longer a list, but just a dataframe
+
     if len(dict_terms) == 1:
         dict_terms = dict_terms[0]
-    
-    #Whether to remove extra columns that aren't needed from dataframe
-    if rem_extra_cols:
-        dict_terms = dict_terms[[search_col, definition_col, class_flag_col]]
 
     return dict_terms
 
@@ -528,8 +564,22 @@ def read_lithologies(lith_file=None, interp_col='LITHOLOGY', target_col='CODE', 
     if use_cols is None:
         use_cols = ['LITHOLOGY', 'CODE']
 
-    lithoDF = pd.read_csv(lithFPath, usecols=use_cols)
+    lithoDF = pd.read_csv(lith_file, usecols=use_cols)
 
     lithoDF.rename(columns={interp_col:'INTERPRETATION', target_col:'TARGET'}, inplace=True)
 
     return lithoDF
+
+def add_control_points(df, df_control, well_key='API_NUMBER', xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', controlpoints_crs='EPSG:4269', top_col='TOP', bottom_col='BOTTOM', description_col='FORMATION', interp_col='INTERPRETATION', target_col='TARGET', verbose=False, log=False, **read_csv_kwargs):
+    import geopandas as gpd
+
+    if isinstance(df_control, pd.DataFrame) or isinstance(df_control, gpd.GeoDataFrame):
+        pass
+    else:
+        df_control = pd.read_csv(df_control, **read_csv_kwargs)
+
+    from w4h import coords2geometry
+    df_control = coords2geometry(df_no_geometry=df_control, xcol=xcol, ycol=ycol, zcol=zcol, input_coords_crs=controlpoints_crs, log=log)
+
+    df_control = pd.concat([df, df_control])
+    return df_control

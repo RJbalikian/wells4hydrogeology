@@ -31,11 +31,13 @@
 
 #from w4h import classify, clean, export, layers, mapping, read
 
-from w4h.utilities import(logger_function)
+from w4h.core import(logger_function,
+                          run)
 
 from w4h.classify import (specific_define, 
                           split_defined, 
-                          start_define, 
+                          start_define,
+                          wildcard_define,
                           remerge_data, 
                           depth_define, 
                           export_undefined, 
@@ -46,9 +48,9 @@ from w4h.classify import (specific_define,
 
 from w4h.clean import (remove_nonlocated, 
                        remove_no_topo, 
-                       drop_no_depth, 
-                       drop_bad_depth, 
-                       drop_no_formation)
+                       remove_no_depth, 
+                       remove_bad_depth, 
+                       remove_no_formation)
 
 from w4h.export import (export_dataframe,
                         export_grids)
@@ -75,19 +77,21 @@ from w4h.mapping import (read_study_area,
 from w4h.read import (get_current_date,
                       get_most_recent,
                       file_setup,
-                      read_raw_txt,
+                      read_raw_csv,
                       read_xyz,
                       read_dict,
                       define_dtypes,
                       get_search_terms,
                       read_dictionary_terms,
-                      read_lithologies)
+                      read_lithologies,
+                      add_control_points)
 
 
-__all__=(
+__all__=(&#39;logger_function&#39;,&#39;run&#39;,
         &#39;specific_define&#39;, 
         &#39;split_defined&#39;, 
-        &#39;start_define&#39;, 
+        &#39;start_define&#39;,
+        &#39;wildcard_define&#39;,
         &#39;remerge_data&#39;, 
         &#39;depth_define&#39;, 
         &#39;export_undefined&#39;, 
@@ -97,9 +101,9 @@ __all__=(
         &#39;sort_dataframe&#39;,
          &#39;remove_nonlocated&#39;, 
          &#39;remove_no_topo&#39;, 
-         &#39;drop_no_depth&#39;, 
-         &#39;drop_bad_depth&#39;, 
-         &#39;drop_no_formation&#39;,
+         &#39;remove_no_depth&#39;, 
+         &#39;remove_bad_depth&#39;, 
+         &#39;remove_no_formation&#39;,
         &#39;export_dataframe&#39;,
         &#39;export_grids&#39;,
          &#39;get_layer_depths&#39;,
@@ -122,14 +126,15 @@ __all__=(
          &#39;get_current_date&#39;,
          &#39;get_most_recent&#39;,
          &#39;file_setup&#39;,
-         &#39;read_raw_txt&#39;,
+         &#39;read_raw_csv&#39;,
          &#39;read_xyz&#39;,
          &#39;read_dict&#39;,
          &#39;define_dtypes&#39;,
          &#39;get_search_terms&#39;,
          &#39;read_dictionary_terms&#39;,
          &#39;read_lithologies&#39;,
-        &#39;logger_function&#39;)
+         &#39;add_control_points&#39;
+         )
 
 __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</code></pre>
 </details>
@@ -142,6 +147,10 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 <div class="desc"></div>
 </dd>
 <dt><code class="name"><a title="w4h.clean" href="clean.html">w4h.clean</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="w4h.core" href="core.html">w4h.core</a></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -161,10 +170,6 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 <dd>
 <div class="desc"></div>
 </dd>
-<dt><code class="name"><a title="w4h.utilities" href="utilities.html">w4h.utilities</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 </dl>
 </section>
 <section>
@@ -172,18 +177,42 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="w4h.align_rasters"><code class="name flex">
-<span>def <span class="ident">align_rasters</span></span>(<span>grids_unaligned, modelgrid, nodataval=0, log=False)</span>
+<dt id="w4h.add_control_points"><code class="name flex">
+<span>def <span class="ident">add_control_points</span></span>(<span>df, df_control, well_key='API_NUMBER', xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', controlpoints_crs='EPSG:4269', top_col='TOP', bottom_col='BOTTOM', description_col='FORMATION', interp_col='INTERPRETATION', target_col='TARGET', verbose=False, log=False, **read_csv_kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Reprojects two rasters to align their pixels</p>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_control_points(df, df_control, well_key=&#39;API_NUMBER&#39;, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEV_FT&#39;, controlpoints_crs=&#39;EPSG:4269&#39;, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, description_col=&#39;FORMATION&#39;, interp_col=&#39;INTERPRETATION&#39;, target_col=&#39;TARGET&#39;, verbose=False, log=False, **read_csv_kwargs):
+    import geopandas as gpd
+
+    if isinstance(df_control, pd.DataFrame) or isinstance(df_control, gpd.GeoDataFrame):
+        pass
+    else:
+        df_control = pd.read_csv(df_control, **read_csv_kwargs)
+
+    from w4h import coords2geometry
+    df_control = coords2geometry(df_no_geometry=df_control, xcol=xcol, ycol=ycol, zcol=zcol, input_coords_crs=controlpoints_crs, log=log)
+
+    df_control = pd.concat([df, df_control])
+    return df_control</code></pre>
+</details>
+</dd>
+<dt id="w4h.align_rasters"><code class="name flex">
+<span>def <span class="ident">align_rasters</span></span>(<span>grids_unaligned, modelgrid, no_data_val_grid=0, log=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reprojects two rasters and aligns their pixels</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>grids_unaligned</code></strong> :&ensp;<code>list</code> or <code>xarray.DataArray</code></dt>
 <dd>Contains a list of grids or one unaligned grid</dd>
 <dt><strong><code>modelgrid</code></strong> :&ensp;<code>xarray.DataArray</code></dt>
 <dd>Contains model grid</dd>
-<dt><strong><code>nodataval</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
+<dt><strong><code>no_data_val_grid</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
 <dd>Sets value of no data pixels</dd>
 <dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
 <dd>Whether to log results to log file, by default False</dd>
@@ -197,8 +226,8 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def align_rasters(grids_unaligned, modelgrid, nodataval=0, log=False):
-    &#34;&#34;&#34;Reprojects two rasters to align their pixels
+<pre><code class="python">def align_rasters(grids_unaligned, modelgrid, no_data_val_grid=0, log=False):
+    &#34;&#34;&#34;Reprojects two rasters and aligns their pixels
 
     Parameters
     ----------
@@ -206,7 +235,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
         Contains a list of grids or one unaligned grid
     modelgrid : xarray.DataArray
         Contains model grid
-    nodataval : int, default=0
+    no_data_val_grid : int, default=0
         Sets value of no data pixels
     log : bool, default = False
         Whether to log results to log file, by default False
@@ -224,11 +253,11 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
             alignedGrid = g.rio.reproject_match(modelgrid)
 
             try:
-                nodataval = alignedGrid.attrs[&#39;_FillValue&#39;] #Extract from dataset itself
+                no_data_val_grid = alignedGrid.attrs[&#39;_FillValue&#39;] #Extract from dataset itself
             except:
                 pass
             
-            alignedGrid = alignedGrid.where(alignedGrid != nodataval)  #Replace no data values with NaNs
+            alignedGrid = alignedGrid.where(alignedGrid != no_data_val_grid)  #Replace no data values with NaNs
             
             alignedGrids.append(alignedGrid)
     else:
@@ -245,7 +274,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 </details>
 </dd>
 <dt id="w4h.clip_gdf2study_area"><code class="name flex">
-<span>def <span class="ident">clip_gdf2study_area</span></span>(<span>study_area, gdf, gdf_crs='EPSG:4269', log=False)</span>
+<span>def <span class="ident">clip_gdf2study_area</span></span>(<span>study_area, gdf, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Clips dataframe to only include things within study area.</p>
@@ -255,8 +284,6 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 <dd>Inputs study area polygon</dd>
 <dt><strong><code>gdf</code></strong> :&ensp;<code>geopandas.GeoDataFrame</code></dt>
 <dd>Inputs point data</dd>
-<dt><strong><code>gdf_crs</code></strong> :&ensp;<code>str</code>, default=<code>'EPSG:4269'</code></dt>
-<dd>Inputs crs to project study area to</dd>
 <dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
 <dd>Whether to log results to log file, by default False</dd>
 </dl>
@@ -269,7 +296,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def clip_gdf2study_area(study_area, gdf, gdf_crs=&#39;EPSG:4269&#39;, log=False):
+<pre><code class="python">def clip_gdf2study_area(study_area, gdf, log=False):
     &#34;&#34;&#34;Clips dataframe to only include things within study area.
 
     Parameters
@@ -278,8 +305,6 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
         Inputs study area polygon
     gdf : geopandas.GeoDataFrame
         Inputs point data
-    gdf_crs : str, default=&#39;EPSG:4269&#39;
-        Inputs crs to project study area to
     log : bool, default = False
         Whether to log results to log file, by default False
 
@@ -291,8 +316,8 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    studyArea_proj = study_area.to_crs(gdf_crs).copy()
-    gdfClip = gpd.clip(gdf, studyArea_proj) #Data from table is in EPSG:4269, easier to just project study area to ensure data fit
+    studyArea_proj = study_area.to_crs(gdf.crs).copy()
+    gdfClip = gpd.clip(gdf, studyArea_proj) #Easier to project just study area to ensure data fit
     gdfClip.reset_index(inplace=True, drop=True) #Reset index
     
     return gdfClip</code></pre>
@@ -360,21 +385,21 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 </details>
 </dd>
 <dt id="w4h.coords2geometry"><code class="name flex">
-<span>def <span class="ident">coords2geometry</span></span>(<span>df, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', crs='EPSG:4269', use_z=False, log=False)</span>
+<span>def <span class="ident">coords2geometry</span></span>(<span>df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', input_coords_crs='EPSG:4269', use_z=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Adds geometry to points with xy coordinates in the specified coordinate reference system.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>df</code></strong> :&ensp;<code>pandas.Dataframe</code></dt>
+<dt><strong><code>df_no_geometry</code></strong> :&ensp;<code>pandas.Dataframe</code></dt>
 <dd>a Pandas dataframe containing points</dd>
 <dt><strong><code>xcol</code></strong> :&ensp;<code>str</code>, default=<code>'LONGITUDE'</code></dt>
-<dd>Name of column holding x coordinate data in df</dd>
+<dd>Name of column holding x coordinate data in df_no_geometry</dd>
 <dt><strong><code>ycol</code></strong> :&ensp;<code>str</code>, default=<code>'LATITUDE'</code></dt>
-<dd>Name of column holding y coordinate data in df</dd>
+<dd>Name of column holding y coordinate data in df_no_geometry</dd>
 <dt><strong><code>zcol</code></strong> :&ensp;<code>str</code>, default=<code>'ELEV_FT'</code></dt>
-<dd>Name of column holding z coordinate data in df</dd>
-<dt><strong><code>crs</code></strong> :&ensp;<code>str</code>, default=<code>'EPSG:4269</code></dt>
+<dd>Name of column holding z coordinate data in df_no_geometry</dd>
+<dt><strong><code>input_coords_crs</code></strong> :&ensp;<code>str</code>, default=<code>'EPSG:4269</code></dt>
 <dd>Name of crs used for geometry</dd>
 <dt><strong><code>use_z</code></strong> :&ensp;<code>bool</code>, default=<code>False</code></dt>
 <dd>Whether to use z column in calculation</dd>
@@ -390,20 +415,20 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def coords2geometry(df, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEV_FT&#39;, crs=&#39;EPSG:4269&#39;, use_z=False, log=False):
+<pre><code class="python">def coords2geometry(df_no_geometry, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEV_FT&#39;, input_coords_crs=&#39;EPSG:4269&#39;, use_z=False, log=False):
     &#34;&#34;&#34;Adds geometry to points with xy coordinates in the specified coordinate reference system.
 
     Parameters
     ----------
-    df : pandas.Dataframe
+    df_no_geometry : pandas.Dataframe
         a Pandas dataframe containing points
     xcol : str, default=&#39;LONGITUDE&#39;
-        Name of column holding x coordinate data in df
+        Name of column holding x coordinate data in df_no_geometry
     ycol : str, default=&#39;LATITUDE&#39;
-        Name of column holding y coordinate data in df
+        Name of column holding y coordinate data in df_no_geometry
     zcol : str, default=&#39;ELEV_FT&#39;
-        Name of column holding z coordinate data in df
-    crs : str, default=&#39;EPSG:4269
+        Name of column holding z coordinate data in df_no_geometry
+    input_coords_crs : str, default=&#39;EPSG:4269
         Name of crs used for geometry
     use_z : bool, default=False
         Whether to use z column in calculation
@@ -418,7 +443,9 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    ptCRS=crs
+    df = df_no_geometry.copy()
+
+    ptCRS=input_coords_crs
 
     x = df[xcol].to_numpy()
     y = df[ycol].to_numpy()
@@ -435,20 +462,16 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 </details>
 </dd>
 <dt id="w4h.define_dtypes"><code class="name flex">
-<span>def <span class="ident">define_dtypes</span></span>(<span>df, dtypes=None, dtype_file=None, dtype_dir='C:\\Users\\riley\\LocalData\\Code\\Github\\wells4hydrogeology/resources/', log=False)</span>
+<span>def <span class="ident">define_dtypes</span></span>(<span>undefined_df, datatypes=None, verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to define datatypes of a dataframe, especially with file-indicated dyptes</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
+<dt><strong><code>undefined_df</code></strong> :&ensp;<code>pd.DataFrame</code></dt>
 <dd>Pandas dataframe with columns whose datatypes need to be (re)defined</dd>
-<dt><strong><code>dtypes</code></strong> :&ensp;<code>dict</code> or <code>None</code>, default <code>= None</code></dt>
+<dt><strong><code>datatypes</code></strong> :&ensp;<code>dict, str, pathlib.PurePath() object,</code> or <code>None</code>, default <code>= None</code></dt>
 <dd>Dictionary containing datatypes, to be used in pandas.DataFrame.astype() function. If None, will read from file indicated by dtype_file (which must be defined, along with dtype_dir), by default None</dd>
-<dt><strong><code>dtype_file</code></strong> :&ensp;<code>str</code> or <code>None</code>, default <code>= None</code></dt>
-<dd>Filename of file containing datatypes (txt file in dictionary format). If None, dtypes must be defined, by default None.</dd>
-<dt><strong><code>dtype_dir</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path obejct</code>, default <code>= str(repoDir)+'/resources/'</code></dt>
-<dd>Directory containing dtype_file, by default</dd>
 <dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
 <dd>Whether to log inputs and outputs to log file.</dd>
 </dl>
@@ -461,19 +484,15 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def define_dtypes(df, dtypes=None, dtype_file=None, dtype_dir=str(repoDir)+&#39;/resources/&#39;, log=False):
+<pre><code class="python">def define_dtypes(undefined_df, datatypes=None, verbose=False, log=False):
     &#34;&#34;&#34;Function to define datatypes of a dataframe, especially with file-indicated dyptes
 
     Parameters
     ----------
-    df : pandas.DataFrame
+    undefined_df : pd.DataFrame
         Pandas dataframe with columns whose datatypes need to be (re)defined
-    dtypes : dict or None, default = None
+    datatypes : dict, str, pathlib.PurePath() object, or None, default = None
         Dictionary containing datatypes, to be used in pandas.DataFrame.astype() function. If None, will read from file indicated by dtype_file (which must be defined, along with dtype_dir), by default None
-    dtype_file : str or None, default = None
-        Filename of file containing datatypes (txt file in dictionary format). If None, dtypes must be defined, by default None.
-    dtype_dir : str or pathlib.Path obejct, default = str(repoDir)+&#39;/resources/&#39;
-        Directory containing dtype_file, by default 
     log : bool, default = False
         Whether to log inputs and outputs to log file.
 
@@ -484,24 +503,36 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    dfout = df.copy()
+    dfout = undefined_df.copy()
     
-    if dtypes is None:
-        if isinstance(dtype_dir, pathlib.PurePath):
-            dtype_dir = dtype_dir.as_posix()
-        if dtype_dir[-1] != &#39;/&#39;:
-            dtype_dir = dtype_dir + &#39;/&#39;
+    if isinstance(datatypes, pathlib.PurePath) or isinstance(datatypes, str):
+        datatypes = pathlib.Path(datatypes)
 
-        if dtype_file is None:
-            print(&#39;ERROR: Either dtype_file (and dtype_dir) or dtypes must be defined&#39;)
-            return 
-        
-        dtype_file = pathlib.Path(dtype_dir).joinpath(dtype_file)
-        dtypes = read_dict(file=dtype_file)
+        if not datatypes.exists():
+            if verbose:
+                print(&#39;ERROR: datatypes ({}) does not exist&#39;.format(datatypes))
+            return dfout
+        elif datatypes.is_dir():
+            if verbose:
+                print(&#39;ERROR: datatypes must be either dict or filepath (path to directories not allowed)&#39;)
+            return dfout
+
+        datatypes = read_dict(file=datatypes)
+        dfout = dfout.astype(datatypes)
+
+    elif isinstance(datatypes, dict):
+        if verbose:
+            print(&#39;datatypes is None, not updating datatypes&#39;)
+        dfout = dfout.astype(datatypes)
+    else:
+        if verbose:
+            print(&#39;ERROR: datatypes must be either dict or a filepath, not {}&#39;.format(type(datatypes)))
+        return dfout
     
+    #This is likely redundant
     dfcols = dfout.columns
     for i in range(0, np.shape(dfout)[1]):
-        dfout.iloc[:,i] = df.iloc[:,i].astype(dtypes[dfcols[i]])
+        dfout.iloc[:,i] = undefined_df.iloc[:,i].astype(datatypes[dfcols[i]])
 
     return dfout</code></pre>
 </details>
@@ -568,215 +599,6 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
         total = dfIN.shape[0]
         print(&#34;Records classified as bedrock that were deeper than &#34;+str(thresh)+ &#34;&#39;: &#34; + str(brDepthClass))
         print(&#34;This represents &#34;+str(round((brDepthClass)*100/total,2))+&#34;% of the unclassified data in this dataframe.&#34;)
-        
-    return df</code></pre>
-</details>
-</dd>
-<dt id="w4h.drop_bad_depth"><code class="name flex">
-<span>def <span class="ident">drop_bad_depth</span></span>(<span>df, top_col='TOP', bottom_col='BOTTOM', depth_type='depth', verbose=False, log=False)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Function to remove all records in the dataframe with well interpretations where the depth information is bad (i.e., where the bottom of the record is neerer to the surface than the top)</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
-<dd>Pandas dataframe containing the well records and descriptions for each interval</dd>
-<dt><strong><code>top_col</code></strong> :&ensp;<code>str</code>, default=<code>'TOP'</code></dt>
-<dd>The name of the column containing the depth or elevation for the top of the interval, by default 'TOP'</dd>
-<dt><strong><code>bottom_col</code></strong> :&ensp;<code>str</code>, default=<code>'BOTTOM'</code></dt>
-<dd>The name of the column containing the depth or elevation for the bottom of each interval, by default 'BOTTOM'</dd>
-<dt><strong><code>depth_type</code></strong> :&ensp;<code>str, {'depth', 'elevation'}</code></dt>
-<dd>Whether the table is organized by depth or elevation. If depth, the top column will have smaller values than the bottom column. If elevation, the top column will have higher values than the bottom column, by default 'depth'</dd>
-<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
-<dd>Whether to print results to the terminal, by default False</dd>
-<dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
-<dd>Whether to log results to log file, by default False</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>pandas.Dataframe</code></dt>
-<dd>Pandas dataframe with the records remvoed where the top is indicatd to be below the bottom.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def drop_bad_depth(df, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, depth_type=&#39;depth&#39;, verbose=False, log=False):
-    &#34;&#34;&#34;Function to remove all records in the dataframe with well interpretations where the depth information is bad (i.e., where the bottom of the record is neerer to the surface than the top)
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Pandas dataframe containing the well records and descriptions for each interval
-    top_col : str, default=&#39;TOP&#39;
-        The name of the column containing the depth or elevation for the top of the interval, by default &#39;TOP&#39;
-    bottom_col : str, default=&#39;BOTTOM&#39;
-        The name of the column containing the depth or elevation for the bottom of each interval, by default &#39;BOTTOM&#39;
-    depth_type : str, {&#39;depth&#39;, &#39;elevation&#39;}
-        Whether the table is organized by depth or elevation. If depth, the top column will have smaller values than the bottom column. If elevation, the top column will have higher values than the bottom column, by default &#39;depth&#39;
-    verbose : bool, default = False
-        Whether to print results to the terminal, by default False
-    log : bool, default = False
-        Whether to log results to log file, by default False
-
-    Returns
-    -------
-    pandas.Dataframe
-        Pandas dataframe with the records remvoed where the top is indicatd to be below the bottom.
-    &#34;&#34;&#34;
-    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
-    if depth_type.lower() ==&#39;depth&#39;:
-        df[&#39;THICKNESS&#39;] = df[bottom_col] - df[top_col] #Calculate interval thickness
-    elif depth_type.lower() ==&#39;elevation&#39; or depth_type==&#39;elev&#39;:
-        df[&#39;THICKNESS&#39;] = df[top_col] - df[bottom_col] #Calculate interval thickness
-    before = df.shape[0] #Calculate number of rows before dropping
-    df = df[(df[&#39;THICKNESS&#39;] &gt;= 0)] #Only include rows where interval thickness is positive (bottom is deeper than top)
-    df.reset_index(inplace=True, drop=True) #Reset index
-
-    if verbose:
-        print(&#34;Number of rows before dropping those with obviously bad depth information: &#34;+str(before))
-        print(&#34;Number of rows after dropping those with obviously bad depth information: &#34;+str(df.shape[0]))
-        print(&#39;Well records deleted: &#39;+str(before-df.shape[0]))
-    return df</code></pre>
-</details>
-</dd>
-<dt id="w4h.drop_no_depth"><code class="name flex">
-<span>def <span class="ident">drop_no_depth</span></span>(<span>df, top_col='TOP', bottom_col='BOTTOM', no_data_val='', verbose=False, log=False)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Function to drop well intervals with no depth information</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
-<dd>Dataframe containing well descriptions</dd>
-<dt><strong><code>top_col</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>Name of column containing information on the top of the well intervals, by default 'TOP'</dd>
-<dt><strong><code>bottom_col</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>Name of column containing information on the bottom of the well intervals, by default 'BOTTOM'</dd>
-<dt><strong><code>no_data_val</code></strong> :&ensp;<code>any</code>, optional</dt>
-<dd>No data value in the input data, used by this function to indicate that depth data is not there, to be replaced by np.nan, by default ''</dd>
-<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, optional</dt>
-<dd>Whether to print results to console, by default False</dd>
-<dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
-<dd>Whether to log results to log file, by default False</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
-<dd>Dataframe with depths dropped</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def drop_no_depth(df, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, no_data_val=&#39;&#39;, verbose=False, log=False):
-    &#34;&#34;&#34;Function to drop well intervals with no depth information
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Dataframe containing well descriptions
-    top_col : str, optional
-        Name of column containing information on the top of the well intervals, by default &#39;TOP&#39;
-    bottom_col : str, optional
-        Name of column containing information on the bottom of the well intervals, by default &#39;BOTTOM&#39;
-    no_data_val : any, optional
-        No data value in the input data, used by this function to indicate that depth data is not there, to be replaced by np.nan, by default &#39;&#39;
-    verbose : bool, optional
-        Whether to print results to console, by default False
-    log : bool, default = False
-        Whether to log results to log file, by default False
-
-    Returns
-    -------
-    df : pandas.DataFrame
-        Dataframe with depths dropped
-    &#34;&#34;&#34;
-    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
-    #Replace empty cells in top and bottom columns with nan
-    df[top_col] = df[top_col].replace(no_data_val, np.nan)
-    df[bottom_col] = df[bottom_col].replace(no_data_val, np.nan)
-    
-    #Calculate number of rows before dropping
-    before = df.shape[0]
-
-    #Drop records without depth information
-    df = df.dropna(subset=[top_col])
-    df = df.dropna(subset=[bottom_col])
-    df.reset_index(inplace=True, drop=True) #Reset index
-  
-    if verbose:
-        print(&#34;Number of rows before dropping those without record depth information: &#34; + str(before))
-        print(&#34;Number of rows after dropping those without record depth information: &#34; + str(df.shape[0]))
-        print(&#39;Number of well records without formation information deleted: &#39; + str(before - df.shape[0]))
-    
-    return df</code></pre>
-</details>
-</dd>
-<dt id="w4h.drop_no_formation"><code class="name flex">
-<span>def <span class="ident">drop_no_formation</span></span>(<span>df, description_col='FORMATION', no_data_val='', verbose=False, log=False)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Function that drops all records in the dataframe containing the well descriptions where no description is given.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
-<dd>Pandas dataframe containing the well records with their individual descriptions</dd>
-<dt><strong><code>description_col</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>Name of the column containing the geologic description of each interval, by default 'FORMATION'</dd>
-<dt><strong><code>no_data_val</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>The value expected if the column is empty or there is no data. These will be replaced by np.nan before being removed, by default ''</dd>
-<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, optional</dt>
-<dd>Whether to print the results of this step to the terminal, by default False</dd>
-<dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
-<dd>Whether to log results to log file, by default False</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>pandas.DataFrame</code></dt>
-<dd>Pandas dataframe with records with no description removed.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def drop_no_formation(df, description_col=&#39;FORMATION&#39;, no_data_val=&#39;&#39;, verbose=False, log=False):
-    &#34;&#34;&#34;Function that drops all records in the dataframe containing the well descriptions where no description is given.
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Pandas dataframe containing the well records with their individual descriptions
-    description_col : str, optional
-        Name of the column containing the geologic description of each interval, by default &#39;FORMATION&#39;
-    no_data_val : str, optional
-        The value expected if the column is empty or there is no data. These will be replaced by np.nan before being removed, by default &#39;&#39;
-    verbose : bool, optional
-        Whether to print the results of this step to the terminal, by default False
-    log : bool, default = False
-        Whether to log results to log file, by default False
-        
-    Returns
-    -------
-    pandas.DataFrame
-        Pandas dataframe with records with no description removed.
-    &#34;&#34;&#34;
-    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
-    #Replace empty cells in formation column with nans
-    df[description_col] = df[description_col].replace(no_data_val, np.nan) 
-    before = df.shape[0] #Calculate number of rows before dropping
-
-    #Drop records without FORMATION information
-    df = df.dropna(subset=[description_col])
-    df.reset_index(inplace=True, drop=True) #Reset index
-
-    if verbose:
-        print(&#34;Number of rows before dropping those without FORMATION information: &#34;+str(before))
-        print(&#34;Number of rows after dropping those without FORMATION information: &#34;+str(df.shape[0]))
-        print(&#39;Well records deleted: &#39;+str(before-df.shape[0]))
         
     return df</code></pre>
 </details>
@@ -1055,25 +877,25 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 </details>
 </dd>
 <dt id="w4h.file_setup"><code class="name flex">
-<span>def <span class="ident">file_setup</span></span>(<span>db_dir, metadata_dir=None, xyz_dir=None, data_pattern='*ISGS_DOWNHOLE_DATA*.txt', metadata_pattern='*ISGS_HEADER*.txt', xyz_pattern='*xyzData*', log_dir=None, verbose=False, log=False)</span>
+<span>def <span class="ident">file_setup</span></span>(<span>well_data, metadata=None, data_filename='*ISGS_DOWNHOLE_DATA*.txt', metadata_filename='*ISGS_HEADER*.txt', log_dir=None, verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to setup files, assuming data, metadata, and elevation/location are in separate files (there should be one "key"/identifying column consistent across all files to join/merge them later)</p>
-<p>This function may not be useful if files are organized differently than this structure. If that is the case, it is recommended to use the get_most_recent() function for each individual file needed.</p>
+<p>This function may not be useful if files are organized differently than this structure.
+If that is the case, it is recommended to use the get_most_recent() function for each individual file if needed.
+It may also be of use to simply skip this function altogether and directly define each filepath in a manner that can be used by pandas.read_csv()</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>db_dir</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code>, optional</dt>
+<dt><strong><code>well_data</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code></dt>
 <dd>Str or pathlib.Path to directory containing input files, by default str(repoDir)+'/resources'</dd>
-<dt><strong><code>metadata_dir</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code>, optional</dt>
+<dt><strong><code>metadata</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code>, optional</dt>
 <dd>Str or pathlib.Path to directory containing input metadata files, by default str(repoDir)+'/resources'</dd>
-<dt><strong><code>xyz_dir</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code>, optional</dt>
-<dd>Str or pathlib.Path to directory containing input metadata files, by default str(repoDir)+'/resources'</dd>
-<dt><strong><code>data_pattern</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dt><strong><code>data_filename</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>Pattern used by pathlib.glob() to get the most recent data file, by default '<em>ISGS_DOWNHOLE_DATA</em>.txt'</dd>
-<dt><strong><code>metadata_pattern</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dt><strong><code>metadata_filename</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>Pattern used by pathlib.glob() to get the most recent metadata file, by default '<em>ISGS_HEADER</em>.txt'</dd>
-<dt><strong><code>xyz_pattern</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>Pattern used by pathlib.glob() to get the most recent elevation/location file, by default '<em>xyzData</em>'</dd>
+<dt><strong><code>log_dir</code></strong> :&ensp;<code>str</code> or <code>pathlib.PurePath()</code> or <code>None</code>, default=<code>None</code></dt>
+<dd>Directory to place log file in. This is not read directly, but is used indirectly by w4h.logger_function()</dd>
 <dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
 <dd>Whether to print name of files to terminal, by default True</dd>
 <dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= True</code></dt>
@@ -1082,31 +904,31 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>tuple</code></dt>
-<dd>Tuple with (well_data, metadata, xyz_location_data)</dd>
+<dd>Tuple with paths to (well_data, metadata)</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def file_setup(db_dir, metadata_dir=None, xyz_dir=None, data_pattern=&#39;*ISGS_DOWNHOLE_DATA*.txt&#39;, metadata_pattern=&#39;*ISGS_HEADER*.txt&#39;, xyz_pattern= &#39;*xyzData*&#39;, log_dir=None, verbose=False, log=False):
+<pre><code class="python">def file_setup(well_data, metadata=None, data_filename=&#39;*ISGS_DOWNHOLE_DATA*.txt&#39;, metadata_filename=&#39;*ISGS_HEADER*.txt&#39;, log_dir=None, verbose=False, log=False):
     &#34;&#34;&#34;Function to setup files, assuming data, metadata, and elevation/location are in separate files (there should be one &#34;key&#34;/identifying column consistent across all files to join/merge them later)
 
-    This function may not be useful if files are organized differently than this structure. If that is the case, it is recommended to use the get_most_recent() function for each individual file needed.
+    This function may not be useful if files are organized differently than this structure. 
+    If that is the case, it is recommended to use the get_most_recent() function for each individual file if needed.
+    It may also be of use to simply skip this function altogether and directly define each filepath in a manner that can be used by pandas.read_csv()
 
     Parameters
     ----------
-    db_dir : str or pathlib.Path object, optional
+    well_data : str or pathlib.Path object
         Str or pathlib.Path to directory containing input files, by default str(repoDir)+&#39;/resources&#39;
-    metadata_dir : str or pathlib.Path object, optional
+    metadata : str or pathlib.Path object, optional
         Str or pathlib.Path to directory containing input metadata files, by default str(repoDir)+&#39;/resources&#39;
-    xyz_dir : str or pathlib.Path object, optional
-        Str or pathlib.Path to directory containing input metadata files, by default str(repoDir)+&#39;/resources&#39;
-    data_pattern : str, optional
+    data_filename : str, optional
         Pattern used by pathlib.glob() to get the most recent data file, by default &#39;*ISGS_DOWNHOLE_DATA*.txt&#39;
-    metadata_pattern : str, optional
+    metadata_filename : str, optional
         Pattern used by pathlib.glob() to get the most recent metadata file, by default &#39;*ISGS_HEADER*.txt&#39;
-    xyz_pattern : str, optional
-        Pattern used by pathlib.glob() to get the most recent elevation/location file, by default &#39;*xyzData*&#39;
+    log_dir : str or pathlib.PurePath() or None, default=None
+        Directory to place log file in. This is not read directly, but is used indirectly by w4h.logger_function()
     verbose : bool, default = False
         Whether to print name of files to terminal, by default True
     log : bool, default = True
@@ -1115,44 +937,51 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
     Returns
     -------
     tuple
-        Tuple with (well_data, metadata, xyz_location_data)
+        Tuple with paths to (well_data, metadata)
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     #Define  filepath variables to be used later for reading/writing files
-    raw_directory = pathlib.Path(db_dir)
-    if metadata_dir is None:
-        metadata_dir=raw_directory
+    data_path = pathlib.Path(well_data)
+    if metadata is None:
+        origMetaPath = None
+        metadata=data_path
     else:
-        metadata_dir=pathlib.Path(metadata_dir)
+        origMetaPath = metadata
+        metadata=pathlib.Path(metadata)
 
-    if xyz_dir is None:
-        xyz_dir=raw_directory
+    #If input path is a directory, find most recent version of the file. If file, just read the file
+    if data_path.is_dir():
+        downholeDataFILE = get_most_recent(data_path, data_filename, verbose=verbose)
     else:
-        xyz_dir=pathlib.Path(xyz_dir)
-
-    downholeDataFILE = get_most_recent(raw_directory, data_pattern, verbose=verbose)
-    headerDataFILE = get_most_recent(metadata_dir, metadata_pattern, verbose=verbose)
-    xyzInFILE = get_most_recent(xyz_dir,xyz_pattern, verbose=verbose)
-
+        downholeDataFILE = data_path
+    
+    if metadata.is_dir():
+        headerDataFILE = get_most_recent(metadata, metadata_filename, verbose=verbose)
+        if headerDataFILE == []:
+            headerDataFILE = downholeDataFILE
+    else:
+        if origMetaPath is None:
+            headerDataFILE = downholeDataFILE
+        else:
+            headerDataFILE = metadata
+       #Set all input as pathlib.Path objects (may be redundant, but just in case)
     downholeDataPATH = pathlib.Path(downholeDataFILE)
     headerDataPATH = pathlib.Path(headerDataFILE)
-    xyzInPATH = pathlib.Path(xyzInFILE)
 
     if verbose:
         print(&#39;Using the following files:&#39;)
         print(&#39;\t&#39;, downholeDataFILE)
         print(&#39;\t&#39;, headerDataFILE)
-        print(&#39;\t&#39;, xyzInFILE)
 
     #Define datatypes, to use later
     #downholeDataDTYPES = {&#39;ID&#39;:np.uint32, &#34;API_NUMBER&#34;:np.uint64,&#34;TABLE_NAME&#34;:str,&#34;WHO&#34;:str,&#34;INTERPRET_DATE&#34;:str,&#34;FORMATION&#34;:str,&#34;THICKNESS&#34;:np.float64,&#34;TOP&#34;:np.float64,&#34;BOTTOM&#34;:np.float64}
     #headerDataDTYPES = {&#39;ID&#39;:np.uint32,&#39;API_NUMBER&#39;:np.uint64,&#34;TDFORMATION&#34;:str,&#34;PRODFORM&#34;:str,&#34;TOTAL_DEPTH&#34;:np.float64,&#34;SECTION&#34;:np.float64,&#34;TWP&#34;:np.float64,&#34;TDIR&#34;:str,&#34;RNG&#34;:np.float64,&#34;RDIR&#34;:str,&#34;MERIDIAN&#34;:np.float64,&#34;FARM_NAME&#34;:str,&#34;NSFOOT&#34;:np.float64,&#34;NSDIR&#34;:str,&#34;EWFOOT&#34;:np.float64,&#34;EWDIR&#34;:str,&#34;QUARTERS&#34;:str,&#34;ELEVATION&#34;:np.float64,&#34;ELEVREF&#34;:str,&#34;COMP_DATE&#34;:str,&#34;STATUS&#34;:str,&#34;FARM_NUM&#34;:str,&#34;COUNTY_CODE&#34;:np.float64,&#34;PERMIT_NUMBER&#34;:str,&#34;COMPANY_NAME&#34;:str,&#34;COMPANY_CODE&#34;:str,&#34;PERMIT_DATE&#34;:str,&#34;CORNER&#34;:str,&#34;LATITUDE&#34;:np.float64,&#34;LONGITUDE&#34;:np.float64,&#34;ENTERED_BY&#34;:str,&#34;UPDDATE&#34;:str,&#34;ELEVSOURCE&#34;:str, &#34;ELEV_FT&#34;:np.float64}
-    return downholeDataPATH, headerDataPATH, xyzInPATH</code></pre>
+    return downholeDataPATH, headerDataPATH</code></pre>
 </details>
 </dd>
 <dt id="w4h.fill_unclassified"><code class="name flex">
-<span>def <span class="ident">fill_unclassified</span></span>(<span>df)</span>
+<span>def <span class="ident">fill_unclassified</span></span>(<span>df, classification_col='CLASS_FLAG')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Fills unclassified rows in 'CLASS_FLAG' column with np.nan</p>
@@ -1170,7 +999,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fill_unclassified(df):
+<pre><code class="python">def fill_unclassified(df, classification_col=&#39;CLASS_FLAG&#39;):
     &#34;&#34;&#34;Fills unclassified rows in &#39;CLASS_FLAG&#39; column with np.nan
 
     Parameters
@@ -1183,7 +1012,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
     df : pandas.DataFrame
         Dataframe on which operation has been performed
     &#34;&#34;&#34;
-    df[&#39;CLASS_FLAG&#39;].fillna(0, inplace=True)
+    df[classification_col].fillna(0, inplace=True)
     return df</code></pre>
 </details>
 </dd>
@@ -1401,7 +1230,15 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
     fileDates = []
     for f in files: #Get the file dates from their file modification times
         fileDates.append(np.datetime64(datetime.datetime.fromtimestamp(os.path.getmtime(f))))
-    globInd = np.argmin(np.datetime64(todayDateStr) - np.array(fileDates)) #Find the index of the most recent file
+    
+    if fileDates == []:
+        #If no files found that match pattern, return an empty pathlib.Path()
+        if verbose:
+            print(&#39;No file found in {} matching {} pattern&#39;.format(dir, glob_pattern))
+        mostRecentFile = pathlib.Path()
+        return mostRecentFile
+    else:
+        globInd = np.argmin(np.datetime64(todayDateStr) - np.array(fileDates)) #Find the index of the most recent file
 
     #Iterate through glob/files again (need to recreate glob)
     files = pathlib.Path(dir).rglob(glob_pattern)
@@ -1417,63 +1254,102 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 </details>
 </dd>
 <dt id="w4h.get_search_terms"><code class="name flex">
-<span>def <span class="ident">get_search_terms</span></span>(<span>spec_dir='C:\\Users\\riley\\LocalData\\Code\\Github\\wells4hydrogeology/resources/', spec_glob_pattern='*SearchTerms-Specific*', start_dir=None, start_glob_pattern='*SearchTerms-Start*', log=False)</span>
+<span>def <span class="ident">get_search_terms</span></span>(<span>spec_path='C:\\Users\\riley\\LocalData\\Code\\Github\\wells4hydrogeology/resources/', spec_glob_pattern='*SearchTerms-Specific*', start_path=None, start_glob_pattern='*SearchTerms-Start*', wildcard_path=None, wildcard_glob_pattern='*SearchTerms-Wildcard', log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Read in dictionary files for downhole data</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>spec_dir</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path</code>, optional</dt>
+<dt><strong><code>spec_path</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path</code>, optional</dt>
 <dd>Directory where the file containing the specific search terms is located, by default str(repoDir)+'/resources/'</dd>
 <dt><strong><code>spec_glob_pattern</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default '<em>SearchTerms-Specific</em>'</dd>
-<dt><strong><code>start_dir</code></strong> :&ensp;<code>str</code> or <code>None</code>, optional</dt>
+<dt><strong><code>start_path</code></strong> :&ensp;<code>str</code> or <code>None</code>, optional</dt>
 <dd>Directory where the file containing the start search terms is located, by default None</dd>
 <dt><strong><code>start_glob_pattern</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default '<em>SearchTerms-Start</em>'</dd>
+<dt><strong><code>wildcard_path</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path</code>, default <code>= None</code></dt>
+<dd>Directory where the file containing the wildcard search terms is located, by default None</dd>
+<dt><strong><code>wildcard_glob_pattern</code></strong> :&ensp;<code>str</code>, default <code>= '*SearchTerms-Wildcard'</code></dt>
+<dd>Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default '<em>SearchTerms-Wildcard</em>'</dd>
 <dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= True</code></dt>
 <dd>Whether to log inputs and outputs to log file.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<p>(specTermsPath, startTermsPath) : tuple
-Tuple containing the pandas dataframe with specific search terms and one with start search terms</p></div>
+<p>(specTermsPath, startTermsPath, wilcardTermsPath) : tuple
+Tuple containing the pandas dataframes with specific search terms,
+with start search terms, and with wildcard search terms</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_search_terms(spec_dir=str(repoDir)+&#39;/resources/&#39;, spec_glob_pattern=&#39;*SearchTerms-Specific*&#39;, start_dir=None, start_glob_pattern = &#39;*SearchTerms-Start*&#39;, log=False):
+<pre><code class="python">def get_search_terms(spec_path=str(repoDir)+&#39;/resources/&#39;, spec_glob_pattern=&#39;*SearchTerms-Specific*&#39;, 
+                     start_path=None, start_glob_pattern = &#39;*SearchTerms-Start*&#39;, 
+                     wildcard_path=None, wildcard_glob_pattern=&#39;*SearchTerms-Wildcard&#39;,
+                     log=False):
     &#34;&#34;&#34;Read in dictionary files for downhole data
 
     Parameters
     ----------
-    spec_dir : str or pathlib.Path, optional
+    spec_path : str or pathlib.Path, optional
         Directory where the file containing the specific search terms is located, by default str(repoDir)+&#39;/resources/&#39;
     spec_glob_pattern : str, optional
         Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default &#39;*SearchTerms-Specific*&#39;
-    start_dir : str or None, optional
+    start_path : str or None, optional
         Directory where the file containing the start search terms is located, by default None
     start_glob_pattern : str, optional
         Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default &#39;*SearchTerms-Start*&#39;
+    wildcard_path : str or pathlib.Path, default = None
+        Directory where the file containing the wildcard search terms is located, by default None    
+    wildcard_glob_pattern : str, default = &#39;*SearchTerms-Wildcard&#39;
+        Search string used by pathlib.glob() to find the most recent file of interest, uses get_most_recent() function, by default &#39;*SearchTerms-Wildcard*&#39;
     log : bool, default = True
         Whether to log inputs and outputs to log file.        
 
     Returns
     -------
-    (specTermsPath, startTermsPath) : tuple
-        Tuple containing the pandas dataframe with specific search terms and one with start search terms
+    (specTermsPath, startTermsPath, wilcardTermsPath) : tuple
+        Tuple containing the pandas dataframes with specific search terms,  with start search terms, and with wildcard search terms
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     
     #specTermsFile = &#34;SearchTerms-Specific_BedrockOrNo_2022-09.csv&#34; #Specific matches
     #startTermsFile = &#34;SearchTerms-Start_BedrockOrNo.csv&#34; #Wildcard matches for the start of the description
-    
-    if start_dir is None:
-        start_dir = spec_dir
 
-    specTermsPath = get_most_recent(spec_dir, spec_glob_pattern)
-    startTermsPath = get_most_recent(start_dir, start_glob_pattern)
+    #Exact match path
+    if spec_path is None:
+        specTermsPath = spec_path        
+    else:
+        spec_path = pathlib.Path(spec_path)
+
+        if spec_path.is_dir():
+            specTermsPath = get_most_recent(spec_path, spec_glob_pattern)
+        else:
+            specTermsPath = spec_path
+
+    #Startswith path
+    if start_path is None:
+        startTermsPath = start_path        
+    else:
+        start_path = pathlib.Path(start_path)
+
+        if start_path.is_dir():
+            startTermsPath = get_most_recent(start_path, start_glob_pattern)
+        else:
+            startTermsPath = start_path
+
+    #Wildcard Path
+    if wildcard_path is None:
+        wilcardTermsPath = wildcard_path        
+    else:
+        wildcard_path = pathlib.Path(wildcard_path)
+
+        if wildcard_path.is_dir():
+            wilcardTermsPath = get_most_recent(wildcard_path, wildcard_glob_pattern)
+        else:
+            wilcardTermsPath = wildcard_path
     
-    return specTermsPath, startTermsPath</code></pre>
+    return specTermsPath, startTermsPath, wilcardTermsPath</code></pre>
 </details>
 </dd>
 <dt id="w4h.get_unique_wells"><code class="name flex">
@@ -2036,39 +1912,60 @@ If False, return list of geopandas.geodataframes with only essential information
     if logtocommence:
         global log_filename
         #log parameter should be false by default on all. If true, will show up in kwargs
-            #Is there a way to do this so all can be set at once?
+        
+        #Get the log parameter value
         if &#39;log&#39; in parameters.keys():
             log_file = parameters.pop(&#39;log&#39;, None)
         else:
+            #If it wasn&#39;t set, default to None
             log_file = None
         
+        #Get currenet time and setup format for log messages
         curr_time = datetime.datetime.now()
         FORMAT = &#39;%(asctime)s  %(message)s&#39;
+
+        #Check if we are starting a new logfile (only does this during run of file_setup() or (currently non-existent) new_logfile() functions)
         if log_file == True and (func_name == &#39;file_setup&#39; or func_name == &#39;new_logfile&#39;):
+
+            #Get the log_dir variable set as a file_setup() parameter, or default to None if not specified
             out_dir = parameters.pop(&#39;log_dir&#39;, None)
             if out_dir is None:
-                out_dir = parameters[&#39;db_dir&#39;]
+                #If output directory not specified, default to the input directory
+                out_dir = parameters[&#39;well_data&#39;]
+            
+            #Get the timestamp for the filename (this won&#39;t change, so represents the start of logging)
             timestamp = curr_time.strftime(&#39;%Y-%m-%d_%H-%M-%S&#39;)
             log_filename = pathlib.Path(out_dir).joinpath(f&#34;log_{timestamp}.txt&#34;)
-            print(&#39;Logging data to&#39;, log_filename)
+            if &#39;verbose&#39; in parameters.keys():
+                print(&#39;Logging data to&#39;, log_filename)
+
+            #Set up logging stream using logging module
             logging.basicConfig(filename=log_filename, level=logging.INFO, format=FORMAT, filemode=&#39;w&#39;)
-            logging.info(f&#34;Called {func_name} with args: {parameters}&#34;)
+
+            #Log 
+            logging.info(f&#34;{func_name} CALLED WITH PARAMETERS:\n\t {parameters}&#34;)
         elif log_file == True:
+            #Run this for functions that aren&#39;t setting up logging file
             if log_filename:
+                #Get the log stream and log this function&#39;s call with parameters
                 logging.basicConfig(filename=log_filename, level=logging.INFO, format=FORMAT)
-                logging.info(f&#34;Called {func_name} with args: {parameters}&#34;)
+                logging.info(f&#34;{func_name} CALLED WITH PARAMETERS: \n\t{parameters}&#34;)
             else:
+                #If log file has not already been set up, set it up
                 timestamp = curr_time.strftime(&#39;%Y-%m-%d_%H-%M-%S&#39;)
                 log_filename = f&#34;log_{timestamp}.txt&#34;
+
+                #Now, get the log stream and log this function&#39;s call with parameters
                 logging.basicConfig(filename=log_filename, level=logging.INFO, format=FORMAT)
-                logging.info(f&#34;Called {func_name} with args: {parameters}&#34;)
+                logging.info(f&#34;{func_name} CALLED WITH PARAMETERS: \n\t{parameters}&#34;)
         else:
+            #Don&#39;t log if log=False
             pass
     return</code></pre>
 </details>
 </dd>
 <dt id="w4h.merge_lithologies"><code class="name flex">
-<span>def <span class="ident">merge_lithologies</span></span>(<span>df, targinterps_df, target_col='TARGET', target_class='bool')</span>
+<span>def <span class="ident">merge_lithologies</span></span>(<span>df, targinterps_df, interp_col='INTERPRETATION', target_col='TARGET', target_class='bool')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to merge lithologies and target booleans based on classifications</p>
@@ -2081,7 +1978,7 @@ If False, return list of geopandas.geodataframes with only essential information
 <dt><strong><code>target_col</code></strong> :&ensp;<code>str</code>, default <code>= 'TARGET'</code></dt>
 <dd>Name of column in targinterps_df containing the target interpretations</dd>
 </dl>
-<p>target_class, default = True
+<p>target_class, default = 'bool'
 Whether the input column is using boolean values as its target indicator</p>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -2092,7 +1989,7 @@ Whether the input column is using boolean values as its target indicator</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def merge_lithologies(df, targinterps_df, target_col=&#39;TARGET&#39;, target_class=&#39;bool&#39;):
+<pre><code class="python">def merge_lithologies(df, targinterps_df, interp_col=&#39;INTERPRETATION&#39;, target_col=&#39;TARGET&#39;, target_class=&#39;bool&#39;):
     &#34;&#34;&#34;Function to merge lithologies and target booleans based on classifications
     
     Parameters
@@ -2103,7 +2000,7 @@ Whether the input column is using boolean values as its target indicator</p>
         Dataframe containing lithologies and their target interpretations, depending on what the target is for this analysis (often, coarse materials=1, fine=0)
     target_col : str, default = &#39;TARGET&#39;
         Name of column in targinterps_df containing the target interpretations
-    target_class, default = True
+    target_class, default = &#39;bool&#39;
         Whether the input column is using boolean values as its target indicator
         
     Returns
@@ -2117,13 +2014,12 @@ Whether the input column is using boolean values as its target indicator</p>
     if target_class==&#39;bool&#39;:
         targinterps_df[target_col] = targinterps_df[target_col].where(targinterps_df[target_col]==&#39;1&#39;, other=&#39;0&#39;).astype(int)
         targinterps_df[target_col].fillna(value=0, inplace=True)
-
     else:
         targinterps_df[target_col].replace(&#39;DoNotUse&#39;, value=-1, inplace=True)
         targinterps_df[target_col].fillna(value=-2, inplace=True)
         targinterps_df[target_col].astype(np.int8)
 
-    df_targ = pd.merge(df, targinterps_df.set_index(&#39;INTERPRETATION&#39;), right_on=&#39;INTERPRETATION&#39;,left_on=&#39;INTERPRETATION&#39;, how=&#39;left&#39;)
+    df_targ = pd.merge(df, targinterps_df.set_index(interp_col), right_on=interp_col, left_on=&#39;LITHOLOGY&#39;, how=&#39;left&#39;)
     
     return df_targ</code></pre>
 </details>
@@ -2280,7 +2176,7 @@ Whether the input column is using boolean values as its target indicator</p>
 </details>
 </dd>
 <dt id="w4h.read_dictionary_terms"><code class="name flex">
-<span>def <span class="ident">read_dictionary_terms</span></span>(<span>dict_file, cols=None, col_types=None, dictionary_type=None, class_flag=1, rem_extra_cols=True, log=False)</span>
+<span>def <span class="ident">read_dictionary_terms</span></span>(<span>dict_file, id_col='ID', search_col='DESCRIPTION', definition_col='LITHOLOGY', class_flag_col='CLASS_FLAG', dictionary_type=None, class_flag=6, rem_extra_cols=True, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to read dictionary terms from file into pandas dataframe</p>
@@ -2288,15 +2184,16 @@ Whether the input column is using boolean values as its target indicator</p>
 <dl>
 <dt><strong><code>dict_file</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object,</code> or <code>list</code> of <code>these</code></dt>
 <dd>File or list of files to be read</dd>
-<dt><strong><code>cols</code></strong> :&ensp;<code>dict</code> or <code>None</code>, default <code>= None</code></dt>
-<dd>Dictionary containing columns to be renamed. If None, see source code for renaming actions, by default None</dd>
-<dt><strong><code>col_types</code></strong> :&ensp;<code>dict</code> or <code>None</code>, default <code>= None</code></dt>
-<dd>Dictionary containing column types to be set. If None, see source code for renaming actions, by default None, by default None</dd>
-<dt><strong><code>dictionary_type</code></strong> :&ensp;<code>str</code> or <code>None, {None, 'exact', 'start'}</code></dt>
-<dd>Indicator of which kind of dictionary terms to be read in: None, 'exact' or 'start', by default None.
+<dt><strong><code>search_col</code></strong> :&ensp;<code>str</code>, default <code>= 'DESCRIPTION'</code></dt>
+<dd>Name of column containing search terms (geologic formations)</dd>
+<dt><strong><code>definition_col</code></strong> :&ensp;<code>str</code>, default <code>= 'LITHOLOGY'</code></dt>
+<dd>Name of column containing interpretations of search terms (lithologies)</dd>
+<dt><strong><code>dictionary_type</code></strong> :&ensp;<code>str</code> or <code>None, {None, 'exact', 'start', 'wildcard',}</code></dt>
+<dd>Indicator of which kind of dictionary terms to be read in: None, 'exact', 'start', or 'wildcard' by default None.
 - If None, uses name of file to try to determine. If it cannot, it will default to using the classification flag from class_flag
 - If 'exact', will be used to search for exact matches to geologic descriptions
-- If 'start', will be used as with the .startswith() string method to find inexact matches to geologic descriptions</dd>
+- If 'start', will be used as with the .startswith() string method to find inexact matches to geologic descriptions
+- If 'wildcard', will be used to find any matching substring for inexact geologic matches</dd>
 <dt><strong><code>class_flag</code></strong> :&ensp;<code>int</code>, default <code>= 1</code></dt>
 <dd>Classification flag to be used if dictionary_type is None and cannot be otherwise determined, by default 1</dd>
 <dt><strong><code>rem_extra_cols</code></strong> :&ensp;<code>bool</code>, default <code>= True</code></dt>
@@ -2313,22 +2210,23 @@ Whether the input column is using boolean values as its target indicator</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_dictionary_terms(dict_file, cols=None, col_types=None, dictionary_type=None, class_flag=1, rem_extra_cols=True, log=False):
+<pre><code class="python">def read_dictionary_terms(dict_file, id_col=&#39;ID&#39;, search_col=&#39;DESCRIPTION&#39;, definition_col=&#39;LITHOLOGY&#39;, class_flag_col=&#39;CLASS_FLAG&#39;, dictionary_type=None, class_flag=6, rem_extra_cols=True, log=False):
     &#34;&#34;&#34;Function to read dictionary terms from file into pandas dataframe
 
     Parameters
     ----------
     dict_file : str or pathlib.Path object, or list of these
         File or list of files to be read
-    cols : dict or None, default = None
-        Dictionary containing columns to be renamed. If None, see source code for renaming actions, by default None
-    col_types : dict or None, default = None
-        Dictionary containing column types to be set. If None, see source code for renaming actions, by default None, by default None
-    dictionary_type : str or None, {None, &#39;exact&#39;, &#39;start&#39;}
-        Indicator of which kind of dictionary terms to be read in: None, &#39;exact&#39; or &#39;start&#39;, by default None.
+    search_col : str, default = &#39;DESCRIPTION&#39;
+        Name of column containing search terms (geologic formations)
+    definition_col : str, default = &#39;LITHOLOGY&#39;
+        Name of column containing interpretations of search terms (lithologies)
+    dictionary_type : str or None, {None, &#39;exact&#39;, &#39;start&#39;, &#39;wildcard&#39;,}
+        Indicator of which kind of dictionary terms to be read in: None, &#39;exact&#39;, &#39;start&#39;, or &#39;wildcard&#39; by default None.
             - If None, uses name of file to try to determine. If it cannot, it will default to using the classification flag from class_flag
             - If &#39;exact&#39;, will be used to search for exact matches to geologic descriptions
             - If &#39;start&#39;, will be used as with the .startswith() string method to find inexact matches to geologic descriptions
+            - If &#39;wildcard&#39;, will be used to find any matching substring for inexact geologic matches
     class_flag : int, default = 1
         Classification flag to be used if dictionary_type is None and cannot be otherwise determined, by default 1
     rem_extra_cols : bool, default = True
@@ -2345,90 +2243,102 @@ Whether the input column is using boolean values as its target indicator</p>
 
     #Read files into pandas dataframes
     dict_terms = []
-    if type(dict_file) is list:
+    if dict_file is None:
+        df = pd.DataFrame(columns=[&#39;ID&#39;, &#39;DESCRIPTION&#39;, &#39;LITHOLOGY&#39;, &#39;CLASS_FLAGS&#39;])
+        dict_terms.append(df)
+        dict_file = [&#39;&#39;]
+    elif type(dict_file) is list:
         for f in dict_file:
-            dict_terms.append(pd.read_csv(f))
-            if &#39;ID&#39; in dict_terms.columns:
-                dict_terms.set_index(&#39;ID&#39;, drop=True, inplace=True)
+            if not f.exists():
+                df = pd.DataFrame(columns=[&#39;ID&#39;, &#39;DESCRIPTION&#39;, &#39;LITHOLOGY&#39;, &#39;CLASS_FLAGS&#39;])
+                dict_terms.append(df)
+            else:
+                dict_terms.append(pd.read_csv(f))
+
+            if id_col in dict_terms.columns:
+                dict_terms.set_index(id_col, drop=True, inplace=True)
     else:
-        dict_terms.append(pd.read_csv(dict_file))
-        if &#39;ID&#39; in dict_terms[-1].columns:
-            dict_terms[-1].set_index(&#39;ID&#39;, drop=True, inplace=True)
-        dict_file = [dict_file]
+        dict_file = pathlib.Path(dict_file)
+        if dict_file.exists() and dict_file.is_file():
+            dict_terms.append(pd.read_csv(dict_file, low_memory=False))
+            if id_col in dict_terms[-1].columns:
+                dict_terms[-1].set_index(id_col, drop=True, inplace=True)
+            dict_file = [dict_file]
+        else:
+            print(&#39;ERROR: dict_file ({}) does not exist.&#39;.format(dict_file))
+            #Create empty dataframe to return
+            dict_terms = pd.DataFrame(columns=[&#39;ID&#39;, &#39;DESCRIPTION&#39;, &#39;LITHOLOGY&#39;, &#34;CLASS_FLAGS&#34;])
+            return dict_terms
 
     #Rename important columns
     searchTermList = [&#39;searchterm&#39;, &#39;search&#39;, &#39;exact&#39;]
     startTermList = [&#39;startterm&#39;, &#39;start&#39;, &#39;startswith&#39;]
-                
+    wildcardTermList = [&#39;wildcard&#39;, &#39;substring&#39;, ]
+
     #Recast all columns to datatypes of headerData to defined types
-    dict_termDtypes = {&#39;FORMATION&#39;:str,&#39;INTERPRETATION&#39;:str, &#39;CLASS_FLAG&#39;:np.uint8}
+    dict_termDtypes = {search_col:str, definition_col:str, class_flag_col:np.uint8}
 
     if dictionary_type is None:
-        dictionary_type=&#39;&#39;
+        dictionary_type=&#39;&#39; #Allow string methods on this variable
 
+    #Iterating, to allow reading of multiple dict file at once (also works with just one at at time)
     for i, d in enumerate(dict_terms):
         if dictionary_type.lower() in searchTermList or (dictionary_type==&#39;&#39; and &#39;spec&#39; in str(dict_file[i]).lower()):
-            d[&#39;CLASS_FLAG&#39;] = 1
+            d[class_flag_col] = 1
         elif dictionary_type.lower() in startTermList or (dictionary_type==&#39;&#39; and &#39;start&#39; in str(dict_file[i]).lower()):
-            d[&#39;CLASS_FLAG&#39;] = 4 #Start term classification flag
+            d[class_flag_col] = 4 #Start term classification flag
+        elif dictionary_type.lower() in wildcardTermList or (dictionary_type==&#39;&#39; and &#39;wildcard&#39; in str(dict_file[i]).lower()):
+            d[class_flag_col] = 5 #Wildcard term classification flag
         else:
-            d[&#39;CLASS_FLAG&#39;] = class_flag #Custom classification flag, defined as argument
-            #1=specific match,2 (not defined), 3: bedrock classification for obvious bedrock, 4: Wildcard/start term
+            d[class_flag_col] = class_flag #Custom classification flag, defined as argument
+        #1: exact classification match, 2: (not defined...ML?), 3: bedrock classification for obvious bedrock, 4: start term, 5: wildcard/substring, 6: Undefined
 
-        if cols is None:
-            if &#39;SearchTerm&#39; in d.columns:
-                d.rename(columns={&#39;SearchTerm&#39;:&#39;FORMATION&#39;}, inplace=True)
-            if &#39;StartTerm&#39; in d.columns:
-                d.rename(columns={&#39;StartTerm&#39;:&#39;FORMATION&#39;}, inplace=True)        
-            if &#39;InterpUpdate&#39; in d.columns:
-                d.rename(columns={&#39;InterpUpdate&#39;:&#39;INTERPRETATION&#39;}, inplace=True)
-        else:
-            for k in list(cols.keys()):
-                d.rename(columns={k:cols[k]}, inplace=True)
-        if col_types is None:
-            pass
-        else:
-            for k in list(col_types.keys()):
-                d.rename(columns={k:col_types[k]}, inplace=True)
-    
+        #Rename columns so it is consistent through rest of code
+        if search_col != &#39;DESCRIPTION&#39;:
+            d.rename(columns={search_col:&#39;DESCRIPTION&#39;}, inplace=True)
+        if definition_col != &#39;LITHOLOGY&#39;:
+            d.rename(columns={definition_col:&#39;LITHOLOGY&#39;}, inplace=True)
+        if class_flag_col != &#39;CLASS_FLAG&#39;:
+            d.rename(columns={class_flag_col:&#39;CLASS_FLAG&#39;}, inplace=True)
+
+        #Cast all columns as type str, if not already
         for i in range(0, np.shape(d)[1]):
             if d.iloc[:,i].name in list(dict_termDtypes.keys()):
                 d.iloc[:,i] = d.iloc[:,i].astype(dict_termDtypes[d.iloc[:,i].name])
-    
+        
         #Delete duplicate definitions
-        d.drop_duplicates(subset=&#39;FORMATION&#39;,inplace=True) #Apparently, there are some duplicate definitions, which need to be deleted first
+        d.drop_duplicates(subset=&#39;DESCRIPTION&#39;,inplace=True) #Apparently, there are some duplicate definitions, which need to be deleted first
         d.reset_index(inplace=True, drop=True)
 
+        #Whether to remove extra columns that aren&#39;t needed from dataframe
+        if rem_extra_cols:
+            d = d[[&#39;DESCRIPTION&#39;, &#39;LITHOLOGY&#39;, &#39;CLASS_FLAG&#39;]]
+
     #If only one file designated, convert it so it&#39;s no longer a list, but just a dataframe
+
     if len(dict_terms) == 1:
         dict_terms = dict_terms[0]
-    
-    #Whether to remove extra columns that aren&#39;t needed from dataframe
-    if rem_extra_cols:
-        dict_terms = dict_terms[[&#39;FORMATION&#39;, &#39;INTERPRETATION&#39;, &#39;CLASS_FLAG&#39;]]
 
     return dict_terms</code></pre>
 </details>
 </dd>
 <dt id="w4h.read_grid"><code class="name flex">
-<span>def <span class="ident">read_grid</span></span>(<span>datapath='', grid_type='model', nodataval=0, use_service=False, study_area='', clip2studyarea=True, study_area_crs=None, grid_crs=None, log=False, **kwargs)</span>
+<span>def <span class="ident">read_grid</span></span>(<span>grid_path=None, grid_type='model', no_data_val_grid=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, verbose=False, log=False, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Reads in grid</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>datapath</code></strong> :&ensp;<code>str</code>, default=<code>''</code></dt>
-<dd>ontains data path to a grid file</dd>
+<dt><strong><code>grid_path</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path</code>, default=<code>None</code></dt>
+<dd>Path to a grid file</dd>
 <dt><strong><code>grid_type</code></strong> :&ensp;<code>str</code>, default=<code>'model'</code></dt>
 <dd>Sets what type of grid to load in</dd>
-<dt><strong><code>nodataval</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
+<dt><strong><code>no_data_val_grid</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
 <dd>Sets the no data value of the grid</dd>
 <dt><strong><code>use_service</code></strong> :&ensp;<code>str</code>, default=<code>False</code></dt>
 <dd>Sets which service the function uses</dd>
-<dt><strong><code>study_area</code></strong> :&ensp;<code>geopandas.GeoDataFrame</code>, default=<code>''</code></dt>
+<dt><strong><code>study_area</code></strong> :&ensp;<code>geopandas.GeoDataFrame</code>, default=<code>None</code></dt>
 <dd>Dataframe containing study area polygon</dd>
-<dt><strong><code>clip2studyarea</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
-<dd>If function clips grid to study area</dd>
 <dt><strong><code>study_area_crs</code></strong> :&ensp;<code>str</code>, default=<code>None</code></dt>
 <dd>Sets specific crs if current crs is not wanted</dd>
 <dt><strong><code>grid_crs</code></strong> :&ensp;<code>str</code>, default=<code>None</code></dt>
@@ -2445,23 +2355,21 @@ Whether the input column is using boolean values as its target indicator</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_grid(datapath=&#39;&#39;, grid_type=&#39;model&#39;, nodataval=0, use_service=False, study_area=&#39;&#39;, clip2studyarea=True,  study_area_crs=None, grid_crs=None, log=False, **kwargs):
+<pre><code class="python">def read_grid(grid_path=None, grid_type=&#39;model&#39;, no_data_val_grid=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, verbose=False, log=False, **kwargs):
     &#34;&#34;&#34;Reads in grid
 
     Parameters
     ----------
-    datapath : str, default=&#39;&#39;
-        ontains data path to a grid file
+    grid_path : str or pathlib.Path, default=None
+        Path to a grid file
     grid_type : str, default=&#39;model&#39;
         Sets what type of grid to load in
-    nodataval : int, default=0
+    no_data_val_grid : int, default=0
         Sets the no data value of the grid
     use_service : str, default=False
         Sets which service the function uses
-    study_area : geopandas.GeoDataFrame, default=&#39;&#39;
+    study_area : geopandas.GeoDataFrame, default=None
         Dataframe containing study area polygon
-    clip2studyarea : bool, default=True
-        If function clips grid to study area
     study_area_crs : str, default=None
         Sets specific crs if current crs is not wanted
     grid_crs : str, default=None
@@ -2482,17 +2390,17 @@ Whether the input column is using boolean values as its target indicator</p>
             rgrid = kwargs[&#39;read_grid&#39;]
         else:
             rgrid=True
-        gridIN = read_model_grid(study_area, gridpath=datapath, nodataval=0, read_grid=rgrid, clip2studyarea=clip2studyarea, study_area_crs=study_area_crs, grid_crs=grid_crs)
+        gridIN = read_model_grid(model_grid_path=grid_path, study_area=study_area,  no_data_val_grid=0, read_grid=rgrid, study_area_crs=study_area_crs, grid_crs=grid_crs, verbose=verbose)
     else:
         if use_service==False:
-            gridIN = rxr.open_rasterio(datapath)
+            gridIN = rxr.open_rasterio(grid_path)
         elif use_service.lower()==&#39;wcs&#39;:
             gridIN = read_wcs(study_area, wcs_url=lidarURL, **kwargs)
         elif use_service.lower()==&#39;wms&#39;:
             pass
             gridIN = read_wms(study_area, wcs_url=lidarURL, **kwargs)
             
-        if clip2studyarea:
+        if study_area is not None:
             if grid_crs is None:
                 try:
                     grid_crs=gridIN.spatial_ref.crs_wkt
@@ -2509,27 +2417,26 @@ Whether the input column is using boolean values as its target indicator</p>
             study_area_crs=study_area.crs
             
             gridIN = grid2study_area(study_area=study_area, grid=gridIN, study_area_crs=study_area_crs, grid_crs=grid_crs)
+
         try:
-            nodataval = gridIN.attrs[&#39;_FillValue&#39;] #Extract from dataset itself
+            no_data_val_grid = gridIN.attrs[&#39;_FillValue&#39;] #Extract from dataset itself
         except:
             pass
                 
-        gridIN = gridIN.where(gridIN != nodataval, other=np.nan)  #Replace no data values with NaNs
+        gridIN = gridIN.where(gridIN != no_data_val_grid, other=np.nan)  #Replace no data values with NaNs
 
     return gridIN</code></pre>
 </details>
 </dd>
 <dt id="w4h.read_lithologies"><code class="name flex">
-<span>def <span class="ident">read_lithologies</span></span>(<span>litho_dir=None, lith_file=None, interp_col='LITHOLOGY', target_col='CODE', use_cols=None, log=False)</span>
+<span>def <span class="ident">read_lithologies</span></span>(<span>lith_file=None, interp_col='LITHOLOGY', target_col='CODE', use_cols=None, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to read lithology file into pandas dataframe</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>litho_dir</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code>, default <code>= None</code></dt>
-<dd>Directory where lithology file is located. If None, default is in source coude, by default None</dd>
-<dt><strong><code>lith_file</code></strong> :&ensp;<code>str</code>, default <code>= None</code></dt>
-<dd>Filename of lithology file. If None, default is in source coude, by default None</dd>
+<dt><strong><code>lith_file</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code>, default <code>= None</code></dt>
+<dd>Filename of lithology file. If None, default is contained within repository, by default None</dd>
 <dt><strong><code>interp_col</code></strong> :&ensp;<code>str</code>, default <code>= 'LITHOLOGY'</code></dt>
 <dd>Column to used to match interpretations</dd>
 <dt><strong><code>target_col</code></strong> :&ensp;<code>str</code>, default <code>= 'CODE'</code></dt>
@@ -2548,15 +2455,13 @@ Whether the input column is using boolean values as its target indicator</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_lithologies(litho_dir=None, lith_file=None, interp_col=&#39;LITHOLOGY&#39;, target_col=&#39;CODE&#39;, use_cols=None, log=False):
+<pre><code class="python">def read_lithologies(lith_file=None, interp_col=&#39;LITHOLOGY&#39;, target_col=&#39;CODE&#39;, use_cols=None, log=False):
     &#34;&#34;&#34;Function to read lithology file into pandas dataframe
 
     Parameters
     ----------
-    litho_dir : str or pathlib.Path object, default = None
-        Directory where lithology file is located. If None, default is in source coude, by default None
-    lith_file : str, default = None
-        Filename of lithology file. If None, default is in source coude, by default None
+    lith_file : str or pathlib.Path object, default = None
+        Filename of lithology file. If None, default is contained within repository, by default None
     interp_col : str, default = &#39;LITHOLOGY&#39;
         Column to used to match interpretations
     target_col : str, default = &#39;CODE&#39;
@@ -2573,25 +2478,17 @@ Whether the input column is using boolean values as its target indicator</p>
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    #dictDir = &#34;\\\\isgs-sinkhole\\geophysics\\Balikian\\ISWS_HydroGeo\\WellDataAutoClassification\\SupportingDocs\\&#34;
-    if litho_dir is None:
-        litho_dir=str(repoDir)+&#39;/resources/&#39;
-    elif isinstance(litho_dir, pathlib.PurePath):
-        litho_dir = litho_dir.as_posix()
-    
-    litho_dir.replace(&#39;\\&#39;, &#39;/&#39;)
-    litho_dir.replace(&#39;\\&#39;[-1], &#39;/&#39;)
-    if litho_dir[-1] != &#39;/&#39;:
-        litho_dir = litho_dir+&#39;/&#39;
-
     if lith_file is None:
+        #Find resources
         lith_file=&#39;Lithology_Interp_FineCoarse.csv&#39;
     
+    if not isinstance(lith_file, pathlib.PurePath):
+        lith_file = pathlib.Path(lith_file)
+
     if use_cols is None:
         use_cols = [&#39;LITHOLOGY&#39;, &#39;CODE&#39;]
 
-    lithFPath = pathlib.Path(litho_dir+lith_file)
-    lithoDF = pd.read_csv(lithFPath, usecols=use_cols)
+    lithoDF = pd.read_csv(lith_file, usecols=use_cols)
 
     lithoDF.rename(columns={interp_col:&#39;INTERPRETATION&#39;, target_col:&#39;TARGET&#39;}, inplace=True)
 
@@ -2599,24 +2496,22 @@ Whether the input column is using boolean values as its target indicator</p>
 </details>
 </dd>
 <dt id="w4h.read_model_grid"><code class="name flex">
-<span>def <span class="ident">read_model_grid</span></span>(<span>study_area, gridpath, nodataval=0, read_grid=True, node_byspace=False, clip2studyarea=True, study_area_crs=None, grid_crs=None, log=False)</span>
+<span>def <span class="ident">read_model_grid</span></span>(<span>model_grid_path, study_area=None, no_data_val_grid=0, read_grid=True, node_byspace=True, study_area_crs=None, grid_crs=None, verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Reads in model grid to xarray data array</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>study_area</code></strong> :&ensp;<code>geopandas.GeoDataFrame</code></dt>
-<dd>Dataframe containing study area polygon</dd>
-<dt><strong><code>gridpath</code></strong> :&ensp;<code>str</code></dt>
+<dt><strong><code>grid_path</code></strong> :&ensp;<code>str</code></dt>
 <dd>Path to model grid file</dd>
-<dt><strong><code>nodataval</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
+<dt><strong><code>study_area</code></strong> :&ensp;<code>geopandas.GeoDataFrame</code>, default=<code>None</code></dt>
+<dd>Dataframe containing study area polygon</dd>
+<dt><strong><code>no_data_val_grid</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
 <dd>value assigned to areas with no data</dd>
 <dt><strong><code>readGrid</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
 <dd>Whether function to either read grid or create grid</dd>
 <dt><strong><code>node_byspace</code></strong> :&ensp;<code>bool</code>, default=<code>False</code></dt>
 <dd>Denotes how to create grid</dd>
-<dt><strong><code>clip2studyarea</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
-<dd>Whether to clip grid to study area</dd>
 <dt><strong><code>study_area_crs</code></strong> :&ensp;<code>str</code>, default=<code>None</code></dt>
 <dd>Inputs study area crs</dd>
 <dt><strong><code>grid_crs</code></strong> :&ensp;<code>str</code>, default=<code>None</code></dt>
@@ -2633,23 +2528,21 @@ Whether the input column is using boolean values as its target indicator</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_model_grid(study_area, gridpath, nodataval=0, read_grid=True, node_byspace=False, clip2studyarea=True, study_area_crs=None, grid_crs=None, log=False):
+<pre><code class="python">def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_grid=True, node_byspace=True, study_area_crs=None, grid_crs=None, verbose=False, log=False):
     &#34;&#34;&#34;Reads in model grid to xarray data array
 
     Parameters
     ----------
-    study_area : geopandas.GeoDataFrame
-        Dataframe containing study area polygon
-    gridpath : str
+    grid_path : str
         Path to model grid file
-    nodataval : int, default=0
+    study_area : geopandas.GeoDataFrame, default=None
+        Dataframe containing study area polygon
+    no_data_val_grid : int, default=0
         value assigned to areas with no data
     readGrid : bool, default=True
         Whether function to either read grid or create grid
     node_byspace : bool, default=False
         Denotes how to create grid
-    clip2studyarea : bool, default=True
-        Whether to clip grid to study area
     study_area_crs : str, default=None
         Inputs study area crs
     grid_crs : str, default=None
@@ -2664,8 +2557,8 @@ Whether the input column is using boolean values as its target indicator</p>
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     
-    if read_grid:
-        modelGridIN = rxr.open_rasterio(gridpath)
+    if read_grid and model_grid_path is not None:
+        modelGridIN = rxr.open_rasterio(model_grid_path)
 
         file = w4h.read.__get_resource_path(&#39;isws_crs.txt&#39;)
         iswsCRS = w4h.read_dict(file, keytype=None)
@@ -2678,12 +2571,15 @@ Whether the input column is using boolean values as its target indicator</p>
         elif grid_crs.lower()==&#39;isws&#39;:
             modelGridIN.rio.write_crs(iswsCRS)
         
-        if clip2studyarea:                
+        if study_area is not None:                
             if study_area_crs is None:
                 study_area_crs=study_area.crs
             study_area = study_area.to_crs(grid_crs)
             study_area_crs=study_area.crs            
             modelGrid = grid2study_area(study_area=study_area, grid=modelGridIN, study_area_crs=study_area_crs, grid_crs=grid_crs)
+        else:
+            modelGrid = modelGridIN
+
         try:
             noDataVal = float(modelGrid.attrs[&#39;_FillValue&#39;]) #Extract from dataset itsel
         except:
@@ -2691,6 +2587,9 @@ Whether the input column is using boolean values as its target indicator</p>
 
         modelGrid = modelGrid.where(modelGrid != noDataVal, other=np.nan)   #Replace no data values with NaNs
         modelGrid.rio.reproject(iswsCRS, inplace=True)
+    elif model_grid_path is None and study_area is None:
+        if verbose:
+            print(&#34;ERROR: Either model_grid_path or study_area must be defined.&#34;)
     else:
         spatRefDict = {&#39;crs_wkt&#39;: &#39;PROJCS[&#34;Clarke_1866_Lambert_Conformal_Conic&#34;,GEOGCS[&#34;NAD27&#34;,DATUM[&#34;North_American_Datum_1927&#34;,SPHEROID[&#34;Clarke 1866&#34;,6378206.4,294.978698199999,AUTHORITY[&#34;EPSG&#34;,&#34;7008&#34;]],AUTHORITY[&#34;EPSG&#34;,&#34;6267&#34;]],PRIMEM[&#34;Greenwich&#34;,0],UNIT[&#34;degree&#34;,0.0174532925199433,AUTHORITY[&#34;EPSG&#34;,&#34;9122&#34;]],AUTHORITY[&#34;EPSG&#34;,&#34;4267&#34;]],PROJECTION[&#34;Lambert_Conformal_Conic_2SP&#34;],PARAMETER[&#34;latitude_of_origin&#34;,33],PARAMETER[&#34;central_meridian&#34;,-89.5],PARAMETER[&#34;standard_parallel_1&#34;,33],PARAMETER[&#34;standard_parallel_2&#34;,45],PARAMETER[&#34;false_easting&#34;,2999994],PARAMETER[&#34;false_northing&#34;,0],UNIT[&#34;US survey foot&#34;,0.304800609601219,AUTHORITY[&#34;EPSG&#34;,&#34;9003&#34;]],AXIS[&#34;Easting&#34;,EAST],AXIS[&#34;Northing&#34;,NORTH]]&#39;,
             &#39;semi_major_axis&#39;: 6378206.4,
@@ -2748,8 +2647,8 @@ Whether the input column is using boolean values as its target indicator</p>
     return modelGrid</code></pre>
 </details>
 </dd>
-<dt id="w4h.read_raw_txt"><code class="name flex">
-<span>def <span class="ident">read_raw_txt</span></span>(<span>data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, x_col='LONGITUDE', ycol='LATITUDE', id_col='API_NUMBER', encoding='latin-1', verbose=False, log=False)</span>
+<dt id="w4h.read_raw_csv"><code class="name flex">
+<span>def <span class="ident">read_raw_csv</span></span>(<span>data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, xcol='LONGITUDE', ycol='LATITUDE', well_key='API_NUMBER', encoding='latin-1', verbose=False, log=False, **read_csv_kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Easy function to read raw .txt files output from (for example), an Access database</p>
@@ -2767,7 +2666,7 @@ Whether the input column is using boolean values as its target indicator</p>
 <dd>Name of column in metadata file indicating the x-location of the well, by default 'LONGITUDE'</dd>
 <dt><strong><code>ycol</code></strong> :&ensp;<code>str</code>, default <code>= 'LATITUDE'</code></dt>
 <dd>Name of the column in metadata file indicating the y-location of the well, by default 'LATITUDE'</dd>
-<dt><strong><code>id_col</code></strong> :&ensp;<code>str</code>, default <code>= 'API_NUMBER'</code></dt>
+<dt><strong><code>well_key</code></strong> :&ensp;<code>str</code>, default <code>= 'API_NUMBER'</code></dt>
 <dd>Name of the column with the key/identifier that will be used to merge data later, by default 'API_NUMBER'</dd>
 <dt><strong><code>encoding</code></strong> :&ensp;<code>str</code>, default <code>= 'latin-1'</code></dt>
 <dd>Encoding of the data in the input files, by default 'latin-1'</dd>
@@ -2775,6 +2674,8 @@ Whether the input column is using boolean values as its target indicator</p>
 <dd>Whether to print the number of rows in the input columns, by default False</dd>
 <dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
 <dd>Whether to log inputs and outputs to log file.</dd>
+<dt><strong><code>**read_csv_kwargs</code></strong></dt>
+<dd>**kwargs that get passed to pd.read_csv()</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <p>(pandas.DataFrame, pandas.DataFrame)
@@ -2783,7 +2684,7 @@ Tuple/list with two pandas dataframes: (data, metadata)</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_raw_txt(data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, x_col=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, id_col=&#39;API_NUMBER&#39;, encoding=&#39;latin-1&#39;, verbose=False, log=False):
+<pre><code class="python">def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, well_key=&#39;API_NUMBER&#39;, encoding=&#39;latin-1&#39;, verbose=False, log=False, **read_csv_kwargs):
     &#34;&#34;&#34;Easy function to read raw .txt files output from (for example), an Access database
 
     Parameters
@@ -2800,7 +2701,7 @@ Tuple/list with two pandas dataframes: (data, metadata)</p></div>
         Name of column in metadata file indicating the x-location of the well, by default &#39;LONGITUDE&#39;
     ycol : str, default = &#39;LATITUDE&#39;
         Name of the column in metadata file indicating the y-location of the well, by default &#39;LATITUDE&#39;
-    id_col : str, default = &#39;API_NUMBER&#39;
+    well_key : str, default = &#39;API_NUMBER&#39;
         Name of the column with the key/identifier that will be used to merge data later, by default &#39;API_NUMBER&#39;
     encoding : str, default = &#39;latin-1&#39;
         Encoding of the data in the input files, by default &#39;latin-1&#39;
@@ -2808,6 +2709,8 @@ Tuple/list with two pandas dataframes: (data, metadata)</p></div>
         Whether to print the number of rows in the input columns, by default False
     log : bool, default = False
         Whether to log inputs and outputs to log file.
+    **read_csv_kwargs
+        **kwargs that get passed to pd.read_csv()
 
     Returns
     -------
@@ -2826,16 +2729,24 @@ Tuple/list with two pandas dataframes: (data, metadata)</p></div>
     else:
         metadata_useCols= metadata_cols
 
-    downholeDataIN = pd.read_csv(data_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=data_useCols)
-    headerDataIN = pd.read_csv(metadata_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=metadata_useCols)
+    #Check if input data is already 
+    if isinstance(data_filepath, pd.DataFrame):
+        downholeDataIN = data_filepath[data_useCols]
+    else:
+        downholeDataIN = pd.read_csv(data_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=data_useCols, **read_csv_kwargs)
+    
+    if isinstance(metadata_filepath, pd.DataFrame):
+        headerDataIN = metadata_filepath[metadata_useCols]
+    else:
+        headerDataIN = pd.read_csv(metadata_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=metadata_useCols, **read_csv_kwargs)
 
     #Drop data with no API        
-    downholeDataIN = downholeDataIN.dropna(subset=[id_col]) #Drop data with no API
-    headerDataIN = headerDataIN.dropna(subset=[id_col]) #Drop metadata with no API
+    downholeDataIN = downholeDataIN.dropna(subset=[well_key]) #Drop data with no API
+    headerDataIN = headerDataIN.dropna(subset=[well_key]) #Drop metadata with no API
 
     #Drop data with no or missing location information
     headerDataIN = headerDataIN.dropna(subset=[ycol]) 
-    headerDataIN = headerDataIN.dropna(subset=[x_col])
+    headerDataIN = headerDataIN.dropna(subset=[xcol])
     
     #Reset index so index goes from 0 in numerical/integer order
     headerDataIN.reset_index(inplace=True, drop=True)
@@ -2850,13 +2761,13 @@ Tuple/list with two pandas dataframes: (data, metadata)</p></div>
 </details>
 </dd>
 <dt id="w4h.read_study_area"><code class="name flex">
-<span>def <span class="ident">read_study_area</span></span>(<span>studyareapath, crs='', log=False)</span>
+<span>def <span class="ident">read_study_area</span></span>(<span>study_area_path, study_area_crs='EPSG:4269', log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Read study area geospatial file into geopandas</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>studyareapath</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path</code></dt>
+<dt><strong><code>study_area_path</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path</code></dt>
 <dd>Filepath to any geospatial file readable by geopandas.
 Polygon is best, but may work with other types if extent is correct.</dd>
 <dt><strong><code>crs</code></strong> :&ensp;<code>str, tuple, dict</code>, optional</dt>
@@ -2873,12 +2784,12 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_study_area(studyareapath, crs=&#39;&#39;, log=False):
+<pre><code class="python">def read_study_area(study_area_path, study_area_crs=&#39;EPSG:4269&#39;, log=False):
     &#34;&#34;&#34;Read study area geospatial file into geopandas
 
     Parameters
     ----------
-    studyareapath : str or pathlib.Path
+    study_area_path : str or pathlib.Path
         Filepath to any geospatial file readable by geopandas. 
         Polygon is best, but may work with other types if extent is correct.
     crs : str, tuple, dict, optional
@@ -2893,7 +2804,9 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    studyAreaIN = gpd.read_file(studyareapath)
+    studyAreaIN = gpd.read_file(study_area_path)
+    studyAreaIN.to_crs(study_area_crs, inplace=True)
+
     return studyAreaIN</code></pre>
 </details>
 </dd>
@@ -2958,6 +2871,10 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 
     #studyAreaPath = r&#34;\\isgs-sinkhole.ad.uillinois.edu\geophysics\Balikian\ISWS_HydroGeo\WellDataAutoClassification\SampleData\ESL_StudyArea_5mi.shp&#34;
     #study_area = gpd.read_file(studyAreaPath)
+    if study_area is None:
+        print(&#39;ERROR: study_area must be specified to use read_wcs (currently set to {})&#39;.format(study_area))
+        return
+
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     if &#39;wcs_url&#39; in kwargs:
@@ -3112,6 +3029,10 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     wmsData_rxr : xarray.DataArray
         Holds the image from the WebMapService
     &#34;&#34;&#34;
+    if study_area is None:
+        print(&#39;ERROR: study_area must be specified to use read_wms (currently set to {})&#39;.format(study_area))
+        return
+    
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     from owslib.wms import WebMapService
@@ -3194,7 +3115,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 </details>
 </dd>
 <dt id="w4h.read_xyz"><code class="name flex">
-<span>def <span class="ident">read_xyz</span></span>(<span>xyzpath, dtypes=None, verbose=False, log=False)</span>
+<span>def <span class="ident">read_xyz</span></span>(<span>xyzpath, datatypes=None, verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to read file containing xyz data (elevation/location)</p>
@@ -3202,7 +3123,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 <dl>
 <dt><strong><code>xyzpath</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path</code></dt>
 <dd>Filepath of the xyz file, including extension</dd>
-<dt><strong><code>dtypes</code></strong> :&ensp;<code>dict</code>, default <code>= None</code></dt>
+<dt><strong><code>datatypes</code></strong> :&ensp;<code>dict</code>, default <code>= None</code></dt>
 <dd>Dictionary containing the datatypes for the columns int he xyz file. If None, {'ID':np.uint32,'API_NUMBER':np.uint64,'LATITUDE':np.float64,'LONGITUDE':np.float64,'ELEV_FT':np.float64}, by default None</dd>
 <dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
 <dd>Whether to print the number of xyz records to the terminal, by default False</dd>
@@ -3218,14 +3139,14 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_xyz(xyzpath, dtypes=None, verbose=False, log=False):
+<pre><code class="python">def read_xyz(xyzpath, datatypes=None, verbose=False, log=False):
     &#34;&#34;&#34;Function to read file containing xyz data (elevation/location)
 
     Parameters
     ----------
     xyzpath : str or pathlib.Path
         Filepath of the xyz file, including extension
-    dtypes : dict, default = None
+    datatypes : dict, default = None
         Dictionary containing the datatypes for the columns int he xyz file. If None, {&#39;ID&#39;:np.uint32,&#39;API_NUMBER&#39;:np.uint64,&#39;LATITUDE&#39;:np.float64,&#39;LONGITUDE&#39;:np.float64,&#39;ELEV_FT&#39;:np.float64}, by default None
     verbose : bool, default = False
         Whether to print the number of xyz records to the terminal, by default False
@@ -3239,7 +3160,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    if dtypes is None:
+    if datatypes is None:
         xyzDTypes = {&#39;ID&#39;:np.uint32,&#39;API_NUMBER&#39;:np.uint64,&#39;LATITUDE&#39;:np.float64,&#39;LONGITUDE&#39;:np.float64,&#39;ELEV_FT&#39;:np.float64}
 
     xyzDataIN = pd.read_csv(xyzpath, sep=&#39;,&#39;, header=&#39;infer&#39;, dtype=xyzDTypes, index_col=&#39;ID&#39;)
@@ -3289,8 +3210,217 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     return remergeDF</code></pre>
 </details>
 </dd>
+<dt id="w4h.remove_bad_depth"><code class="name flex">
+<span>def <span class="ident">remove_bad_depth</span></span>(<span>df, top_col='TOP', bottom_col='BOTTOM', depth_type='depth', verbose=False, log=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function to remove all records in the dataframe with well interpretations where the depth information is bad (i.e., where the bottom of the record is neerer to the surface than the top)</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
+<dd>Pandas dataframe containing the well records and descriptions for each interval</dd>
+<dt><strong><code>top_col</code></strong> :&ensp;<code>str</code>, default=<code>'TOP'</code></dt>
+<dd>The name of the column containing the depth or elevation for the top of the interval, by default 'TOP'</dd>
+<dt><strong><code>bottom_col</code></strong> :&ensp;<code>str</code>, default=<code>'BOTTOM'</code></dt>
+<dd>The name of the column containing the depth or elevation for the bottom of each interval, by default 'BOTTOM'</dd>
+<dt><strong><code>depth_type</code></strong> :&ensp;<code>str, {'depth', 'elevation'}</code></dt>
+<dd>Whether the table is organized by depth or elevation. If depth, the top column will have smaller values than the bottom column. If elevation, the top column will have higher values than the bottom column, by default 'depth'</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
+<dd>Whether to print results to the terminal, by default False</dd>
+<dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
+<dd>Whether to log results to log file, by default False</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pandas.Dataframe</code></dt>
+<dd>Pandas dataframe with the records remvoed where the top is indicatd to be below the bottom.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def remove_bad_depth(df, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, depth_type=&#39;depth&#39;, verbose=False, log=False):
+    &#34;&#34;&#34;Function to remove all records in the dataframe with well interpretations where the depth information is bad (i.e., where the bottom of the record is neerer to the surface than the top)
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Pandas dataframe containing the well records and descriptions for each interval
+    top_col : str, default=&#39;TOP&#39;
+        The name of the column containing the depth or elevation for the top of the interval, by default &#39;TOP&#39;
+    bottom_col : str, default=&#39;BOTTOM&#39;
+        The name of the column containing the depth or elevation for the bottom of each interval, by default &#39;BOTTOM&#39;
+    depth_type : str, {&#39;depth&#39;, &#39;elevation&#39;}
+        Whether the table is organized by depth or elevation. If depth, the top column will have smaller values than the bottom column. If elevation, the top column will have higher values than the bottom column, by default &#39;depth&#39;
+    verbose : bool, default = False
+        Whether to print results to the terminal, by default False
+    log : bool, default = False
+        Whether to log results to log file, by default False
+
+    Returns
+    -------
+    pandas.Dataframe
+        Pandas dataframe with the records remvoed where the top is indicatd to be below the bottom.
+    &#34;&#34;&#34;
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
+    if depth_type.lower() ==&#39;depth&#39;:
+        df[&#39;THICKNESS&#39;] = df[bottom_col] - df[top_col] #Calculate interval thickness
+    elif depth_type.lower() ==&#39;elevation&#39; or depth_type==&#39;elev&#39;:
+        df[&#39;THICKNESS&#39;] = df[top_col] - df[bottom_col] #Calculate interval thickness
+    before = df.shape[0] #Calculate number of rows before dropping
+    df = df[(df[&#39;THICKNESS&#39;] &gt;= 0)] #Only include rows where interval thickness is positive (bottom is deeper than top)
+    df.reset_index(inplace=True, drop=True) #Reset index
+
+    if verbose:
+        print(&#34;Number of rows before dropping those with obviously bad depth information: &#34;+str(before))
+        print(&#34;Number of rows after dropping those with obviously bad depth information: &#34;+str(df.shape[0]))
+        print(&#39;Well records deleted: &#39;+str(before-df.shape[0]))
+    return df</code></pre>
+</details>
+</dd>
+<dt id="w4h.remove_no_depth"><code class="name flex">
+<span>def <span class="ident">remove_no_depth</span></span>(<span>df, top_col='TOP', bottom_col='BOTTOM', no_data_val_table='', verbose=False, log=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function to remove well intervals with no depth information</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
+<dd>Dataframe containing well descriptions</dd>
+<dt><strong><code>top_col</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Name of column containing information on the top of the well intervals, by default 'TOP'</dd>
+<dt><strong><code>bottom_col</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Name of column containing information on the bottom of the well intervals, by default 'BOTTOM'</dd>
+<dt><strong><code>no_data_val_table</code></strong> :&ensp;<code>any</code>, optional</dt>
+<dd>No data value in the input data, used by this function to indicate that depth data is not there, to be replaced by np.nan, by default ''</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Whether to print results to console, by default False</dd>
+<dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
+<dd>Whether to log results to log file, by default False</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
+<dd>Dataframe with depths dropped</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def remove_no_depth(df, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, no_data_val_table=&#39;&#39;, verbose=False, log=False):
+    &#34;&#34;&#34;Function to remove well intervals with no depth information
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe containing well descriptions
+    top_col : str, optional
+        Name of column containing information on the top of the well intervals, by default &#39;TOP&#39;
+    bottom_col : str, optional
+        Name of column containing information on the bottom of the well intervals, by default &#39;BOTTOM&#39;
+    no_data_val_table : any, optional
+        No data value in the input data, used by this function to indicate that depth data is not there, to be replaced by np.nan, by default &#39;&#39;
+    verbose : bool, optional
+        Whether to print results to console, by default False
+    log : bool, default = False
+        Whether to log results to log file, by default False
+
+    Returns
+    -------
+    df : pandas.DataFrame
+        Dataframe with depths dropped
+    &#34;&#34;&#34;
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
+    #Replace empty cells in top and bottom columns with nan
+    df[top_col] = df[top_col].replace(no_data_val_table, np.nan)
+    df[bottom_col] = df[bottom_col].replace(no_data_val_table, np.nan)
+    
+    #Calculate number of rows before dropping
+    before = df.shape[0]
+
+    #Drop records without depth information
+    df = df.dropna(subset=[top_col])
+    df = df.dropna(subset=[bottom_col])
+    df.reset_index(inplace=True, drop=True) #Reset index
+  
+    if verbose:
+        print(&#34;Number of rows before dropping those without record depth information: &#34; + str(before))
+        print(&#34;Number of rows after dropping those without record depth information: &#34; + str(df.shape[0]))
+        print(&#39;Number of well records without formation information deleted: &#39; + str(before - df.shape[0]))
+    
+    return df</code></pre>
+</details>
+</dd>
+<dt id="w4h.remove_no_formation"><code class="name flex">
+<span>def <span class="ident">remove_no_formation</span></span>(<span>df, description_col='FORMATION', no_data_val_table='', verbose=False, log=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function that removes all records in the dataframe containing the well descriptions where no description is given.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
+<dd>Pandas dataframe containing the well records with their individual descriptions</dd>
+<dt><strong><code>description_col</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Name of the column containing the geologic description of each interval, by default 'FORMATION'</dd>
+<dt><strong><code>no_data_val_table</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>The value expected if the column is empty or there is no data. These will be replaced by np.nan before being removed, by default ''</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Whether to print the results of this step to the terminal, by default False</dd>
+<dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
+<dd>Whether to log results to log file, by default False</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pandas.DataFrame</code></dt>
+<dd>Pandas dataframe with records with no description removed.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def remove_no_formation(df, description_col=&#39;FORMATION&#39;, no_data_val_table=&#39;&#39;, verbose=False, log=False):
+    &#34;&#34;&#34;Function that removes all records in the dataframe containing the well descriptions where no description is given.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Pandas dataframe containing the well records with their individual descriptions
+    description_col : str, optional
+        Name of the column containing the geologic description of each interval, by default &#39;FORMATION&#39;
+    no_data_val_table : str, optional
+        The value expected if the column is empty or there is no data. These will be replaced by np.nan before being removed, by default &#39;&#39;
+    verbose : bool, optional
+        Whether to print the results of this step to the terminal, by default False
+    log : bool, default = False
+        Whether to log results to log file, by default False
+        
+    Returns
+    -------
+    pandas.DataFrame
+        Pandas dataframe with records with no description removed.
+    &#34;&#34;&#34;
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
+    #Replace empty cells in formation column with nans
+    df[description_col] = df[description_col].replace(no_data_val_table, np.nan) 
+    before = df.shape[0] #Calculate number of rows before dropping
+
+    #Drop records without FORMATION information
+    df = df.dropna(subset=[description_col])
+    df.reset_index(inplace=True, drop=True) #Reset index
+
+    if verbose:
+        print(&#34;Number of rows before dropping those without FORMATION information: &#34;+str(before))
+        print(&#34;Number of rows after dropping those without FORMATION information: &#34;+str(df.shape[0]))
+        print(&#39;Well records deleted: &#39;+str(before-df.shape[0]))
+        
+    return df</code></pre>
+</details>
+</dd>
 <dt id="w4h.remove_no_topo"><code class="name flex">
-<span>def <span class="ident">remove_no_topo</span></span>(<span>df, elev_column='ELEV_FT', no_data_val='', verbose=False, log=False)</span>
+<span>def <span class="ident">remove_no_topo</span></span>(<span>df, zcol='ELEV_FT', no_data_val_table='', verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to remove wells that do not have topography data (needed for layer selection later).</p>
@@ -3299,9 +3429,9 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 <dl>
 <dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
 <dd>Pandas dataframe containing elevation information.</dd>
-<dt><strong><code>elev_column</code></strong> :&ensp;<code>str</code></dt>
+<dt><strong><code>zcol</code></strong> :&ensp;<code>str</code></dt>
 <dd>Name of elevation column</dd>
-<dt><strong><code>no_data_val</code></strong> :&ensp;<code>any</code></dt>
+<dt><strong><code>no_data_val_table</code></strong> :&ensp;<code>any</code></dt>
 <dd>Value in dataset that indicates no data is present (replaced with np.nan)</dd>
 <dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, optional</dt>
 <dd>Whether to print outputs, by default True</dd>
@@ -3317,7 +3447,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def remove_no_topo(df, elev_column=&#39;ELEV_FT&#39;, no_data_val=&#39;&#39;, verbose=False, log=False):
+<pre><code class="python">def remove_no_topo(df, zcol=&#39;ELEV_FT&#39;, no_data_val_table=&#39;&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to remove wells that do not have topography data (needed for layer selection later).
 
     This function is intended to be run on the metadata table after elevations have attempted to been added.
@@ -3326,9 +3456,9 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     ----------
     df : pandas.DataFrame
         Pandas dataframe containing elevation information.
-    elev_column : str
+    zcol : str
         Name of elevation column
-    no_data_val : any
+    no_data_val_table : any
         Value in dataset that indicates no data is present (replaced with np.nan)
     verbose : bool, optional
         Whether to print outputs, by default True
@@ -3344,8 +3474,8 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 
     before = df.shape[0]
     
-    df[elev_column].replace(no_data_val, np.nan, inplace=True)
-    df.dropna(subset=[elev_column], inplace=True)
+    df[zcol].replace(no_data_val_table, np.nan, inplace=True)
+    df.dropna(subset=[zcol], inplace=True)
     
     if verbose:
         after = df.shape[0]
@@ -3413,6 +3543,337 @@ Polygon is best, but may work with other types if extent is correct.</dd>
         print(str(before-after)+&#39; records removed without location information.&#39;)
         print(str(df.shape[0])+&#39; wells remain from &#39;+str(df[&#39;API_NUMBER&#39;].unique().shape[0])+&#39; geolocated wells in study area.&#39;)
     return df</code></pre>
+</details>
+</dd>
+<dt id="w4h.run"><code class="name flex">
+<span>def <span class="ident">run</span></span>(<span>well_data, well_data_cols=None, metadata=None, well_metadata_cols=None, layers=9, description_col='FORMATION', top_col='TOP', bottom_col='BOTTOM', depth_type='depth', study_area=None, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEVATION', idcol='API_NUMBER', output_crs='EPSG:4269', surf_elev_file=None, bedrock_elev_file=None, model_grid=None, lith_dict=None, lith_dict_start=None, lith_dict_wildcard=None, target_dict=None, target_name='CoarseFine', export_dir=None, verbose=False, log=False, **keyword_parameters)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function to run entire process with one line of code. </p>
+<p>NOTE: verbose and log are boolean parameters used for most of the functions. verbose=True prints information to terminal, log=True logs to a file in the log_dir, which defaults to the export_dir</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>well_data</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path obj</code></dt>
+<dd>Filepath to file or directory containing well data.</dd>
+<dt><strong><code>well_data_cols</code></strong> :&ensp;<code>List</code> or <code>list-like</code></dt>
+<dd>Columns to</dd>
+<dt><strong><code>metadata</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code></dt>
+<dd>Filepath to file or directory containing well metadata, such as location and elevation.</dd>
+<dt><strong><code>well_metadata_cols</code></strong> :&ensp;<code>List</code> or <code>list-like</code></dt>
+<dd><em>description</em></dd>
+<dt><strong><code>layers</code></strong> :&ensp;<code>int</code>, default <code>= 9</code></dt>
+<dd>The number of layers in the model grid</dd>
+<dt><strong><code>description_col</code></strong> :&ensp;<code>str</code>, default <code>= 'FORMATION'</code></dt>
+<dd>Name of column containing geologic descriptions of the well interval. This column should be in well_data.</dd>
+<dt><strong><code>top_col</code></strong> :&ensp;<code>str</code>, default <code>= 'TOP'</code></dt>
+<dd>Name of column containing depth/elevation at top of well interval. This column should be in well_data.</dd>
+<dt><strong><code>bottom_col</code></strong> :&ensp;<code>str</code>, default <code>= 'BOTTOM'</code></dt>
+<dd>Name of column containing depth/elevation at bottom of well interval. This column should be in well_data.</dd>
+<dt><strong><code>depth_type</code></strong> :&ensp;<code>str</code>, default <code>= 'depth'</code></dt>
+<dd>Whether values top_col or bottom_col refer to depth or elevation.</dd>
+<dt><strong><code>study_area</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object,</code> or <code>geopandas.GeoDataFrame</code></dt>
+<dd><em>description</em></dd>
+<dt><strong><code>xcol</code></strong> :&ensp;<code>str</code>, default <code>= 'LONGITUDE'</code></dt>
+<dd>Name of column containing x coordinates. This column should be in metadata unless metadata is not read, then it should be in well_data.</dd>
+<dt><strong><code>ycol</code></strong> :&ensp;<code>str</code>, default <code>= 'LATITUDE'</code></dt>
+<dd>Name of column containing y coordinates. This column should be in metadata unless metadata is not read, then it should be in well_data.</dd>
+<dt><strong><code>zcol</code></strong> :&ensp;<code>str</code>, default <code>= 'ELEVATION'</code></dt>
+<dd>Name of column containing z coordinates. This column should be in metadata unless metadata is not read, then it should be in well_data.</dd>
+<dt><strong><code>output_crs</code></strong> :&ensp;<code>crs definition accepted by pyproj</code>, default <code>= 'EPSG:4269'</code></dt>
+<dd>CRS to output all of the data into</dd>
+<dt><strong><code>surf_elev_file</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code></dt>
+<dd><em>description</em></dd>
+<dt><strong><code>bedrock_elev_file</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code></dt>
+<dd><em>description</em></dd>
+<dt><strong><code>model_grid</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object,</code> or <code>model grid parameters (see model_grid function)</code></dt>
+<dd><em>description</em></dd>
+<dt><strong><code>lith_dict</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object,</code> or <code>pandas.DataFrame</code></dt>
+<dd><em>description</em></dd>
+<dt><strong><code>lith_dict_start</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object,</code> or <code>pandas.DataFrame</code></dt>
+<dd><em>description</em></dd>
+<dt><strong><code>lith_dict_wildcard</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object,</code> or <code>pandas.DataFrame</code></dt>
+<dd><em>description</em></dd>
+<dt><strong><code>target_dict</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object,</code> or <code>pandas.DataFrame</code></dt>
+<dd><em>description</em></dd>
+<dt><strong><code>target_name</code></strong> :&ensp;<code>str</code>, default <code>= 'CoarseFine'</code></dt>
+<dd>Name of target of interest, to be used on exported files</dd>
+<dt><strong><code>export_dir</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code>, default <code>= None</code></dt>
+<dd>Directory to export output files</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
+<dd>Whether to print updates/results</dd>
+<dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
+<dd>Whether to send parameters and outputs to log file, to be saved in export_dir, or the same directory as well_data if export_dir not defined.</dd>
+<dt><strong><code>**keyword_parameters</code></strong></dt>
+<dd>Keyword parameters used by any of the functions throughout the process. See list of functions above, and the API documentation for their possible parameters</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def run(well_data, well_data_cols=None, 
+        metadata=None, well_metadata_cols=None, 
+        layers = 9,
+        description_col=&#39;FORMATION&#39;, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, depth_type=&#39;depth&#39;,
+        study_area=None, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEVATION&#39;, idcol=&#39;API_NUMBER&#39;, output_crs=&#39;EPSG:4269&#39;,
+        surf_elev_file=None, bedrock_elev_file=None, model_grid=None,
+        lith_dict=None, lith_dict_start=None, lith_dict_wildcard=None,
+        target_dict=None,
+        target_name=&#39;CoarseFine&#39;,
+        export_dir=None,
+        verbose=False,
+        log=False,
+        **keyword_parameters):
+    
+    &#34;&#34;&#34;Function to run entire process with one line of code. 
+    
+    NOTE: verbose and log are boolean parameters used for most of the functions. verbose=True prints information to terminal, log=True logs to a file in the log_dir, which defaults to the export_dir
+
+    Parameters
+    ----------
+    well_data : str or pathlib.Path obj
+        Filepath to file or directory containing well data.
+    well_data_cols : List or list-like
+        Columns to 
+    metadata : str or pathlib.Path object
+        Filepath to file or directory containing well metadata, such as location and elevation.
+    well_metadata_cols : List or list-like
+        _description_
+    layers : int, default = 9
+        The number of layers in the model grid
+    description_col : str, default = &#39;FORMATION&#39;
+        Name of column containing geologic descriptions of the well interval. This column should be in well_data.
+    top_col : str, default = &#39;TOP&#39;
+        Name of column containing depth/elevation at top of well interval. This column should be in well_data.
+    bottom_col : str, default = &#39;BOTTOM&#39;
+        Name of column containing depth/elevation at bottom of well interval. This column should be in well_data.    
+    depth_type : str, default = &#39;depth&#39;
+        Whether values top_col or bottom_col refer to depth or elevation.
+    study_area : str or pathlib.Path object, or geopandas.GeoDataFrame
+        _description_
+    xcol : str, default = &#39;LONGITUDE&#39; 
+        Name of column containing x coordinates. This column should be in metadata unless metadata is not read, then it should be in well_data.
+    ycol : str, default = &#39;LATITUDE&#39;
+        Name of column containing y coordinates. This column should be in metadata unless metadata is not read, then it should be in well_data.
+    zcol : str, default = &#39;ELEVATION&#39; 
+        Name of column containing z coordinates. This column should be in metadata unless metadata is not read, then it should be in well_data.
+    output_crs : crs definition accepted by pyproj, default = &#39;EPSG:4269&#39;
+        CRS to output all of the data into
+    surf_elev_file : str or pathlib.Path object
+        _description_
+    bedrock_elev_file : str or pathlib.Path object
+        _description_
+    model_grid : str or pathlib.Path object, or model grid parameters (see model_grid function)
+        _description_
+    lith_dict : str or pathlib.Path object, or pandas.DataFrame
+        _description_
+    lith_dict_start : str or pathlib.Path object, or pandas.DataFrame
+        _description_
+    lith_dict_wildcard : str or pathlib.Path object, or pandas.DataFrame
+        _description_
+    target_dict : str or pathlib.Path object, or pandas.DataFrame
+        _description_
+    target_name : str, default = &#39;CoarseFine&#39;
+        Name of target of interest, to be used on exported files
+    export_dir : str or pathlib.Path object, default = None
+        Directory to export output files
+    verbose : bool, default = False
+        Whether to print updates/results
+    log : bool, default = False
+        Whether to send parameters and outputs to log file, to be saved in export_dir, or the same directory as well_data if export_dir not defined.
+    **keyword_parameters
+        Keyword parameters used by any of the functions throughout the process. See list of functions above, and the API documentation for their possible parameters
+    &#34;&#34;&#34;
+
+    #Get data (files or otherwise)
+    file_setup_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.file_setup.__code__.co_varnames}
+    
+    #Check how well_data and metadata were defined
+    if isinstance(well_data, pathlib.PurePath) or isinstance(well_data, str):
+        #Convert well_data to pathlib.Path if not already
+        if isinstance(well_data, str):
+            well_data = pathlib.Path(well_data)
+
+        if metadata is None:
+            if well_data.is_dir():
+                downholeDataPATH, headerDataPATH = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
+            elif well_data.exists():
+                downholeDataPATH, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
+            else:
+                print(&#39;ERROR: well_data file does not exist:{}&#39;.format(well_data))
+        elif isinstance(metadata, pathlib.PurePath) or isinstance(metadata, str):
+            if isinstance(metadata, str):
+                metadata = pathlib.Path(metadata)    
+            downholeDataPATH, headerDataPATH = w4h.file_setup(well_data=well_data, metadata=metadata, **file_setup_kwargs)                
+        else:
+            if isinstance(metadata, pd.DataFrame):
+                downholeDataPATH, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
+                headerDataPATH = metadata
+            elif metadata is None:
+                downholeDataPATH, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
+
+    elif isinstance(well_data, pd.DataFrame):
+        if isinstance(metadata, pd.DataFrame):
+            downholeDataPATH = well_data
+            headerDataPATH = metadata
+        elif isinstance(metadata, pathlib.PurePath) or isinstance(metadata, str):
+            _, headerDataPATH = w4h.file_setup(well_data=metadata, metadata=metadata, verbose=verbose, log=log, **file_setup_kwargs)                
+            downholeDataPATH = well_data
+        else:
+            print(&#39;ERROR: metadata must be a string filepath, a pathlib.Path object, or pandas.DataFrame&#39;)
+    else:
+        print(&#39;ERROR: well_data must be a string filepath, a pathlib.Path object, or pandas.DataFrame&#39;)
+
+    #Get pandas dataframes from input
+    read_raw_txt_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_raw_csv .__code__.co_varnames}
+    downholeDataIN, headerDataIN = w4h.read_raw_csv(data_filepath=downholeDataPATH, metadata_filepath=headerDataPATH, verbose=verbose, log=log, **read_raw_txt_kwargs) 
+    #Functions to read data into dataframes. Also excludes extraneous columns, and drops header data with no location information
+
+    #Define data types (file will need to be udpated)
+    downholeData = w4h.define_dtypes(undefined_df=downholeDataIN, datatypes=&#39;./resources/downholeDataTypes.txt&#39;, verbose=verbose, log=log)
+    headerData = w4h.define_dtypes(undefined_df=headerDataIN, datatypes=&#39;./resources/headerDataTypes.txt&#39;, verbose=verbose, log=log)
+
+    #Get Study area
+    read_study_area_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_study_area.__code__.co_varnames}
+    if study_area is None:
+        studyAreaIN = None
+        use_study_area = False
+    else:
+        studyAreaIN = w4h.read_study_area(study_area_path=study_area, log=log, **read_study_area_kwargs)
+        use_study_area = True
+
+    #Get surfaces and grid(s)
+    read_grid_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_grid.__code__.co_varnames}
+
+    modelGridPath = model_grid
+    surfaceElevPath = surf_elev_file
+    bedrockElevPath = bedrock_elev_file
+    #UPDATE: allow other types of model grid read ***
+    modelGrid = w4h.read_grid(grid_path=modelGridPath, grid_type=&#39;model&#39;, study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
+    surfaceElevGridIN = w4h.read_grid(grid_path=surfaceElevPath, grid_type=&#39;surface&#39;, study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
+    bedrockElevGridIN = w4h.read_grid(grid_path=bedrockElevPath, grid_type=&#39;bedrock&#39;, study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
+
+    #Add control points
+    #UPDATE: Code here for adding in control points ***
+
+    #UPDATE: MAKE SURE CRS&#39;s all align ***
+
+    #Convert headerData to have geometry
+    coords2geometry_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.coords2geometry.__code__.co_varnames}
+    headerData = w4h.coords2geometry(df=headerData, xcol=xcol, ycol=ycol, zcol=zcol, log=log, **coords2geometry_kwargs)
+    clip_gdf2study_area_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.clip_gdf2study_area.__code__.co_varnames}
+    headerData = w4h.clip_gdf2study_area(study_area=studyAreaIN, gdf=headerData, log=log, **clip_gdf2study_area_kwargs)
+
+    #Clean up data
+    downholeData = w4h.remove_nonlocated(downholeData, headerData, log=log, verbose=verbose)
+    headerData = w4h.remove_no_topo(df=headerData, zcol=zcol, verbose=verbose, log=log)
+
+    remove_no_depth_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.remove_no_depth.__code__.co_varnames}
+    donwholeData = w4h.remove_no_depth(downholeData, verbose=verbose, top_col=top_col, bottom_col=bottom_col, log=log, **remove_no_depth_kwargs) #Drop records with no depth information
+
+    remove_bad_depth_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.remove_bad_depth.__code__.co_varnames}
+    donwholeData = w4h.remove_bad_depth(downholeData, verbose=verbose, top_col=top_col, bottom_col=bottom_col, depth_type=depth_type, log=log, **remove_bad_depth_kwargs)#Drop records with bad depth information (i.e., top depth &gt; bottom depth) (Also calculates thickness of each record)
+
+    remove_no_formation_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.remove_no_formation.__code__.co_varnames}
+    downholeData = w4h.remove_no_formation(downholeData, description_col=description_col, verbose=verbose, log=log, **remove_no_formation_kwargs)
+
+    #CLASSIFICATION
+    #Read dictionary definitions and classify
+    get_search_terms_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.get_search_terms.__code__.co_varnames}
+    specTermsPATH, startTermsPATH, wildcardTermsPATH, = w4h.get_search_terms(spec_path=lith_dict, start_path=lith_dict_start, wildcard_path=lith_dict_wildcard, log=log, **get_search_terms_kwargs)
+    read_dictionary_terms_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_dictionary_terms.__code__.co_varnames}
+    specTerms = w4h.read_dictionary_terms(dict_file=specTermsPATH, log=log, **read_dictionary_terms_kwargs)
+    startTerms = w4h.read_dictionary_terms(dict_file=startTermsPATH, log=log, **read_dictionary_terms_kwargs)
+    wildcardTerms = w4h.read_dictionary_terms(dict_file=wildcardTermsPATH, log=log, **read_dictionary_terms_kwargs)
+
+    #Clean up dictionary terms
+    specTerms.drop_duplicates(subset=&#39;DESCRIPTION&#39;, inplace=True)
+    specTerms.reset_index(inplace=True, drop=True)
+
+    startTerms.drop_duplicates(subset=&#39;DESCRIPTION&#39;, inplace=True)
+    startTerms.reset_index(inplace=True, drop=True)
+
+    wildcardTerms.drop_duplicates(subset=&#39;DESCRIPTION&#39;, inplace=True)
+    wildcardTerms.reset_index(inplace=True, drop=True)
+
+    if verbose:
+        print(&#39;Search terms to be used:&#39;)
+        print(&#39;\t {} exact match term/definition pairs&#39;)
+        print(&#39;\t {} starting match term/definition pairs&#39;)
+        print(&#39;\t {} wildcard match term/definition pairs&#39;)
+
+    #CLASSIFICATIONS
+    #Exact match classifications
+    downholeData = w4h.specific_define(downholeData, specTerms, description_col=description_col, verbose=verbose, log=log)
+    
+    #.startswith classifications
+    classifedDF, searchDF = w4h.split_defined(downholeData, verbose=verbose, log=log)
+    searchDF = w4h.start_define(df=searchDF, terms_df=startTerms, description_col=description_col, verbose=verbose, log=log)
+    downholeData = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
+
+    #wildcard/any substring match classifications    
+    classifedDF, searchDF = w4h.split_defined(downholeData, verbose=verbose, log=log)
+    searchDF = w4h.wildcard_define(df=searchDF, terms_df=wildcardTerms, description_col=description_col, verbose=verbose, log=log)
+    downholeData = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
+
+    #Depth classification
+    classifedDF, searchDF = w4h.split_defined(downholeData, verbose=verbose, log=log)
+    searchDF = w4h.depth_define(searchDF, thresh=550, verbose=verbose, log=log)
+    downholeData = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***
+    
+    #Fill unclassified data
+    downholeData = w4h.fill_unclassified(downholeData, classification_col=&#39;CLASS_FLAG&#39;)
+    
+    #Add target interpratations
+    read_lithologies_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_lithologies.__code__.co_varnames}
+    targetInterpDF = w4h.read_lithologies(lith_file=target_dict, log=log, **read_lithologies_kwargs)
+    downholeData = w4h.merge_lithologies(df=downholeData, targinterps_df=targetInterpDF, target_col=&#39;TARGET&#39;, target_class=&#39;bool&#39;)
+    
+    #Sort dataframe to prepare for next steps
+    #downholeData = w4h.sort_dataframe(df=downholeData, sort_cols=[&#39;API_NUMBER&#39;,&#39;TOP&#39;], remove_nans=True)
+    downholeData = downholeData.sort_values(sort_cols=[idcol, top_col])
+    downholeData.reset_index(inplace=True, drop=True)
+    #UPDATE: Option to remove nans?
+    downholeData = downholeData[pd.notna(downholeData[&#34;LITHOLOGY&#34;])]
+
+    #Analyze Surface(s) and grid(s)
+    bedrockGrid, surfaceGrid = w4h.align_rasters(grids_unaligned=[bedrockElevGridIN, surfaceElevGridIN], modelgrid=modelGrid, no_data_val=0, log=log)
+    driftThickGrid, layerThickGrid = w4h.get_drift_thick(surface=surfaceGrid, bedrock=bedrockGrid, layers=layers, plot=verbose, log=log)
+    #UPDATE: LAYER NAMES SO DON&#34;T INCLUDE FT
+    headerData = w4h.sample_raster_points(raster=bedrockGrid, points_df=headerData, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_ELEV_FT&#39;, verbose=verbose, log=log)
+    headerData = w4h.sample_raster_points(raster=surfaceGrid, points_df=headerData, xcol=xcol, ycol=ycol, new_col=&#39;SURFACE_ELEV_FT&#39;, verbose=verbose, log=log)
+    headerData = w4h.sample_raster_points(raster=driftThickGrid, points_df=headerData, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_DEPTH_FT&#39;, verbose=verbose, log=log)
+    headerData = w4h.sample_raster_points(raster=layerThickGrid, points_df=headerData, xcol=xcol, ycol=ycol, new_col=&#39;LAYER_THICK_FT&#39;, verbose=verbose, log=log)
+    headerData = w4h.get_layer_depths(metadata=headerData, no_layers=layers, log=log)
+
+    #UPDATE: Check if this actually works, I think they should be copies of each other if metadata is not specified and not found using the metadata_filename pattern in file_setup() ***
+    #Merge header and data into one df, if applicable
+    if downholeData.values.base is headerData.values.base:
+        pass
+    else:
+        #downholeData = pd.merge(left = downholeData, right = headerData, on=idcol)
+        downholeData = w4h.merge_tables(data_df=downholeData,  header_df=headerData, data_cols=None, header_cols=None, on=idcol, how=&#39;inner&#39;, auto_pick_cols=True, log=log)
+    
+    #UPDATE: START HERE AGAIN, double checck and get kwargs for all functions ***
+    #downholeData = downholeData.copy()
+    #UPDATE: Potentially need to remove duplicate columns here, I think I fixed that tho ***
+    resdf = w4h.layer_target_thick(downholeData, layers=9, return_all=False, outfile_prefix=&#39;CoarseFine&#39;, export_dir=export_dir, depth_top_col=top_col, depth_bot_col=bottom_col, log=log)
+    layers_data = w4h.layer_interp(points=resdf, layers=9, grid=modelGrid, method=&#39;lin&#39;, log=log)
+
+    if export_dir is None:
+        if well_data.is_dir():
+            export_dir = well_data.joinpath(&#39;Output&#39;)
+        else:
+            export_dir = well_data.parent.joinpath()
+        
+        if not export_dir.exists():
+            try:
+                export_dir.mkdir()
+            except:
+                pass
+
+    w4h.export_grids(grid_data=layers_data, out_path=export_dir, file_id=&#39;&#39;,filetype=&#39;tif&#39;, variable_sep=True, date_stamp=True, log=log)
+    #UPDATE: export points?
+    return resdf, layers_data</code></pre>
 </details>
 </dd>
 <dt id="w4h.sample_raster_points"><code class="name flex">
@@ -3545,12 +4006,12 @@ new_col : str, optional</dd>
     df_sorted = df.sort_values(sort_cols)
     df_sorted.reset_index(inplace=True, drop=True)
     if remove_nans:
-        df_sorted = df_sorted[pd.notna(df_sorted[&#34;INTERPRETATION&#34;])]
+        df_sorted = df_sorted[pd.notna(df_sorted[&#34;LITHOLOGY&#34;])]
     return df_sorted</code></pre>
 </details>
 </dd>
 <dt id="w4h.specific_define"><code class="name flex">
-<span>def <span class="ident">specific_define</span></span>(<span>df, terms_df, description_col='FORMATION', terms_col='FORMATION', verbose=False, log=False)</span>
+<span>def <span class="ident">specific_define</span></span>(<span>df, terms_df, description_col='FORMATION', terms_col='DESCRIPTION', verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to classify terms that have been specifically defined in the terms_df.</p>
@@ -3576,7 +4037,7 @@ new_col : str, optional</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def specific_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;FORMATION&#39;, verbose=False, log=False):
+<pre><code class="python">def specific_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;DESCRIPTION&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to classify terms that have been specifically defined in the terms_df.
 
     Parameters
@@ -3603,7 +4064,6 @@ new_col : str, optional</dd>
         terms_df.rename(columns={terms_col:description_col}, inplace=True)
         terms_col = description_col
 
-
     df[description_col] = df[description_col].astype(str)
     terms_df[terms_col] = terms_df[terms_col].astype(str)
 
@@ -3617,11 +4077,11 @@ new_col : str, optional</dd>
     
     df_Interps = pd.merge(df, terms_df.set_index(terms_col), on=description_col, how=&#39;left&#39;)
     df_Interps.rename(columns={description_col:&#39;FORMATION&#39;}, inplace=True)
-    df_Interps[&#39;BEDROCK_FLAG&#39;] = df_Interps[&#39;INTERPRETATION&#39;] == &#39;BEDROCK&#39;
+    df_Interps[&#39;BEDROCK_FLAG&#39;] = df_Interps[&#39;LITHOLOGY&#39;] == &#39;BEDROCK&#39;
     
     if verbose:
-        print(&#34;Records Classified with full search term: &#34;+str(int(df_Interps[&#39;CLASS_FLAG&#39;].sum())))
-        print(&#34;Records Classified with full search term: &#34;+str(round((df_Interps[&#39;CLASS_FLAG&#39;].sum()/df_Interps.shape[0])*100,2))+&#34;% of data&#34;)
+        print(&#34;Records Classified with full search term: &#34;+str(int(df_Interps[df_Interps[&#39;CLASS_FLAG&#39;]==1][&#39;CLASS_FLAG&#39;].sum())))
+        print(&#34;Records Classified with full search term: &#34;+str(round((df_Interps[df_Interps[&#39;CLASS_FLAG&#39;]==1][&#39;CLASS_FLAG&#39;].sum()/df_Interps.shape[0])*100,2))+&#34;% of data&#34;)
 
     return df_Interps</code></pre>
 </details>
@@ -3682,7 +4142,7 @@ new_col : str, optional</dd>
 </details>
 </dd>
 <dt id="w4h.start_define"><code class="name flex">
-<span>def <span class="ident">start_define</span></span>(<span>df, terms_df, description_col='FORMATION', terms_col='FORMATION', verbose=False, log=False)</span>
+<span>def <span class="ident">start_define</span></span>(<span>df, terms_df, description_col='FORMATION', terms_col='DESCRIPTION', verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to classify descriptions according to starting substring. </p>
@@ -3710,7 +4170,7 @@ new_col : str, optional</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def start_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;FORMATION&#39;, verbose=False, log=False):
+<pre><code class="python">def start_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;DESCRIPTION&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to classify descriptions according to starting substring. 
 
     Parameters
@@ -3745,12 +4205,87 @@ new_col : str, optional</dd>
     #First, for each startterm, find all results in df that start with, add classification flag, and add interpretation.
     for i,s in enumerate(terms_df[terms_col]):
         df[&#39;CLASS_FLAG&#39;].where(~df[description_col].str.startswith(s,na=False),4,inplace=True)
-        df[&#39;INTERPRETATION&#39;].where(~df[description_col].str.startswith(s,na=False),terms_df.loc[i,&#39;INTERPRETATION&#39;],inplace=True)
-    df[&#39;BEDROCK_FLAG&#39;].loc[df[&#34;INTERPRETATION&#34;] == &#39;BEDROCK&#39;]
+        df[&#39;LITHOLOGY&#39;].where(~df[description_col].str.startswith(s,na=False),terms_df.loc[i,&#39;LITHOLOGY&#39;],inplace=True)
+    df[&#39;BEDROCK_FLAG&#39;].loc[df[&#34;LITHOLOGY&#34;] == &#39;BEDROCK&#39;]
     
     if verbose:
         print(&#34;Records classified with start search term: &#34;+str(int(df[&#39;CLASS_FLAG&#39;].count())))
         print(&#34;Records classified with start search term: &#34;+str(round((df[&#39;CLASS_FLAG&#39;].count()/df.shape[0])*100,2))+&#34;% of remaining data&#34;)
+        #print(&#34;Records classified with both search terms: &#34;+str(round(((df[&#39;CLASS_FLAG&#39;].count()+specDF[&#39;CLASS_FLAG&#39;].count())/downholeData_Interps.shape[0])*100,2))+&#34;% of all data&#34;)
+        #This step usually takes about 5-6 minutes
+    return df</code></pre>
+</details>
+</dd>
+<dt id="w4h.wildcard_define"><code class="name flex">
+<span>def <span class="ident">wildcard_define</span></span>(<span>df, terms_df, description_col='FORMATION', terms_col='DESCRIPTION', verbose=False, log=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function to classify descriptions according to any substring. </p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
+<dd>Dataframe containing all the well descriptions</dd>
+<dt><strong><code>terms_df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
+<dd>Dataframe containing all the startswith substrings to use for searching</dd>
+<dt><strong><code>description_col</code></strong> :&ensp;<code>str</code>, default <code>= 'FORMATION'</code></dt>
+<dd>Name of column in df containing descriptions, by default 'FORMATION'</dd>
+<dt><strong><code>terms_col</code></strong> :&ensp;<code>str</code>, default <code>= 'FORMATION'</code></dt>
+<dd>Name of column in terms_df containing startswith substring to match with description_col, by default 'FORMATION'</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
+<dd>Whether to print out results, by default False</dd>
+<dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= True</code></dt>
+<dd>Whether to log results to log file</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
+<dd>Dataframe containing the original data and new classifications</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def wildcard_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;DESCRIPTION&#39;, verbose=False, log=False):
+    &#34;&#34;&#34;Function to classify descriptions according to any substring. 
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe containing all the well descriptions
+    terms_df : pandas.DataFrame
+        Dataframe containing all the startswith substrings to use for searching
+    description_col : str, default = &#39;FORMATION&#39;
+        Name of column in df containing descriptions, by default &#39;FORMATION&#39;
+    terms_col : str, default = &#39;FORMATION&#39;
+        Name of column in terms_df containing startswith substring to match with description_col, by default &#39;FORMATION&#39;
+    verbose : bool, default = False
+        Whether to print out results, by default False
+    log : bool, default = True
+        Whether to log results to log file
+
+    Returns
+    -------
+    df : pandas.DataFrame
+        Dataframe containing the original data and new classifications
+    &#34;&#34;&#34;
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
+    if verbose:
+        #Estimate when it will end, based on test run
+        estTime = df.shape[0]/3054409 * 6 #It took about 6 minutes to classify data with entire dataframe. This estimates the fraction of that it will take
+        nowTime = datetime.datetime.now()
+        endTime = nowTime+datetime.timedelta(minutes=estTime)
+        print(&#34;Wildcard Term process should be done by (?) {:d}:{:02d}&#34;.format(endTime.hour, endTime.minute))
+
+    #First, for each startterm, find all results in df that start with, add classification flag, and add interpretation.
+    for i,s in enumerate(terms_df[terms_col]):
+        df[&#39;CLASS_FLAG&#39;].where(~df[description_col].str.contains(s, case=False, regex=False, na=False), 5, inplace=True)
+        df[&#39;LITHOLOGY&#39;].where(~df[description_col].str.contains(s, case=False, regex=False, na=False),terms_df.loc[i,&#39;LITHOLOGY&#39;],inplace=True)
+    df[&#39;BEDROCK_FLAG&#39;].loc[df[&#34;LITHOLOGY&#34;] == &#39;BEDROCK&#39;]
+    
+    if verbose:
+        print(&#34;Records classified with wildcard search term: &#34;+str(int(df[&#39;CLASS_FLAG&#39;].count())))
+        print(&#34;Records classified with wildcard search term: &#34;+str(round((df[&#39;CLASS_FLAG&#39;].count()/df.shape[0])*100,2))+&#34;% of remaining data&#34;)
         #print(&#34;Records classified with both search terms: &#34;+str(round(((df[&#39;CLASS_FLAG&#39;].count()+specDF[&#39;CLASS_FLAG&#39;].count())/downholeData_Interps.shape[0])*100,2))+&#34;% of all data&#34;)
         #This step usually takes about 5-6 minutes
     return df</code></pre>
@@ -3820,24 +4355,22 @@ new_col : str, optional</dd>
 <ul>
 <li><code><a title="w4h.classify" href="classify.html">w4h.classify</a></code></li>
 <li><code><a title="w4h.clean" href="clean.html">w4h.clean</a></code></li>
+<li><code><a title="w4h.core" href="core.html">w4h.core</a></code></li>
 <li><code><a title="w4h.export" href="export.html">w4h.export</a></code></li>
 <li><code><a title="w4h.layers" href="layers.html">w4h.layers</a></code></li>
 <li><code><a title="w4h.mapping" href="mapping.html">w4h.mapping</a></code></li>
 <li><code><a title="w4h.read" href="read.html">w4h.read</a></code></li>
-<li><code><a title="w4h.utilities" href="utilities.html">w4h.utilities</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="w4h.add_control_points" href="#w4h.add_control_points">add_control_points</a></code></li>
 <li><code><a title="w4h.align_rasters" href="#w4h.align_rasters">align_rasters</a></code></li>
 <li><code><a title="w4h.clip_gdf2study_area" href="#w4h.clip_gdf2study_area">clip_gdf2study_area</a></code></li>
 <li><code><a title="w4h.combine_dataset" href="#w4h.combine_dataset">combine_dataset</a></code></li>
 <li><code><a title="w4h.coords2geometry" href="#w4h.coords2geometry">coords2geometry</a></code></li>
 <li><code><a title="w4h.define_dtypes" href="#w4h.define_dtypes">define_dtypes</a></code></li>
 <li><code><a title="w4h.depth_define" href="#w4h.depth_define">depth_define</a></code></li>
-<li><code><a title="w4h.drop_bad_depth" href="#w4h.drop_bad_depth">drop_bad_depth</a></code></li>
-<li><code><a title="w4h.drop_no_depth" href="#w4h.drop_no_depth">drop_no_depth</a></code></li>
-<li><code><a title="w4h.drop_no_formation" href="#w4h.drop_no_formation">drop_no_formation</a></code></li>
 <li><code><a title="w4h.export_dataframe" href="#w4h.export_dataframe">export_dataframe</a></code></li>
 <li><code><a title="w4h.export_grids" href="#w4h.export_grids">export_grids</a></code></li>
 <li><code><a title="w4h.export_undefined" href="#w4h.export_undefined">export_undefined</a></code></li>
@@ -3860,19 +4393,24 @@ new_col : str, optional</dd>
 <li><code><a title="w4h.read_grid" href="#w4h.read_grid">read_grid</a></code></li>
 <li><code><a title="w4h.read_lithologies" href="#w4h.read_lithologies">read_lithologies</a></code></li>
 <li><code><a title="w4h.read_model_grid" href="#w4h.read_model_grid">read_model_grid</a></code></li>
-<li><code><a title="w4h.read_raw_txt" href="#w4h.read_raw_txt">read_raw_txt</a></code></li>
+<li><code><a title="w4h.read_raw_csv" href="#w4h.read_raw_csv">read_raw_csv</a></code></li>
 <li><code><a title="w4h.read_study_area" href="#w4h.read_study_area">read_study_area</a></code></li>
 <li><code><a title="w4h.read_wcs" href="#w4h.read_wcs">read_wcs</a></code></li>
 <li><code><a title="w4h.read_wms" href="#w4h.read_wms">read_wms</a></code></li>
 <li><code><a title="w4h.read_xyz" href="#w4h.read_xyz">read_xyz</a></code></li>
 <li><code><a title="w4h.remerge_data" href="#w4h.remerge_data">remerge_data</a></code></li>
+<li><code><a title="w4h.remove_bad_depth" href="#w4h.remove_bad_depth">remove_bad_depth</a></code></li>
+<li><code><a title="w4h.remove_no_depth" href="#w4h.remove_no_depth">remove_no_depth</a></code></li>
+<li><code><a title="w4h.remove_no_formation" href="#w4h.remove_no_formation">remove_no_formation</a></code></li>
 <li><code><a title="w4h.remove_no_topo" href="#w4h.remove_no_topo">remove_no_topo</a></code></li>
 <li><code><a title="w4h.remove_nonlocated" href="#w4h.remove_nonlocated">remove_nonlocated</a></code></li>
+<li><code><a title="w4h.run" href="#w4h.run">run</a></code></li>
 <li><code><a title="w4h.sample_raster_points" href="#w4h.sample_raster_points">sample_raster_points</a></code></li>
 <li><code><a title="w4h.sort_dataframe" href="#w4h.sort_dataframe">sort_dataframe</a></code></li>
 <li><code><a title="w4h.specific_define" href="#w4h.specific_define">specific_define</a></code></li>
 <li><code><a title="w4h.split_defined" href="#w4h.split_defined">split_defined</a></code></li>
 <li><code><a title="w4h.start_define" href="#w4h.start_define">start_define</a></code></li>
+<li><code><a title="w4h.wildcard_define" href="#w4h.wildcard_define">wildcard_define</a></code></li>
 <li><code><a title="w4h.xyz_metadata_merge" href="#w4h.xyz_metadata_merge">xyz_metadata_merge</a></code></li>
 </ul>
 </li>

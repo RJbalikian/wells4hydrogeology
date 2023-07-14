@@ -3,7 +3,7 @@
 
 #from w4h import classify, clean, export, layers, mapping, read
 
-from w4h.utilities import(logger_function,
+from w4h.core import(logger_function,
                           run)
 
 from w4h.classify import (specific_define, 
@@ -20,9 +20,9 @@ from w4h.classify import (specific_define,
 
 from w4h.clean import (remove_nonlocated, 
                        remove_no_topo, 
-                       drop_no_depth, 
-                       drop_bad_depth, 
-                       drop_no_formation)
+                       remove_no_depth, 
+                       remove_bad_depth, 
+                       remove_no_formation)
 
 from w4h.export import (export_dataframe,
                         export_grids)
@@ -49,16 +49,17 @@ from w4h.mapping import (read_study_area,
 from w4h.read import (get_current_date,
                       get_most_recent,
                       file_setup,
-                      read_raw_txt,
+                      read_raw_csv,
                       read_xyz,
                       read_dict,
                       define_dtypes,
                       get_search_terms,
                       read_dictionary_terms,
-                      read_lithologies)
+                      read_lithologies,
+                      add_control_points)
 
 
-__all__=(
+__all__=('logger_function','run',
         'specific_define', 
         'split_defined', 
         'start_define',
@@ -72,9 +73,9 @@ __all__=(
         'sort_dataframe',
          'remove_nonlocated', 
          'remove_no_topo', 
-         'drop_no_depth', 
-         'drop_bad_depth', 
-         'drop_no_formation',
+         'remove_no_depth', 
+         'remove_bad_depth', 
+         'remove_no_formation',
         'export_dataframe',
         'export_grids',
          'get_layer_depths',
@@ -97,14 +98,14 @@ __all__=(
          'get_current_date',
          'get_most_recent',
          'file_setup',
-         'read_raw_txt',
+         'read_raw_csv',
          'read_xyz',
          'read_dict',
          'define_dtypes',
          'get_search_terms',
          'read_dictionary_terms',
          'read_lithologies',
-        'logger_function',
-        'run')
+         'add_control_points'
+         )
 
 __author__='Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski'
