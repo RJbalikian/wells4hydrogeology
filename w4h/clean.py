@@ -6,7 +6,7 @@ import pandas as pd
 from w4h import logger_function
 
 #This function removes all data from the downholeData table where there is no location information (in the headerData table). This includes elevation info too
-def remove_nonlocated(df, metadata_df, verbose=False, log=False):
+def remove_nonlocated(df, metadata_df=None, verbose=False, log=False):
     """Function to remove wells and well intervals where there is no location information
 
     Parameters
@@ -28,9 +28,14 @@ def remove_nonlocated(df, metadata_df, verbose=False, log=False):
     before = df.shape[0] #Extract length of data before this process
 
     #Create Merged dataset only with data where wells exist in both databases (i.e., well has data and location info)
-    df = pd.merge(df, metadata_df.set_index('API_NUMBER'), on='API_NUMBER', how='left', indicator='Exist')
-    df['Existbool'] = np.where(df['Exist'] == 'both', True, False)
-    df = df[df['Existbool']==True].drop(['Exist','Existbool'], axis=1)
+    #df = pd.merge(df, metadata_df.set_index('API_NUMBER'), on='API_NUMBER', how='left', indicator='Exist')
+    if metadata_df is not None:
+        df_with_locations = metadata_df
+    else:
+        df_with_locations = df
+
+    df_with_locations['Existbool'] = np.where(df_with_locations['Exist'] == 'both', True, False)
+    df_with_locations = df_with_locations[df_with_locations['Existbool']==True].drop(['Exist','Existbool'], axis=1)
     
     #Create new downhole data table with only relevant records and columns
     keepCols=['API_NUMBER','TABLE_NAME','FORMATION','THICKNESS','TOP','BOTTOM']

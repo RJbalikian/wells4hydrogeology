@@ -149,14 +149,15 @@ def run(well_data, well_data_cols=None,
     surfaceElevGridIN = w4h.read_grid(grid_path=surfaceElevPath, grid_type='surface', study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
     bedrockElevGridIN = w4h.read_grid(grid_path=bedrockElevPath, grid_type='bedrock', study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
 
+    #UPDATE: MAKE SURE CRS's all align ***
     #Add control points
     #UPDATE: Code here for adding in control points ***
 
-    #UPDATE: MAKE SURE CRS's all align ***
+    w4h.add_control_points(df, df_control, well_key='API_NUMBER', xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', controlpoints_crs='EPSG:4269', top_col='TOP', bottom_col='BOTTOM', description_col='FORMATION', interp_col='INTERPRETATION', target_col='TARGET', verbose=False, log=False, **read_csv_kwargs)
 
     #Convert headerData to have geometry
     coords2geometry_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.coords2geometry.__code__.co_varnames}
-    headerData = w4h.coords2geometry(df=headerData, xcol=xcol, ycol=ycol, zcol=zcol, log=log, **coords2geometry_kwargs)
+    headerData = w4h.coords2geometry(df_no_geometry=headerData, xcol=xcol, ycol=ycol, zcol=zcol, log=log, **coords2geometry_kwargs)
     clip_gdf2study_area_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.clip_gdf2study_area.__code__.co_varnames}
     headerData = w4h.clip_gdf2study_area(study_area=studyAreaIN, gdf=headerData, log=log, **clip_gdf2study_area_kwargs)
 
