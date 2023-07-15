@@ -27,6 +27,7 @@ def remove_nonlocated(df, metadata_df=None, verbose=False, log=False):
 
     before = df.shape[0] #Extract length of data before this process
 
+    ##NO LONGER MERGING HERE. See w4h.merge_tables()
     #Create Merged dataset only with data where wells exist in both databases (i.e., well has data and location info)
     #df = pd.merge(df, metadata_df.set_index('API_NUMBER'), on='API_NUMBER', how='left', indicator='Exist')
     if metadata_df is not None:

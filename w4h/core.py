@@ -92,12 +92,17 @@ def run(well_data, well_data_cols=None,
 
         if metadata is None:
             if well_data.is_dir():
+                #If the two files are supposed to be in the same directory (or just want well_data found)
                 downholeDataPATH, headerDataPATH = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
             elif well_data.exists():
+                #If well_data is a file, and metadata is not used
                 downholeDataPATH, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
+                headerDataPATH = None
             else:
-                print('ERROR: well_data file does not exist:{}'.format(well_data))
+                #Need for well_data to exist at the very least
+                IOError('well_data file does not exist:{}'.format(well_data))
         elif isinstance(metadata, pathlib.PurePath) or isinstance(metadata, str):
+            #Metdata has specifically been specified by a filepath
             if isinstance(metadata, str):
                 metadata = pathlib.Path(metadata)    
             downholeDataPATH, headerDataPATH = w4h.file_setup(well_data=well_data, metadata=metadata, **file_setup_kwargs)                

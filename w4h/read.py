@@ -195,21 +195,31 @@ def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols
     else:
         downholeDataIN = pd.read_csv(data_filepath, sep=',', header='infer', encoding=encoding, usecols=data_useCols, **read_csv_kwargs)
     
-    if isinstance(metadata_filepath, pd.DataFrame):
+    if metadata_filepath is None:
+        headerDataIN = None
+    elif isinstance(metadata_filepath, pd.DataFrame):
         headerDataIN = metadata_filepath[metadata_useCols]
     else:
         headerDataIN = pd.read_csv(metadata_filepath, sep=',', header='infer', encoding=encoding, usecols=metadata_useCols, **read_csv_kwargs)
 
     #Drop data with no API        
     downholeDataIN = downholeDataIN.dropna(subset=[well_key]) #Drop data with no API
-    headerDataIN = headerDataIN.dropna(subset=[well_key]) #Drop metadata with no API
+    if headerDataIN is not None:
+        headerDataIN = headerDataIN.dropna(subset=[well_key]) #Drop metadata with no API
 
-    #Drop data with no or missing location information
-    headerDataIN = headerDataIN.dropna(subset=[ycol]) 
-    headerDataIN = headerDataIN.dropna(subset=[xcol])
-    
-    #Reset index so index goes from 0 in numerical/integer order
-    headerDataIN.reset_index(inplace=True, drop=True)
+        #Drop data with no or missing location information
+        headerDataIN = headerDataIN.dropna(subset=[ycol]) 
+        headerDataIN = headerDataIN.dropna(subset=[xcol])
+
+        #Reset index so index goes from 0 in numerical/integer order
+        headerDataIN.reset_index(inplace=True, drop=True)
+    else:
+        #***UPDATE: Need to make sure these columns exist in this case***
+        downholeDataIN = headerDataIN.dropna(subset=[well_key]) #Drop metadata with no API
+
+        #Drop data with no or missing location information
+        downholeDataIN = headerDataIN.dropna(subset=[ycol]) 
+        downholeDataIN = headerDataIN.dropna(subset=[xcol])        
     downholeDataIN.reset_index(inplace=True, drop=True)
     
     #Print outputs to terminal, if designated
