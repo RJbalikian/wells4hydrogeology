@@ -15,7 +15,7 @@ import w4h
 from w4h import logger_function
 
 #Function to Merge tables
-def merge_tables(data_df, header_df, data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, **kwargs):
+def merge_tables(data_df, header_df, data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, verbose=False, **kwargs):
     """Function to merge tables, intended for merging metadata table with data table
 
     Parameters
@@ -44,44 +44,58 @@ def merge_tables(data_df, header_df, data_cols=None, header_cols=None, auto_pick
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    if auto_pick_cols:
-        header_cols = ['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'BEDROCK_ELEV_FT', 'SURFACE_ELEV_FT', 'BEDROCK_DEPTH_FT', 'LAYER_THICK_FT']
-        for c in header_df.columns:
-            if c.startswith('ELEV_') or c.startswith('DEPTH'):
-                header_cols.append(c)
-            if '_PROJ' in c:
-                header_cols.append(c)
-        header_cols.append('geometry')
-    elif header_cols is None:
-        header_cols = header_df.columns
-    else:
-        header_cols = header_cols
+    if header_df is None:
+        #Figure out which columns to include
+        if data_cols is None:
+            #If not specified, get all the cols
+            data_cols = data_df.columns                      
+        else:
+            if header_cols is not None:
+                data_cols = data_cols + header_cols
+        
+        data_df = data_df[data_cols]
 
-    #If not specified, get all the cols
-    if data_cols is None:
-        data_cols = data_df.columns
+        mergedTable = data_df
+    else:   
+        if auto_pick_cols:
+            header_cols = ['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'BEDROCK_ELEV_FT', 'SURFACE_ELEV_FT', 'BEDROCK_DEPTH_FT', 'LAYER_THICK_FT']
+            for c in header_df.columns:
+                if c.startswith('ELEV_') or c.startswith('DEPTH'):
+                    header_cols.append(c)
+                if '_PROJ' in c:
+                    header_cols.append(c)
+            header_cols.append('geometry')
+        elif header_cols is None:
+            header_cols = header_df.columns
+        else:
+            header_cols = header_cols
 
-    #Defults for on and how
-    if 'on' not in kwargs.keys():
-        kwargs['on']='API_NUMBER'
+        #If not specified, get all the cols
+        if data_cols is None:
+            data_cols = data_df.columns
 
-    if 'how' not in kwargs.keys():
-        kwargs['how']='inner'
+        #Defults for on and how
+        if 'on' not in kwargs.keys():
+            kwargs['on']='API_NUMBER'
 
-    #Drop duplicate columns
-    if drop_duplicate_cols:
-        header_colCopy= header_cols.copy()
-        remCount = 0
-        for i, c in enumerate(header_colCopy):
-            if c in data_cols and c != kwargs['on']:
-                print('REMOVING', header_cols[i-remCount])
-                header_cols.pop(i - remCount)
-                remCount += 1
+        if 'how' not in kwargs.keys():
+            kwargs['how']='inner'
 
-    leftTable_join = data_df[data_cols]
-    rightTable_join = header_df[header_cols]
+        #Drop duplicate columns
+        if drop_duplicate_cols:
+            header_colCopy= header_cols.copy()
+            remCount = 0
+            for i, c in enumerate(header_colCopy):
+                if c in data_cols and c != kwargs['on']:
+                    if verbose:
+                        print('REMOVING', header_cols[i-remCount])
+                    header_cols.pop(i - remCount)
+                    remCount += 1
 
-    mergedTable = pd.merge(left=leftTable_join, right=rightTable_join, **kwargs)
+        leftTable_join = data_df[data_cols]
+        rightTable_join = header_df[header_cols]
+
+        mergedTable = pd.merge(left=leftTable_join, right=rightTable_join, **kwargs)
     return mergedTable
 
 #Get layer depths of each layer, based on precalculated layer thickness

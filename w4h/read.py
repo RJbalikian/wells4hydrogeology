@@ -174,8 +174,8 @@ def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols
 
     Returns
     -------
-    (pandas.DataFrame, pandas.DataFrame)
-        Tuple/list with two pandas dataframes: (data, metadata)
+    (pandas.DataFrame, pandas.DataFrame/None)
+        Tuple/list with two pandas dataframes: (well_data, metadata) metadata is None if only well_data is used
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
@@ -215,11 +215,9 @@ def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols
         headerDataIN.reset_index(inplace=True, drop=True)
     else:
         #***UPDATE: Need to make sure these columns exist in this case***
-        downholeDataIN = headerDataIN.dropna(subset=[well_key]) #Drop metadata with no API
-
         #Drop data with no or missing location information
-        downholeDataIN = headerDataIN.dropna(subset=[ycol]) 
-        downholeDataIN = headerDataIN.dropna(subset=[xcol])        
+        downholeDataIN = downholeDataIN.dropna(subset=[ycol]) 
+        downholeDataIN = downholeDataIN.dropna(subset=[xcol])        
     downholeDataIN.reset_index(inplace=True, drop=True)
     
     #Print outputs to terminal, if designated
@@ -328,38 +326,41 @@ def define_dtypes(undefined_df, datatypes=None, verbose=False, log=False):
     dfout : pandas.DataFrame
         Pandas dataframe containing redefined columns
     """
-    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
-    dfout = undefined_df.copy()
-    
-    if isinstance(datatypes, pathlib.PurePath) or isinstance(datatypes, str):
-        datatypes = pathlib.Path(datatypes)
-
-        if not datatypes.exists():
-            if verbose:
-                print('ERROR: datatypes ({}) does not exist'.format(datatypes))
-            return dfout
-        elif datatypes.is_dir():
-            if verbose:
-                print('ERROR: datatypes must be either dict or filepath (path to directories not allowed)')
-            return dfout
-
-        datatypes = read_dict(file=datatypes)
-        dfout = dfout.astype(datatypes)
-
-    elif isinstance(datatypes, dict):
-        if verbose:
-            print('datatypes is None, not updating datatypes')
-        dfout = dfout.astype(datatypes)
+    if undefined_df is None:
+        dfout = None
     else:
-        if verbose:
-            print('ERROR: datatypes must be either dict or a filepath, not {}'.format(type(datatypes)))
-        return dfout
-    
-    #This is likely redundant
-    dfcols = dfout.columns
-    for i in range(0, np.shape(dfout)[1]):
-        dfout.iloc[:,i] = undefined_df.iloc[:,i].astype(datatypes[dfcols[i]])
+        logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
+        dfout = undefined_df.copy()
+        
+        if isinstance(datatypes, pathlib.PurePath) or isinstance(datatypes, str):
+            datatypes = pathlib.Path(datatypes)
+
+            if not datatypes.exists():
+                if verbose:
+                    print('ERROR: datatypes ({}) does not exist'.format(datatypes))
+                return dfout
+            elif datatypes.is_dir():
+                if verbose:
+                    print('ERROR: datatypes must be either dict or filepath (path to directories not allowed)')
+                return dfout
+
+            datatypes = read_dict(file=datatypes)
+            dfout = dfout.astype(datatypes)
+
+        elif isinstance(datatypes, dict):
+            if verbose:
+                print('datatypes is None, not updating datatypes')
+            dfout = dfout.astype(datatypes)
+        else:
+            if verbose:
+                print('ERROR: datatypes must be either dict or a filepath, not {}'.format(type(datatypes)))
+            return dfout
+        
+        #This is likely redundant
+        dfcols = dfout.columns
+        for i in range(0, np.shape(dfout)[1]):
+            dfout.iloc[:,i] = undefined_df.iloc[:,i].astype(datatypes[dfcols[i]])
 
     return dfout
 
