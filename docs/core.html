@@ -374,10 +374,21 @@ def logger_function(logtocommence, parameters, func_name):
             pass
     return
 
-
 #Get filepaths for package resources in dictionary format
 resource_dir = pathlib.Path(pkg_resources.resource_filename(__name__, &#39;resources/resources_home.txt&#39;)).parent
 def get_resources(verbose=False):
+    &#34;&#34;&#34;Function to get filepaths for resources included with package
+
+    Parameters
+    ----------
+    verbose : bool, optional
+        Whether to print results to terminal, by default False
+
+    Returns
+    -------
+    resources_dict : dict
+        Dictionary containing key, value pairs with filepaths to resources that may be of interest.
+    &#34;&#34;&#34;
     resources_dict = {}
     sample_data_dir = resource_dir.joinpath(&#39;sample_data&#39;)
 
@@ -403,8 +414,6 @@ def get_resources(verbose=False):
     resources_dict[&#39;xyz_dtypes&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;xyzDataTypes.txt&#39;, verbose=verbose)
 
     return resources_dict
-
-
 
 def __check_parameter_names(verbose=True):
     #Check parameters are unique
@@ -473,12 +482,34 @@ def __check_parameter_names(verbose=True):
 <span>def <span class="ident">get_resources</span></span>(<span>verbose=False)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Function to get filepaths for resources included with package</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Whether to print results to terminal, by default False</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>resources_dict</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Dictionary containing key, value pairs with filepaths to resources that may be of interest.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_resources(verbose=False):
+    &#34;&#34;&#34;Function to get filepaths for resources included with package
+
+    Parameters
+    ----------
+    verbose : bool, optional
+        Whether to print results to terminal, by default False
+
+    Returns
+    -------
+    resources_dict : dict
+        Dictionary containing key, value pairs with filepaths to resources that may be of interest.
+    &#34;&#34;&#34;
     resources_dict = {}
     sample_data_dir = resource_dir.joinpath(&#39;sample_data&#39;)
 
