@@ -42,7 +42,8 @@ keepList = ['generate_docs', 'conf']
 
 for f in trg_path.iterdir():
     if f.stem in keepList or f.is_dir():
-        pass
+        if f.stem == 'resources':
+            os.remove(f)
     else:
         os.remove(f)
 

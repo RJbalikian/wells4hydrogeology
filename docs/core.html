@@ -35,11 +35,13 @@ import pandas as pd
 
 import w4h
 
+import pkg_resources
+
 def run(well_data, well_data_cols=None, 
         metadata=None, well_metadata_cols=None, 
         layers = 9,
         description_col=&#39;FORMATION&#39;, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, depth_type=&#39;depth&#39;,
-        study_area=None, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEVATION&#39;, idcol=&#39;API_NUMBER&#39;, output_crs=&#39;EPSG:4269&#39;,
+        study_area=None, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEVATION&#39;, well_id_col=&#39;API_NUMBER&#39;, output_crs=&#39;EPSG:4269&#39;,
         surf_elev_file=None, bedrock_elev_file=None, model_grid=None,
         lith_dict=None, lith_dict_start=None, lith_dict_wildcard=None,
         target_dict=None,
@@ -120,12 +122,17 @@ def run(well_data, well_data_cols=None,
 
         if metadata is None:
             if well_data.is_dir():
+                #If the two files are supposed to be in the same directory (or just want well_data found)
                 downholeDataPATH, headerDataPATH = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
             elif well_data.exists():
+                #If well_data is a file, and metadata is not used
                 downholeDataPATH, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
+                headerDataPATH = None
             else:
-                print(&#39;ERROR: well_data file does not exist:{}&#39;.format(well_data))
+                #Need for well_data to exist at the very least
+                IOError(&#39;well_data file does not exist:{}&#39;.format(well_data))
         elif isinstance(metadata, pathlib.PurePath) or isinstance(metadata, str):
+            #Metdata has specifically been specified by a filepath
             if isinstance(metadata, str):
                 metadata = pathlib.Path(metadata)    
             downholeDataPATH, headerDataPATH = w4h.file_setup(well_data=well_data, metadata=metadata, **file_setup_kwargs)                
@@ -150,12 +157,22 @@ def run(well_data, well_data_cols=None,
 
     #Get pandas dataframes from input
     read_raw_txt_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_raw_csv .__code__.co_varnames}
-    downholeDataIN, headerDataIN = w4h.read_raw_csv(data_filepath=downholeDataPATH, metadata_filepath=headerDataPATH, verbose=verbose, log=log, **read_raw_txt_kwargs) 
+    well_data_IN, metadata_IN = w4h.read_raw_csv(data_filepath=downholeDataPATH, metadata_filepath=headerDataPATH, verbose=verbose, log=log, **read_raw_txt_kwargs) 
     #Functions to read data into dataframes. Also excludes extraneous columns, and drops header data with no location information
 
     #Define data types (file will need to be udpated)
-    downholeData = w4h.define_dtypes(undefined_df=downholeDataIN, datatypes=&#39;./resources/downholeDataTypes.txt&#39;, verbose=verbose, log=log)
-    headerData = w4h.define_dtypes(undefined_df=headerDataIN, datatypes=&#39;./resources/headerDataTypes.txt&#39;, verbose=verbose, log=log)
+    well_data_DF = w4h.define_dtypes(undefined_df=well_data_IN, datatypes=&#39;./resources/downholeDataTypes.txt&#39;, verbose=verbose, log=log)
+    metadata_DF = w4h.define_dtypes(undefined_df=metadata_IN, datatypes=&#39;./resources/headerDataTypes.txt&#39;, verbose=verbose, log=log)
+
+    if metadata_DF is None:
+        well_data_xyz = well_data_DF
+    else:
+        merge_tables_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.merge_tables.__code__.co_varnames}
+        well_data_xyz = w4h.merge_tables(data_df=well_data_DF, header_df=metadata_DF, data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, **merge_tables_kwargs)
+
+    #Convert well_data_xyz to have geometry
+    coords2geometry_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.coords2geometry.__code__.co_varnames}
+    well_data_xyz = w4h.coords2geometry(df_no_geometry=well_data_xyz, xcol=xcol, ycol=ycol, zcol=zcol, log=log, **coords2geometry_kwargs)
 
     #Get Study area
     read_study_area_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_study_area.__code__.co_varnames}
@@ -165,6 +182,9 @@ def run(well_data, well_data_cols=None,
     else:
         studyAreaIN = w4h.read_study_area(study_area_path=study_area, log=log, **read_study_area_kwargs)
         use_study_area = True
+
+    clip_gdf2study_area_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.clip_gdf2study_area.__code__.co_varnames}
+    well_data_xyz = w4h.clip_gdf2study_area(study_area=studyAreaIN, gdf=well_data_xyz, log=log, **clip_gdf2study_area_kwargs)
 
     #Get surfaces and grid(s)
     read_grid_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_grid.__code__.co_varnames}
@@ -177,29 +197,24 @@ def run(well_data, well_data_cols=None,
     surfaceElevGridIN = w4h.read_grid(grid_path=surfaceElevPath, grid_type=&#39;surface&#39;, study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
     bedrockElevGridIN = w4h.read_grid(grid_path=bedrockElevPath, grid_type=&#39;bedrock&#39;, study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
 
+    #UPDATE: MAKE SURE CRS&#39;s all align ***
     #Add control points
     #UPDATE: Code here for adding in control points ***
-
-    #UPDATE: MAKE SURE CRS&#39;s all align ***
-
-    #Convert headerData to have geometry
-    coords2geometry_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.coords2geometry.__code__.co_varnames}
-    headerData = w4h.coords2geometry(df=headerData, xcol=xcol, ycol=ycol, zcol=zcol, log=log, **coords2geometry_kwargs)
-    clip_gdf2study_area_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.clip_gdf2study_area.__code__.co_varnames}
-    headerData = w4h.clip_gdf2study_area(study_area=studyAreaIN, gdf=headerData, log=log, **clip_gdf2study_area_kwargs)
-
+    add_control_points_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.add_control_points.__code__.co_varnames}
+    well_data_xyz = w4h.add_control_points(df_without_control=well_data_xyz, xcol=xcol, ycol=ycol, zcol=zcol, top_col=top_col, bottom_col=bottom_col, description_col=description_col, verbose=verbose, log=log, **add_control_points_kwargs)
+    
     #Clean up data
-    downholeData = w4h.remove_nonlocated(downholeData, headerData, log=log, verbose=verbose)
-    headerData = w4h.remove_no_topo(df=headerData, zcol=zcol, verbose=verbose, log=log)
+    well_data_xyz = w4h.remove_nonlocated(df_with_locations=well_data_xyz, log=log, verbose=verbose)
+    well_data_xyz = w4h.remove_no_topo(df_with_topo=well_data_xyz, zcol=zcol, verbose=verbose, log=log)
 
     remove_no_depth_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.remove_no_depth.__code__.co_varnames}
-    donwholeData = w4h.remove_no_depth(downholeData, verbose=verbose, top_col=top_col, bottom_col=bottom_col, log=log, **remove_no_depth_kwargs) #Drop records with no depth information
+    well_data_xyz = w4h.remove_no_depth(well_data_xyz, verbose=verbose, top_col=top_col, bottom_col=bottom_col, log=log, **remove_no_depth_kwargs) #Drop records with no depth information
 
     remove_bad_depth_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.remove_bad_depth.__code__.co_varnames}
-    donwholeData = w4h.remove_bad_depth(downholeData, verbose=verbose, top_col=top_col, bottom_col=bottom_col, depth_type=depth_type, log=log, **remove_bad_depth_kwargs)#Drop records with bad depth information (i.e., top depth &gt; bottom depth) (Also calculates thickness of each record)
+    well_data_xyz = w4h.remove_bad_depth(well_data_xyz, verbose=verbose, top_col=top_col, bottom_col=bottom_col, depth_type=depth_type, log=log, **remove_bad_depth_kwargs)#Drop records with bad depth information (i.e., top depth &gt; bottom depth) (Also calculates thickness of each record)
 
-    remove_no_formation_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.remove_no_formation.__code__.co_varnames}
-    downholeData = w4h.remove_no_formation(downholeData, description_col=description_col, verbose=verbose, log=log, **remove_no_formation_kwargs)
+    remove_no_formation_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.remove_no_description.__code__.co_varnames}
+    well_data_xyz = w4h.remove_no_description(well_data_xyz, description_col=description_col, verbose=verbose, log=log, **remove_no_formation_kwargs)
 
     #CLASSIFICATION
     #Read dictionary definitions and classify
@@ -228,67 +243,58 @@ def run(well_data, well_data_cols=None,
 
     #CLASSIFICATIONS
     #Exact match classifications
-    downholeData = w4h.specific_define(downholeData, specTerms, description_col=description_col, verbose=verbose, log=log)
+    well_data_xyz = w4h.specific_define(well_data_xyz, specTerms, description_col=description_col, verbose=verbose, log=log)
     
     #.startswith classifications
-    classifedDF, searchDF = w4h.split_defined(downholeData, verbose=verbose, log=log)
+    classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
     searchDF = w4h.start_define(df=searchDF, terms_df=startTerms, description_col=description_col, verbose=verbose, log=log)
-    downholeData = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
+    well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
 
     #wildcard/any substring match classifications    
-    classifedDF, searchDF = w4h.split_defined(downholeData, verbose=verbose, log=log)
+    classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
     searchDF = w4h.wildcard_define(df=searchDF, terms_df=wildcardTerms, description_col=description_col, verbose=verbose, log=log)
-    downholeData = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
+    well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
 
     #Depth classification
-    classifedDF, searchDF = w4h.split_defined(downholeData, verbose=verbose, log=log)
+    classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
     searchDF = w4h.depth_define(searchDF, thresh=550, verbose=verbose, log=log)
-    downholeData = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***
+    well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***
     
     #Fill unclassified data
-    downholeData = w4h.fill_unclassified(downholeData, classification_col=&#39;CLASS_FLAG&#39;)
+    well_data_xyz = w4h.fill_unclassified(well_data_xyz, classification_col=&#39;CLASS_FLAG&#39;)
     
     #Add target interpratations
     read_lithologies_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_lithologies.__code__.co_varnames}
     targetInterpDF = w4h.read_lithologies(lith_file=target_dict, log=log, **read_lithologies_kwargs)
-    downholeData = w4h.merge_lithologies(df=downholeData, targinterps_df=targetInterpDF, target_col=&#39;TARGET&#39;, target_class=&#39;bool&#39;)
+    well_data_xyz = w4h.merge_lithologies(df=well_data_xyz, targinterps_df=targetInterpDF, target_col=&#39;TARGET&#39;, target_class=&#39;bool&#39;)
     
     #Sort dataframe to prepare for next steps
-    #downholeData = w4h.sort_dataframe(df=downholeData, sort_cols=[&#39;API_NUMBER&#39;,&#39;TOP&#39;], remove_nans=True)
-    downholeData = downholeData.sort_values(sort_cols=[idcol, top_col])
-    downholeData.reset_index(inplace=True, drop=True)
+    #well_data_xyz = w4h.sort_dataframe(df=well_data_xyz, sort_cols=[&#39;API_NUMBER&#39;,&#39;TOP&#39;], remove_nans=True)
+    well_data_xyz = well_data_xyz.sort_values(by=[well_id_col, top_col])
+    well_data_xyz.reset_index(inplace=True, drop=True)
     #UPDATE: Option to remove nans?
-    downholeData = downholeData[pd.notna(downholeData[&#34;LITHOLOGY&#34;])]
+    well_data_xyz = well_data_xyz[pd.notna(well_data_xyz[&#34;LITHOLOGY&#34;])]
 
     #Analyze Surface(s) and grid(s)
-    bedrockGrid, surfaceGrid = w4h.align_rasters(grids_unaligned=[bedrockElevGridIN, surfaceElevGridIN], modelgrid=modelGrid, no_data_val=0, log=log)
+    bedrockGrid, surfaceGrid = w4h.align_rasters(grids_unaligned=[bedrockElevGridIN, surfaceElevGridIN], modelgrid=modelGrid, no_data_val_grid=0, log=log)
     driftThickGrid, layerThickGrid = w4h.get_drift_thick(surface=surfaceGrid, bedrock=bedrockGrid, layers=layers, plot=verbose, log=log)
     #UPDATE: LAYER NAMES SO DON&#34;T INCLUDE FT
-    headerData = w4h.sample_raster_points(raster=bedrockGrid, points_df=headerData, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_ELEV_FT&#39;, verbose=verbose, log=log)
-    headerData = w4h.sample_raster_points(raster=surfaceGrid, points_df=headerData, xcol=xcol, ycol=ycol, new_col=&#39;SURFACE_ELEV_FT&#39;, verbose=verbose, log=log)
-    headerData = w4h.sample_raster_points(raster=driftThickGrid, points_df=headerData, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_DEPTH_FT&#39;, verbose=verbose, log=log)
-    headerData = w4h.sample_raster_points(raster=layerThickGrid, points_df=headerData, xcol=xcol, ycol=ycol, new_col=&#39;LAYER_THICK_FT&#39;, verbose=verbose, log=log)
-    headerData = w4h.get_layer_depths(metadata=headerData, no_layers=layers, log=log)
+    well_data_xyz = w4h.sample_raster_points(raster=bedrockGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_ELEV_FT&#39;, verbose=verbose, log=log)
+    well_data_xyz = w4h.sample_raster_points(raster=surfaceGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;SURFACE_ELEV_FT&#39;, verbose=verbose, log=log)
+    well_data_xyz = w4h.sample_raster_points(raster=driftThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_DEPTH_FT&#39;, verbose=verbose, log=log)
+    well_data_xyz = w4h.sample_raster_points(raster=layerThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;LAYER_THICK_FT&#39;, verbose=verbose, log=log)
+    well_data_xyz = w4h.get_layer_depths(df_with_depths=well_data_xyz, no_layers=layers, log=log)
 
-    #UPDATE: Check if this actually works, I think they should be copies of each other if metadata is not specified and not found using the metadata_filename pattern in file_setup() ***
-    #Merge header and data into one df, if applicable
-    if downholeData.values.base is headerData.values.base:
-        pass
-    else:
-        #downholeData = pd.merge(left = downholeData, right = headerData, on=idcol)
-        downholeData = w4h.merge_tables(data_df=downholeData,  header_df=headerData, data_cols=None, header_cols=None, on=idcol, how=&#39;inner&#39;, auto_pick_cols=True, log=log)
+    resdf = w4h.layer_target_thick(well_data_xyz, layers=9, return_all=False, outfile_prefix=&#39;CoarseFine&#39;, export_dir=export_dir, depth_top_col=top_col, depth_bot_col=bottom_col, log=log)
     
-    #UPDATE: START HERE AGAIN, double checck and get kwargs for all functions ***
-    #downholeData = downholeData.copy()
-    #UPDATE: Potentially need to remove duplicate columns here, I think I fixed that tho ***
-    resdf = w4h.layer_target_thick(downholeData, layers=9, return_all=False, outfile_prefix=&#39;CoarseFine&#39;, export_dir=export_dir, depth_top_col=top_col, depth_bot_col=bottom_col, log=log)
-    layers_data = w4h.layer_interp(points=resdf, layers=9, grid=modelGrid, method=&#39;lin&#39;, log=log)
+    layer_interp_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.layer_interp.__code__.co_varnames}
+    layers_data = w4h.layer_interp(points=resdf, layers=9, grid=modelGrid, verbose=verbose, log=log, **layer_interp_kwargs)
 
     if export_dir is None:
         if well_data.is_dir():
             export_dir = well_data.joinpath(&#39;Output&#39;)
         else:
-            export_dir = well_data.parent.joinpath()
+            export_dir = well_data.parent.joinpath(&#39;Outpath&#39;)
         
         if not export_dir.exists():
             try:
@@ -296,7 +302,7 @@ def run(well_data, well_data_cols=None,
             except:
                 pass
 
-    w4h.export_grids(grid_data=layers_data, out_path=export_dir, file_id=&#39;&#39;,filetype=&#39;tif&#39;, variable_sep=True, date_stamp=True, log=log)
+    w4h.export_grids(grid_data=layers_data, out_path=export_dir, file_id=&#39;&#39;,filetype=&#39;tif&#39;, variable_sep=True, date_stamp=True, verbose=verbose, log=log)
     #UPDATE: export points?
     return resdf, layers_data
 
@@ -368,6 +374,38 @@ def logger_function(logtocommence, parameters, func_name):
             pass
     return
 
+
+#Get filepaths for package resources in dictionary format
+resource_dir = pathlib.Path(pkg_resources.resource_filename(__name__, &#39;resources/resources_home.txt&#39;)).parent
+def get_resources(verbose=False):
+    resources_dict = {}
+    sample_data_dir = resource_dir.joinpath(&#39;sample_data&#39;)
+
+    #Get sample data
+    #Get lithology dictionaries&#39; filepaths
+    sample_dictionary_dir = sample_data_dir.joinpath(&#39;DictionaryTerms&#39;)
+    resources_dict[&#39;LithologyDict_Exact&#39;] = w4h.get_most_recent(dir=sample_dictionary_dir, glob_pattern=&#39;*DICTIONARY_SearchTerms*&#39;, verbose=verbose)
+    resources_dict[&#39;LithologyDict_Start&#39;] = w4h.get_most_recent(dir=sample_dictionary_dir, glob_pattern=&#39;*SearchTerms-Start*&#39;, verbose=verbose)
+    resources_dict[&#39;LithologyDict_Wildcard&#39;] = w4h.get_most_recent(dir=sample_dictionary_dir, glob_pattern=&#39;*SearchTerms-Wildcard*&#39;, verbose=verbose)
+
+    #Get Lithology Interpretation filepaths
+    lith_interp_dir = sample_data_dir.joinpath(&#39;LithologyInterpretations&#39;)
+    resources_dict[&#39;LithInterps_FineCoarse&#39;] = w4h.get_most_recent(dir=lith_interp_dir, glob_pattern=&#39;*FineCoarse*&#39;, verbose=verbose)
+    resources_dict[&#39;LithInterps_Clay&#39;] = w4h.get_most_recent(dir=lith_interp_dir, glob_pattern=&#39;*Clay*&#39;, verbose=verbose)
+    resources_dict[&#39;LithInterps_Silt&#39;] = w4h.get_most_recent(dir=lith_interp_dir, glob_pattern=&#39;*Silt*&#39;, verbose=verbose)    
+    resources_dict[&#39;LithInterps_Sand&#39;] = w4h.get_most_recent(dir=lith_interp_dir, glob_pattern=&#39;*Sand*&#39;, verbose=verbose)    
+    resources_dict[&#39;LithInterps_Gravel&#39;] = w4h.get_most_recent(dir=lith_interp_dir, glob_pattern=&#39;*Gravel*&#39;, verbose=verbose)    
+
+    #Get other resource filepaths
+    resources_dict[&#39;well_data_dtypes&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;downholeDataTypes.txt&#39;, verbose=verbose)
+    resources_dict[&#39;metadata_dtypes&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;headerDataTypes.txt&#39;, verbose=verbose)
+    resources_dict[&#39;ISWS_CRS&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;isws_crs.txt&#39;, verbose=verbose)
+    resources_dict[&#39;xyz_dtypes&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;xyzDataTypes.txt&#39;, verbose=verbose)
+
+    return resources_dict
+
+
+
 def __check_parameter_names(verbose=True):
     #Check parameters are unique
     import inspect
@@ -385,7 +423,7 @@ def __check_parameter_names(verbose=True):
                  w4h.remove_no_topo,
                  w4h.remove_no_depth,
                  w4h.remove_bad_depth,
-                 w4h.remove_no_formation,
+                 w4h.remove_no_description,
                  w4h.get_search_terms,
                  w4h.read_dictionary_terms,
                  w4h.specific_define,
@@ -431,6 +469,43 @@ def __check_parameter_names(verbose=True):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="w4h.core.get_resources"><code class="name flex">
+<span>def <span class="ident">get_resources</span></span>(<span>verbose=False)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_resources(verbose=False):
+    resources_dict = {}
+    sample_data_dir = resource_dir.joinpath(&#39;sample_data&#39;)
+
+    #Get sample data
+    #Get lithology dictionaries&#39; filepaths
+    sample_dictionary_dir = sample_data_dir.joinpath(&#39;DictionaryTerms&#39;)
+    resources_dict[&#39;LithologyDict_Exact&#39;] = w4h.get_most_recent(dir=sample_dictionary_dir, glob_pattern=&#39;*DICTIONARY_SearchTerms*&#39;, verbose=verbose)
+    resources_dict[&#39;LithologyDict_Start&#39;] = w4h.get_most_recent(dir=sample_dictionary_dir, glob_pattern=&#39;*SearchTerms-Start*&#39;, verbose=verbose)
+    resources_dict[&#39;LithologyDict_Wildcard&#39;] = w4h.get_most_recent(dir=sample_dictionary_dir, glob_pattern=&#39;*SearchTerms-Wildcard*&#39;, verbose=verbose)
+
+    #Get Lithology Interpretation filepaths
+    lith_interp_dir = sample_data_dir.joinpath(&#39;LithologyInterpretations&#39;)
+    resources_dict[&#39;LithInterps_FineCoarse&#39;] = w4h.get_most_recent(dir=lith_interp_dir, glob_pattern=&#39;*FineCoarse*&#39;, verbose=verbose)
+    resources_dict[&#39;LithInterps_Clay&#39;] = w4h.get_most_recent(dir=lith_interp_dir, glob_pattern=&#39;*Clay*&#39;, verbose=verbose)
+    resources_dict[&#39;LithInterps_Silt&#39;] = w4h.get_most_recent(dir=lith_interp_dir, glob_pattern=&#39;*Silt*&#39;, verbose=verbose)    
+    resources_dict[&#39;LithInterps_Sand&#39;] = w4h.get_most_recent(dir=lith_interp_dir, glob_pattern=&#39;*Sand*&#39;, verbose=verbose)    
+    resources_dict[&#39;LithInterps_Gravel&#39;] = w4h.get_most_recent(dir=lith_interp_dir, glob_pattern=&#39;*Gravel*&#39;, verbose=verbose)    
+
+    #Get other resource filepaths
+    resources_dict[&#39;well_data_dtypes&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;downholeDataTypes.txt&#39;, verbose=verbose)
+    resources_dict[&#39;metadata_dtypes&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;headerDataTypes.txt&#39;, verbose=verbose)
+    resources_dict[&#39;ISWS_CRS&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;isws_crs.txt&#39;, verbose=verbose)
+    resources_dict[&#39;xyz_dtypes&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;xyzDataTypes.txt&#39;, verbose=verbose)
+
+    return resources_dict</code></pre>
+</details>
+</dd>
 <dt id="w4h.core.logger_function"><code class="name flex">
 <span>def <span class="ident">logger_function</span></span>(<span>logtocommence, parameters, func_name)</span>
 </code></dt>
@@ -517,7 +592,7 @@ def __check_parameter_names(verbose=True):
 </details>
 </dd>
 <dt id="w4h.core.run"><code class="name flex">
-<span>def <span class="ident">run</span></span>(<span>well_data, well_data_cols=None, metadata=None, well_metadata_cols=None, layers=9, description_col='FORMATION', top_col='TOP', bottom_col='BOTTOM', depth_type='depth', study_area=None, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEVATION', idcol='API_NUMBER', output_crs='EPSG:4269', surf_elev_file=None, bedrock_elev_file=None, model_grid=None, lith_dict=None, lith_dict_start=None, lith_dict_wildcard=None, target_dict=None, target_name='CoarseFine', export_dir=None, verbose=False, log=False, **keyword_parameters)</span>
+<span>def <span class="ident">run</span></span>(<span>well_data, well_data_cols=None, metadata=None, well_metadata_cols=None, layers=9, description_col='FORMATION', top_col='TOP', bottom_col='BOTTOM', depth_type='depth', study_area=None, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEVATION', well_id_col='API_NUMBER', output_crs='EPSG:4269', surf_elev_file=None, bedrock_elev_file=None, model_grid=None, lith_dict=None, lith_dict_start=None, lith_dict_wildcard=None, target_dict=None, target_name='CoarseFine', export_dir=None, verbose=False, log=False, **keyword_parameters)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to run entire process with one line of code. </p>
@@ -585,7 +660,7 @@ def __check_parameter_names(verbose=True):
         metadata=None, well_metadata_cols=None, 
         layers = 9,
         description_col=&#39;FORMATION&#39;, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, depth_type=&#39;depth&#39;,
-        study_area=None, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEVATION&#39;, idcol=&#39;API_NUMBER&#39;, output_crs=&#39;EPSG:4269&#39;,
+        study_area=None, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEVATION&#39;, well_id_col=&#39;API_NUMBER&#39;, output_crs=&#39;EPSG:4269&#39;,
         surf_elev_file=None, bedrock_elev_file=None, model_grid=None,
         lith_dict=None, lith_dict_start=None, lith_dict_wildcard=None,
         target_dict=None,
@@ -666,12 +741,17 @@ def __check_parameter_names(verbose=True):
 
         if metadata is None:
             if well_data.is_dir():
+                #If the two files are supposed to be in the same directory (or just want well_data found)
                 downholeDataPATH, headerDataPATH = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
             elif well_data.exists():
+                #If well_data is a file, and metadata is not used
                 downholeDataPATH, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
+                headerDataPATH = None
             else:
-                print(&#39;ERROR: well_data file does not exist:{}&#39;.format(well_data))
+                #Need for well_data to exist at the very least
+                IOError(&#39;well_data file does not exist:{}&#39;.format(well_data))
         elif isinstance(metadata, pathlib.PurePath) or isinstance(metadata, str):
+            #Metdata has specifically been specified by a filepath
             if isinstance(metadata, str):
                 metadata = pathlib.Path(metadata)    
             downholeDataPATH, headerDataPATH = w4h.file_setup(well_data=well_data, metadata=metadata, **file_setup_kwargs)                
@@ -696,12 +776,22 @@ def __check_parameter_names(verbose=True):
 
     #Get pandas dataframes from input
     read_raw_txt_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_raw_csv .__code__.co_varnames}
-    downholeDataIN, headerDataIN = w4h.read_raw_csv(data_filepath=downholeDataPATH, metadata_filepath=headerDataPATH, verbose=verbose, log=log, **read_raw_txt_kwargs) 
+    well_data_IN, metadata_IN = w4h.read_raw_csv(data_filepath=downholeDataPATH, metadata_filepath=headerDataPATH, verbose=verbose, log=log, **read_raw_txt_kwargs) 
     #Functions to read data into dataframes. Also excludes extraneous columns, and drops header data with no location information
 
     #Define data types (file will need to be udpated)
-    downholeData = w4h.define_dtypes(undefined_df=downholeDataIN, datatypes=&#39;./resources/downholeDataTypes.txt&#39;, verbose=verbose, log=log)
-    headerData = w4h.define_dtypes(undefined_df=headerDataIN, datatypes=&#39;./resources/headerDataTypes.txt&#39;, verbose=verbose, log=log)
+    well_data_DF = w4h.define_dtypes(undefined_df=well_data_IN, datatypes=&#39;./resources/downholeDataTypes.txt&#39;, verbose=verbose, log=log)
+    metadata_DF = w4h.define_dtypes(undefined_df=metadata_IN, datatypes=&#39;./resources/headerDataTypes.txt&#39;, verbose=verbose, log=log)
+
+    if metadata_DF is None:
+        well_data_xyz = well_data_DF
+    else:
+        merge_tables_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.merge_tables.__code__.co_varnames}
+        well_data_xyz = w4h.merge_tables(data_df=well_data_DF, header_df=metadata_DF, data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, **merge_tables_kwargs)
+
+    #Convert well_data_xyz to have geometry
+    coords2geometry_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.coords2geometry.__code__.co_varnames}
+    well_data_xyz = w4h.coords2geometry(df_no_geometry=well_data_xyz, xcol=xcol, ycol=ycol, zcol=zcol, log=log, **coords2geometry_kwargs)
 
     #Get Study area
     read_study_area_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_study_area.__code__.co_varnames}
@@ -711,6 +801,9 @@ def __check_parameter_names(verbose=True):
     else:
         studyAreaIN = w4h.read_study_area(study_area_path=study_area, log=log, **read_study_area_kwargs)
         use_study_area = True
+
+    clip_gdf2study_area_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.clip_gdf2study_area.__code__.co_varnames}
+    well_data_xyz = w4h.clip_gdf2study_area(study_area=studyAreaIN, gdf=well_data_xyz, log=log, **clip_gdf2study_area_kwargs)
 
     #Get surfaces and grid(s)
     read_grid_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_grid.__code__.co_varnames}
@@ -723,29 +816,24 @@ def __check_parameter_names(verbose=True):
     surfaceElevGridIN = w4h.read_grid(grid_path=surfaceElevPath, grid_type=&#39;surface&#39;, study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
     bedrockElevGridIN = w4h.read_grid(grid_path=bedrockElevPath, grid_type=&#39;bedrock&#39;, study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
 
+    #UPDATE: MAKE SURE CRS&#39;s all align ***
     #Add control points
     #UPDATE: Code here for adding in control points ***
-
-    #UPDATE: MAKE SURE CRS&#39;s all align ***
-
-    #Convert headerData to have geometry
-    coords2geometry_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.coords2geometry.__code__.co_varnames}
-    headerData = w4h.coords2geometry(df=headerData, xcol=xcol, ycol=ycol, zcol=zcol, log=log, **coords2geometry_kwargs)
-    clip_gdf2study_area_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.clip_gdf2study_area.__code__.co_varnames}
-    headerData = w4h.clip_gdf2study_area(study_area=studyAreaIN, gdf=headerData, log=log, **clip_gdf2study_area_kwargs)
-
+    add_control_points_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.add_control_points.__code__.co_varnames}
+    well_data_xyz = w4h.add_control_points(df_without_control=well_data_xyz, xcol=xcol, ycol=ycol, zcol=zcol, top_col=top_col, bottom_col=bottom_col, description_col=description_col, verbose=verbose, log=log, **add_control_points_kwargs)
+    
     #Clean up data
-    downholeData = w4h.remove_nonlocated(downholeData, headerData, log=log, verbose=verbose)
-    headerData = w4h.remove_no_topo(df=headerData, zcol=zcol, verbose=verbose, log=log)
+    well_data_xyz = w4h.remove_nonlocated(df_with_locations=well_data_xyz, log=log, verbose=verbose)
+    well_data_xyz = w4h.remove_no_topo(df_with_topo=well_data_xyz, zcol=zcol, verbose=verbose, log=log)
 
     remove_no_depth_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.remove_no_depth.__code__.co_varnames}
-    donwholeData = w4h.remove_no_depth(downholeData, verbose=verbose, top_col=top_col, bottom_col=bottom_col, log=log, **remove_no_depth_kwargs) #Drop records with no depth information
+    well_data_xyz = w4h.remove_no_depth(well_data_xyz, verbose=verbose, top_col=top_col, bottom_col=bottom_col, log=log, **remove_no_depth_kwargs) #Drop records with no depth information
 
     remove_bad_depth_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.remove_bad_depth.__code__.co_varnames}
-    donwholeData = w4h.remove_bad_depth(downholeData, verbose=verbose, top_col=top_col, bottom_col=bottom_col, depth_type=depth_type, log=log, **remove_bad_depth_kwargs)#Drop records with bad depth information (i.e., top depth &gt; bottom depth) (Also calculates thickness of each record)
+    well_data_xyz = w4h.remove_bad_depth(well_data_xyz, verbose=verbose, top_col=top_col, bottom_col=bottom_col, depth_type=depth_type, log=log, **remove_bad_depth_kwargs)#Drop records with bad depth information (i.e., top depth &gt; bottom depth) (Also calculates thickness of each record)
 
-    remove_no_formation_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.remove_no_formation.__code__.co_varnames}
-    downholeData = w4h.remove_no_formation(downholeData, description_col=description_col, verbose=verbose, log=log, **remove_no_formation_kwargs)
+    remove_no_formation_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.remove_no_description.__code__.co_varnames}
+    well_data_xyz = w4h.remove_no_description(well_data_xyz, description_col=description_col, verbose=verbose, log=log, **remove_no_formation_kwargs)
 
     #CLASSIFICATION
     #Read dictionary definitions and classify
@@ -774,67 +862,58 @@ def __check_parameter_names(verbose=True):
 
     #CLASSIFICATIONS
     #Exact match classifications
-    downholeData = w4h.specific_define(downholeData, specTerms, description_col=description_col, verbose=verbose, log=log)
+    well_data_xyz = w4h.specific_define(well_data_xyz, specTerms, description_col=description_col, verbose=verbose, log=log)
     
     #.startswith classifications
-    classifedDF, searchDF = w4h.split_defined(downholeData, verbose=verbose, log=log)
+    classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
     searchDF = w4h.start_define(df=searchDF, terms_df=startTerms, description_col=description_col, verbose=verbose, log=log)
-    downholeData = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
+    well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
 
     #wildcard/any substring match classifications    
-    classifedDF, searchDF = w4h.split_defined(downholeData, verbose=verbose, log=log)
+    classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
     searchDF = w4h.wildcard_define(df=searchDF, terms_df=wildcardTerms, description_col=description_col, verbose=verbose, log=log)
-    downholeData = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
+    well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
 
     #Depth classification
-    classifedDF, searchDF = w4h.split_defined(downholeData, verbose=verbose, log=log)
+    classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
     searchDF = w4h.depth_define(searchDF, thresh=550, verbose=verbose, log=log)
-    downholeData = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***
+    well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***
     
     #Fill unclassified data
-    downholeData = w4h.fill_unclassified(downholeData, classification_col=&#39;CLASS_FLAG&#39;)
+    well_data_xyz = w4h.fill_unclassified(well_data_xyz, classification_col=&#39;CLASS_FLAG&#39;)
     
     #Add target interpratations
     read_lithologies_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_lithologies.__code__.co_varnames}
     targetInterpDF = w4h.read_lithologies(lith_file=target_dict, log=log, **read_lithologies_kwargs)
-    downholeData = w4h.merge_lithologies(df=downholeData, targinterps_df=targetInterpDF, target_col=&#39;TARGET&#39;, target_class=&#39;bool&#39;)
+    well_data_xyz = w4h.merge_lithologies(df=well_data_xyz, targinterps_df=targetInterpDF, target_col=&#39;TARGET&#39;, target_class=&#39;bool&#39;)
     
     #Sort dataframe to prepare for next steps
-    #downholeData = w4h.sort_dataframe(df=downholeData, sort_cols=[&#39;API_NUMBER&#39;,&#39;TOP&#39;], remove_nans=True)
-    downholeData = downholeData.sort_values(sort_cols=[idcol, top_col])
-    downholeData.reset_index(inplace=True, drop=True)
+    #well_data_xyz = w4h.sort_dataframe(df=well_data_xyz, sort_cols=[&#39;API_NUMBER&#39;,&#39;TOP&#39;], remove_nans=True)
+    well_data_xyz = well_data_xyz.sort_values(by=[well_id_col, top_col])
+    well_data_xyz.reset_index(inplace=True, drop=True)
     #UPDATE: Option to remove nans?
-    downholeData = downholeData[pd.notna(downholeData[&#34;LITHOLOGY&#34;])]
+    well_data_xyz = well_data_xyz[pd.notna(well_data_xyz[&#34;LITHOLOGY&#34;])]
 
     #Analyze Surface(s) and grid(s)
-    bedrockGrid, surfaceGrid = w4h.align_rasters(grids_unaligned=[bedrockElevGridIN, surfaceElevGridIN], modelgrid=modelGrid, no_data_val=0, log=log)
+    bedrockGrid, surfaceGrid = w4h.align_rasters(grids_unaligned=[bedrockElevGridIN, surfaceElevGridIN], modelgrid=modelGrid, no_data_val_grid=0, log=log)
     driftThickGrid, layerThickGrid = w4h.get_drift_thick(surface=surfaceGrid, bedrock=bedrockGrid, layers=layers, plot=verbose, log=log)
     #UPDATE: LAYER NAMES SO DON&#34;T INCLUDE FT
-    headerData = w4h.sample_raster_points(raster=bedrockGrid, points_df=headerData, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_ELEV_FT&#39;, verbose=verbose, log=log)
-    headerData = w4h.sample_raster_points(raster=surfaceGrid, points_df=headerData, xcol=xcol, ycol=ycol, new_col=&#39;SURFACE_ELEV_FT&#39;, verbose=verbose, log=log)
-    headerData = w4h.sample_raster_points(raster=driftThickGrid, points_df=headerData, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_DEPTH_FT&#39;, verbose=verbose, log=log)
-    headerData = w4h.sample_raster_points(raster=layerThickGrid, points_df=headerData, xcol=xcol, ycol=ycol, new_col=&#39;LAYER_THICK_FT&#39;, verbose=verbose, log=log)
-    headerData = w4h.get_layer_depths(metadata=headerData, no_layers=layers, log=log)
+    well_data_xyz = w4h.sample_raster_points(raster=bedrockGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_ELEV_FT&#39;, verbose=verbose, log=log)
+    well_data_xyz = w4h.sample_raster_points(raster=surfaceGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;SURFACE_ELEV_FT&#39;, verbose=verbose, log=log)
+    well_data_xyz = w4h.sample_raster_points(raster=driftThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_DEPTH_FT&#39;, verbose=verbose, log=log)
+    well_data_xyz = w4h.sample_raster_points(raster=layerThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;LAYER_THICK_FT&#39;, verbose=verbose, log=log)
+    well_data_xyz = w4h.get_layer_depths(df_with_depths=well_data_xyz, no_layers=layers, log=log)
 
-    #UPDATE: Check if this actually works, I think they should be copies of each other if metadata is not specified and not found using the metadata_filename pattern in file_setup() ***
-    #Merge header and data into one df, if applicable
-    if downholeData.values.base is headerData.values.base:
-        pass
-    else:
-        #downholeData = pd.merge(left = downholeData, right = headerData, on=idcol)
-        downholeData = w4h.merge_tables(data_df=downholeData,  header_df=headerData, data_cols=None, header_cols=None, on=idcol, how=&#39;inner&#39;, auto_pick_cols=True, log=log)
+    resdf = w4h.layer_target_thick(well_data_xyz, layers=9, return_all=False, outfile_prefix=&#39;CoarseFine&#39;, export_dir=export_dir, depth_top_col=top_col, depth_bot_col=bottom_col, log=log)
     
-    #UPDATE: START HERE AGAIN, double checck and get kwargs for all functions ***
-    #downholeData = downholeData.copy()
-    #UPDATE: Potentially need to remove duplicate columns here, I think I fixed that tho ***
-    resdf = w4h.layer_target_thick(downholeData, layers=9, return_all=False, outfile_prefix=&#39;CoarseFine&#39;, export_dir=export_dir, depth_top_col=top_col, depth_bot_col=bottom_col, log=log)
-    layers_data = w4h.layer_interp(points=resdf, layers=9, grid=modelGrid, method=&#39;lin&#39;, log=log)
+    layer_interp_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.layer_interp.__code__.co_varnames}
+    layers_data = w4h.layer_interp(points=resdf, layers=9, grid=modelGrid, verbose=verbose, log=log, **layer_interp_kwargs)
 
     if export_dir is None:
         if well_data.is_dir():
             export_dir = well_data.joinpath(&#39;Output&#39;)
         else:
-            export_dir = well_data.parent.joinpath()
+            export_dir = well_data.parent.joinpath(&#39;Outpath&#39;)
         
         if not export_dir.exists():
             try:
@@ -842,7 +921,7 @@ def __check_parameter_names(verbose=True):
             except:
                 pass
 
-    w4h.export_grids(grid_data=layers_data, out_path=export_dir, file_id=&#39;&#39;,filetype=&#39;tif&#39;, variable_sep=True, date_stamp=True, log=log)
+    w4h.export_grids(grid_data=layers_data, out_path=export_dir, file_id=&#39;&#39;,filetype=&#39;tif&#39;, variable_sep=True, date_stamp=True, verbose=verbose, log=log)
     #UPDATE: export points?
     return resdf, layers_data</code></pre>
 </details>
@@ -865,6 +944,7 @@ def __check_parameter_names(verbose=True):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="w4h.core.get_resources" href="#w4h.core.get_resources">get_resources</a></code></li>
 <li><code><a title="w4h.core.logger_function" href="#w4h.core.logger_function">logger_function</a></code></li>
 <li><code><a title="w4h.core.run" href="#w4h.core.run">run</a></code></li>
 </ul>

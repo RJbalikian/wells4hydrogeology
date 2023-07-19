@@ -34,12 +34,12 @@ import pandas as pd
 from w4h import logger_function
 
 #This function removes all data from the downholeData table where there is no location information (in the headerData table). This includes elevation info too
-def remove_nonlocated(df, metadata_df, verbose=False, log=False):
+def remove_nonlocated(df_with_locations, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, no_data_val_table=&#39;&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to remove wells and well intervals where there is no location information
 
     Parameters
     ----------
-    df : pandas.DataFrame
+    df_with_locations : pandas.DataFrame
         Pandas dataframe containing well descriptions
     metadata_DF : pandas.DataFrame
         Pandas dataframe containing metadata, including well locations (e.g., Latitude/Longitude)
@@ -48,37 +48,35 @@ def remove_nonlocated(df, metadata_df, verbose=False, log=False):
 
     Returns
     -------
-    df : pandas.DataFrame
+    df_with_locations : pandas.DataFrame
         Pandas dataframe containing only data with location information
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    before = df.shape[0] #Extract length of data before this process
+    before = df_with_locations.shape[0] #Extract length of data before this process
 
-    #Create Merged dataset only with data where wells exist in both databases (i.e., well has data and location info)
-    df = pd.merge(df, metadata_df.set_index(&#39;API_NUMBER&#39;), on=&#39;API_NUMBER&#39;, how=&#39;left&#39;, indicator=&#39;Exist&#39;)
-    df[&#39;Existbool&#39;] = np.where(df[&#39;Exist&#39;] == &#39;both&#39;, True, False)
-    df = df[df[&#39;Existbool&#39;]==True].drop([&#39;Exist&#39;,&#39;Existbool&#39;], axis=1)
+    df_with_locations[xcol].replace(no_data_val_table, np.nan, inplace=True)
+    df_with_locations[ycol].replace(no_data_val_table, np.nan, inplace=True)
     
-    #Create new downhole data table with only relevant records and columns
-    keepCols=[&#39;API_NUMBER&#39;,&#39;TABLE_NAME&#39;,&#39;FORMATION&#39;,&#39;THICKNESS&#39;,&#39;TOP&#39;,&#39;BOTTOM&#39;]
-    df = df[keepCols].copy()
+    df_with_locations.dropna(subset=xcol, inplace=True)
+    df_with_locations.dropna(subset=ycol, inplace=True)
+    
     if verbose:
-        after = df.shape[0]
+        after = df_with_locations.shape[0]
         print(str(before-after)+&#39; records removed without location information.&#39;)
-        print(str(df.shape[0])+&#39; wells remain from &#39;+str(df[&#39;API_NUMBER&#39;].unique().shape[0])+&#39; geolocated wells in study area.&#39;)
-    return df
+        print(str(df_with_locations.shape[0])+&#39; wells remain from &#39;+str(df_with_locations[&#39;API_NUMBER&#39;].unique().shape[0])+&#39; geolocated wells in study area.&#39;)
+    return df_with_locations
 
 #Function to remove data (intended for headerData) without surface topography information
 ##THIS ASSUMES AND SHOULD ONLY BE RUN AFTER ALL DESIRED SURFACE TOPO DATASETS HAVE BEEN MERGED/ADDED
-def remove_no_topo(df, zcol=&#39;ELEV_FT&#39;, no_data_val_table=&#39;&#39;, verbose=False, log=False):
+def remove_no_topo(df_with_topo, zcol=&#39;ELEVATION&#39;, no_data_val_table=&#39;&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to remove wells that do not have topography data (needed for layer selection later).
 
     This function is intended to be run on the metadata table after elevations have attempted to been added.
 
     Parameters
     ----------
-    df : pandas.DataFrame
+    df_with_topo : pandas.DataFrame
         Pandas dataframe containing elevation information.
     zcol : str
         Name of elevation column
@@ -96,26 +94,26 @@ def remove_no_topo(df, zcol=&#39;ELEV_FT&#39;, no_data_val_table=&#39;&#39;, ver
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    before = df.shape[0]
+    before = df_with_topo.shape[0]
     
-    df[zcol].replace(no_data_val_table, np.nan, inplace=True)
-    df.dropna(subset=[zcol], inplace=True)
+    df_with_topo[zcol].replace(no_data_val_table, np.nan, inplace=True)
+    df_with_topo.dropna(subset=[zcol], inplace=True)
     
     if verbose:
-        after = df.shape[0]
+        after = df_with_topo.shape[0]
         print(&#39;Well records removed: &#39;+str(before-after))
         print(&#34;Number of rows before dropping those without surface elevation information: &#34;+str(before))
         print(&#34;Number of rows after dropping those without surface elevation information: &#34;+str(after))
     
-    return df
+    return df_with_topo
 
 #This function drops all records in the downholedata with no depth information (either top or bottom depth of well interval)
-def remove_no_depth(df, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, no_data_val_table=&#39;&#39;, verbose=False, log=False):
+def remove_no_depth(df_with_depth, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, no_data_val_table=&#39;&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to remove well intervals with no depth information
 
     Parameters
     ----------
-    df : pandas.DataFrame
+    df_with_depth : pandas.DataFrame
         Dataframe containing well descriptions
     top_col : str, optional
         Name of column containing information on the top of the well intervals, by default &#39;TOP&#39;
@@ -130,37 +128,37 @@ def remove_no_depth(df, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, no_d
 
     Returns
     -------
-    df : pandas.DataFrame
+    df_with_depth : pandas.DataFrame
         Dataframe with depths dropped
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     #Replace empty cells in top and bottom columns with nan
-    df[top_col] = df[top_col].replace(no_data_val_table, np.nan)
-    df[bottom_col] = df[bottom_col].replace(no_data_val_table, np.nan)
+    df_with_depth[top_col] = df_with_depth[top_col].replace(no_data_val_table, np.nan)
+    df_with_depth[bottom_col] = df_with_depth[bottom_col].replace(no_data_val_table, np.nan)
     
     #Calculate number of rows before dropping
-    before = df.shape[0]
+    before = df_with_depth.shape[0]
 
     #Drop records without depth information
-    df = df.dropna(subset=[top_col])
-    df = df.dropna(subset=[bottom_col])
-    df.reset_index(inplace=True, drop=True) #Reset index
+    df_with_depth = df_with_depth.dropna(subset=[top_col])
+    df_with_depth = df_with_depth.dropna(subset=[bottom_col])
+    df_with_depth.reset_index(inplace=True, drop=True) #Reset index
   
     if verbose:
         print(&#34;Number of rows before dropping those without record depth information: &#34; + str(before))
-        print(&#34;Number of rows after dropping those without record depth information: &#34; + str(df.shape[0]))
-        print(&#39;Number of well records without formation information deleted: &#39; + str(before - df.shape[0]))
+        print(&#34;Number of rows after dropping those without record depth information: &#34; + str(df_with_depth.shape[0]))
+        print(&#39;Number of well records without formation information deleted: &#39; + str(before - df_with_depth.shape[0]))
     
-    return df
+    return df_with_depth
 
 #This function drops all records in downholeData with bad depth information (where the bottom of a record is nearer to the surface than the top)
-def remove_bad_depth(df, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, depth_type=&#39;depth&#39;, verbose=False, log=False):
+def remove_bad_depth(df_with_depth, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, depth_type=&#39;depth&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to remove all records in the dataframe with well interpretations where the depth information is bad (i.e., where the bottom of the record is neerer to the surface than the top)
 
     Parameters
     ----------
-    df : pandas.DataFrame
+    df_with_depth : pandas.DataFrame
         Pandas dataframe containing the well records and descriptions for each interval
     top_col : str, default=&#39;TOP&#39;
         The name of the column containing the depth or elevation for the top of the interval, by default &#39;TOP&#39;
@@ -181,26 +179,26 @@ def remove_bad_depth(df, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, dep
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     if depth_type.lower() ==&#39;depth&#39;:
-        df[&#39;THICKNESS&#39;] = df[bottom_col] - df[top_col] #Calculate interval thickness
+        df_with_depth[&#39;THICKNESS&#39;] = df_with_depth[bottom_col] - df_with_depth[top_col] #Calculate interval thickness
     elif depth_type.lower() ==&#39;elevation&#39; or depth_type==&#39;elev&#39;:
-        df[&#39;THICKNESS&#39;] = df[top_col] - df[bottom_col] #Calculate interval thickness
-    before = df.shape[0] #Calculate number of rows before dropping
-    df = df[(df[&#39;THICKNESS&#39;] &gt;= 0)] #Only include rows where interval thickness is positive (bottom is deeper than top)
-    df.reset_index(inplace=True, drop=True) #Reset index
+        df_with_depth[&#39;THICKNESS&#39;] = df_with_depth[top_col] - df_with_depth[bottom_col] #Calculate interval thickness
+    before = df_with_depth.shape[0] #Calculate number of rows before dropping
+    df_with_depth = df_with_depth[(df_with_depth[&#39;THICKNESS&#39;] &gt;= 0)] #Only include rows where interval thickness is positive (bottom is deeper than top)
+    df_with_depth.reset_index(inplace=True, drop=True) #Reset index
 
     if verbose:
         print(&#34;Number of rows before dropping those with obviously bad depth information: &#34;+str(before))
-        print(&#34;Number of rows after dropping those with obviously bad depth information: &#34;+str(df.shape[0]))
-        print(&#39;Well records deleted: &#39;+str(before-df.shape[0]))
-    return df
+        print(&#34;Number of rows after dropping those with obviously bad depth information: &#34;+str(df_with_depth.shape[0]))
+        print(&#39;Well records deleted: &#39;+str(before-df_with_depth.shape[0]))
+    return df_with_depth
 
 #This function drops all records in downholeData with no formation in formation in the description fiel
-def remove_no_formation(df, description_col=&#39;FORMATION&#39;, no_data_val_table=&#39;&#39;, verbose=False, log=False):
+def remove_no_description(df_with_descriptions, description_col=&#39;FORMATION&#39;, no_data_val_table=&#39;&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function that removes all records in the dataframe containing the well descriptions where no description is given.
 
     Parameters
     ----------
-    df : pandas.DataFrame
+    df_with_descriptions : pandas.DataFrame
         Pandas dataframe containing the well records with their individual descriptions
     description_col : str, optional
         Name of the column containing the geologic description of each interval, by default &#39;FORMATION&#39;
@@ -219,19 +217,19 @@ def remove_no_formation(df, description_col=&#39;FORMATION&#39;, no_data_val_tab
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     #Replace empty cells in formation column with nans
-    df[description_col] = df[description_col].replace(no_data_val_table, np.nan) 
-    before = df.shape[0] #Calculate number of rows before dropping
+    df_with_descriptions[description_col] = df_with_descriptions[description_col].replace(no_data_val_table, np.nan) 
+    before = df_with_descriptions.shape[0] #Calculate number of rows before dropping
 
     #Drop records without FORMATION information
-    df = df.dropna(subset=[description_col])
-    df.reset_index(inplace=True, drop=True) #Reset index
+    df_with_descriptions = df_with_descriptions.dropna(subset=[description_col])
+    df_with_descriptions.reset_index(inplace=True, drop=True) #Reset index
 
     if verbose:
         print(&#34;Number of rows before dropping those without FORMATION information: &#34;+str(before))
-        print(&#34;Number of rows after dropping those without FORMATION information: &#34;+str(df.shape[0]))
-        print(&#39;Well records deleted: &#39;+str(before-df.shape[0]))
+        print(&#34;Number of rows after dropping those without FORMATION information: &#34;+str(df_with_descriptions.shape[0]))
+        print(&#39;Well records deleted: &#39;+str(before-df_with_descriptions.shape[0]))
         
-    return df</code></pre>
+    return df_with_descriptions</code></pre>
 </details>
 </section>
 <section>
@@ -242,13 +240,13 @@ def remove_no_formation(df, description_col=&#39;FORMATION&#39;, no_data_val_tab
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="w4h.clean.remove_bad_depth"><code class="name flex">
-<span>def <span class="ident">remove_bad_depth</span></span>(<span>df, top_col='TOP', bottom_col='BOTTOM', depth_type='depth', verbose=False, log=False)</span>
+<span>def <span class="ident">remove_bad_depth</span></span>(<span>df_with_depth, top_col='TOP', bottom_col='BOTTOM', depth_type='depth', verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to remove all records in the dataframe with well interpretations where the depth information is bad (i.e., where the bottom of the record is neerer to the surface than the top)</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
+<dt><strong><code>df_with_depth</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
 <dd>Pandas dataframe containing the well records and descriptions for each interval</dd>
 <dt><strong><code>top_col</code></strong> :&ensp;<code>str</code>, default=<code>'TOP'</code></dt>
 <dd>The name of the column containing the depth or elevation for the top of the interval, by default 'TOP'</dd>
@@ -270,12 +268,12 @@ def remove_no_formation(df, description_col=&#39;FORMATION&#39;, no_data_val_tab
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def remove_bad_depth(df, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, depth_type=&#39;depth&#39;, verbose=False, log=False):
+<pre><code class="python">def remove_bad_depth(df_with_depth, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, depth_type=&#39;depth&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to remove all records in the dataframe with well interpretations where the depth information is bad (i.e., where the bottom of the record is neerer to the surface than the top)
 
     Parameters
     ----------
-    df : pandas.DataFrame
+    df_with_depth : pandas.DataFrame
         Pandas dataframe containing the well records and descriptions for each interval
     top_col : str, default=&#39;TOP&#39;
         The name of the column containing the depth or elevation for the top of the interval, by default &#39;TOP&#39;
@@ -296,28 +294,28 @@ def remove_no_formation(df, description_col=&#39;FORMATION&#39;, no_data_val_tab
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     if depth_type.lower() ==&#39;depth&#39;:
-        df[&#39;THICKNESS&#39;] = df[bottom_col] - df[top_col] #Calculate interval thickness
+        df_with_depth[&#39;THICKNESS&#39;] = df_with_depth[bottom_col] - df_with_depth[top_col] #Calculate interval thickness
     elif depth_type.lower() ==&#39;elevation&#39; or depth_type==&#39;elev&#39;:
-        df[&#39;THICKNESS&#39;] = df[top_col] - df[bottom_col] #Calculate interval thickness
-    before = df.shape[0] #Calculate number of rows before dropping
-    df = df[(df[&#39;THICKNESS&#39;] &gt;= 0)] #Only include rows where interval thickness is positive (bottom is deeper than top)
-    df.reset_index(inplace=True, drop=True) #Reset index
+        df_with_depth[&#39;THICKNESS&#39;] = df_with_depth[top_col] - df_with_depth[bottom_col] #Calculate interval thickness
+    before = df_with_depth.shape[0] #Calculate number of rows before dropping
+    df_with_depth = df_with_depth[(df_with_depth[&#39;THICKNESS&#39;] &gt;= 0)] #Only include rows where interval thickness is positive (bottom is deeper than top)
+    df_with_depth.reset_index(inplace=True, drop=True) #Reset index
 
     if verbose:
         print(&#34;Number of rows before dropping those with obviously bad depth information: &#34;+str(before))
-        print(&#34;Number of rows after dropping those with obviously bad depth information: &#34;+str(df.shape[0]))
-        print(&#39;Well records deleted: &#39;+str(before-df.shape[0]))
-    return df</code></pre>
+        print(&#34;Number of rows after dropping those with obviously bad depth information: &#34;+str(df_with_depth.shape[0]))
+        print(&#39;Well records deleted: &#39;+str(before-df_with_depth.shape[0]))
+    return df_with_depth</code></pre>
 </details>
 </dd>
 <dt id="w4h.clean.remove_no_depth"><code class="name flex">
-<span>def <span class="ident">remove_no_depth</span></span>(<span>df, top_col='TOP', bottom_col='BOTTOM', no_data_val_table='', verbose=False, log=False)</span>
+<span>def <span class="ident">remove_no_depth</span></span>(<span>df_with_depth, top_col='TOP', bottom_col='BOTTOM', no_data_val_table='', verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to remove well intervals with no depth information</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
+<dt><strong><code>df_with_depth</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
 <dd>Dataframe containing well descriptions</dd>
 <dt><strong><code>top_col</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>Name of column containing information on the top of the well intervals, by default 'TOP'</dd>
@@ -332,19 +330,19 @@ def remove_no_formation(df, description_col=&#39;FORMATION&#39;, no_data_val_tab
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
+<dt><strong><code>df_with_depth</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
 <dd>Dataframe with depths dropped</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def remove_no_depth(df, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, no_data_val_table=&#39;&#39;, verbose=False, log=False):
+<pre><code class="python">def remove_no_depth(df_with_depth, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, no_data_val_table=&#39;&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to remove well intervals with no depth information
 
     Parameters
     ----------
-    df : pandas.DataFrame
+    df_with_depth : pandas.DataFrame
         Dataframe containing well descriptions
     top_col : str, optional
         Name of column containing information on the top of the well intervals, by default &#39;TOP&#39;
@@ -359,39 +357,39 @@ def remove_no_formation(df, description_col=&#39;FORMATION&#39;, no_data_val_tab
 
     Returns
     -------
-    df : pandas.DataFrame
+    df_with_depth : pandas.DataFrame
         Dataframe with depths dropped
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     #Replace empty cells in top and bottom columns with nan
-    df[top_col] = df[top_col].replace(no_data_val_table, np.nan)
-    df[bottom_col] = df[bottom_col].replace(no_data_val_table, np.nan)
+    df_with_depth[top_col] = df_with_depth[top_col].replace(no_data_val_table, np.nan)
+    df_with_depth[bottom_col] = df_with_depth[bottom_col].replace(no_data_val_table, np.nan)
     
     #Calculate number of rows before dropping
-    before = df.shape[0]
+    before = df_with_depth.shape[0]
 
     #Drop records without depth information
-    df = df.dropna(subset=[top_col])
-    df = df.dropna(subset=[bottom_col])
-    df.reset_index(inplace=True, drop=True) #Reset index
+    df_with_depth = df_with_depth.dropna(subset=[top_col])
+    df_with_depth = df_with_depth.dropna(subset=[bottom_col])
+    df_with_depth.reset_index(inplace=True, drop=True) #Reset index
   
     if verbose:
         print(&#34;Number of rows before dropping those without record depth information: &#34; + str(before))
-        print(&#34;Number of rows after dropping those without record depth information: &#34; + str(df.shape[0]))
-        print(&#39;Number of well records without formation information deleted: &#39; + str(before - df.shape[0]))
+        print(&#34;Number of rows after dropping those without record depth information: &#34; + str(df_with_depth.shape[0]))
+        print(&#39;Number of well records without formation information deleted: &#39; + str(before - df_with_depth.shape[0]))
     
-    return df</code></pre>
+    return df_with_depth</code></pre>
 </details>
 </dd>
-<dt id="w4h.clean.remove_no_formation"><code class="name flex">
-<span>def <span class="ident">remove_no_formation</span></span>(<span>df, description_col='FORMATION', no_data_val_table='', verbose=False, log=False)</span>
+<dt id="w4h.clean.remove_no_description"><code class="name flex">
+<span>def <span class="ident">remove_no_description</span></span>(<span>df_with_descriptions, description_col='FORMATION', no_data_val_table='', verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function that removes all records in the dataframe containing the well descriptions where no description is given.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
+<dt><strong><code>df_with_descriptions</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
 <dd>Pandas dataframe containing the well records with their individual descriptions</dd>
 <dt><strong><code>description_col</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>Name of the column containing the geologic description of each interval, by default 'FORMATION'</dd>
@@ -411,12 +409,12 @@ def remove_no_formation(df, description_col=&#39;FORMATION&#39;, no_data_val_tab
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def remove_no_formation(df, description_col=&#39;FORMATION&#39;, no_data_val_table=&#39;&#39;, verbose=False, log=False):
+<pre><code class="python">def remove_no_description(df_with_descriptions, description_col=&#39;FORMATION&#39;, no_data_val_table=&#39;&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function that removes all records in the dataframe containing the well descriptions where no description is given.
 
     Parameters
     ----------
-    df : pandas.DataFrame
+    df_with_descriptions : pandas.DataFrame
         Pandas dataframe containing the well records with their individual descriptions
     description_col : str, optional
         Name of the column containing the geologic description of each interval, by default &#39;FORMATION&#39;
@@ -435,30 +433,30 @@ def remove_no_formation(df, description_col=&#39;FORMATION&#39;, no_data_val_tab
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     #Replace empty cells in formation column with nans
-    df[description_col] = df[description_col].replace(no_data_val_table, np.nan) 
-    before = df.shape[0] #Calculate number of rows before dropping
+    df_with_descriptions[description_col] = df_with_descriptions[description_col].replace(no_data_val_table, np.nan) 
+    before = df_with_descriptions.shape[0] #Calculate number of rows before dropping
 
     #Drop records without FORMATION information
-    df = df.dropna(subset=[description_col])
-    df.reset_index(inplace=True, drop=True) #Reset index
+    df_with_descriptions = df_with_descriptions.dropna(subset=[description_col])
+    df_with_descriptions.reset_index(inplace=True, drop=True) #Reset index
 
     if verbose:
         print(&#34;Number of rows before dropping those without FORMATION information: &#34;+str(before))
-        print(&#34;Number of rows after dropping those without FORMATION information: &#34;+str(df.shape[0]))
-        print(&#39;Well records deleted: &#39;+str(before-df.shape[0]))
+        print(&#34;Number of rows after dropping those without FORMATION information: &#34;+str(df_with_descriptions.shape[0]))
+        print(&#39;Well records deleted: &#39;+str(before-df_with_descriptions.shape[0]))
         
-    return df</code></pre>
+    return df_with_descriptions</code></pre>
 </details>
 </dd>
 <dt id="w4h.clean.remove_no_topo"><code class="name flex">
-<span>def <span class="ident">remove_no_topo</span></span>(<span>df, zcol='ELEV_FT', no_data_val_table='', verbose=False, log=False)</span>
+<span>def <span class="ident">remove_no_topo</span></span>(<span>df_with_topo, zcol='ELEVATION', no_data_val_table='', verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to remove wells that do not have topography data (needed for layer selection later).</p>
 <p>This function is intended to be run on the metadata table after elevations have attempted to been added.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
+<dt><strong><code>df_with_topo</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
 <dd>Pandas dataframe containing elevation information.</dd>
 <dt><strong><code>zcol</code></strong> :&ensp;<code>str</code></dt>
 <dd>Name of elevation column</dd>
@@ -478,14 +476,14 @@ def remove_no_formation(df, description_col=&#39;FORMATION&#39;, no_data_val_tab
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def remove_no_topo(df, zcol=&#39;ELEV_FT&#39;, no_data_val_table=&#39;&#39;, verbose=False, log=False):
+<pre><code class="python">def remove_no_topo(df_with_topo, zcol=&#39;ELEVATION&#39;, no_data_val_table=&#39;&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to remove wells that do not have topography data (needed for layer selection later).
 
     This function is intended to be run on the metadata table after elevations have attempted to been added.
 
     Parameters
     ----------
-    df : pandas.DataFrame
+    df_with_topo : pandas.DataFrame
         Pandas dataframe containing elevation information.
     zcol : str
         Name of elevation column
@@ -503,28 +501,28 @@ def remove_no_formation(df, description_col=&#39;FORMATION&#39;, no_data_val_tab
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    before = df.shape[0]
+    before = df_with_topo.shape[0]
     
-    df[zcol].replace(no_data_val_table, np.nan, inplace=True)
-    df.dropna(subset=[zcol], inplace=True)
+    df_with_topo[zcol].replace(no_data_val_table, np.nan, inplace=True)
+    df_with_topo.dropna(subset=[zcol], inplace=True)
     
     if verbose:
-        after = df.shape[0]
+        after = df_with_topo.shape[0]
         print(&#39;Well records removed: &#39;+str(before-after))
         print(&#34;Number of rows before dropping those without surface elevation information: &#34;+str(before))
         print(&#34;Number of rows after dropping those without surface elevation information: &#34;+str(after))
     
-    return df</code></pre>
+    return df_with_topo</code></pre>
 </details>
 </dd>
 <dt id="w4h.clean.remove_nonlocated"><code class="name flex">
-<span>def <span class="ident">remove_nonlocated</span></span>(<span>df, metadata_df, verbose=False, log=False)</span>
+<span>def <span class="ident">remove_nonlocated</span></span>(<span>df_with_locations, xcol='LONGITUDE', ycol='LATITUDE', no_data_val_table='', verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to remove wells and well intervals where there is no location information</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
+<dt><strong><code>df_with_locations</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
 <dd>Pandas dataframe containing well descriptions</dd>
 <dt><strong><code>metadata_DF</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
 <dd>Pandas dataframe containing metadata, including well locations (e.g., Latitude/Longitude)</dd>
@@ -533,19 +531,19 @@ def remove_no_formation(df, description_col=&#39;FORMATION&#39;, no_data_val_tab
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
+<dt><strong><code>df_with_locations</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
 <dd>Pandas dataframe containing only data with location information</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def remove_nonlocated(df, metadata_df, verbose=False, log=False):
+<pre><code class="python">def remove_nonlocated(df_with_locations, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, no_data_val_table=&#39;&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to remove wells and well intervals where there is no location information
 
     Parameters
     ----------
-    df : pandas.DataFrame
+    df_with_locations : pandas.DataFrame
         Pandas dataframe containing well descriptions
     metadata_DF : pandas.DataFrame
         Pandas dataframe containing metadata, including well locations (e.g., Latitude/Longitude)
@@ -554,26 +552,24 @@ def remove_no_formation(df, description_col=&#39;FORMATION&#39;, no_data_val_tab
 
     Returns
     -------
-    df : pandas.DataFrame
+    df_with_locations : pandas.DataFrame
         Pandas dataframe containing only data with location information
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    before = df.shape[0] #Extract length of data before this process
+    before = df_with_locations.shape[0] #Extract length of data before this process
 
-    #Create Merged dataset only with data where wells exist in both databases (i.e., well has data and location info)
-    df = pd.merge(df, metadata_df.set_index(&#39;API_NUMBER&#39;), on=&#39;API_NUMBER&#39;, how=&#39;left&#39;, indicator=&#39;Exist&#39;)
-    df[&#39;Existbool&#39;] = np.where(df[&#39;Exist&#39;] == &#39;both&#39;, True, False)
-    df = df[df[&#39;Existbool&#39;]==True].drop([&#39;Exist&#39;,&#39;Existbool&#39;], axis=1)
+    df_with_locations[xcol].replace(no_data_val_table, np.nan, inplace=True)
+    df_with_locations[ycol].replace(no_data_val_table, np.nan, inplace=True)
     
-    #Create new downhole data table with only relevant records and columns
-    keepCols=[&#39;API_NUMBER&#39;,&#39;TABLE_NAME&#39;,&#39;FORMATION&#39;,&#39;THICKNESS&#39;,&#39;TOP&#39;,&#39;BOTTOM&#39;]
-    df = df[keepCols].copy()
+    df_with_locations.dropna(subset=xcol, inplace=True)
+    df_with_locations.dropna(subset=ycol, inplace=True)
+    
     if verbose:
-        after = df.shape[0]
+        after = df_with_locations.shape[0]
         print(str(before-after)+&#39; records removed without location information.&#39;)
-        print(str(df.shape[0])+&#39; wells remain from &#39;+str(df[&#39;API_NUMBER&#39;].unique().shape[0])+&#39; geolocated wells in study area.&#39;)
-    return df</code></pre>
+        print(str(df_with_locations.shape[0])+&#39; wells remain from &#39;+str(df_with_locations[&#39;API_NUMBER&#39;].unique().shape[0])+&#39; geolocated wells in study area.&#39;)
+    return df_with_locations</code></pre>
 </details>
 </dd>
 </dl>
@@ -596,7 +592,7 @@ def remove_no_formation(df, description_col=&#39;FORMATION&#39;, no_data_val_tab
 <ul class="">
 <li><code><a title="w4h.clean.remove_bad_depth" href="#w4h.clean.remove_bad_depth">remove_bad_depth</a></code></li>
 <li><code><a title="w4h.clean.remove_no_depth" href="#w4h.clean.remove_no_depth">remove_no_depth</a></code></li>
-<li><code><a title="w4h.clean.remove_no_formation" href="#w4h.clean.remove_no_formation">remove_no_formation</a></code></li>
+<li><code><a title="w4h.clean.remove_no_description" href="#w4h.clean.remove_no_description">remove_no_description</a></code></li>
 <li><code><a title="w4h.clean.remove_no_topo" href="#w4h.clean.remove_no_topo">remove_no_topo</a></code></li>
 <li><code><a title="w4h.clean.remove_nonlocated" href="#w4h.clean.remove_nonlocated">remove_nonlocated</a></code></li>
 </ul>

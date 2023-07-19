@@ -32,12 +32,17 @@ import json
 import os
 import pathlib
 
+import geopandas as gpd
 import pandas as pd
 import numpy as np
 
 repoDir = pathlib.Path(os.getcwd())
 
 from w4h import logger_function
+
+import pkg_resources
+
+resource_dir = pathlib.Path(pkg_resources.resource_filename(__name__, &#39;resources/resources_home.txt&#39;)).parent
 
 # Gets the current date for use with in code
 def get_current_date():
@@ -57,7 +62,7 @@ def get_current_date():
     return todayDate, dateSuffix
 
 #Function to get most recent file 
-def get_most_recent(dir=str(repoDir)+&#39;/resources&#39;, glob_pattern=&#39;*&#39;, verbose=True):
+def get_most_recent(dir=resource_dir, glob_pattern=&#39;*&#39;, verbose=True):
     &#34;&#34;&#34;Function to find the most recent file with the indicated pattern, using pathlib.glob function.
 
     Parameters
@@ -202,48 +207,63 @@ def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols
 
     Returns
     -------
-    (pandas.DataFrame, pandas.DataFrame)
-        Tuple/list with two pandas dataframes: (data, metadata)
+    (pandas.DataFrame, pandas.DataFrame/None)
+        Tuple/list with two pandas dataframes: (well_data, metadata) metadata is None if only well_data is used
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
+    #Check if input data is already dataframe, otherwise, read it in as dataframe
+    if not isinstance(data_filepath, pd.DataFrame) or isinstance(data_filepath, gpd.GeoDataFrame):
+        downholeDataIN = pd.read_csv(data_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, **read_csv_kwargs)
+
     if data_cols is None:
+        data_useCols = downholeDataIN.columns
+    elif data_cols == &#39;auto&#39;:
         data_useCols = [&#34;API_NUMBER&#34;,&#34;TABLE_NAME&#34;,&#34;FORMATION&#34;,&#34;THICKNESS&#34;,&#34;TOP&#34;,&#34;BOTTOM&#34;]
     else:
         data_useCols= data_cols
+    downholeDataIN = downholeDataIN[data_useCols]
 
-    if metadata_cols is None:
+    if metadata_filepath is None:
+        headerDataIN = None
+    elif not isinstance(metadata_filepath, pd.DataFrame) or isinstance(metadata_filepath, gpd.GeoDataFrame):
+        headerDataIN = pd.read_csv(metadata_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=metadata_useCols, **read_csv_kwargs)
+    else:
+        headerDataIN = None
+
+    if metadata_cols is None and headerDataIN is not None:
+        metadata_useCols = headerDataIN.columns
+    elif metadata_cols == &#39;auto&#39;:
         metadata_useCols = [&#39;API_NUMBER&#39;,&#34;TOTAL_DEPTH&#34;,&#34;SECTION&#34;,&#34;TWP&#34;,&#34;TDIR&#34;,&#34;RNG&#34;,&#34;RDIR&#34;,&#34;MERIDIAN&#34;,&#34;QUARTERS&#34;,&#34;ELEVATION&#34;,&#34;ELEVREF&#34;,&#34;COUNTY_CODE&#34;,&#34;LATITUDE&#34;,&#34;LONGITUDE&#34;,&#34;ELEVSOURCE&#34;]
     else:
         metadata_useCols= metadata_cols
 
-    #Check if input data is already 
-    if isinstance(data_filepath, pd.DataFrame):
-        downholeDataIN = data_filepath[data_useCols]
-    else:
-        downholeDataIN = pd.read_csv(data_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=data_useCols, **read_csv_kwargs)
-    
-    if isinstance(metadata_filepath, pd.DataFrame):
-        headerDataIN = metadata_filepath[metadata_useCols]
-    else:
-        headerDataIN = pd.read_csv(metadata_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=metadata_useCols, **read_csv_kwargs)
-
+    if headerDataIN is not None:
+        headerDataIN = headerDataIN[metadata_useCols]
+        
     #Drop data with no API        
     downholeDataIN = downholeDataIN.dropna(subset=[well_key]) #Drop data with no API
-    headerDataIN = headerDataIN.dropna(subset=[well_key]) #Drop metadata with no API
+    if headerDataIN is not None:
+        headerDataIN = headerDataIN.dropna(subset=[well_key]) #Drop metadata with no API
 
-    #Drop data with no or missing location information
-    headerDataIN = headerDataIN.dropna(subset=[ycol]) 
-    headerDataIN = headerDataIN.dropna(subset=[xcol])
-    
-    #Reset index so index goes from 0 in numerical/integer order
-    headerDataIN.reset_index(inplace=True, drop=True)
+        #Drop data with no or missing location information
+        headerDataIN = headerDataIN.dropna(subset=[ycol]) 
+        headerDataIN = headerDataIN.dropna(subset=[xcol])
+
+        #Reset index so index goes from 0 in numerical/integer order
+        headerDataIN.reset_index(inplace=True, drop=True)
+    else:
+        #***UPDATE: Need to make sure these columns exist in this case***
+        #Drop data with no or missing location information
+        downholeDataIN = downholeDataIN.dropna(subset=[ycol]) 
+        downholeDataIN = downholeDataIN.dropna(subset=[xcol])        
     downholeDataIN.reset_index(inplace=True, drop=True)
     
     #Print outputs to terminal, if designated
     if verbose:
         print(&#39;Data file has &#39; + str(downholeDataIN.shape[0])+&#39; valid well records.&#39;)
-        print(&#34;Metadata file has &#34;+str(headerDataIN.shape[0])+&#34; unique wells with valid location information.&#34;)
+        if headerDataIN is not None:
+            print(&#34;Metadata file has &#34;+str(headerDataIN.shape[0])+&#34; unique wells with valid location information.&#34;)
     
     return downholeDataIN, headerDataIN
 
@@ -293,8 +313,12 @@ def __get_resource_path(res):
         _description_
     &#34;&#34;&#34;
     repoPath = pathlib.Path(__file__).parent.parent
-    repoPathStr = str(repoPath).replace(&#39;\\&#39;, &#39;/&#39;).replace(&#39;\\&#39;[0], &#39;/&#39;)
-    resource = repoPathStr+&#39;/resources/&#39;+res
+    try:
+        resource = repoPath/ &#34;resources&#34; / &#34;sample_data&#34;/ res
+        if not resource.exists():
+            raise FileNotFoundError(&#39;File not found&#39;)
+    except:
+        resource = repoPath/ &#34;resources&#34; / res
     return resource
 
 #Read dictionary file into dictionary variable
@@ -342,38 +366,41 @@ def define_dtypes(undefined_df, datatypes=None, verbose=False, log=False):
     dfout : pandas.DataFrame
         Pandas dataframe containing redefined columns
     &#34;&#34;&#34;
-    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
-    dfout = undefined_df.copy()
-    
-    if isinstance(datatypes, pathlib.PurePath) or isinstance(datatypes, str):
-        datatypes = pathlib.Path(datatypes)
-
-        if not datatypes.exists():
-            if verbose:
-                print(&#39;ERROR: datatypes ({}) does not exist&#39;.format(datatypes))
-            return dfout
-        elif datatypes.is_dir():
-            if verbose:
-                print(&#39;ERROR: datatypes must be either dict or filepath (path to directories not allowed)&#39;)
-            return dfout
-
-        datatypes = read_dict(file=datatypes)
-        dfout = dfout.astype(datatypes)
-
-    elif isinstance(datatypes, dict):
-        if verbose:
-            print(&#39;datatypes is None, not updating datatypes&#39;)
-        dfout = dfout.astype(datatypes)
+    if undefined_df is None:
+        dfout = None
     else:
-        if verbose:
-            print(&#39;ERROR: datatypes must be either dict or a filepath, not {}&#39;.format(type(datatypes)))
-        return dfout
-    
-    #This is likely redundant
-    dfcols = dfout.columns
-    for i in range(0, np.shape(dfout)[1]):
-        dfout.iloc[:,i] = undefined_df.iloc[:,i].astype(datatypes[dfcols[i]])
+        logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
+        dfout = undefined_df.copy()
+        
+        if isinstance(datatypes, pathlib.PurePath) or isinstance(datatypes, str):
+            datatypes = pathlib.Path(datatypes)
+
+            if not datatypes.exists():
+                if verbose:
+                    print(&#39;ERROR: datatypes ({}) does not exist&#39;.format(datatypes))
+                return dfout
+            elif datatypes.is_dir():
+                if verbose:
+                    print(&#39;ERROR: datatypes must be either dict or filepath (path to directories not allowed)&#39;)
+                return dfout
+
+            datatypes = read_dict(file=datatypes)
+            dfout = dfout.astype(datatypes)
+
+        elif isinstance(datatypes, dict):
+            if verbose:
+                print(&#39;datatypes is None, not updating datatypes&#39;)
+            dfout = dfout.astype(datatypes)
+        else:
+            if verbose:
+                print(&#39;ERROR: datatypes must be either dict or a filepath, not {}&#39;.format(type(datatypes)))
+            return dfout
+        
+        #This is likely redundant
+        dfcols = dfout.columns
+        for i in range(0, np.shape(dfout)[1]):
+            dfout.iloc[:,i] = undefined_df.iloc[:,i].astype(datatypes[dfcols[i]])
 
     return dfout
 
@@ -598,19 +625,78 @@ def read_lithologies(lith_file=None, interp_col=&#39;LITHOLOGY&#39;, target_col=
 
     return lithoDF
 
-def add_control_points(df, df_control, well_key=&#39;API_NUMBER&#39;, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEV_FT&#39;, controlpoints_crs=&#39;EPSG:4269&#39;, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, description_col=&#39;FORMATION&#39;, interp_col=&#39;INTERPRETATION&#39;, target_col=&#39;TARGET&#39;, verbose=False, log=False, **read_csv_kwargs):
+def add_control_points(df_without_control, df_control=None,  xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEV_FT&#39;, controlpoints_crs=&#39;EPSG:4269&#39;,  description_col=&#39;FORMATION&#39;, interp_col=&#39;INTERPRETATION&#39;, target_col=&#39;TARGET&#39;, verbose=False, log=False, **kwargs):
+    &#34;&#34;&#34;Function to add control points, primarily to aid in interpolation. This may be useful when conditions are known but do not exist in input well database
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe with current working data
+    df_control : str, pathlib.Purepath, or pandas.DataFrame
+        Pandas dataframe with control points
+    well_key : str, optional
+        The column containing the &#34;key&#34; (unique identifier) for each well, by default &#39;API_NUMBER&#39;
+    xcol : str, optional
+        The column in df_control containing the x coordinates for each control point, by default &#39;LONGITUDE&#39;
+    ycol : str, optional
+        The column in df_control containing the y coordinates for each control point, by default &#39;LATITUDE&#39;
+    zcol : str, optional
+        The column in df_control containing the z coordinates for each control point, by default &#39;ELEV_FT&#39;
+    controlpoints_crs : str, optional
+        The column in df_control containing the crs of points, by default &#39;EPSG:4269&#39;
+    description_col : str, optional
+        The column in df_control with the description (if this is used), by default &#39;FORMATION&#39;
+    interp_col : str, optional
+        The column in df_control with the interpretation (if this is used), by default &#39;INTERPRETATION&#39;
+    target_col : str, optional
+        The column in df_control with the target code (if this is used), by default &#39;TARGET&#39;
+    verbose : bool, optional
+        Whether to print information to terminal, by default False
+    log : bool, optional
+        Whether to log information in log file, by default False
+    **kwargs
+        Keyword arguments of pandas.concat() or pandas.read_csv that will be passed to that function, except for objs, which are df and df_control
+
+    Returns
+    -------
+    pandas.DataFrame
+        Pandas DataFrame with original data and control points formatted the same way and concatenated together
+    &#34;&#34;&#34;
     import geopandas as gpd
 
-    if isinstance(df_control, pd.DataFrame) or isinstance(df_control, gpd.GeoDataFrame):
+    if df_control is None:
+        return df_without_control
+    elif isinstance(df_control, pd.DataFrame) or isinstance(df_control, gpd.GeoDataFrame):
         pass
     else:
+        read_csv_kwargs = {k: v for k, v in locals()[&#39;kwargs&#39;].items() if k in pd.read_csv.__code__.co_varnames}
         df_control = pd.read_csv(df_control, **read_csv_kwargs)
+    
+    #Drop unnecessary columns, if needed
+    if target_col not in df_without_control.columns and target_col in df_control.columns:
+        df_control.drop([target_col], axis=1, inplace=True)
+        
+    if interp_col not in df_without_control.columns and interp_col in df_control.columns:
+        df_control.drop([interp_col], axis=1, inplace=True)
+        
+    if description_col not in df_without_control.columns and description_col in df_control.columns:
+        df_control.drop([description_col], axis=1, inplace=True)            
+        
+    #If our main df is already a geodataframe, make df_control one too
+    if isinstance(df_without_control, gpd.GeoDataFrame):
+        from w4h import coords2geometry
+        df_control = coords2geometry(df_no_geometry=df_control, xcol=xcol, ycol=ycol, zcol=zcol, input_coords_crs=controlpoints_crs, log=log)
 
-    from w4h import coords2geometry
-    df_control = coords2geometry(df_no_geometry=df_control, xcol=xcol, ycol=ycol, zcol=zcol, input_coords_crs=controlpoints_crs, log=log)
-
-    df_control = pd.concat([df, df_control])
-    return df_control</code></pre>
+    #Get kwargs passed to pd.concat, and set defaults for ignore_index and join
+    concat_kwargs = {k: v for k, v in locals()[&#39;kwargs&#39;].items() if k in pd.concat.__code__.co_varnames}
+    if &#39;ignore_index&#39; not in concat_kwargs.keys():
+        concat_kwargs[&#39;ignore_index&#39;] = True
+    if &#39;join&#39; not in concat_kwargs.keys():
+        concat_kwargs[&#39;join&#39;] = &#39;outer&#39;
+        
+    df = pd.concat([df_without_control, df_control], **concat_kwargs)
+    
+    return df</code></pre>
 </details>
 </section>
 <section>
@@ -621,27 +707,120 @@ def add_control_points(df, df_control, well_key=&#39;API_NUMBER&#39;, xcol=&#39;
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="w4h.read.add_control_points"><code class="name flex">
-<span>def <span class="ident">add_control_points</span></span>(<span>df, df_control, well_key='API_NUMBER', xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', controlpoints_crs='EPSG:4269', top_col='TOP', bottom_col='BOTTOM', description_col='FORMATION', interp_col='INTERPRETATION', target_col='TARGET', verbose=False, log=False, **read_csv_kwargs)</span>
+<span>def <span class="ident">add_control_points</span></span>(<span>df_without_control, df_control=None, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', controlpoints_crs='EPSG:4269', description_col='FORMATION', interp_col='INTERPRETATION', target_col='TARGET', verbose=False, log=False, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Function to add control points, primarily to aid in interpolation. This may be useful when conditions are known but do not exist in input well database</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
+<dd>Dataframe with current working data</dd>
+<dt><strong><code>df_control</code></strong> :&ensp;<code>str, pathlib.Purepath,</code> or <code>pandas.DataFrame</code></dt>
+<dd>Pandas dataframe with control points</dd>
+<dt><strong><code>well_key</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>The column containing the "key" (unique identifier) for each well, by default 'API_NUMBER'</dd>
+<dt><strong><code>xcol</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>The column in df_control containing the x coordinates for each control point, by default 'LONGITUDE'</dd>
+<dt><strong><code>ycol</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>The column in df_control containing the y coordinates for each control point, by default 'LATITUDE'</dd>
+<dt><strong><code>zcol</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>The column in df_control containing the z coordinates for each control point, by default 'ELEV_FT'</dd>
+<dt><strong><code>controlpoints_crs</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>The column in df_control containing the crs of points, by default 'EPSG:4269'</dd>
+<dt><strong><code>description_col</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>The column in df_control with the description (if this is used), by default 'FORMATION'</dd>
+<dt><strong><code>interp_col</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>The column in df_control with the interpretation (if this is used), by default 'INTERPRETATION'</dd>
+<dt><strong><code>target_col</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>The column in df_control with the target code (if this is used), by default 'TARGET'</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Whether to print information to terminal, by default False</dd>
+<dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Whether to log information in log file, by default False</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Keyword arguments of pandas.concat() or pandas.read_csv that will be passed to that function, except for objs, which are df and df_control</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pandas.DataFrame</code></dt>
+<dd>Pandas DataFrame with original data and control points formatted the same way and concatenated together</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def add_control_points(df, df_control, well_key=&#39;API_NUMBER&#39;, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEV_FT&#39;, controlpoints_crs=&#39;EPSG:4269&#39;, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, description_col=&#39;FORMATION&#39;, interp_col=&#39;INTERPRETATION&#39;, target_col=&#39;TARGET&#39;, verbose=False, log=False, **read_csv_kwargs):
+<pre><code class="python">def add_control_points(df_without_control, df_control=None,  xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEV_FT&#39;, controlpoints_crs=&#39;EPSG:4269&#39;,  description_col=&#39;FORMATION&#39;, interp_col=&#39;INTERPRETATION&#39;, target_col=&#39;TARGET&#39;, verbose=False, log=False, **kwargs):
+    &#34;&#34;&#34;Function to add control points, primarily to aid in interpolation. This may be useful when conditions are known but do not exist in input well database
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe with current working data
+    df_control : str, pathlib.Purepath, or pandas.DataFrame
+        Pandas dataframe with control points
+    well_key : str, optional
+        The column containing the &#34;key&#34; (unique identifier) for each well, by default &#39;API_NUMBER&#39;
+    xcol : str, optional
+        The column in df_control containing the x coordinates for each control point, by default &#39;LONGITUDE&#39;
+    ycol : str, optional
+        The column in df_control containing the y coordinates for each control point, by default &#39;LATITUDE&#39;
+    zcol : str, optional
+        The column in df_control containing the z coordinates for each control point, by default &#39;ELEV_FT&#39;
+    controlpoints_crs : str, optional
+        The column in df_control containing the crs of points, by default &#39;EPSG:4269&#39;
+    description_col : str, optional
+        The column in df_control with the description (if this is used), by default &#39;FORMATION&#39;
+    interp_col : str, optional
+        The column in df_control with the interpretation (if this is used), by default &#39;INTERPRETATION&#39;
+    target_col : str, optional
+        The column in df_control with the target code (if this is used), by default &#39;TARGET&#39;
+    verbose : bool, optional
+        Whether to print information to terminal, by default False
+    log : bool, optional
+        Whether to log information in log file, by default False
+    **kwargs
+        Keyword arguments of pandas.concat() or pandas.read_csv that will be passed to that function, except for objs, which are df and df_control
+
+    Returns
+    -------
+    pandas.DataFrame
+        Pandas DataFrame with original data and control points formatted the same way and concatenated together
+    &#34;&#34;&#34;
     import geopandas as gpd
 
-    if isinstance(df_control, pd.DataFrame) or isinstance(df_control, gpd.GeoDataFrame):
+    if df_control is None:
+        return df_without_control
+    elif isinstance(df_control, pd.DataFrame) or isinstance(df_control, gpd.GeoDataFrame):
         pass
     else:
+        read_csv_kwargs = {k: v for k, v in locals()[&#39;kwargs&#39;].items() if k in pd.read_csv.__code__.co_varnames}
         df_control = pd.read_csv(df_control, **read_csv_kwargs)
+    
+    #Drop unnecessary columns, if needed
+    if target_col not in df_without_control.columns and target_col in df_control.columns:
+        df_control.drop([target_col], axis=1, inplace=True)
+        
+    if interp_col not in df_without_control.columns and interp_col in df_control.columns:
+        df_control.drop([interp_col], axis=1, inplace=True)
+        
+    if description_col not in df_without_control.columns and description_col in df_control.columns:
+        df_control.drop([description_col], axis=1, inplace=True)            
+        
+    #If our main df is already a geodataframe, make df_control one too
+    if isinstance(df_without_control, gpd.GeoDataFrame):
+        from w4h import coords2geometry
+        df_control = coords2geometry(df_no_geometry=df_control, xcol=xcol, ycol=ycol, zcol=zcol, input_coords_crs=controlpoints_crs, log=log)
 
-    from w4h import coords2geometry
-    df_control = coords2geometry(df_no_geometry=df_control, xcol=xcol, ycol=ycol, zcol=zcol, input_coords_crs=controlpoints_crs, log=log)
-
-    df_control = pd.concat([df, df_control])
-    return df_control</code></pre>
+    #Get kwargs passed to pd.concat, and set defaults for ignore_index and join
+    concat_kwargs = {k: v for k, v in locals()[&#39;kwargs&#39;].items() if k in pd.concat.__code__.co_varnames}
+    if &#39;ignore_index&#39; not in concat_kwargs.keys():
+        concat_kwargs[&#39;ignore_index&#39;] = True
+    if &#39;join&#39; not in concat_kwargs.keys():
+        concat_kwargs[&#39;join&#39;] = &#39;outer&#39;
+        
+    df = pd.concat([df_without_control, df_control], **concat_kwargs)
+    
+    return df</code></pre>
 </details>
 </dd>
 <dt id="w4h.read.define_dtypes"><code class="name flex">
@@ -684,38 +863,41 @@ def add_control_points(df, df_control, well_key=&#39;API_NUMBER&#39;, xcol=&#39;
     dfout : pandas.DataFrame
         Pandas dataframe containing redefined columns
     &#34;&#34;&#34;
-    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
-    dfout = undefined_df.copy()
-    
-    if isinstance(datatypes, pathlib.PurePath) or isinstance(datatypes, str):
-        datatypes = pathlib.Path(datatypes)
-
-        if not datatypes.exists():
-            if verbose:
-                print(&#39;ERROR: datatypes ({}) does not exist&#39;.format(datatypes))
-            return dfout
-        elif datatypes.is_dir():
-            if verbose:
-                print(&#39;ERROR: datatypes must be either dict or filepath (path to directories not allowed)&#39;)
-            return dfout
-
-        datatypes = read_dict(file=datatypes)
-        dfout = dfout.astype(datatypes)
-
-    elif isinstance(datatypes, dict):
-        if verbose:
-            print(&#39;datatypes is None, not updating datatypes&#39;)
-        dfout = dfout.astype(datatypes)
+    if undefined_df is None:
+        dfout = None
     else:
-        if verbose:
-            print(&#39;ERROR: datatypes must be either dict or a filepath, not {}&#39;.format(type(datatypes)))
-        return dfout
-    
-    #This is likely redundant
-    dfcols = dfout.columns
-    for i in range(0, np.shape(dfout)[1]):
-        dfout.iloc[:,i] = undefined_df.iloc[:,i].astype(datatypes[dfcols[i]])
+        logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
+        dfout = undefined_df.copy()
+        
+        if isinstance(datatypes, pathlib.PurePath) or isinstance(datatypes, str):
+            datatypes = pathlib.Path(datatypes)
+
+            if not datatypes.exists():
+                if verbose:
+                    print(&#39;ERROR: datatypes ({}) does not exist&#39;.format(datatypes))
+                return dfout
+            elif datatypes.is_dir():
+                if verbose:
+                    print(&#39;ERROR: datatypes must be either dict or filepath (path to directories not allowed)&#39;)
+                return dfout
+
+            datatypes = read_dict(file=datatypes)
+            dfout = dfout.astype(datatypes)
+
+        elif isinstance(datatypes, dict):
+            if verbose:
+                print(&#39;datatypes is None, not updating datatypes&#39;)
+            dfout = dfout.astype(datatypes)
+        else:
+            if verbose:
+                print(&#39;ERROR: datatypes must be either dict or a filepath, not {}&#39;.format(type(datatypes)))
+            return dfout
+        
+        #This is likely redundant
+        dfcols = dfout.columns
+        for i in range(0, np.shape(dfout)[1]):
+            dfout.iloc[:,i] = undefined_df.iloc[:,i].astype(datatypes[dfcols[i]])
 
     return dfout</code></pre>
 </details>
@@ -863,7 +1045,7 @@ It may also be of use to simply skip this function altogether and directly defin
 </details>
 </dd>
 <dt id="w4h.read.get_most_recent"><code class="name flex">
-<span>def <span class="ident">get_most_recent</span></span>(<span>dir='C:\\Users\\riley\\LocalData\\Code\\Github\\wells4hydrogeology/resources', glob_pattern='*', verbose=True)</span>
+<span>def <span class="ident">get_most_recent</span></span>(<span>dir=WindowsPath('C:/Users/riley/LocalData/Code/Github/wells4hydrogeology/w4h/resources'), glob_pattern='*', verbose=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to find the most recent file with the indicated pattern, using pathlib.glob function.</p>
@@ -883,7 +1065,7 @@ It may also be of use to simply skip this function altogether and directly defin
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_most_recent(dir=str(repoDir)+&#39;/resources&#39;, glob_pattern=&#39;*&#39;, verbose=True):
+<pre><code class="python">def get_most_recent(dir=resource_dir, glob_pattern=&#39;*&#39;, verbose=True):
     &#34;&#34;&#34;Function to find the most recent file with the indicated pattern, using pathlib.glob function.
 
     Parameters
@@ -1320,8 +1502,8 @@ with start search terms, and with wildcard search terms</p></div>
 <dd>**kwargs that get passed to pd.read_csv()</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<p>(pandas.DataFrame, pandas.DataFrame)
-Tuple/list with two pandas dataframes: (data, metadata)</p></div>
+<p>(pandas.DataFrame, pandas.DataFrame/None)
+Tuple/list with two pandas dataframes: (well_data, metadata) metadata is None if only well_data is used</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1356,48 +1538,63 @@ Tuple/list with two pandas dataframes: (data, metadata)</p></div>
 
     Returns
     -------
-    (pandas.DataFrame, pandas.DataFrame)
-        Tuple/list with two pandas dataframes: (data, metadata)
+    (pandas.DataFrame, pandas.DataFrame/None)
+        Tuple/list with two pandas dataframes: (well_data, metadata) metadata is None if only well_data is used
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
+    #Check if input data is already dataframe, otherwise, read it in as dataframe
+    if not isinstance(data_filepath, pd.DataFrame) or isinstance(data_filepath, gpd.GeoDataFrame):
+        downholeDataIN = pd.read_csv(data_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, **read_csv_kwargs)
+
     if data_cols is None:
+        data_useCols = downholeDataIN.columns
+    elif data_cols == &#39;auto&#39;:
         data_useCols = [&#34;API_NUMBER&#34;,&#34;TABLE_NAME&#34;,&#34;FORMATION&#34;,&#34;THICKNESS&#34;,&#34;TOP&#34;,&#34;BOTTOM&#34;]
     else:
         data_useCols= data_cols
+    downholeDataIN = downholeDataIN[data_useCols]
 
-    if metadata_cols is None:
+    if metadata_filepath is None:
+        headerDataIN = None
+    elif not isinstance(metadata_filepath, pd.DataFrame) or isinstance(metadata_filepath, gpd.GeoDataFrame):
+        headerDataIN = pd.read_csv(metadata_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=metadata_useCols, **read_csv_kwargs)
+    else:
+        headerDataIN = None
+
+    if metadata_cols is None and headerDataIN is not None:
+        metadata_useCols = headerDataIN.columns
+    elif metadata_cols == &#39;auto&#39;:
         metadata_useCols = [&#39;API_NUMBER&#39;,&#34;TOTAL_DEPTH&#34;,&#34;SECTION&#34;,&#34;TWP&#34;,&#34;TDIR&#34;,&#34;RNG&#34;,&#34;RDIR&#34;,&#34;MERIDIAN&#34;,&#34;QUARTERS&#34;,&#34;ELEVATION&#34;,&#34;ELEVREF&#34;,&#34;COUNTY_CODE&#34;,&#34;LATITUDE&#34;,&#34;LONGITUDE&#34;,&#34;ELEVSOURCE&#34;]
     else:
         metadata_useCols= metadata_cols
 
-    #Check if input data is already 
-    if isinstance(data_filepath, pd.DataFrame):
-        downholeDataIN = data_filepath[data_useCols]
-    else:
-        downholeDataIN = pd.read_csv(data_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=data_useCols, **read_csv_kwargs)
-    
-    if isinstance(metadata_filepath, pd.DataFrame):
-        headerDataIN = metadata_filepath[metadata_useCols]
-    else:
-        headerDataIN = pd.read_csv(metadata_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=metadata_useCols, **read_csv_kwargs)
-
+    if headerDataIN is not None:
+        headerDataIN = headerDataIN[metadata_useCols]
+        
     #Drop data with no API        
     downholeDataIN = downholeDataIN.dropna(subset=[well_key]) #Drop data with no API
-    headerDataIN = headerDataIN.dropna(subset=[well_key]) #Drop metadata with no API
+    if headerDataIN is not None:
+        headerDataIN = headerDataIN.dropna(subset=[well_key]) #Drop metadata with no API
 
-    #Drop data with no or missing location information
-    headerDataIN = headerDataIN.dropna(subset=[ycol]) 
-    headerDataIN = headerDataIN.dropna(subset=[xcol])
-    
-    #Reset index so index goes from 0 in numerical/integer order
-    headerDataIN.reset_index(inplace=True, drop=True)
+        #Drop data with no or missing location information
+        headerDataIN = headerDataIN.dropna(subset=[ycol]) 
+        headerDataIN = headerDataIN.dropna(subset=[xcol])
+
+        #Reset index so index goes from 0 in numerical/integer order
+        headerDataIN.reset_index(inplace=True, drop=True)
+    else:
+        #***UPDATE: Need to make sure these columns exist in this case***
+        #Drop data with no or missing location information
+        downholeDataIN = downholeDataIN.dropna(subset=[ycol]) 
+        downholeDataIN = downholeDataIN.dropna(subset=[xcol])        
     downholeDataIN.reset_index(inplace=True, drop=True)
     
     #Print outputs to terminal, if designated
     if verbose:
         print(&#39;Data file has &#39; + str(downholeDataIN.shape[0])+&#39; valid well records.&#39;)
-        print(&#34;Metadata file has &#34;+str(headerDataIN.shape[0])+&#34; unique wells with valid location information.&#34;)
+        if headerDataIN is not None:
+            print(&#34;Metadata file has &#34;+str(headerDataIN.shape[0])+&#34; unique wells with valid location information.&#34;)
     
     return downholeDataIN, headerDataIN</code></pre>
 </details>

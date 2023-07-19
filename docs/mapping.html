@@ -143,9 +143,12 @@ def clip_gdf2study_area(study_area, gdf, log=False):
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    studyArea_proj = study_area.to_crs(gdf.crs).copy()
-    gdfClip = gpd.clip(gdf, studyArea_proj) #Easier to project just study area to ensure data fit
-    gdfClip.reset_index(inplace=True, drop=True) #Reset index
+    if study_area is None:
+        return gdf
+    else:
+        studyArea_proj = study_area.to_crs(gdf.crs).copy()
+        gdfClip = gpd.clip(gdf, studyArea_proj) #Easier to project just study area to ensure data fit
+        gdfClip.reset_index(inplace=True, drop=True) #Reset index
     
     return gdfClip
 
@@ -932,9 +935,12 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    studyArea_proj = study_area.to_crs(gdf.crs).copy()
-    gdfClip = gpd.clip(gdf, studyArea_proj) #Easier to project just study area to ensure data fit
-    gdfClip.reset_index(inplace=True, drop=True) #Reset index
+    if study_area is None:
+        return gdf
+    else:
+        studyArea_proj = study_area.to_crs(gdf.crs).copy()
+        gdfClip = gpd.clip(gdf, studyArea_proj) #Easier to project just study area to ensure data fit
+        gdfClip.reset_index(inplace=True, drop=True) #Reset index
     
     return gdfClip</code></pre>
 </details>
