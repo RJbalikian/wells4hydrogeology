@@ -25,23 +25,7 @@ API Documentation <a href="https://rjbalikian.github.io/wells4hydrogeology/main.
 
 # Inputs
 ## Required Inputs
-### Required inputs include:
-- Well Data: A table containing descriptions of well intervals for wells throughout the area of interest.
-    - This is intended for the ISGS_DOWNHOLE_DATA table in the ISGS well database, but can be used with any table containing the proper column types.
-- Metadata: A table containing the metadata for all the wells, including unique identifier (e.g., API number), well location, and elevation.
-    - This is intended for the ISGS_HEADER table in the main ISGS well database, but can be used with any table containing the location information
-- Surface elevation: raster data containing the surface elevation of the study area or state, to be read by rioxarray/rasterio
-- Bedrock elevation: raster data containing the bedrock elevation of the study area or state, to be read by rioxarray/rasterio
-- Model grid: raster data whose resolution and cell locations align with that of the hydrogeologic model (i.e., in MODFLOW)
-    - Can either be read by rioxarray/rasterio or grid parameters can be set manually
-- Lithology data: "definitions" to convert raw, manual well descriptions to broad lithological categories and then to a target lithology (e.g., coarse sediment).
-
-## Optional inputs
-- Column names
-    - Column names for the fields containing well description, top depth/elevation, bottom depth/elevation, x location, y location, z location
-    - Other column names can be specified as well, see <a href="https://rjbalikian.github.io/wells4hydrogeology/main.html">API Documentation</a> for more information.
-- Study Area
-    - A file or other input that can be read by geopandas containing an area of interest (this can be used to clip larger datasets)
+Required inputs include are shown <a href="https://github.com/RJbalikian/wells4hydrogeology/">here</a>wiki
 
 # Organization
 ## Modules
