@@ -15,7 +15,7 @@ Using well descriptions from these database tables, the code contained here extr
 API Documentation <a href="https://rjbalikian.github.io/wells4hydrogeology/main.html">here</a>
 
 # Dependencies
- The w4h module has the following dependencies:
+## The w4h module has the following dependencies:
 - numpy
 - geopandas (and therefore pandas)
 - rioxarray (and therefore xarray)
@@ -25,7 +25,7 @@ API Documentation <a href="https://rjbalikian.github.io/wells4hydrogeology/main.
 
 # Inputs
 ## Required Inputs
-Required inputs include:
+### Required inputs include:
 - Well Data: A table containing descriptions of well intervals for wells throughout the area of interest.
     - This is intended for the ISGS_DOWNHOLE_DATA table in the ISGS well database, but can be used with any table containing the proper column types.
 - Metadata: A table containing the metadata for all the wells, including unique identifier (e.g., API number), well location, and elevation.
@@ -37,7 +37,7 @@ Required inputs include:
 - Lithology data: "definitions" to convert raw, manual well descriptions to broad lithological categories and then to a target lithology (e.g., coarse sediment).
 
 ## Optional inputs
-- Column names: 
+- Column names
     - Column names for the fields containing well description, top depth/elevation, bottom depth/elevation, x location, y location, z location
     - Other column names can be specified as well, see <a href="https://rjbalikian.github.io/wells4hydrogeology/main.html">API Documentation</a> for more information.
 - Study Area
