@@ -45,4 +45,4 @@ The w4h package "ships" with some definition files that are read in/used by the 
 - xyzData_yyyy-mm-dd.csv: most recent update of statewide wells with API, Latitude, Longitude, and surface elevation extracted from statewide lidar topography
 
 # Intended workflow
-If diagram is not formatting properly, it is also available on github here: <a href="https://github.com/RJbalikian/wells4hydrogeology/wiki/Intended-Workflow-%5BDRAFT%5D">here</a>
+If diagram is not formatting properly, it is also available on github <a href="https://github.com/RJbalikian/wells4hydrogeology/wiki/Intended-Workflow-%5BDRAFT%5D">here</a>.
