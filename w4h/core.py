@@ -350,6 +350,18 @@ def logger_function(logtocommence, parameters, func_name):
 #Get filepaths for package resources in dictionary format
 resource_dir = pathlib.Path(pkg_resources.resource_filename(__name__, 'resources/resources_home.txt')).parent
 def get_resources(verbose=False):
+    """Function to get filepaths for resources included with package
+
+    Parameters
+    ----------
+    verbose : bool, optional
+        Whether to print results to terminal, by default False
+
+    Returns
+    -------
+    resources_dict : dict
+        Dictionary containing key, value pairs with filepaths to resources that may be of interest.
+    """
     resources_dict = {}
     sample_data_dir = resource_dir.joinpath('sample_data')
 
