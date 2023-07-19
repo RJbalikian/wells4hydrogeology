@@ -7,6 +7,8 @@ import pandas as pd
 
 import w4h
 
+import pkg_resources
+
 def run(well_data, well_data_cols=None, 
         metadata=None, well_metadata_cols=None, 
         layers = 9,
@@ -343,6 +345,38 @@ def logger_function(logtocommence, parameters, func_name):
             #Don't log if log=False
             pass
     return
+
+
+#Get filepaths for package resources in dictionary format
+resource_dir = pathlib.Path(pkg_resources.resource_filename(__name__, 'resources/resources_home.txt')).parent
+def get_resources(verbose=False):
+    resources_dict = {}
+    sample_data_dir = resource_dir.joinpath('sample_data')
+
+    #Get sample data
+    #Get lithology dictionaries' filepaths
+    sample_dictionary_dir = sample_data_dir.joinpath('DictionaryTerms')
+    resources_dict['LithologyDict_Exact'] = w4h.get_most_recent(dir=sample_dictionary_dir, glob_pattern='*DICTIONARY_SearchTerms*', verbose=verbose)
+    resources_dict['LithologyDict_Start'] = w4h.get_most_recent(dir=sample_dictionary_dir, glob_pattern='*SearchTerms-Start*', verbose=verbose)
+    resources_dict['LithologyDict_Wildcard'] = w4h.get_most_recent(dir=sample_dictionary_dir, glob_pattern='*SearchTerms-Wildcard*', verbose=verbose)
+
+    #Get Lithology Interpretation filepaths
+    lith_interp_dir = sample_data_dir.joinpath('LithologyInterpretations')
+    resources_dict['LithInterps_FineCoarse'] = w4h.get_most_recent(dir=lith_interp_dir, glob_pattern='*FineCoarse*', verbose=verbose)
+    resources_dict['LithInterps_Clay'] = w4h.get_most_recent(dir=lith_interp_dir, glob_pattern='*Clay*', verbose=verbose)
+    resources_dict['LithInterps_Silt'] = w4h.get_most_recent(dir=lith_interp_dir, glob_pattern='*Silt*', verbose=verbose)    
+    resources_dict['LithInterps_Sand'] = w4h.get_most_recent(dir=lith_interp_dir, glob_pattern='*Sand*', verbose=verbose)    
+    resources_dict['LithInterps_Gravel'] = w4h.get_most_recent(dir=lith_interp_dir, glob_pattern='*Gravel*', verbose=verbose)    
+
+    #Get other resource filepaths
+    resources_dict['well_data_dtypes'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='downholeDataTypes.txt', verbose=verbose)
+    resources_dict['metadata_dtypes'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='headerDataTypes.txt', verbose=verbose)
+    resources_dict['ISWS_CRS'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='isws_crs.txt', verbose=verbose)
+    resources_dict['xyz_dtypes'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='xyzDataTypes.txt', verbose=verbose)
+
+    return resources_dict
+
+
 
 def __check_parameter_names(verbose=True):
     #Check parameters are unique

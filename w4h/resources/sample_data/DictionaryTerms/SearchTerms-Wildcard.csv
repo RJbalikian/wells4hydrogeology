@@ -1,0 +1,751 @@
+ID,DESCRIPTION,LITHOLOGY
+1,"s,med,brn;",SAND
+2,"s,med,calc,lgt gry brn,",SAND
+3,"s,crs,brn,",SAND
+4,"cly st,calc,",SILT
+5,"sty cl,lea,gry,",CLAY
+6,broken lime (clay seams),BEDROCK AND OTHER
+7,"gravel,sandy,some water",GRAVEL WITH SAND
+9,"st,lgt gry",SILT
+10,"st,slgtly calc,",SILT
+11,"st,sy,cly,grngry,",SILT AND SAND MIX
+12,"st,sy,brn-gry,",SILT AND SAND MIX
+13,"st,sy,cly,",SILT AND SAND MIX
+14,"st,scttrd s,",SILT AND SAND MIX
+15,VIENNA,BEDROCK
+16,"st, cly, s",SILT
+17,"st&s,",SILT AND SAND MIX
+18,St Peter,BEDROCK
+19,St. Peter,BEDROCK
+20,"st&s,",SILT AND SAND
+21,St.Peter,BEDROCK
+22,Stark Shale Member,BEDROCK
+23,Ste. Genevieve,BEDROCK
+24,"st,vy cly,",SILT
+25,St. Louis Limestone,BEDROCK
+26,St. Louis,BEDROCK
+27,very sy dk gry sh,BEDROCK
+28,St. Pete,BEDROCK
+29,ST. P,BEDROCK
+30,St. David,BEDROCK
+31,St. Gen,BEDROCK
+32,St. Clair,BEDROCK
+33,St. PATER,BEDROCK
+34,Tan and light brown oolitic lime,BEDROCK
+35,Tan and light brown sandstone,BEDROCK
+36,Tan and light brwon dolomitic lime,BEDROCK
+37,Tan and light brown slightly dolomitic lime,BEDROCK
+38,Tan and light brown slightly sandy dolomitic lime,BEDROCK
+39,Tan and light brown dense lime,BEDROCK
+40,Tan and light brown dolomite,BEDROCK
+41,Tan and light brown oolitic fossiliferous lime,BEDROCK
+42,Tan and light brown oolitic lime,BEDROCK
+43,Tan and light brown fossiliferous dolomitic lime,BEDROCK
+44,Tan and light brown fossiliferous crystalline lime,BEDROCK
+45,Tan and light brown granular textured lime,BEDROCK
+46,Tan and white oolitic lime,BEDROCK
+47,Tan and white sandy lime,BEDROCK
+48,Tan and white sandy oolitic lime,BEDROCK
+49,Tan and white dolomite,BEDROCK
+50,Tan and white dolomitic lime,BEDROCK
+51,Tan and white oolitic dolomitic lime,BEDROCK
+52,Tan and white fine grained sand,SAND
+53,Tan and white fossiliferous oolitic dolomitic lime,BEDROCK
+54,Tan and yellow fossiliferous oolitic lime,BEDROCK
+55,Tan calcareous sand,BEDROCK
+56,Tan cherty lime,BEDROCK
+57,Tan cherty dolomitic lime,BEDROCK
+58,Tan and yellow green crystalline oolitic fossiliferous lime,BEDROCK
+59,Tan and yellow oolitic lime,BEDROCK
+60,Tan and yellow sandy oolitic lime,BEDROCK
+61,tan brown lime,BEDROCK
+62,tan bedrock,BEDROCK
+63,Tan and light gray dolomite,BEDROCK
+64,Tan and light gray dolomitic lime,BEDROCK
+65,Tan and light gray dense lime,BEDROCK
+66,Tan and light gray crystalline to dense lime,BEDROCK
+67,Tan and light gray crystalline lime,BEDROCK
+68,Tan and light gray lime crystalline,BEDROCK
+69,Tan and light gray oolitic dolomitic lime,BEDROCK
+70,Tan and light gray oolitic fossiliferous lime,BEDROCK
+71,Tan and light gray cherty dolomitic lime,BEDROCK
+72,Tan and light gray brown crystalline lime,BEDROCK
+73,Tan and light gray crystalline to dense lime,BEDROCK
+74,Tan and light gray crystalline fossiliferous lime,BEDROCK
+75,Tan and light gray oolitic lime,BEDROCK
+76,Tan and light gray crystalline lime,BEDROCK
+77,Tan and white crystalline lime,BEDROCK
+78,Tan and white crystalline fossiliferous dolomitic lime,BEDROCK
+79,Tan and white crystalline fossiliferous lime,BEDROCK
+80,Tan and very light brown crystalline slight dolomitic lime,BEDROCK
+81,Tan and sandy oolitic fossiliferous lime,BEDROCK
+82,Tan and white crystalline oolitic fossiliferous lime,BEDROCK
+83,Tan and light gray brown oolitic lime,BEDROCK
+84,Tan and light yellow crystalline fossiliferous lime,BEDROCK
+85,Tan and light gray sandy crystalline lime,BEDROCK
+86,Tan and light gray sandy oolitic lime,BEDROCK
+87,Tan and light green dolomitic lime,BEDROCK
+88,Tan and light pink red speckled lime,BEDROCK
+89,Tan and white crystalline to dense lime,BEDROCK
+90,Tan and red calcareous sandstone,BEDROCK
+91,Tan and red crystalline lime,BEDROCK
+92,Tan and red crystalline to oolitic lime,BEDROCK
+93,Tan and reddish brown oolitic fossiliferous lime,BEDROCK
+94,Tan and reddish fossiliferous oolitic lime,BEDROCK
+95,Tan and gray dolomite,BEDROCK
+96,Tan and gray crystalline slightly dolomitic lime,BEDROCK
+97,Tan and gray crystalline to oolitic lime,BEDROCK
+98,Tan and gray dense lime,BEDROCK
+99,Tan and gray dolomite,BEDROCK
+100,Tan and gray crystalline lim,BEDROCK
+101,Tan and gray dolomitic crystalline lime,BEDROCK
+102,Tan and gray dolomitic lime,BEDROCK
+103,Tan and light brown cyrstalline fossiliferous lime,BEDROCK
+104,Tan and gray crystalline fossiliferous lime,BEDROCK
+105,Tan and gray crystalline slight dolomitic lime,BEDROCK
+106,Tan and gray crystalline fossiliferous shaley lime,BEDROCK
+107,"Tan and gray crystalline lime, slightly dolomitic",BEDROCK
+108,Tan and gray fossiliferous lime,BEDROCK
+109,Tan and gray lime,BEDROCK
+110,Tan and gray fossiliferous oolitic lime,BEDROCK
+111,Tan and gray fossiliferous lime,BEDROCK
+112,Tan and gray mottled crystalline fossiliferous lime,BEDROCK
+113,Tan and gray green dense lime,BEDROCK
+114,Tan and gray cherty dolomite,BEDROCK
+115,very soft gray silt,SILT
+116,very soft gray shale,BEDROCK
+117,"Tan and brown oolitic, dolomitic lime",BEDROCK
+118,Tan and brown oolitic fossiliferous lime,BEDROCK
+119,very soft lighr gray shale,BEDROCK
+120,very soft hard gray/brown lime,BEDROCK
+121,Tan and brown oolitic lime,BEDROCK
+122,Tan and gray brown oolitic dolomitic lime,BEDROCK
+123,Tan and gray brown crystalline lime,BEDROCK
+124,Tan and gray brown mottled fossiliferous lime,BEDROCK
+125,Tan and gray brown crystalline lime,BEDROCK
+126,Tan and gray brown oolitic dolomitic lime,BEDROCK
+127,Tan and gray brown oolitic fossiliferous lime,BEDROCK
+128,Tan and gray brown sandy fossiliferous lime,BEDROCK
+129,Tan and gray cherty crystalline lime,BEDROCK
+130,Tan and gray brown dolomitic lime,BEDROCK
+131,Tan and dark brown mottled crystalline lime,BEDROCK
+132,Tan and gray oolitic and fossiliferous lime,BEDROCK
+133,Tan and brown very cherty crystalline lime,BEDROCK
+134,Tan and gray crystalline dolomitic lime,BEDROCK
+135,Tan and buff crystalline chalky lime,BEDROCK
+136,Tan and buff crystalline to oolitic lime,BEDROCK
+137,Tan and buff dolomitic lime,BEDROCK
+138,Tan and cream crystalline cherty dolomitic lime,BEDROCK
+139,Tan and gray brown crystalline fossiliferous lime,BEDROCK
+140,Tan and crystalline lime,BEDROCK
+141,Tan and brown slightly dolomitic crystalline lime,BEDROCK
+142,Tan and dark brown oolitic lime,BEDROCK
+143,Tan and dark brown oolitic lime,BEDROCK
+144,Tan and gray blue chert,BEDROCK
+145,Tan and gray brown cherty dolomitic lime,BEDROCK
+146,Tan and gray brown cherty lime,BEDROCK
+147,Tan and crystalline dolomitic lime,BEDROCK
+148,Tan and light brown crystalline fossiliferous lime,BEDROCK
+149,Tan and gray mottled crystalline lime,BEDROCK
+150,Tan and light brown crystalline fossiliferous lime,BEDROCK
+151,Tan and light brown crystalline fossiliferous oolitic lime,BEDROCK
+152,Tan and light brown crystalline fossiliferous slightly dolomitic lime,BEDROCK
+153,Tan and light brown crystalline fossiliferous lime,BEDROCK
+154,Tan and light brown crystalline fossiliferous crystalline lime,BEDROCK
+155,Tan and light brown crystalline fossiliferous dolomitic lime,BEDROCK
+156,Tan and light brown crystalline lime,BEDROCK
+157,Tan and light brown crystalline oolitic lime,BEDROCK
+158,Tan and light brown crystalline lime,BEDROCK
+159,Tan and light brown crystalline slightly dolomitic lime,BEDROCK
+160,Tan and light brown crystalline to dense lime,BEDROCK
+161,Tan and light brown crystalline to dolomitic sandy lime,BEDROCK
+162,Tan and light brown crystalline fossilifeorus lime,BEDROCK
+163,very soft gray clay & sand,CLAY AND SAND MIX
+164,Tan and green calcareous sand,SAND
+165,Tan and green crystalline to dense lime,BEDROCK
+166,Tan and green cherty dolomitic lime,BEDROCK
+167,Tan and green crystalline fossiliferous lime,BEDROCK
+168,"Tan and light brown crystalline fossiliferous , gray shale",BEDROCK
+169,Tan and gray oolitic lime,BEDROCK
+170,Tan and gray oolitic fossiliferous lime,BEDROCK
+171,Tan and gray sandy oolitic lime,BEDROCK
+172,Tan and gray oolitic sandy lime,BEDROCK
+173,Tan and gray salt and pepper lime,BEDROCK
+174,Tan and gray sandy dolomitic lime,BEDROCK
+175,Tan and light brown crystalline dolomitic fossiliferous lime,BEDROCK
+176,Tan and light brown crystalline and oolitic lime,BEDROCK
+177,Tan and light brown crystalline cherty lime,BEDROCK
+178,Tan and light brown crystalline dolomitic cherty lime,BEDROCK
+179,Tan and light brown coarse crystalline lime,BEDROCK
+180,Tan and light brown crystalline dolomitic lime,BEDROCK
+181,Tan and light brown crystalline fossilifeorus lime,BEDROCK
+182,Tan and light  brown oolitic lime,BEDROCK
+183,Tan and green dolomitic lime,BEDROCK
+184,Tan and green oolitic lime,BEDROCK
+185,Tan and green sandy fossiliferous lime,BEDROCK
+186,Tan and light brown chalky lime,BEDROCK
+187,Tan and light brown cherty dolomite,BEDROCK
+188,Tan and greenish crystalline lime,BEDROCK
+189,tan lime & sandstone,BEDROCK
+190,tan lime & lt gray shale,BEDROCK
+191,tan limestone at,BEDROCK
+192,tan limestone (,BEDROCK
+193,Tan fossiliferous limestone,BEDROCK
+194,Tan fossiliferous oolitic lime,BEDROCK
+195,Tan fossiliferous sandy lime,BEDROCK
+196,Tan fossiliferous slightly dolomitic lime,BEDROCK
+197,Tan fossiliferouslimestone,BEDROCK
+198,"sty cl,",CLAY
+199,"ss,",BEDROCK
+200,s&g,SAND AND GRAVEL
+201,"limestone,",BEDROCK
+202,"lime & shale,",BEDROCK
+203,soft sandy brown limestone,BEDROCK
+204,blue shale,BEDROCK
+205,shale,BEDROCK
+206,sand & gravel,SAND AND GRAVEL
+207,"till,sy,ltl gvl",CLAY
+208,"till,s,ltl gvl",CLAY
+209,"dolomite,",BEDROCK
+210,"chert,",BEDROCK
+211,"cht,",BEDROCK
+212,"brown & gray clay,",CLAY
+213,slate & solid,BEDROCK
+214,white rock,BEDROCK
+215,flint rock,BEDROCK
+216,dark rock,BEDROCK
+217,"rock,",BEDROCK
+218,"shale,",BEDROCK
+219,ls & sh;,BEDROCK
+220,y lime,BEDROCK
+221,shale,BEDROCK
+222,"sandstone,",BEDROCK
+223,sandstone-,BEDROCK
+224,sandstone;,BEDROCK
+225,"till,s,",CLAY
+226,"till,sy,ltl gvl",CLAY
+228,"ls,",BEDROCK
+229,"till, sandy, little gravel",CLAY
+230,"shale,",BEDROCK
+231,"sandstone,",BEDROCK
+232,"dol,",BEDROCK
+233,ls vy chty,BEDROCK
+234,ls chty,BEDROCK
+235,"lime,",BEDROCK
+236,"slate,",BEDROCK
+237,"limesotne,",BEDROCK
+238,"st,s,",SILT AND SAND
+239,"st,sy,",SILT AND SAND
+240,"siltstone,",BEDROCK
+241,"ls,dolc,",BEDROCK
+242,SILURIAN,BEDROCK
+243,DEVONIAN,BEDROCK
+244,chert-,BEDROCK
+245,Maquoketa,BEDROCK
+246,Burlington,BEDROCK
+247,shale;,BEDROCK
+248,"ls & sh,",BEDROCK
+249,flint hard shale,BEDROCK
+250,g lime,BEDROCK
+251,g & w lime,BEDROCK
+252,"clay shale, light greenish gray,",BEDROCK
+253,"clay shale, light gray,",BEDROCK
+254,"Clay shale, light green,",BEDROCK
+255,"Clay shale, light grayish green,",BEDROCK
+256,"clay shale, light gray.",BEDROCK
+257,"Clay shale, light olive,",BEDROCK
+258,"Clay shale, medium gray,",BEDROCK
+259,"Clay shale, light greenish-gray,",BEDROCK
+260,"clay shale, medium green,",BEDROCK
+261,"clay shale, medium greenish-gray",BEDROCK
+262,"Clay shale, medium gray,",BEDROCK
+263,"Clay shale, medium greenish gray",BEDROCK
+264,"clay shale, medium gray to dark,",BEDROCK
+265,"Clay shale, light to medium greenish-gray;",BEDROCK
+266,"clay shale, medium dark gray",BEDROCK
+267,"Clay shale, light to medium gray,",BEDROCK
+268,"Clay shale, medium bluish gray",BEDROCK
+269,"Clay shale, medium brownish-gray,",BEDROCK
+270,"Clay shale, medium brownish gray,",BEDROCK
+271,"clay shale, medium dark gray,",BEDROCK
+272,"Clay shale, dark green,",BEDROCK
+273,"Clay shale, dark gray,",BEDROCK
+274,"Clay shale, dirty greenish gray,",BEDROCK
+275,"clay shale, darker",BEDROCK
+276,"clay shale, dark,",BEDROCK
+277,"clay shale, dark greenish gray,",BEDROCK
+278,"clay shale, gray and greenish gray",BEDROCK
+279,"Clay shale, dark greenish gray and dark gray,",BEDROCK
+280,"Clay shale, dark gray;",BEDROCK
+281,"clay shale, gray,",BEDROCK
+282,"clay shale, dark greenish gray,",BEDROCK
+283,"Clay shale, gray to light greenish gray,",BEDROCK
+284,"Clay shale, gray to light gray,",BEDROCK
+285,"Clay shale, gray to greenish-gray,",BEDROCK
+286,"Clay shale, brownish gray,",BEDROCK
+287,"clay shale, black,",BEDROCK
+288,"clay shale, brownish-gray,",BEDROCK
+289,"clay shale, dark gray,",BEDROCK
+290,"Clay shale, dark gray with brown tint,",BEDROCK
+291,"clay shale, dark gray with an olive cast,",BEDROCK
+292,"clay shale, dark gray to black,",BEDROCK
+293,"clay shale, calcareous light greenish gray,",BEDROCK
+294,"Clay shale, brownish-gray,",BEDROCK
+295,"clay shale, dark gray and greenish gray,",BEDROCK
+296,"Clay shale, greenish-gray,",BEDROCK
+297,"clay shale, greenish gray,",BEDROCK
+298,clay soapstone & white sand,BEDROCK
+299,clay soapstone & fine sand,BEDROCK
+300,"Clay shale, medium greenish-gray,",BEDROCK
+301,"clay silt, gray brown,",SILT
+302,"clay silt loam,",SILT
+303,"clay siltstone,",BEDROCK
+446,blue grn ss,BEDROCK
+447,blue hardpan,SOIL
+448,blue hard pan,SOIL
+449,blue lime,BEDROCK
+450,blue mud & gravel,MUD AND GRAVEL
+451,blue mud and sand,MUD AND SAND
+452,blue rock,BEDROCK
+453,blue sand & gravel,SAND AND GRAVEL
+454,blue sand (,SAND
+455,blue sand gravel,SAND AND GRAVEL
+456,blue sandstone,BEDROCK
+457,blue sandy clay,CLAY WITH SAND
+458,blue sandy shale,BEDROCK
+304,12-15 slot,SAND
+305,12-15+,SAND
+306,20-Dec,SAND
+307,25-Dec,SAND
+308,30-Dec,SAND
+309,Dec-35,SAND
+310,Dec-40,SAND
+311,Dec-60,SAND AND GRAVEL
+312,Dec-80,SAND AND GRAVEL
+313,15 slot,SAND
+314,15+,SAND
+315,15-20,SAND
+316,15-25,SAND
+317,15-30,SAND
+318,15-40,SAND
+319,15-60,SAND AND GRAVEL
+320,15-80,SAND AND GRAVEL
+321,20 slot,SAND
+322,20+,SAND
+323,20-25,SAND
+324,20-30,SAND
+325,20-40,SAND
+326,20-60,SAND AND GRAVEL
+327,20-80,SAND AND GRAVEL
+328,20-slot,SAND
+329,25 slot,SAND
+330,30 slot,SAND
+331,30-40,SAND
+332,30-60,SAND AND GRAVEL
+333,30-80,SAND AND GRAVEL
+334,30-slot,SAND
+335,30 slot,SAND
+336,30+,SAND
+337,40 slot,SAND
+338,50 slot,SAND
+339,60 slot,SAND
+340,60-100,SAND AND GRAVEL
+341,60-80,SAND AND GRAVEL
+342,80% limestone,BEDROCK
+343,75% limestone,BEDROCK
+344,60% limestone,BEDROCK
+345,60% sandstone,BEDROCK
+346,50% limestone,BEDROCK
+347,50% sandstone,BEDROCK
+348,50% shale,BEDROCK
+349,40% sandstone,BEDROCK
+350,40% limestone,BEDROCK
+351,30% sandstone,BEDROCK
+352,30% limestone,BEDROCK
+353,20% limestone,BEDROCK
+354,20% sandstone,BEDROCK
+355,20% pea gravel,GRAVEL
+356,80% sandstone,BEDROCK
+357,80% shale,BEDROCK
+358,85% limestone,BEDROCK
+359,90% lime,BEDROCK
+360,90% shale,BEDROCK
+361,90% sandstone,BEDROCK
+362,A horizon,SOIL
+363,A1 horizon,SOIL
+364,A2 horizon,SOIL
+365,A3 horizon,SOIL
+366,A4 horizon,SOIL
+367,A5 horizon,SOIL
+368,AA horizon,SOIL
+369,AB horizon,SOIL
+370,A-horizon,SOIL
+371,AE horizon,SOIL
+372,Alexandrian series,BEDROCK
+373,Ancell,BEDROCK
+374,Anna Shale,BEDROCK
+375,Ap horizon,SOIL
+376,asphalt,FILL
+377,AUX VASES,BEDROCK
+378,B Horizon,SOIL
+379,B1 Horizon,SOIL
+380,B2 Horizon,SOIL
+381,B3 Horizon,SOIL
+382,B4 Horizon,SOIL
+383,B5 Horizon,SOIL
+384,B6 Horizon,SOIL
+385,B7 Horizon,SOIL
+386,backfill,FILL
+387,backbone limestone,BEDROCK
+388,Bailey Limestone,BEDROCK
+389,Bankston Fork,BEDROCK
+390,Bankston lime,BEDROCK
+391,Banner,CLAY
+392,Barlow,BEDROCK
+393,base of glacial,BEDROCK
+394,base of penn,BEDROCK
+395,batestown,CLAY
+396,bb,GRAVEL
+397,BC Horizon,SOIL
+398,BE Horizon,SOIL
+399,bed rock,BEDROCK
+400,Bedrock,BEDROCK
+401,bedrock,BEDROCK
+402,Beech Creek,BEDROCK
+403,Benoist,BEDROCK
+404,Bentonite,CLAY
+405,Berry,CLAY
+406,Bethel,BEDROCK
+407,bituminous,BEDROCK
+408,bkn,BEDROCK AND OTHER
+409,bl gry sh,BEDROCK
+410,bl gry ss,BEDROCK
+411,bl gry lime,BEDROCK
+412,bl gry ls,BEDROCK
+413,bl gry lm,BEDROCK
+414,bl sh,BEDROCK
+415,black & gray sh,BEDROCK
+416,black & gray lime,BEDROCK
+418,black and gray sh,BEDROCK
+419,black and green sh,BEDROCK
+420,black calcareous sh,BEDROCK
+421,black carbonaceous sh,BEDROCK
+422,black clay,CLAY
+423,black coal,BEDROCK
+424,black rock,BEDROCK
+425,black peat,ORGANIC MATERIAL
+426,black shale,BEDROCK
+427,black shael,BEDROCK
+428,black slate,BEDROCK
+429,black soil,SOIL
+430,black surface,SOIL
+431,black top soil,SOIL
+432,black topsoil,SOIL
+433,blacktop,FILL
+434,blk sh,BEDROCK
+435,blue clay & sand,CLAY AND SAND MIX
+436,blue clay (,CLAY
+437,blue clay at,CLAY
+438,"blue clay, gravel",CLAY AND GRAVEL
+439,blue clay;,CLAY
+440,blue gray lime,BEDROCK
+441,blue gray rock,BEDROCK
+442,blue gray sandstone,BEDROCK
+443,blue gray sh,BEDROCK
+444,blue gray ss,BEDROCK
+445,blue green lime,BEDROCK
+459,diamicton (Glasford,CLAY
+460,diamicton (till,CLAY
+461,diamicton as above,CLAY
+462,diamicton loam,CLAY
+463,diamicton with,CLAY
+464,"diamicton,",CLAY
+465,diamicton/,CLAY
+466,diamicton:,CLAY
+467,diamicton;,CLAY
+468,diamicton?,CLAY
+469,diamicton|,CLAY
+470,diamictton,CLAY
+471,blue silt & gravel,SILT AND GRAVEL MIX
+472,blue silt & sand,SILT AND SAND MIX
+473,blue silt & some sand,SILT AND SAND MIX
+474,BLUE SLATE,BEDROCK
+475,BLUE STICKY SHALE,BEDROCK
+476,BLUE TILL,CLAY
+477,BLUE TO BLACK SHALE,BEDROCK
+478,BLUE TO GRAY CLAY,CLAY
+479,BLUE TO GRAY SAND,SAND
+480,BLUE TO GRAY SHALE,BEDROCK
+481,blue-gray lime,BEDROCK
+482,blue-gray shale,BEDROCK
+483,"blue-gray, Clay",CLAY
+484,blue-green drift,CLAY
+485,bluish gray shale,BEDROCK
+486,bone coal,BEDROCK
+487,boney coal,BEDROCK
+488,bony,BEDROCK
+489,borden siltstone,BEDROCK
+490,boulder clay,BOULDERY MATERIAL
+491,boulders & cobbles,BOULDERY MATERIAL
+492,boulders & gravel,BOULDERY MATERIAL
+493,boulders & gvl,BOULDERY MATERIAL
+494,boulders & limestone,BOULDERY MATERIAL
+495,boulders & stones,BOULDERY MATERIAL
+496,boulders &,BOULDERY MATERIAL
+497,boulders and cobbles,BOULDERY MATERIAL
+498,boulders and,BOULDERY MATERIAL
+499,boulders (,BOULDERY MATERIAL
+500,boulds w/gravel,BOULDERY MATERIAL
+501,boulders with gravel,BOULDERY MATERIAL
+502,boulders with sand,BOULDERY MATERIAL
+503,"boulders, clay",BOULDERY MATERIAL
+504,"boulders, cobbles",BOULDERY MATERIAL
+505,"boulders, gravel",BOULDERY MATERIAL
+506,br cl,CLAY
+507,br lm,BEDROCK
+508,Brandon Bridge,BEDROCK
+509,Breccia,BEDROCK
+510,Brereton,BEDROCK
+511,Briar Hill,BEDROCK
+512,Bridgeport,BEDROCK
+513,bright coal,BEDROCK
+514,brittle black coal,BEDROCK
+515,brittle green shale,BEDROCK
+516,brittle shale,BEDROCK
+517,brk.lim,BEDROCK
+518,brkn gy fosl ls,BEDROCK
+519,brkn gry limeston,BEDROCK
+520,brkn gry lm,BEDROCK
+521,brkn gry ls,BEDROCK
+522,brkn lime,BEDROCK
+523,brkn lm,BEDROCK
+524,brkn ls,BEDROCK
+525,brkn yl limestone,BEDROCK
+526,brkn ylw limestone,BEDROCK
+527,brn & gray clay,CLAY
+528,brn & gry c,CLAY
+529,brn & gry l,BEDROCK
+530,brn & gry sandstone,BEDROCK
+531,brn & gry silty clay,CLAY
+532,"brn & gry, c",CLAY
+533,brn f s,SAND
+534,brn dry sand,SAND
+535,brn f/med s,SAND
+536,brn fine sand,SAND
+537,brn f-med sand,SAND
+538,brn glacial,CLAY
+539,brn gl cl w/gvl,GRAVLE AND CLAY MIX
+540,brn gl cl,CLAY
+541,brn glcl,CLAY
+542,brn gravel & sand,SAND AND GRAVEL
+543,brn gravel & sd,SAND AND GRAVEL
+544,brn gravel & silt,SILT AND GRAVEL MIX
+545,brown gravel/cse sand,SAND AND GRAVEL
+546,brn gravel,GRAVEL
+547,brn gvl,GRAVEL
+548,brn hardpan,TOPSOIL
+549,brn hdpn,TOPSOIL
+550,brn med sa,SAND
+551,brn med s /,SAND
+552,brn med s/,SAND
+553,brn med/crs,SAND
+554,brn med/fine,SAND
+555,brn med-crs,SAND
+556,brn medium,SAND
+557,brn mottled,CLAY
+558,brn mtld,CLAY
+559,brn s & gvl,SAND AND GRAVEL
+560,brn s,SAND
+561,brn s(,SAND
+562,brn sand & gravel,SAND AND GRAVEL
+563,brn sand & gvl,SAND AND GRAVEL
+564,brn sand fine,SAND
+565,brn sand med,SAND
+566,"brn sand ,",SAND
+567,brn sandr,BEDROCK
+568,brn sands,BEDROCK
+569,brn sandy cl,CLAY AND SAND MIX
+570,brn sandy sh,BEDROCK
+571,brn sandy si,SILT AND SAND MIX
+572,brn sd & gvl,SAND AND GRAVEL
+573,brn sd f,SAND
+574,brn sdy c,CLAY
+575,brn sh,BEDROCK
+576,brn si,SILT
+577,brn ss,BEDROCK
+578,brn sty c,CLAY
+579,brn sy cl,CLAY AND SAND MIX
+580,brn sy cl,CLAY AND SAND MIX
+581,brn till,CLAY
+582,brn vy f,SAND
+583,brn wet med s&g,SAND AND GRAVEL
+584,brn wet med/crs s&g,SAND AND GRAVEL
+585,brn/gry l,BEDROCK
+586,brn-gry silty c,CLAY
+587,brnsh gray l,BEDROCK
+588,brnsh gry cl,CLAY
+589,brnsh gry f,SAND
+590,brnsh gry l,BEDROCK
+591,brnsh gry sa,SAND
+592,brnsh gry sty cl,CLAY
+593,brnsh l,BEDROCK
+594,brnsh-gry cl,CLAY
+595,brocken rock,BEDROCK
+596,broekn lime,BEDROCK
+597,broekn rock,BEDROCK
+598,broke lime,BEDROCK
+599,broken gray l,BEDROCK
+600,broken gray sa,BEDROCK
+601,broken Lime,BEDROCK
+602,broken l,BEDROCK
+603,broken rock,BEDROCK
+604,broken sand & boulders,BEDROCK AND OTHER
+605,broken sand & mud,BEDROCK AND OTHER
+606,broken sand,BEDROCK AND OTHER
+607,broken shaley dolomite,BEDROCK
+608,broken shaley limestone,BEDROCK
+609,broken shaley rock,BEDROCK
+610,broken shale,BEDROCK
+611,broken up gray limestone,BEDROCK
+612,broken up,BEDROCK
+613,broken white l,BEDROCK
+614,broken white s,BEDROCK
+615,broken yellow lime,BEDROCK
+616,broken yellow ls,BEDROCK
+617,broken yellow rock,BEDROCK
+618,Broken zone,BEDROCK
+619,broken,BEDROCK
+620,brown & dark brown cl,CLAY
+621,brown & dk brown c,CLAY
+622,brown & gray cl,CLAY
+623,brown & gray dolomite,BEDROCK
+624,brown & gray fine,SAND
+625,brown & gray gravel,GRAVEL
+626,brown & gray lime,BEDROCK
+627,brown & gray rock,BEDROCK
+628,brown & gray sand & gravel,SAND AND GRAVEL
+629,brown & gray sandstone,BEDROCK
+630,brown & gray sandy clay,CLAY AND SAND MIX
+631,brown & gray sandy shale,BEDROCK
+632,brown & gray sand,SAND
+633,brown & gray shale,BEDROCK
+634,brown & gray silty clay,CLAY
+635,brown & gray silty fine sand,SILT AND SAND MIX
+636,brown & gray silty gravel,SILT AND GRAVEL MIX
+637,brown & gray silt,SILT
+638,brown & gray weathered,BEDROCK
+639,"brown & gray, clay",CLAY
+640,"brown & gray, sandy",CLAY AND SAND MIX
+641,brown & green drift,CLAY
+642,brown & light brown clay,CLAY
+643,brown & light gray clay,CLAY
+644,brown & light gray lime,BEDROCK
+645,brown & red clay,CLAY
+646,brown & reddish brown clay,CLAY
+647,brown & reddish s,BEDROCK
+648,brown & rock,BEDROCK
+649,brown & tan clay,CLAY
+650,brown & tan lime,BEDROCK
+651,brown & tan sandstone,BEDROCK
+652,brown & tan sand & gravel,SAND AND GRAVEL
+655,brown & tan shale,BEDROCK
+656,brown & tan silt,SILT
+657,brown & tan sandy,SAND AND CLAY MIX
+658,brown & white lime,BEDROCK
+659,brown & white sandstone,BEDROCK
+660,brown & yellow broken,BEDROCK
+661,brown & yellow cl,CLAY
+662,Brown and dark brown crystalline fossiliferous lime,BEDROCK
+663,Brown and dark brown crystalline lime,BEDROCK
+664,Brown and gray brown crystalline lime,BEDROCK
+665,Brown and gray brown fossiliferous lime,BEDROCK
+666,Brown and gray crystalline fossiliferous lime,BEDROCK
+667,Brown and gray crystalline lime,BEDROCK
+668,Brown and gray dolomitic lime,BEDROCK
+669,Brown and gray fossiliferous,BEDROCK
+670,Brown and gray limestone,BEDROCK
+671,Brown and gray oolitic,BEDROCK
+672,Brown and tan fossiliferous lime,BEDROCK
+673,Brown and tan mottled crystalline,BEDROCK
+674,brown broken lime,BEDROCK
+675,brown broken shale,BEDROCK
+676,Brown calcareous sandstone,BEDROCK
+677,brown calcareous sandy lime,BEDROCK
+678,brown calcareous sand,BEDROCK
+679,brown clay - chert,CLAY
+680,brown clay - fine gravel,CLAY AND GRAVEL MIX
+681,brown clay - fine sand,CLAY AND SAND MIX
+682,brown clay - gravel,CLAY AND GRAVEL MIX
+683,brown clay - topsoil,CLAY
+684,brown clay & big gravel,CLAY AND GRAVEL MIX
+685,brown clay & broken,BEDROCK AND OTHER
+686,brown clay very tacky,CLAY
+687,Brown clay loam,CLAY AND SAND MIX
+688,brown clay sandy firm,CLAY AND SAND MIX
+689,brown clay sandy soft,CLAY AND SAND MIX
+690,brown clay sand,SAND AND CLAY MIX
+691,brown clay tacky,CLAY
+692,brown clay very sandy,CLAY AND SAND MIX
+693,"brown clay, gravel",CLAY AND GRAVEL MIX
+695,"brown clay, sandy",CLAY AND SAND MIX
+696,"Brown clay, silt",CLAY AND SAND MIX
+697,brown clay/boulders,BOULDERY MATERIAL
+698,brown clay/shale,BEDROCK AND OTHER
+699,brown clayey silt,CLAY AND SAND MIX
+700,brown clayey silt and sand,CLAY AND SAND MIX
+701,brown clayey silt with gravel,CLAY AND GRAVEL MIX
+702,brown clayey silt with lignite,CLAY AND SAND MIX
+703,brown clayey silt,CLAY AND SAND MIX
+704,brown clay-sand & gravel,CLAY AND GRAVEL MIX
+705,brown clay,CLAY
+706,brown coarse sand &,SAND AND GRAVEL
+707,brown coarse sand w/,SAND AND GRAVEL
+708,Brown crystallien,BEDROCK
+709,Brown crystalline,BEDROCK
+710,Brown dolomite,BEDROCK
+711,Brown dolomitic lime,BEDROCK
+712,Brown dolomitic,BEDROCK
+713,Brown fine grained sandstone,BEDROCK
+714,Brown fine grained sand,SAND
+715,brown fine sand to,SAND AND GRAVEL
+716,brown fine sand/,SAND AND GRAVEL
+717,brown fine sandstone,BEDROCK
+718,brown fine sandy clay,CLAY AND SAND MIX
+719,brown fine sandy loam,SAND AND CLAY MIX
+720,brown fine sand,SAND
+721,brown firm clay,CLAY
+722,brown firm sandy clay,CLAY AND SAND MIX
+723,Brown fossiliferous crystalline lime,BEDROCK
+724,Brown fossiliferous dolomitic lime,BEDROCK
+725,Brown fossiliferous lime,BEDROCK
+726,Brown fossiliferous oolitic,BEDROCK
+727,brown glacial,GENERIC
+728,Brown granular textured lime,BEDROCK
+729,brown gravelly sand,SAND AND GRAVEL
+730,brown gravelly sand shale,BEDROCK AND OTHER
+731,brown hardpan,SOIL
+732,brown lime,BEDROCK
+733,Brown lith,BEDROCK
+734,brown loam diamicton,CLAY
+735,brown ls,BEDROCK
+736,brown medium grained sand,SAND
+737,brown medium sand,SAND
+738,brown medium to coarse sand,SAND
+739,brown mud,GENERIC
+740,Brown oolitic crystalline lime,BEDROCK
+741,Brown oolitic dolomi,BEDROCK
+742,Brown oolitic fossilifer,BEDROCK
+743,Brown oolitic,BEDROCK
+744,brown rock & clay,BEDROCK AND OTHER
+745,brown rock and clay,BEDROCK AND OTHER
+746,brown rock,BEDROCK
+747,brown sand & gravel,SAND AND GRAVEL
+748,brown sand & clay,SAND AND CLAY MIX
+749,brown sand (,SAND
+750,Brown sand and gravel,SAND AND GRAVEL
+751,brown sand fine,SAND
+752,brown sand F-M,SAND
+753,"sh,blk",BEDROCK
+754,"sh,sty,",BEDROCK
+756,"till,",CLAY
+757,"sh,",BEDROCK

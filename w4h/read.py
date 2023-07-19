@@ -12,6 +12,10 @@ repoDir = pathlib.Path(os.getcwd())
 
 from w4h import logger_function
 
+import pkg_resources
+
+resource_dir = pathlib.Path(pkg_resources.resource_filename(__name__, 'resources/resources_home.txt')).parent
+
 # Gets the current date for use with in code
 def get_current_date():
     """ Gets the current date to help with finding the most recent file
@@ -30,7 +34,7 @@ def get_current_date():
     return todayDate, dateSuffix
 
 #Function to get most recent file 
-def get_most_recent(dir=str(repoDir)+'/resources', glob_pattern='*', verbose=True):
+def get_most_recent(dir=resource_dir, glob_pattern='*', verbose=True):
     """Function to find the most recent file with the indicated pattern, using pathlib.glob function.
 
     Parameters
