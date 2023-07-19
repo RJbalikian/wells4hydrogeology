@@ -346,7 +346,6 @@ def logger_function(logtocommence, parameters, func_name):
             pass
     return
 
-
 #Get filepaths for package resources in dictionary format
 resource_dir = pathlib.Path(pkg_resources.resource_filename(__name__, 'resources/resources_home.txt')).parent
 def get_resources(verbose=False):
@@ -387,8 +386,6 @@ def get_resources(verbose=False):
     resources_dict['xyz_dtypes'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='xyzDataTypes.txt', verbose=verbose)
 
     return resources_dict
-
-
 
 def __check_parameter_names(verbose=True):
     #Check parameters are unique
