@@ -55,7 +55,7 @@ def export_dataframe(df, out_dir, filename, date_stamp=True, log=False):
 
 #Export (rio)xarray dataarrays and datasets
 
-def export_grids(grid_data, out_path, file_id='',filetype='tif', variable_sep=True, date_stamp=True, log=False):
+def export_grids(grid_data, out_path, file_id='',filetype='tif', variable_sep=True, date_stamp=True, verbose=False, log=False):
     """Function to export grids to files.
 
     Parameters
@@ -82,6 +82,8 @@ def export_grids(grid_data, out_path, file_id='',filetype='tif', variable_sep=Tr
     tifList = ['tif', 'tiff', 'geotiff', 'geotif', 't']
     pickleList = ['pickle', 'pkl', 'p']
 
+    filenames = []
+
     #Format output string(s)
     #Format output filepath
     if type(out_path) is str or isinstance(out_path, pathlib.PurePath):
@@ -89,7 +91,8 @@ def export_grids(grid_data, out_path, file_id='',filetype='tif', variable_sep=Tr
             pass
         else:
             out_path = pathlib.Path(out_path)
-        if out_path.parent.exists()==False:
+            
+        if out_path.parent.exists() == False:
             print('Directory does not exist. Please enter a different value for the out_path parameter.')
             return        
 
@@ -134,10 +137,17 @@ def export_grids(grid_data, out_path, file_id='',filetype='tif', variable_sep=Tr
         file_id = '_'+file_id
 
     out_path = out_path.as_posix()+'/'
+    
+    if verbose:
+        print('Export filepath(s):')
+        
     outPaths = []
     for f in filenames:
-        outPaths.append(out_path+f+file_id+todayDateStr+filetype)
-
+        currOutPath = out_path+f+file_id+todayDateStr+filetype
+        outPaths.append(currOutPath)
+        if verbose:
+            print('\tcurrOutPath')
+        
     #Do export
     if filetype.lower() in pickleList:
         import pickle

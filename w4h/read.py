@@ -4,6 +4,7 @@ import json
 import os
 import pathlib
 
+import geopandas as gpd
 import pandas as pd
 import numpy as np
 
@@ -179,29 +180,35 @@ def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
+    #Check if input data is already dataframe, otherwise, read it in as dataframe
+    if not isinstance(data_filepath, pd.DataFrame) or isinstance(data_filepath, gpd.GeoDataFrame):
+        downholeDataIN = pd.read_csv(data_filepath, sep=',', header='infer', encoding=encoding, **read_csv_kwargs)
+
     if data_cols is None:
+        data_useCols = downholeDataIN.columns
+    elif data_cols == 'auto':
         data_useCols = ["API_NUMBER","TABLE_NAME","FORMATION","THICKNESS","TOP","BOTTOM"]
     else:
         data_useCols= data_cols
+    downholeDataIN = downholeDataIN[data_useCols]
 
-    if metadata_cols is None:
+    if metadata_filepath is None:
+        headerDataIN = None
+    elif not isinstance(metadata_filepath, pd.DataFrame) or isinstance(metadata_filepath, gpd.GeoDataFrame):
+        headerDataIN = pd.read_csv(metadata_filepath, sep=',', header='infer', encoding=encoding, usecols=metadata_useCols, **read_csv_kwargs)
+    else:
+        headerDataIN = None
+
+    if metadata_cols is None and headerDataIN is not None:
+        metadata_useCols = headerDataIN.columns
+    elif metadata_cols == 'auto':
         metadata_useCols = ['API_NUMBER',"TOTAL_DEPTH","SECTION","TWP","TDIR","RNG","RDIR","MERIDIAN","QUARTERS","ELEVATION","ELEVREF","COUNTY_CODE","LATITUDE","LONGITUDE","ELEVSOURCE"]
     else:
         metadata_useCols= metadata_cols
 
-    #Check if input data is already 
-    if isinstance(data_filepath, pd.DataFrame):
-        downholeDataIN = data_filepath[data_useCols]
-    else:
-        downholeDataIN = pd.read_csv(data_filepath, sep=',', header='infer', encoding=encoding, usecols=data_useCols, **read_csv_kwargs)
-    
-    if metadata_filepath is None:
-        headerDataIN = None
-    elif isinstance(metadata_filepath, pd.DataFrame):
-        headerDataIN = metadata_filepath[metadata_useCols]
-    else:
-        headerDataIN = pd.read_csv(metadata_filepath, sep=',', header='infer', encoding=encoding, usecols=metadata_useCols, **read_csv_kwargs)
-
+    if headerDataIN is not None:
+        headerDataIN = headerDataIN[metadata_useCols]
+        
     #Drop data with no API        
     downholeDataIN = downholeDataIN.dropna(subset=[well_key]) #Drop data with no API
     if headerDataIN is not None:
@@ -223,7 +230,8 @@ def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols
     #Print outputs to terminal, if designated
     if verbose:
         print('Data file has ' + str(downholeDataIN.shape[0])+' valid well records.')
-        print("Metadata file has "+str(headerDataIN.shape[0])+" unique wells with valid location information.")
+        if headerDataIN is not None:
+            print("Metadata file has "+str(headerDataIN.shape[0])+" unique wells with valid location information.")
     
     return downholeDataIN, headerDataIN
 
@@ -585,7 +593,7 @@ def read_lithologies(lith_file=None, interp_col='LITHOLOGY', target_col='CODE', 
 
     return lithoDF
 
-def add_control_points(df, df_control, well_key='API_NUMBER', xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', controlpoints_crs='EPSG:4269', top_col='TOP', bottom_col='BOTTOM', description_col='FORMATION', interp_col='INTERPRETATION', target_col='TARGET', verbose=False, log=False, **read_csv_kwargs):
+def add_control_points(df_without_control, df_control=None,  xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', controlpoints_crs='EPSG:4269',  description_col='FORMATION', interp_col='INTERPRETATION', target_col='TARGET', verbose=False, log=False, **kwargs):
     """Function to add control points, primarily to aid in interpolation. This may be useful when conditions are known but do not exist in input well database
 
     Parameters
@@ -604,10 +612,6 @@ def add_control_points(df, df_control, well_key='API_NUMBER', xcol='LONGITUDE', 
         The column in df_control containing the z coordinates for each control point, by default 'ELEV_FT'
     controlpoints_crs : str, optional
         The column in df_control containing the crs of points, by default 'EPSG:4269'
-    top_col : str, optional
-        The column in df_control containing the top depth/elevation of the control point 'interval', by default 'TOP'
-    bottom_col : str, optional
-        The column in df_control containing the bottom depth/elevation of the control point 'interval', by default 'BOTTOM'
     description_col : str, optional
         The column in df_control with the description (if this is used), by default 'FORMATION'
     interp_col : str, optional
@@ -618,6 +622,8 @@ def add_control_points(df, df_control, well_key='API_NUMBER', xcol='LONGITUDE', 
         Whether to print information to terminal, by default False
     log : bool, optional
         Whether to log information in log file, by default False
+    **kwargs
+        Keyword arguments of pandas.concat() or pandas.read_csv that will be passed to that function, except for objs, which are df and df_control
 
     Returns
     -------
@@ -626,14 +632,36 @@ def add_control_points(df, df_control, well_key='API_NUMBER', xcol='LONGITUDE', 
     """
     import geopandas as gpd
 
-    if isinstance(df_control, pd.DataFrame) or isinstance(df_control, gpd.GeoDataFrame):
+    if df_control is None:
+        return df_without_control
+    elif isinstance(df_control, pd.DataFrame) or isinstance(df_control, gpd.GeoDataFrame):
         pass
     else:
+        read_csv_kwargs = {k: v for k, v in locals()['kwargs'].items() if k in pd.read_csv.__code__.co_varnames}
         df_control = pd.read_csv(df_control, **read_csv_kwargs)
-
-    if isinstance(df, gpd.GeoDataFrame):
+    
+    #Drop unnecessary columns, if needed
+    if target_col not in df_without_control.columns and target_col in df_control.columns:
+        df_control.drop([target_col], axis=1, inplace=True)
+        
+    if interp_col not in df_without_control.columns and interp_col in df_control.columns:
+        df_control.drop([interp_col], axis=1, inplace=True)
+        
+    if description_col not in df_without_control.columns and description_col in df_control.columns:
+        df_control.drop([description_col], axis=1, inplace=True)            
+        
+    #If our main df is already a geodataframe, make df_control one too
+    if isinstance(df_without_control, gpd.GeoDataFrame):
         from w4h import coords2geometry
         df_control = coords2geometry(df_no_geometry=df_control, xcol=xcol, ycol=ycol, zcol=zcol, input_coords_crs=controlpoints_crs, log=log)
 
-    df_control = pd.concat([df, df_control])
-    return df_control
+    #Get kwargs passed to pd.concat, and set defaults for ignore_index and join
+    concat_kwargs = {k: v for k, v in locals()['kwargs'].items() if k in pd.concat.__code__.co_varnames}
+    if 'ignore_index' not in concat_kwargs.keys():
+        concat_kwargs['ignore_index'] = True
+    if 'join' not in concat_kwargs.keys():
+        concat_kwargs['join'] = 'outer'
+        
+    df = pd.concat([df_without_control, df_control], **concat_kwargs)
+    
+    return df

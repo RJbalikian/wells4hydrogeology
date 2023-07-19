@@ -22,7 +22,7 @@ from w4h.clean import (remove_nonlocated,
                        remove_no_topo, 
                        remove_no_depth, 
                        remove_bad_depth, 
-                       remove_no_formation)
+                       remove_no_description)
 
 from w4h.export import (export_dataframe,
                         export_grids)
@@ -75,7 +75,7 @@ __all__=('logger_function','run',
          'remove_no_topo', 
          'remove_no_depth', 
          'remove_bad_depth', 
-         'remove_no_formation',
+         'remove_no_description',
         'export_dataframe',
         'export_grids',
          'get_layer_depths',
