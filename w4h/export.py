@@ -146,7 +146,7 @@ def export_grids(grid_data, out_path, file_id='',filetype='tif', variable_sep=Tr
         currOutPath = out_path+f+file_id+todayDateStr+filetype
         outPaths.append(currOutPath)
         if verbose:
-            print('\tcurrOutPath')
+            print('\t {}'.format(currOutPath))
         
     #Do export
     if filetype.lower() in pickleList:
