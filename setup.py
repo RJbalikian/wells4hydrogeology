@@ -8,10 +8,10 @@ setup(
     name="wells4hydrogeology",
     author= "Riley Balikian",
     author_email = "balikian@illinois.edu",
-    version="0.0.10",
+    version="0.0.11",
     install_requires=["geopandas", "rioxarray", "owslib", "scipy", "matplotlib", "pandas", "numpy"],
     long_description = long_description,
     long_description_content_type="text/markdown",
     description="A package to read in geology data from wells and create a layered, gridded hydrogeologic model of a study region, all within a python environment, automating and performing tasks often carried out in a dedicated GIS software.",
-    package_data={'w4h': ['resources/*', 'resources/sample_data/*', 'resources/sample_data/DictionaryTerms/*','resources/sample_data/LithologyInterpretations*']}
+    package_data={'w4h': ['resources/*', 'resources/sample_data/*', 'resources/sample_data/DictionaryTerms/*','resources/sample_data/LithologyInterpretations/*']}
     )
