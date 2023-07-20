@@ -8,7 +8,7 @@ setup(
     name="wells4hydrogeology",
     author= "Riley Balikian",
     author_email = "balikian@illinois.edu",
-    version="0.0.11",
+    version="0.0.12",
     install_requires=["geopandas", "rioxarray", "owslib", "scipy", "matplotlib", "pandas", "numpy"],
     long_description = long_description,
     long_description_content_type="text/markdown",
