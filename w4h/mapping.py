@@ -532,17 +532,24 @@ def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_g
     if read_grid and model_grid_path is not None:
         modelGridIN = rxr.open_rasterio(model_grid_path)
 
-        file = w4h.read.__get_resource_path('isws_crs.txt')
-        iswsCRS = w4h.read_dict(file, keytype=None)
-
         if grid_crs is None:
             try:
                 grid_crs=modelGridIN.spatial_ref.crs_wkt
             except:
-                modelGridIN.rio.write_crs(iswsCRS)
-        elif grid_crs.lower()=='isws':
-            modelGridIN.rio.write_crs(iswsCRS)
-        
+                file = w4h.read.__get_resource_path('isws_crs.txt')
+                iswsCRS = w4h.read_dict(file, keytype=None)
+                grid_crs = iswsCRS              
+                modelGridIN.rio.write_crs(grid_crs)
+        elif isinstance(grid_crs, str) and grid_crs.lower()=='isws':
+            file = w4h.read.__get_resource_path('isws_crs.txt')
+            iswsCRS = w4h.read_dict(file, keytype=None)            
+            grid_crs = iswsCRS              
+            modelGridIN.rio.write_crs(grid_crs)
+        elif isinstance(grid_crs, pathlib.PurePath) or (isinstance(grid_crs, str) and pathlib.Path(grid_crs).exists()):
+            file = grid_crs
+            grid_crs = w4h.read_dict(file, keytype=None)            
+            modelGridIN.rio.write_crs(grid_crs)
+
         if study_area is not None:                
             if study_area_crs is None:
                 study_area_crs=study_area.crs
