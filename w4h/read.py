@@ -200,7 +200,7 @@ def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols
     if metadata_filepath is None:
         headerDataIN = None
     elif not isinstance(metadata_filepath, pd.DataFrame) or isinstance(metadata_filepath, gpd.GeoDataFrame):
-        headerDataIN = pd.read_csv(metadata_filepath, sep=',', header='infer', encoding=encoding, usecols=metadata_useCols, **read_csv_kwargs)
+        headerDataIN = pd.read_csv(metadata_filepath, sep=',', header='infer', encoding=encoding, **read_csv_kwargs)
     else:
         headerDataIN = None
 

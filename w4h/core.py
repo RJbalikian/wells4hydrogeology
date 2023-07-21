@@ -95,33 +95,33 @@ def run(well_data, well_data_cols=None,
         if metadata is None:
             if well_data.is_dir():
                 #If the two files are supposed to be in the same directory (or just want well_data found)
-                downholeDataPATH, headerDataPATH = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
+                well_dataPath, metadataPath = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
             elif well_data.exists():
                 #If well_data is a file, and metadata is not used
-                downholeDataPATH, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
-                headerDataPATH = None
+                well_dataPath, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
+                metadataPath = None
             else:
                 #Need for well_data to exist at the very least
-                IOError('well_data file does not exist:{}'.format(well_data))
+                raise IOError('well_data file does not exist:{}'.format(well_data))
         elif isinstance(metadata, pathlib.PurePath) or isinstance(metadata, str):
             #Metdata has specifically been specified by a filepath
             if isinstance(metadata, str):
                 metadata = pathlib.Path(metadata)    
-            downholeDataPATH, headerDataPATH = w4h.file_setup(well_data=well_data, metadata=metadata, **file_setup_kwargs)                
+            well_dataPath, metadataPath = w4h.file_setup(well_data=well_data, metadata=metadata, **file_setup_kwargs)                
         else:
             if isinstance(metadata, pd.DataFrame):
-                downholeDataPATH, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
-                headerDataPATH = metadata
+                well_dataPath, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
+                metadataPath = metadata
             elif metadata is None:
-                downholeDataPATH, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
+                well_dataPath, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
 
     elif isinstance(well_data, pd.DataFrame):
         if isinstance(metadata, pd.DataFrame):
-            downholeDataPATH = well_data
-            headerDataPATH = metadata
+            well_dataPath = well_data
+            metadataPath = metadata
         elif isinstance(metadata, pathlib.PurePath) or isinstance(metadata, str):
-            _, headerDataPATH = w4h.file_setup(well_data=metadata, metadata=metadata, verbose=verbose, log=log, **file_setup_kwargs)                
-            downholeDataPATH = well_data
+            _, metadataPath = w4h.file_setup(well_data=metadata, metadata=metadata, verbose=verbose, log=log, **file_setup_kwargs)                
+            well_dataPath = well_data
         else:
             print('ERROR: metadata must be a string filepath, a pathlib.Path object, or pandas.DataFrame')
     else:
@@ -129,7 +129,7 @@ def run(well_data, well_data_cols=None,
 
     #Get pandas dataframes from input
     read_raw_txt_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.read_raw_csv .__code__.co_varnames}
-    well_data_IN, metadata_IN = w4h.read_raw_csv(data_filepath=downholeDataPATH, metadata_filepath=headerDataPATH, verbose=verbose, log=log, **read_raw_txt_kwargs) 
+    well_data_IN, metadata_IN = w4h.read_raw_csv(data_filepath=well_dataPath, metadata_filepath=metadataPath, verbose=verbose, log=log, **read_raw_txt_kwargs) 
     #Functions to read data into dataframes. Also excludes extraneous columns, and drops header data with no location information
 
     #Define data types (file will need to be udpated)
@@ -262,11 +262,16 @@ def run(well_data, well_data_cols=None,
     layer_interp_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.layer_interp.__code__.co_varnames}
     layers_data = w4h.layer_interp(points=resdf, layers=9, grid=modelGrid, verbose=verbose, log=log, **layer_interp_kwargs)
 
+    nowTime = datetime.datetime.now()
+    nowTime = str(nowTime).replace(':', '-').replace(' ','_').split('.')[0]
+    nowTimeStr = '_'+str(nowTime)
+
     if export_dir is None:
+        outDir = 'Output_'+nowTimeStr
         if well_data.is_dir():
-            export_dir = well_data.joinpath('Output')
+            export_dir = well_data.joinpath(outDir)
         else:
-            export_dir = well_data.parent.joinpath('Outpath')
+            export_dir = well_data.parent.joinpath(outDir)
         
         if not export_dir.exists():
             try:
@@ -275,7 +280,7 @@ def run(well_data, well_data_cols=None,
                 pass
 
     w4h.export_grids(grid_data=layers_data, out_path=export_dir, file_id='',filetype='tif', variable_sep=True, date_stamp=True, verbose=verbose, log=log)
-    #UPDATE: export points?
+
     return resdf, layers_data
 
 

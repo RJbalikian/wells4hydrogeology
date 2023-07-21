@@ -772,8 +772,13 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
     driftThick = surface - bedrock
     driftThick = driftThick.clip(0,max=5000,keep_attrs=True)
     if plot:
-        driftThick.plot()
-
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+        maxThick = np.nanmax(driftThick)
+        if maxThick > 550:
+            maxThick = 550
+        dtPlot = driftThick.plot(vmin=0, vmax=maxThick, ax=ax)
+        ax.set_title("Drift Thickness")
     try:
         noDataVal = driftThick.attrs['_FillValue'] #Extract from dataset itself
     except:

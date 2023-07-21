@@ -447,6 +447,7 @@ def layer_interp(points, grid, layers=None, method='nearest', return_type='dataa
 
     dataAList = ['dataarray', 'da', 'a', 'array']
     dataSList = ['dataset', 'ds', 'set']
+
     if return_type.lower() in dataAList:
         interp_data = xr.concat(daDict.values(), dim='Layer')
         interp_data = interp_data.assign_coords(Layer=np.arange(1,10))
@@ -464,6 +465,11 @@ def layer_interp(points, grid, layers=None, method='nearest', return_type='dataa
     else:
         print("{} is not a valid input for return_type. Please set return_type to either 'dataarray' or 'dataset'".format(return_type))
         return
+
+    if verbose:
+        for i, layer_data in enumerate(interp_data):
+            pts = points[i]
+            pts.plot(c=pts[targetcol])
 
     if export_dir is None:
         pass
