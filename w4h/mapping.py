@@ -562,7 +562,7 @@ def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_g
             noDataVal = -5000000
 
         modelGrid = modelGrid.where(modelGrid != noDataVal, other=np.nan)   #Replace no data values with NaNs
-        modelGrid.rio.reproject(iswsCRS, inplace=True)
+        modelGrid.rio.reproject(grid_crs, inplace=True)
     elif model_grid_path is None and study_area is None:
         if verbose:
             print("ERROR: Either model_grid_path or study_area must be defined.")

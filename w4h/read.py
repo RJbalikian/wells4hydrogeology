@@ -271,29 +271,6 @@ def read_xyz(xyzpath, datatypes=None, verbose=False, log=False):
         print('XYZ file has ' + str(xyzDataIN.shape[0])+' records with elevation and location.')
     return xyzDataIN
 
-#Get filepath of resource in resource folder
-def __get_resource_path(res):
-    """Function to get the path to the resource folder (used in other functions)
-
-    Parameters
-    ----------
-    res : _type_
-        _description_
-
-    Returns
-    -------
-    _type_
-        _description_
-    """
-    repoPath = pathlib.Path(__file__).parent.parent
-    try:
-        resource = repoPath/ "resources" / "sample_data"/ res
-        if not resource.exists():
-            raise FileNotFoundError('File not found')
-    except:
-        resource = repoPath/ "resources" / res
-    return resource
-
 #Read dictionary file into dictionary variable
 def read_dict(file, keytype='np'):
     """Function to read a text file with a dictionary in it into a python dictionary
