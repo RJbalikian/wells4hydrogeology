@@ -63,8 +63,11 @@ def remove_nonlocated(df_with_locations, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LAT
     
     if verbose:
         after = df_with_locations.shape[0]
-        print(str(before-after)+&#39; records removed without location information.&#39;)
-        print(str(df_with_locations.shape[0])+&#39; wells remain from &#39;+str(df_with_locations[&#39;API_NUMBER&#39;].unique().shape[0])+&#39; geolocated wells in study area.&#39;)
+        print(&#39;Removed well records with no location information. &#39;)
+        print(&#34;\tNumber of records before removing: &#34;+str(before))
+        print(&#34;\tNumber of records after removing: &#34;+str(after))
+        print(&#34;\t\t{} wells records removed without location information&#34;.format(before-after))
+
     return df_with_locations
 
 #Function to remove data (intended for headerData) without surface topography information
@@ -101,9 +104,10 @@ def remove_no_topo(df_with_topo, zcol=&#39;ELEVATION&#39;, no_data_val_table=&#3
     
     if verbose:
         after = df_with_topo.shape[0]
-        print(&#39;Well records removed: &#39;+str(before-after))
-        print(&#34;Number of rows before dropping those without surface elevation information: &#34;+str(before))
-        print(&#34;Number of rows after dropping those without surface elevation information: &#34;+str(after))
+        print(&#39;Removed well records with no surface elevation information. &#39;)
+        print(&#34;\tNumber of records before removing: &#34;+str(before))
+        print(&#34;\tNumber of records after removing: &#34;+str(after))
+        print(&#34;\t\t{} wells records removed without surface elevation information&#34;.format(before-after))
     
     return df_with_topo
 
@@ -146,9 +150,11 @@ def remove_no_depth(df_with_depth, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM
     df_with_depth.reset_index(inplace=True, drop=True) #Reset index
   
     if verbose:
-        print(&#34;Number of rows before dropping those without record depth information: &#34; + str(before))
-        print(&#34;Number of rows after dropping those without record depth information: &#34; + str(df_with_depth.shape[0]))
-        print(&#39;Number of well records without formation information deleted: &#39; + str(before - df_with_depth.shape[0]))
+        after = df_with_depth.shape[0]
+        print(&#39;Removed well records with no depth information. &#39;)
+        print(&#34;\tNumber of records before removing: &#34;+str(before))
+        print(&#34;\tNumber of records after removing: &#34;+str(after))
+        print(&#34;\t\t{} well records removed without depth information&#34;.format(before-after))
     
     return df_with_depth
 
@@ -187,9 +193,12 @@ def remove_bad_depth(df_with_depth, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTO
     df_with_depth.reset_index(inplace=True, drop=True) #Reset index
 
     if verbose:
-        print(&#34;Number of rows before dropping those with obviously bad depth information: &#34;+str(before))
-        print(&#34;Number of rows after dropping those with obviously bad depth information: &#34;+str(df_with_depth.shape[0]))
-        print(&#39;Well records deleted: &#39;+str(before-df_with_depth.shape[0]))
+        after = df_with_depth.shape[0]
+        print(&#39;Removed well records with obviously bad depth information. &#39;)
+        print(&#34;\tNumber of records before removing: &#34;+str(before))
+        print(&#34;\tNumber of records after removing: &#34;+str(after))
+        print(&#34;\t\t{} well records removed without depth information&#34;.format(before-after))
+
     return df_with_depth
 
 #This function drops all records in downholeData with no formation in formation in the description fiel
@@ -225,10 +234,12 @@ def remove_no_description(df_with_descriptions, description_col=&#39;FORMATION&#
     df_with_descriptions.reset_index(inplace=True, drop=True) #Reset index
 
     if verbose:
-        print(&#34;Number of rows before dropping those without FORMATION information: &#34;+str(before))
-        print(&#34;Number of rows after dropping those without FORMATION information: &#34;+str(df_with_descriptions.shape[0]))
-        print(&#39;Well records deleted: &#39;+str(before-df_with_descriptions.shape[0]))
-        
+        after = df_with_descriptions.shape[0]
+        print(&#39;Removed well records without geologic descriptions. &#39;)
+        print(&#34;\tNumber of records before removing: &#34;+str(before))
+        print(&#34;\tNumber of records after removing: &#34;+str(after))
+        print(&#34;\t\t{} well records removed without geologic descriptions&#34;.format(before-after))
+
     return df_with_descriptions</code></pre>
 </details>
 </section>
@@ -302,9 +313,12 @@ def remove_no_description(df_with_descriptions, description_col=&#39;FORMATION&#
     df_with_depth.reset_index(inplace=True, drop=True) #Reset index
 
     if verbose:
-        print(&#34;Number of rows before dropping those with obviously bad depth information: &#34;+str(before))
-        print(&#34;Number of rows after dropping those with obviously bad depth information: &#34;+str(df_with_depth.shape[0]))
-        print(&#39;Well records deleted: &#39;+str(before-df_with_depth.shape[0]))
+        after = df_with_depth.shape[0]
+        print(&#39;Removed well records with obviously bad depth information. &#39;)
+        print(&#34;\tNumber of records before removing: &#34;+str(before))
+        print(&#34;\tNumber of records after removing: &#34;+str(after))
+        print(&#34;\t\t{} well records removed without depth information&#34;.format(before-after))
+
     return df_with_depth</code></pre>
 </details>
 </dd>
@@ -375,9 +389,11 @@ def remove_no_description(df_with_descriptions, description_col=&#39;FORMATION&#
     df_with_depth.reset_index(inplace=True, drop=True) #Reset index
   
     if verbose:
-        print(&#34;Number of rows before dropping those without record depth information: &#34; + str(before))
-        print(&#34;Number of rows after dropping those without record depth information: &#34; + str(df_with_depth.shape[0]))
-        print(&#39;Number of well records without formation information deleted: &#39; + str(before - df_with_depth.shape[0]))
+        after = df_with_depth.shape[0]
+        print(&#39;Removed well records with no depth information. &#39;)
+        print(&#34;\tNumber of records before removing: &#34;+str(before))
+        print(&#34;\tNumber of records after removing: &#34;+str(after))
+        print(&#34;\t\t{} well records removed without depth information&#34;.format(before-after))
     
     return df_with_depth</code></pre>
 </details>
@@ -441,10 +457,12 @@ def remove_no_description(df_with_descriptions, description_col=&#39;FORMATION&#
     df_with_descriptions.reset_index(inplace=True, drop=True) #Reset index
 
     if verbose:
-        print(&#34;Number of rows before dropping those without FORMATION information: &#34;+str(before))
-        print(&#34;Number of rows after dropping those without FORMATION information: &#34;+str(df_with_descriptions.shape[0]))
-        print(&#39;Well records deleted: &#39;+str(before-df_with_descriptions.shape[0]))
-        
+        after = df_with_descriptions.shape[0]
+        print(&#39;Removed well records without geologic descriptions. &#39;)
+        print(&#34;\tNumber of records before removing: &#34;+str(before))
+        print(&#34;\tNumber of records after removing: &#34;+str(after))
+        print(&#34;\t\t{} well records removed without geologic descriptions&#34;.format(before-after))
+
     return df_with_descriptions</code></pre>
 </details>
 </dd>
@@ -508,9 +526,10 @@ def remove_no_description(df_with_descriptions, description_col=&#39;FORMATION&#
     
     if verbose:
         after = df_with_topo.shape[0]
-        print(&#39;Well records removed: &#39;+str(before-after))
-        print(&#34;Number of rows before dropping those without surface elevation information: &#34;+str(before))
-        print(&#34;Number of rows after dropping those without surface elevation information: &#34;+str(after))
+        print(&#39;Removed well records with no surface elevation information. &#39;)
+        print(&#34;\tNumber of records before removing: &#34;+str(before))
+        print(&#34;\tNumber of records after removing: &#34;+str(after))
+        print(&#34;\t\t{} wells records removed without surface elevation information&#34;.format(before-after))
     
     return df_with_topo</code></pre>
 </details>
@@ -567,8 +586,11 @@ def remove_no_description(df_with_descriptions, description_col=&#39;FORMATION&#
     
     if verbose:
         after = df_with_locations.shape[0]
-        print(str(before-after)+&#39; records removed without location information.&#39;)
-        print(str(df_with_locations.shape[0])+&#39; wells remain from &#39;+str(df_with_locations[&#39;API_NUMBER&#39;].unique().shape[0])+&#39; geolocated wells in study area.&#39;)
+        print(&#39;Removed well records with no location information. &#39;)
+        print(&#34;\tNumber of records before removing: &#34;+str(before))
+        print(&#34;\tNumber of records after removing: &#34;+str(after))
+        print(&#34;\t\t{} wells records removed without location information&#34;.format(before-after))
+
     return df_with_locations</code></pre>
 </details>
 </dd>

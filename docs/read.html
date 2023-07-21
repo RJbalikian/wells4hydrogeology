@@ -102,7 +102,7 @@ def get_most_recent(dir=resource_dir, glob_pattern=&#39;*&#39;, verbose=True):
             break
     
     if verbose:
-        print(&#39;Most Recent version of this file is : &#39;+mostRecentFile.name)
+        print(&#39;Most Recent version of file fitting {} pattern is: {}&#39;.format(glob_pattern, mostRecentFile.name))
 
     return mostRecentFile
 
@@ -167,9 +167,10 @@ def file_setup(well_data, metadata=None, data_filename=&#39;*ISGS_DOWNHOLE_DATA*
     headerDataPATH = pathlib.Path(headerDataFILE)
 
     if verbose:
-        print(&#39;Using the following files:&#39;)
+        print(&#39;Using the following file(s):&#39;)
         print(&#39;\t&#39;, downholeDataFILE)
-        print(&#39;\t&#39;, headerDataFILE)
+        if headerDataFILE != downholeDataFILE:
+            print(&#39;\t&#39;, headerDataFILE)
 
     #Define datatypes, to use later
     #downholeDataDTYPES = {&#39;ID&#39;:np.uint32, &#34;API_NUMBER&#34;:np.uint64,&#34;TABLE_NAME&#34;:str,&#34;WHO&#34;:str,&#34;INTERPRET_DATE&#34;:str,&#34;FORMATION&#34;:str,&#34;THICKNESS&#34;:np.float64,&#34;TOP&#34;:np.float64,&#34;BOTTOM&#34;:np.float64}
@@ -227,7 +228,7 @@ def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols
     if metadata_filepath is None:
         headerDataIN = None
     elif not isinstance(metadata_filepath, pd.DataFrame) or isinstance(metadata_filepath, gpd.GeoDataFrame):
-        headerDataIN = pd.read_csv(metadata_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=metadata_useCols, **read_csv_kwargs)
+        headerDataIN = pd.read_csv(metadata_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, **read_csv_kwargs)
     else:
         headerDataIN = None
 
@@ -298,29 +299,6 @@ def read_xyz(xyzpath, datatypes=None, verbose=False, log=False):
         print(&#39;XYZ file has &#39; + str(xyzDataIN.shape[0])+&#39; records with elevation and location.&#39;)
     return xyzDataIN
 
-#Get filepath of resource in resource folder
-def __get_resource_path(res):
-    &#34;&#34;&#34;Function to get the path to the resource folder (used in other functions)
-
-    Parameters
-    ----------
-    res : _type_
-        _description_
-
-    Returns
-    -------
-    _type_
-        _description_
-    &#34;&#34;&#34;
-    repoPath = pathlib.Path(__file__).parent.parent
-    try:
-        resource = repoPath/ &#34;resources&#34; / &#34;sample_data&#34;/ res
-        if not resource.exists():
-            raise FileNotFoundError(&#39;File not found&#39;)
-    except:
-        resource = repoPath/ &#34;resources&#34; / res
-    return resource
-
 #Read dictionary file into dictionary variable
 def read_dict(file, keytype=&#39;np&#39;):
     &#34;&#34;&#34;Function to read a text file with a dictionary in it into a python dictionary
@@ -378,7 +356,7 @@ def define_dtypes(undefined_df, datatypes=None, verbose=False, log=False):
 
             if not datatypes.exists():
                 if verbose:
-                    print(&#39;ERROR: datatypes ({}) does not exist&#39;.format(datatypes))
+                    print(&#34;ERROR: datatypes file &#39;{}&#39; does not exist, using inferred datatypes.&#34;.format(datatypes),)
                 return dfout
             elif datatypes.is_dir():
                 if verbose:
@@ -875,7 +853,7 @@ def add_control_points(df_without_control, df_control=None,  xcol=&#39;LONGITUDE
 
             if not datatypes.exists():
                 if verbose:
-                    print(&#39;ERROR: datatypes ({}) does not exist&#39;.format(datatypes))
+                    print(&#34;ERROR: datatypes file &#39;{}&#39; does not exist, using inferred datatypes.&#34;.format(datatypes),)
                 return dfout
             elif datatypes.is_dir():
                 if verbose:
@@ -996,9 +974,10 @@ It may also be of use to simply skip this function altogether and directly defin
     headerDataPATH = pathlib.Path(headerDataFILE)
 
     if verbose:
-        print(&#39;Using the following files:&#39;)
+        print(&#39;Using the following file(s):&#39;)
         print(&#39;\t&#39;, downholeDataFILE)
-        print(&#39;\t&#39;, headerDataFILE)
+        if headerDataFILE != downholeDataFILE:
+            print(&#39;\t&#39;, headerDataFILE)
 
     #Define datatypes, to use later
     #downholeDataDTYPES = {&#39;ID&#39;:np.uint32, &#34;API_NUMBER&#34;:np.uint64,&#34;TABLE_NAME&#34;:str,&#34;WHO&#34;:str,&#34;INTERPRET_DATE&#34;:str,&#34;FORMATION&#34;:str,&#34;THICKNESS&#34;:np.float64,&#34;TOP&#34;:np.float64,&#34;BOTTOM&#34;:np.float64}
@@ -1105,7 +1084,7 @@ It may also be of use to simply skip this function altogether and directly defin
             break
     
     if verbose:
-        print(&#39;Most Recent version of this file is : &#39;+mostRecentFile.name)
+        print(&#39;Most Recent version of file fitting {} pattern is: {}&#39;.format(glob_pattern, mostRecentFile.name))
 
     return mostRecentFile</code></pre>
 </details>
@@ -1558,7 +1537,7 @@ Tuple/list with two pandas dataframes: (well_data, metadata) metadata is None if
     if metadata_filepath is None:
         headerDataIN = None
     elif not isinstance(metadata_filepath, pd.DataFrame) or isinstance(metadata_filepath, gpd.GeoDataFrame):
-        headerDataIN = pd.read_csv(metadata_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=metadata_useCols, **read_csv_kwargs)
+        headerDataIN = pd.read_csv(metadata_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, **read_csv_kwargs)
     else:
         headerDataIN = None
 

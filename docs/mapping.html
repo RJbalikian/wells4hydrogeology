@@ -183,10 +183,7 @@ def sample_raster_points(raster, points_df, xcol=&#39;LONGITUDE&#39;, ycol=&#39;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     if verbose:
-        nowTime = datetime.datetime.now()
-        expectMin = (points_df.shape[0]/3054409) * 14
-        endTime = nowTime+datetime.timedelta(minutes=expectMin)
-        print(new_col+ &#34; sampling should be done by {:d}:{:02d}&#34;.format(endTime.hour, endTime.minute))
+        print(&#34;Sampling grid for {}.&#34;.format(new_col))
 
     #Project points to raster CRS
     rastercrsWKT=raster.spatial_ref.crs_wkt
@@ -560,17 +557,24 @@ def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_g
     if read_grid and model_grid_path is not None:
         modelGridIN = rxr.open_rasterio(model_grid_path)
 
-        file = w4h.read.__get_resource_path(&#39;isws_crs.txt&#39;)
-        iswsCRS = w4h.read_dict(file, keytype=None)
-
         if grid_crs is None:
             try:
                 grid_crs=modelGridIN.spatial_ref.crs_wkt
             except:
-                modelGridIN.rio.write_crs(iswsCRS)
-        elif grid_crs.lower()==&#39;isws&#39;:
-            modelGridIN.rio.write_crs(iswsCRS)
-        
+                iswsCRSPath = w4h.get_resources()[&#39;ISWS_CRS&#39;]
+                iswsCRS = w4h.read_dict(iswsCRSPath, keytype=None)
+                grid_crs = iswsCRS              
+                modelGridIN.rio.write_crs(grid_crs)
+        elif isinstance(grid_crs, str) and grid_crs.lower()==&#39;isws&#39;:
+            iswsCRSPath = w4h.get_resources()[&#39;ISWS_CRS&#39;]
+            iswsCRS = w4h.read_dict(iswsCRSPath, keytype=None)            
+            grid_crs = iswsCRS              
+            modelGridIN.rio.write_crs(grid_crs)
+        elif isinstance(grid_crs, pathlib.PurePath) or (isinstance(grid_crs, str) and pathlib.Path(grid_crs).exists()):
+            iswsCRSPath = w4h.get_resources()[&#39;ISWS_CRS&#39;]
+            grid_crs = w4h.read_dict(iswsCRSPath, keytype=None)            
+            modelGridIN.rio.write_crs(grid_crs)
+            
         if study_area is not None:                
             if study_area_crs is None:
                 study_area_crs=study_area.crs
@@ -586,7 +590,7 @@ def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_g
             noDataVal = -5000000
 
         modelGrid = modelGrid.where(modelGrid != noDataVal, other=np.nan)   #Replace no data values with NaNs
-        modelGrid.rio.reproject(iswsCRS, inplace=True)
+        modelGrid.rio.reproject(grid_crs, inplace=True)
     elif model_grid_path is None and study_area is None:
         if verbose:
             print(&#34;ERROR: Either model_grid_path or study_area must be defined.&#34;)
@@ -796,8 +800,13 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
     driftThick = surface - bedrock
     driftThick = driftThick.clip(0,max=5000,keep_attrs=True)
     if plot:
-        driftThick.plot()
-
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+        maxThick = np.nanmax(driftThick)
+        if maxThick &gt; 550:
+            maxThick = 550
+        dtPlot = driftThick.plot(vmin=0, vmax=maxThick, ax=ax)
+        ax.set_title(&#34;Drift Thickness&#34;)
     try:
         noDataVal = driftThick.attrs[&#39;_FillValue&#39;] #Extract from dataset itself
     except:
@@ -1078,8 +1087,13 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
     driftThick = surface - bedrock
     driftThick = driftThick.clip(0,max=5000,keep_attrs=True)
     if plot:
-        driftThick.plot()
-
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+        maxThick = np.nanmax(driftThick)
+        if maxThick &gt; 550:
+            maxThick = 550
+        dtPlot = driftThick.plot(vmin=0, vmax=maxThick, ax=ax)
+        ax.set_title(&#34;Drift Thickness&#34;)
     try:
         noDataVal = driftThick.attrs[&#39;_FillValue&#39;] #Extract from dataset itself
     except:
@@ -1353,17 +1367,24 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
     if read_grid and model_grid_path is not None:
         modelGridIN = rxr.open_rasterio(model_grid_path)
 
-        file = w4h.read.__get_resource_path(&#39;isws_crs.txt&#39;)
-        iswsCRS = w4h.read_dict(file, keytype=None)
-
         if grid_crs is None:
             try:
                 grid_crs=modelGridIN.spatial_ref.crs_wkt
             except:
-                modelGridIN.rio.write_crs(iswsCRS)
-        elif grid_crs.lower()==&#39;isws&#39;:
-            modelGridIN.rio.write_crs(iswsCRS)
-        
+                iswsCRSPath = w4h.get_resources()[&#39;ISWS_CRS&#39;]
+                iswsCRS = w4h.read_dict(iswsCRSPath, keytype=None)
+                grid_crs = iswsCRS              
+                modelGridIN.rio.write_crs(grid_crs)
+        elif isinstance(grid_crs, str) and grid_crs.lower()==&#39;isws&#39;:
+            iswsCRSPath = w4h.get_resources()[&#39;ISWS_CRS&#39;]
+            iswsCRS = w4h.read_dict(iswsCRSPath, keytype=None)            
+            grid_crs = iswsCRS              
+            modelGridIN.rio.write_crs(grid_crs)
+        elif isinstance(grid_crs, pathlib.PurePath) or (isinstance(grid_crs, str) and pathlib.Path(grid_crs).exists()):
+            iswsCRSPath = w4h.get_resources()[&#39;ISWS_CRS&#39;]
+            grid_crs = w4h.read_dict(iswsCRSPath, keytype=None)            
+            modelGridIN.rio.write_crs(grid_crs)
+            
         if study_area is not None:                
             if study_area_crs is None:
                 study_area_crs=study_area.crs
@@ -1379,7 +1400,7 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
             noDataVal = -5000000
 
         modelGrid = modelGrid.where(modelGrid != noDataVal, other=np.nan)   #Replace no data values with NaNs
-        modelGrid.rio.reproject(iswsCRS, inplace=True)
+        modelGrid.rio.reproject(grid_crs, inplace=True)
     elif model_grid_path is None and study_area is None:
         if verbose:
             print(&#34;ERROR: Either model_grid_path or study_area must be defined.&#34;)
@@ -1858,10 +1879,7 @@ new_col : str, optional</dd>
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     if verbose:
-        nowTime = datetime.datetime.now()
-        expectMin = (points_df.shape[0]/3054409) * 14
-        endTime = nowTime+datetime.timedelta(minutes=expectMin)
-        print(new_col+ &#34; sampling should be done by {:d}:{:02d}&#34;.format(endTime.hour, endTime.minute))
+        print(&#34;Sampling grid for {}.&#34;.format(new_col))
 
     #Project points to raster CRS
     rastercrsWKT=raster.spatial_ref.crs_wkt

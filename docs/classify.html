@@ -87,8 +87,12 @@ def specific_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col
     df_Interps[&#39;BEDROCK_FLAG&#39;] = df_Interps[&#39;LITHOLOGY&#39;] == &#39;BEDROCK&#39;
     
     if verbose:
-        print(&#34;Records Classified with full search term: &#34;+str(int(df_Interps[df_Interps[&#39;CLASS_FLAG&#39;]==1][&#39;CLASS_FLAG&#39;].sum())))
-        print(&#34;Records Classified with full search term: &#34;+str(round((df_Interps[df_Interps[&#39;CLASS_FLAG&#39;]==1][&#39;CLASS_FLAG&#39;].sum()/df_Interps.shape[0])*100,2))+&#34;% of data&#34;)
+        print(&#39;Classified well records using exact matches&#39;)
+        numRecsClass = int(df_Interps[df_Interps[&#39;CLASS_FLAG&#39;]==1][&#39;CLASS_FLAG&#39;].sum())
+        recsRemainig = int(df_Interps.shape[0]-numRecsClass)
+        percRecsClass =round((df_Interps[df_Interps[&#39;CLASS_FLAG&#39;]==1][&#39;CLASS_FLAG&#39;].sum()/df_Interps.shape[0])*100,2)
+        print(&#34;\t{} records classified using exact matches ({}% of unclassified data)&#34;.format(numRecsClass, percRecsClass))
+        print(&#39;\t{} records remain unclassified ({}% of unclassified data).&#39;.format(recsRemainig, 1-percRecsClass))
 
     return df_Interps
 
@@ -116,10 +120,7 @@ def split_defined(df, classification_col=&#39;CLASS_FLAG&#39;, verbose=False, lo
 
     classifedDF= df[df[classification_col].notna()] #Already-classifed data
     searchDF = df[df[classification_col].isna()] #Unclassified data
-    
-    if verbose:
-        print(str(searchDF.shape[0])+&#39; records unclassified; isolated into searchDF.&#39;)
-    
+        
     return classifedDF, searchDF
 
 #Classify downhole data by the initial substring
@@ -148,12 +149,12 @@ def start_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    if verbose:
-        #Estimate when it will end, based on test run
-        estTime = df.shape[0]/3054409 * 6 #It took about 6 minutes to classify data with entire dataframe. This estimates the fraction of that it will take
-        nowTime = datetime.datetime.now()
-        endTime = nowTime+datetime.timedelta(minutes=estTime)
-        print(&#34;Start Term process should be done by {:d}:{:02d}&#34;.format(endTime.hour, endTime.minute))
+    #if verbose:
+    #    #Estimate when it will end, based on test run
+    #    estTime = df.shape[0]/3054409 * 6 #It took about 6 minutes to classify data with entire dataframe. This estimates the fraction of that it will take
+    #    nowTime = datetime.datetime.now()
+    #    endTime = nowTime+datetime.timedelta(minutes=estTime)
+    #    print(&#34;Start Term process should be done by {:d}:{:02d}&#34;.format(endTime.hour, endTime.minute))
 
     #First, for each startterm, find all results in df that start with, add classification flag, and add interpretation.
     for i,s in enumerate(terms_df[terms_col]):
@@ -162,10 +163,13 @@ def start_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#
     df[&#39;BEDROCK_FLAG&#39;].loc[df[&#34;LITHOLOGY&#34;] == &#39;BEDROCK&#39;]
     
     if verbose:
-        print(&#34;Records classified with start search term: &#34;+str(int(df[&#39;CLASS_FLAG&#39;].count())))
-        print(&#34;Records classified with start search term: &#34;+str(round((df[&#39;CLASS_FLAG&#39;].count()/df.shape[0])*100,2))+&#34;% of remaining data&#34;)
-        #print(&#34;Records classified with both search terms: &#34;+str(round(((df[&#39;CLASS_FLAG&#39;].count()+specDF[&#39;CLASS_FLAG&#39;].count())/downholeData_Interps.shape[0])*100,2))+&#34;% of all data&#34;)
-        #This step usually takes about 5-6 minutes
+        numRecsClass = int(df[df[&#39;CLASS_FLAG&#39;]==4][&#39;CLASS_FLAG&#39;].sum())
+        percRecsClass= round((df[df[&#39;CLASS_FLAG&#39;]==4][&#39;CLASS_FLAG&#39;].sum()/df.shape[0])*100,2)
+        recsRemainig = int(df.shape[0]-numRecsClass)
+
+        print(&#39;Classified well records using initial substring matches&#39;)
+        print(&#34;\t{} records classified using initial substring matches ({}% of unclassified  data)&#34;.format(numRecsClass, percRecsClass))
+        print(&#39;\t{} records remain unclassified ({}% of unclassified  data).&#39;.format(recsRemainig, 1-percRecsClass))
     return df
 
 #Classify downhole data by any substring
@@ -194,12 +198,12 @@ def wildcard_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    if verbose:
-        #Estimate when it will end, based on test run
-        estTime = df.shape[0]/3054409 * 6 #It took about 6 minutes to classify data with entire dataframe. This estimates the fraction of that it will take
-        nowTime = datetime.datetime.now()
-        endTime = nowTime+datetime.timedelta(minutes=estTime)
-        print(&#34;Wildcard Term process should be done by (?) {:d}:{:02d}&#34;.format(endTime.hour, endTime.minute))
+    #if verbose:
+    #    #Estimate when it will end, based on test run
+    #    estTime = df.shape[0]/3054409 * 6 #It took about 6 minutes to classify data with entire dataframe. This estimates the fraction of that it will take
+    #    nowTime = datetime.datetime.now()
+    #    endTime = nowTime+datetime.timedelta(minutes=estTime)
+    #    print(&#34;Wildcard Term process should be done by (?) {:d}:{:02d}&#34;.format(endTime.hour, endTime.minute))
 
     #First, for each startterm, find all results in df that start with, add classification flag, and add interpretation.
     for i,s in enumerate(terms_df[terms_col]):
@@ -208,10 +212,13 @@ def wildcard_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col
     df[&#39;BEDROCK_FLAG&#39;].loc[df[&#34;LITHOLOGY&#34;] == &#39;BEDROCK&#39;]
     
     if verbose:
-        print(&#34;Records classified with wildcard search term: &#34;+str(int(df[&#39;CLASS_FLAG&#39;].count())))
-        print(&#34;Records classified with wildcard search term: &#34;+str(round((df[&#39;CLASS_FLAG&#39;].count()/df.shape[0])*100,2))+&#34;% of remaining data&#34;)
-        #print(&#34;Records classified with both search terms: &#34;+str(round(((df[&#39;CLASS_FLAG&#39;].count()+specDF[&#39;CLASS_FLAG&#39;].count())/downholeData_Interps.shape[0])*100,2))+&#34;% of all data&#34;)
-        #This step usually takes about 5-6 minutes
+        numRecsClass = int(df[df[&#39;CLASS_FLAG&#39;]==5][&#39;CLASS_FLAG&#39;].sum())
+        percRecsClass= round((df[df[&#39;CLASS_FLAG&#39;]==5][&#39;CLASS_FLAG&#39;].sum()/df.shape[0])*100,2)
+        recsRemainig = int(df.shape[0]-numRecsClass)
+
+        print(&#39;Classified well records using any substring (wildcard) match&#39;)
+        print(&#34;\t{} records classified using any substring match ({}% of unclassified  data)&#34;.format(numRecsClass, percRecsClass))
+        print(&#39;\t{} records remain unclassified ({}% of unclassified  data).&#39;.format(recsRemainig, 1-percRecsClass))
     return df
 
 #Merge data back together
@@ -268,8 +275,14 @@ def depth_define(dfIN, top_col=&#39;TOP&#39;, thresh=550.0, verbose=False, log=F
         else:
             brDepthClass = df[&#39;CLASS_FLAG&#39;].value_counts()[3.0]
         total = dfIN.shape[0]
-        print(&#34;Records classified as bedrock that were deeper than &#34;+str(thresh)+ &#34;&#39;: &#34; + str(brDepthClass))
-        print(&#34;This represents &#34;+str(round((brDepthClass)*100/total,2))+&#34;% of the unclassified data in this dataframe.&#34;)
+
+        numRecsClass = int(df[df[&#39;CLASS_FLAG&#39;]==3][&#39;CLASS_FLAG&#39;].sum())
+        percRecsClass= round((df[df[&#39;CLASS_FLAG&#39;]==3][&#39;CLASS_FLAG&#39;].sum()/df.shape[0])*100,2)
+        recsRemainig = int(df.shape[0]-numRecsClass)
+
+        print(&#39;Classified bedrock well records using depth threshold at depth of {}&#39;.format(thresh))
+        print(&#34;\t{} records classified using bedrock threshold depth ({}% of unclassified  data)&#34;.format(numRecsClass, percRecsClass))
+        print(&#39;\t{} records remain unclassified ({}% of unclassified  data).&#39;.format(recsRemainig, 1-percRecsClass))
         
     return df
 
@@ -388,7 +401,7 @@ def get_unique_wells(df, wellid_col=&#39;API_NUMBER&#39;, verbose=False, log=Fal
     uniqueWells = df[wellid_col].unique()
     wellsDF = pd.DataFrame(uniqueWells)
     if verbose:
-        print(&#39;Number of unique wells in downholeData: &#39;+str(wellsDF.shape[0]))
+        print(&#39;Number of unique wells: &#39;+str(wellsDF.shape[0]))
     wellsDF.columns = [&#39;UNIQUE_ID&#39;]
     
     return wellsDF
@@ -486,8 +499,14 @@ def sort_dataframe(df, sort_cols=[&#39;API_NUMBER&#39;,&#39;TOP&#39;], remove_na
         else:
             brDepthClass = df[&#39;CLASS_FLAG&#39;].value_counts()[3.0]
         total = dfIN.shape[0]
-        print(&#34;Records classified as bedrock that were deeper than &#34;+str(thresh)+ &#34;&#39;: &#34; + str(brDepthClass))
-        print(&#34;This represents &#34;+str(round((brDepthClass)*100/total,2))+&#34;% of the unclassified data in this dataframe.&#34;)
+
+        numRecsClass = int(df[df[&#39;CLASS_FLAG&#39;]==3][&#39;CLASS_FLAG&#39;].sum())
+        percRecsClass= round((df[df[&#39;CLASS_FLAG&#39;]==3][&#39;CLASS_FLAG&#39;].sum()/df.shape[0])*100,2)
+        recsRemainig = int(df.shape[0]-numRecsClass)
+
+        print(&#39;Classified bedrock well records using depth threshold at depth of {}&#39;.format(thresh))
+        print(&#34;\t{} records classified using bedrock threshold depth ({}% of unclassified  data)&#34;.format(numRecsClass, percRecsClass))
+        print(&#39;\t{} records remain unclassified ({}% of unclassified  data).&#39;.format(recsRemainig, 1-percRecsClass))
         
     return df</code></pre>
 </details>
@@ -633,7 +652,7 @@ def sort_dataframe(df, sort_cols=[&#39;API_NUMBER&#39;,&#39;TOP&#39;], remove_na
     uniqueWells = df[wellid_col].unique()
     wellsDF = pd.DataFrame(uniqueWells)
     if verbose:
-        print(&#39;Number of unique wells in downholeData: &#39;+str(wellsDF.shape[0]))
+        print(&#39;Number of unique wells: &#39;+str(wellsDF.shape[0]))
     wellsDF.columns = [&#39;UNIQUE_ID&#39;]
     
     return wellsDF</code></pre>
@@ -857,8 +876,12 @@ Whether the input column is using boolean values as its target indicator</p>
     df_Interps[&#39;BEDROCK_FLAG&#39;] = df_Interps[&#39;LITHOLOGY&#39;] == &#39;BEDROCK&#39;
     
     if verbose:
-        print(&#34;Records Classified with full search term: &#34;+str(int(df_Interps[df_Interps[&#39;CLASS_FLAG&#39;]==1][&#39;CLASS_FLAG&#39;].sum())))
-        print(&#34;Records Classified with full search term: &#34;+str(round((df_Interps[df_Interps[&#39;CLASS_FLAG&#39;]==1][&#39;CLASS_FLAG&#39;].sum()/df_Interps.shape[0])*100,2))+&#34;% of data&#34;)
+        print(&#39;Classified well records using exact matches&#39;)
+        numRecsClass = int(df_Interps[df_Interps[&#39;CLASS_FLAG&#39;]==1][&#39;CLASS_FLAG&#39;].sum())
+        recsRemainig = int(df_Interps.shape[0]-numRecsClass)
+        percRecsClass =round((df_Interps[df_Interps[&#39;CLASS_FLAG&#39;]==1][&#39;CLASS_FLAG&#39;].sum()/df_Interps.shape[0])*100,2)
+        print(&#34;\t{} records classified using exact matches ({}% of unclassified data)&#34;.format(numRecsClass, percRecsClass))
+        print(&#39;\t{} records remain unclassified ({}% of unclassified data).&#39;.format(recsRemainig, 1-percRecsClass))
 
     return df_Interps</code></pre>
 </details>
@@ -911,10 +934,7 @@ Whether the input column is using boolean values as its target indicator</p>
 
     classifedDF= df[df[classification_col].notna()] #Already-classifed data
     searchDF = df[df[classification_col].isna()] #Unclassified data
-    
-    if verbose:
-        print(str(searchDF.shape[0])+&#39; records unclassified; isolated into searchDF.&#39;)
-    
+        
     return classifedDF, searchDF</code></pre>
 </details>
 </dd>
@@ -972,12 +992,12 @@ Whether the input column is using boolean values as its target indicator</p>
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    if verbose:
-        #Estimate when it will end, based on test run
-        estTime = df.shape[0]/3054409 * 6 #It took about 6 minutes to classify data with entire dataframe. This estimates the fraction of that it will take
-        nowTime = datetime.datetime.now()
-        endTime = nowTime+datetime.timedelta(minutes=estTime)
-        print(&#34;Start Term process should be done by {:d}:{:02d}&#34;.format(endTime.hour, endTime.minute))
+    #if verbose:
+    #    #Estimate when it will end, based on test run
+    #    estTime = df.shape[0]/3054409 * 6 #It took about 6 minutes to classify data with entire dataframe. This estimates the fraction of that it will take
+    #    nowTime = datetime.datetime.now()
+    #    endTime = nowTime+datetime.timedelta(minutes=estTime)
+    #    print(&#34;Start Term process should be done by {:d}:{:02d}&#34;.format(endTime.hour, endTime.minute))
 
     #First, for each startterm, find all results in df that start with, add classification flag, and add interpretation.
     for i,s in enumerate(terms_df[terms_col]):
@@ -986,10 +1006,13 @@ Whether the input column is using boolean values as its target indicator</p>
     df[&#39;BEDROCK_FLAG&#39;].loc[df[&#34;LITHOLOGY&#34;] == &#39;BEDROCK&#39;]
     
     if verbose:
-        print(&#34;Records classified with start search term: &#34;+str(int(df[&#39;CLASS_FLAG&#39;].count())))
-        print(&#34;Records classified with start search term: &#34;+str(round((df[&#39;CLASS_FLAG&#39;].count()/df.shape[0])*100,2))+&#34;% of remaining data&#34;)
-        #print(&#34;Records classified with both search terms: &#34;+str(round(((df[&#39;CLASS_FLAG&#39;].count()+specDF[&#39;CLASS_FLAG&#39;].count())/downholeData_Interps.shape[0])*100,2))+&#34;% of all data&#34;)
-        #This step usually takes about 5-6 minutes
+        numRecsClass = int(df[df[&#39;CLASS_FLAG&#39;]==4][&#39;CLASS_FLAG&#39;].sum())
+        percRecsClass= round((df[df[&#39;CLASS_FLAG&#39;]==4][&#39;CLASS_FLAG&#39;].sum()/df.shape[0])*100,2)
+        recsRemainig = int(df.shape[0]-numRecsClass)
+
+        print(&#39;Classified well records using initial substring matches&#39;)
+        print(&#34;\t{} records classified using initial substring matches ({}% of unclassified  data)&#34;.format(numRecsClass, percRecsClass))
+        print(&#39;\t{} records remain unclassified ({}% of unclassified  data).&#39;.format(recsRemainig, 1-percRecsClass))
     return df</code></pre>
 </details>
 </dd>
@@ -1047,12 +1070,12 @@ Whether the input column is using boolean values as its target indicator</p>
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    if verbose:
-        #Estimate when it will end, based on test run
-        estTime = df.shape[0]/3054409 * 6 #It took about 6 minutes to classify data with entire dataframe. This estimates the fraction of that it will take
-        nowTime = datetime.datetime.now()
-        endTime = nowTime+datetime.timedelta(minutes=estTime)
-        print(&#34;Wildcard Term process should be done by (?) {:d}:{:02d}&#34;.format(endTime.hour, endTime.minute))
+    #if verbose:
+    #    #Estimate when it will end, based on test run
+    #    estTime = df.shape[0]/3054409 * 6 #It took about 6 minutes to classify data with entire dataframe. This estimates the fraction of that it will take
+    #    nowTime = datetime.datetime.now()
+    #    endTime = nowTime+datetime.timedelta(minutes=estTime)
+    #    print(&#34;Wildcard Term process should be done by (?) {:d}:{:02d}&#34;.format(endTime.hour, endTime.minute))
 
     #First, for each startterm, find all results in df that start with, add classification flag, and add interpretation.
     for i,s in enumerate(terms_df[terms_col]):
@@ -1061,10 +1084,13 @@ Whether the input column is using boolean values as its target indicator</p>
     df[&#39;BEDROCK_FLAG&#39;].loc[df[&#34;LITHOLOGY&#34;] == &#39;BEDROCK&#39;]
     
     if verbose:
-        print(&#34;Records classified with wildcard search term: &#34;+str(int(df[&#39;CLASS_FLAG&#39;].count())))
-        print(&#34;Records classified with wildcard search term: &#34;+str(round((df[&#39;CLASS_FLAG&#39;].count()/df.shape[0])*100,2))+&#34;% of remaining data&#34;)
-        #print(&#34;Records classified with both search terms: &#34;+str(round(((df[&#39;CLASS_FLAG&#39;].count()+specDF[&#39;CLASS_FLAG&#39;].count())/downholeData_Interps.shape[0])*100,2))+&#34;% of all data&#34;)
-        #This step usually takes about 5-6 minutes
+        numRecsClass = int(df[df[&#39;CLASS_FLAG&#39;]==5][&#39;CLASS_FLAG&#39;].sum())
+        percRecsClass= round((df[df[&#39;CLASS_FLAG&#39;]==5][&#39;CLASS_FLAG&#39;].sum()/df.shape[0])*100,2)
+        recsRemainig = int(df.shape[0]-numRecsClass)
+
+        print(&#39;Classified well records using any substring (wildcard) match&#39;)
+        print(&#34;\t{} records classified using any substring match ({}% of unclassified  data)&#34;.format(numRecsClass, percRecsClass))
+        print(&#39;\t{} records remain unclassified ({}% of unclassified  data).&#39;.format(recsRemainig, 1-percRecsClass))
     return df</code></pre>
 </details>
 </dd>

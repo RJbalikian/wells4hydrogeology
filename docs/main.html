@@ -610,7 +610,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 
             if not datatypes.exists():
                 if verbose:
-                    print(&#39;ERROR: datatypes ({}) does not exist&#39;.format(datatypes))
+                    print(&#34;ERROR: datatypes file &#39;{}&#39; does not exist, using inferred datatypes.&#34;.format(datatypes),)
                 return dfout
             elif datatypes.is_dir():
                 if verbose:
@@ -697,8 +697,14 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
         else:
             brDepthClass = df[&#39;CLASS_FLAG&#39;].value_counts()[3.0]
         total = dfIN.shape[0]
-        print(&#34;Records classified as bedrock that were deeper than &#34;+str(thresh)+ &#34;&#39;: &#34; + str(brDepthClass))
-        print(&#34;This represents &#34;+str(round((brDepthClass)*100/total,2))+&#34;% of the unclassified data in this dataframe.&#34;)
+
+        numRecsClass = int(df[df[&#39;CLASS_FLAG&#39;]==3][&#39;CLASS_FLAG&#39;].sum())
+        percRecsClass= round((df[df[&#39;CLASS_FLAG&#39;]==3][&#39;CLASS_FLAG&#39;].sum()/df.shape[0])*100,2)
+        recsRemainig = int(df.shape[0]-numRecsClass)
+
+        print(&#39;Classified bedrock well records using depth threshold at depth of {}&#39;.format(thresh))
+        print(&#34;\t{} records classified using bedrock threshold depth ({}% of unclassified  data)&#34;.format(numRecsClass, percRecsClass))
+        print(&#39;\t{} records remain unclassified ({}% of unclassified  data).&#39;.format(recsRemainig, 1-percRecsClass))
         
     return df</code></pre>
 </details>
@@ -744,10 +750,11 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     if date_stamp:
-        todayDate = datetime.date.today()
-        todayDateStr = &#39;_&#39;+str(todayDate)
+        nowTime = datetime.datetime.now()
+        nowTime = str(nowTime).replace(&#39;:&#39;, &#39;-&#39;).replace(&#39; &#39;,&#39;_&#39;).split(&#39;.&#39;)[0]
+        nowTimeStr = &#39;_&#39;+str(nowTime)
     else:
-        todayDateStr=&#39;&#39;
+        nowTimeStr=&#39;&#39;
 
     if type(out_dir) is str or isinstance(out_dir, pathlib.PurePath):
         out_dir = str(out_dir)
@@ -759,15 +766,15 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
         return
 
     if type(filename) is str:
-        dfOutFile =  out_dir+filename+todayDateStr+&#39;.csv&#39;
+        dfOutFile =  out_dir+filename+nowTimeStr+&#39;.csv&#39;
         df.to_csv(dfOutFile, index_label=&#39;ID&#39;)
-        print(&#39;Exported &#39;+filename+todayDateStr+&#39;.csv&#39;)
+        print(&#39;Exported &#39;+filename+nowTimeStr+&#39;.csv&#39;)
     elif type(filename) is list and type(df) is list and len(df) == len(filename):
         for i, f in enumerate(df):
             fname = filename[i]
-            dfOutFile =  out_dir+fname+todayDateStr+&#39;.csv&#39;
+            dfOutFile =  out_dir+fname+nowTimeStr+&#39;.csv&#39;
             f.to_csv(dfOutFile, index_label=&#39;ID&#39;)
-            print(&#39;Exported &#39;+fname+todayDateStr+&#39;.csv&#39;)</code></pre>
+            print(&#39;Exported &#39;+fname+nowTimeStr+&#39;.csv&#39;)</code></pre>
 </details>
 </dd>
 <dt id="w4h.export_grids"><code class="name flex">
@@ -863,10 +870,11 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
     
     #Format datestamp, if desired in output filename
     if date_stamp:
-        todayDate = datetime.date.today()
-        todayDateStr = &#39;_&#39;+str(todayDate)
+        nowTime = datetime.datetime.now()
+        nowTime = str(nowTime).replace(&#39;:&#39;, &#39;-&#39;).replace(&#39; &#39;,&#39;_&#39;).split(&#39;.&#39;)[0]
+        nowTimeStr = &#39;_&#39;+str(nowTime)
     else:
-        todayDateStr=&#39;&#39;
+        nowTimeStr=&#39;&#39;
 
     #Ensure the file suffix includes .
     if filetype[0] == &#39;.&#39;:
@@ -884,7 +892,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
         
     outPaths = []
     for f in filenames:
-        currOutPath = out_path+f+file_id+todayDateStr+filetype
+        currOutPath = out_path+f+file_id+nowTimeStr+filetype
         outPaths.append(currOutPath)
         if verbose:
             print(&#39;\t {}&#39;.format(currOutPath))
@@ -1080,9 +1088,10 @@ It may also be of use to simply skip this function altogether and directly defin
     headerDataPATH = pathlib.Path(headerDataFILE)
 
     if verbose:
-        print(&#39;Using the following files:&#39;)
+        print(&#39;Using the following file(s):&#39;)
         print(&#39;\t&#39;, downholeDataFILE)
-        print(&#39;\t&#39;, headerDataFILE)
+        if headerDataFILE != downholeDataFILE:
+            print(&#39;\t&#39;, headerDataFILE)
 
     #Define datatypes, to use later
     #downholeDataDTYPES = {&#39;ID&#39;:np.uint32, &#34;API_NUMBER&#34;:np.uint64,&#34;TABLE_NAME&#34;:str,&#34;WHO&#34;:str,&#34;INTERPRET_DATE&#34;:str,&#34;FORMATION&#34;:str,&#34;THICKNESS&#34;:np.float64,&#34;TOP&#34;:np.float64,&#34;BOTTOM&#34;:np.float64}
@@ -1220,8 +1229,13 @@ It may also be of use to simply skip this function altogether and directly defin
     driftThick = surface - bedrock
     driftThick = driftThick.clip(0,max=5000,keep_attrs=True)
     if plot:
-        driftThick.plot()
-
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+        maxThick = np.nanmax(driftThick)
+        if maxThick &gt; 550:
+            maxThick = 550
+        dtPlot = driftThick.plot(vmin=0, vmax=maxThick, ax=ax)
+        ax.set_title(&#34;Drift Thickness&#34;)
     try:
         noDataVal = driftThick.attrs[&#39;_FillValue&#39;] #Extract from dataset itself
     except:
@@ -1358,7 +1372,7 @@ It may also be of use to simply skip this function altogether and directly defin
             break
     
     if verbose:
-        print(&#39;Most Recent version of this file is : &#39;+mostRecentFile.name)
+        print(&#39;Most Recent version of file fitting {} pattern is: {}&#39;.format(glob_pattern, mostRecentFile.name))
 
     return mostRecentFile</code></pre>
 </details>
@@ -1567,7 +1581,7 @@ with start search terms, and with wildcard search terms</p></div>
     uniqueWells = df[wellid_col].unique()
     wellsDF = pd.DataFrame(uniqueWells)
     if verbose:
-        print(&#39;Number of unique wells in downholeData: &#39;+str(wellsDF.shape[0]))
+        print(&#39;Number of unique wells: &#39;+str(wellsDF.shape[0]))
     wellsDF.columns = [&#39;UNIQUE_ID&#39;]
     
     return wellsDF</code></pre>
@@ -1763,6 +1777,8 @@ with start search terms, and with wildcard search terms</p></div>
     if len(points) != layers:
         print(&#39;You have specified a different number of layers than what is iterable in the points argument. This may not work properly.&#39;)
 
+    if verbose:
+        print(&#39;Interpolating target lithology at each layer:&#39;)
     daDict = {}
     for lyr in range(1, layers+1):
         
@@ -1870,10 +1886,11 @@ with start search terms, and with wildcard search terms</p></div>
         daDict[&#39;Layer&#39;+str(lyr).zfill(zFillDigs)] = interp_grid
         del interp_grid
         if verbose:
-            print(&#39;Completed {} interpolation for Layer {}&#39;.format(interpType, str(lyr).zfill(zFillDigs)))
+            print(&#39;\tCompleted {} interpolation for Layer {}&#39;.format(str(interpType).lower(), str(lyr).zfill(zFillDigs)))
 
     dataAList = [&#39;dataarray&#39;, &#39;da&#39;, &#39;a&#39;, &#39;array&#39;]
     dataSList = [&#39;dataset&#39;, &#39;ds&#39;, &#39;set&#39;]
+
     if return_type.lower() in dataAList:
         interp_data = xr.concat(daDict.values(), dim=&#39;Layer&#39;)
         interp_data = interp_data.assign_coords(Layer=np.arange(1,10))
@@ -1891,6 +1908,11 @@ with start search terms, and with wildcard search terms</p></div>
     else:
         print(&#34;{} is not a valid input for return_type. Please set return_type to either &#39;dataarray&#39; or &#39;dataset&#39;&#34;.format(return_type))
         return
+
+    if verbose:
+        for i, layer_data in enumerate(interp_data):
+            pts = points[i]
+            pts.plot(c=pts[targetcol])
 
     if export_dir is None:
         pass
@@ -2325,7 +2347,7 @@ Whether the input column is using boolean values as its target indicator</p>
             for i, c in enumerate(header_colCopy):
                 if c in data_cols and c != kwargs[&#39;on&#39;]:
                     if verbose:
-                        print(&#39;REMOVING&#39;, header_cols[i-remCount])
+                        print(&#39;Removing {} (duplicate columns) from data.&#39;.format(header_cols[i-remCount]))
                     header_cols.pop(i - remCount)
                     remCount += 1
 
@@ -2769,17 +2791,24 @@ Whether the input column is using boolean values as its target indicator</p>
     if read_grid and model_grid_path is not None:
         modelGridIN = rxr.open_rasterio(model_grid_path)
 
-        file = w4h.read.__get_resource_path(&#39;isws_crs.txt&#39;)
-        iswsCRS = w4h.read_dict(file, keytype=None)
-
         if grid_crs is None:
             try:
                 grid_crs=modelGridIN.spatial_ref.crs_wkt
             except:
-                modelGridIN.rio.write_crs(iswsCRS)
-        elif grid_crs.lower()==&#39;isws&#39;:
-            modelGridIN.rio.write_crs(iswsCRS)
-        
+                iswsCRSPath = w4h.get_resources()[&#39;ISWS_CRS&#39;]
+                iswsCRS = w4h.read_dict(iswsCRSPath, keytype=None)
+                grid_crs = iswsCRS              
+                modelGridIN.rio.write_crs(grid_crs)
+        elif isinstance(grid_crs, str) and grid_crs.lower()==&#39;isws&#39;:
+            iswsCRSPath = w4h.get_resources()[&#39;ISWS_CRS&#39;]
+            iswsCRS = w4h.read_dict(iswsCRSPath, keytype=None)            
+            grid_crs = iswsCRS              
+            modelGridIN.rio.write_crs(grid_crs)
+        elif isinstance(grid_crs, pathlib.PurePath) or (isinstance(grid_crs, str) and pathlib.Path(grid_crs).exists()):
+            iswsCRSPath = w4h.get_resources()[&#39;ISWS_CRS&#39;]
+            grid_crs = w4h.read_dict(iswsCRSPath, keytype=None)            
+            modelGridIN.rio.write_crs(grid_crs)
+            
         if study_area is not None:                
             if study_area_crs is None:
                 study_area_crs=study_area.crs
@@ -2795,7 +2824,7 @@ Whether the input column is using boolean values as its target indicator</p>
             noDataVal = -5000000
 
         modelGrid = modelGrid.where(modelGrid != noDataVal, other=np.nan)   #Replace no data values with NaNs
-        modelGrid.rio.reproject(iswsCRS, inplace=True)
+        modelGrid.rio.reproject(grid_crs, inplace=True)
     elif model_grid_path is None and study_area is None:
         if verbose:
             print(&#34;ERROR: Either model_grid_path or study_area must be defined.&#34;)
@@ -2943,7 +2972,7 @@ Tuple/list with two pandas dataframes: (well_data, metadata) metadata is None if
     if metadata_filepath is None:
         headerDataIN = None
     elif not isinstance(metadata_filepath, pd.DataFrame) or isinstance(metadata_filepath, gpd.GeoDataFrame):
-        headerDataIN = pd.read_csv(metadata_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, usecols=metadata_useCols, **read_csv_kwargs)
+        headerDataIN = pd.read_csv(metadata_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, **read_csv_kwargs)
     else:
         headerDataIN = None
 
@@ -3497,9 +3526,12 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     df_with_depth.reset_index(inplace=True, drop=True) #Reset index
 
     if verbose:
-        print(&#34;Number of rows before dropping those with obviously bad depth information: &#34;+str(before))
-        print(&#34;Number of rows after dropping those with obviously bad depth information: &#34;+str(df_with_depth.shape[0]))
-        print(&#39;Well records deleted: &#39;+str(before-df_with_depth.shape[0]))
+        after = df_with_depth.shape[0]
+        print(&#39;Removed well records with obviously bad depth information. &#39;)
+        print(&#34;\tNumber of records before removing: &#34;+str(before))
+        print(&#34;\tNumber of records after removing: &#34;+str(after))
+        print(&#34;\t\t{} well records removed without depth information&#34;.format(before-after))
+
     return df_with_depth</code></pre>
 </details>
 </dd>
@@ -3570,9 +3602,11 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     df_with_depth.reset_index(inplace=True, drop=True) #Reset index
   
     if verbose:
-        print(&#34;Number of rows before dropping those without record depth information: &#34; + str(before))
-        print(&#34;Number of rows after dropping those without record depth information: &#34; + str(df_with_depth.shape[0]))
-        print(&#39;Number of well records without formation information deleted: &#39; + str(before - df_with_depth.shape[0]))
+        after = df_with_depth.shape[0]
+        print(&#39;Removed well records with no depth information. &#39;)
+        print(&#34;\tNumber of records before removing: &#34;+str(before))
+        print(&#34;\tNumber of records after removing: &#34;+str(after))
+        print(&#34;\t\t{} well records removed without depth information&#34;.format(before-after))
     
     return df_with_depth</code></pre>
 </details>
@@ -3636,10 +3670,12 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     df_with_descriptions.reset_index(inplace=True, drop=True) #Reset index
 
     if verbose:
-        print(&#34;Number of rows before dropping those without FORMATION information: &#34;+str(before))
-        print(&#34;Number of rows after dropping those without FORMATION information: &#34;+str(df_with_descriptions.shape[0]))
-        print(&#39;Well records deleted: &#39;+str(before-df_with_descriptions.shape[0]))
-        
+        after = df_with_descriptions.shape[0]
+        print(&#39;Removed well records without geologic descriptions. &#39;)
+        print(&#34;\tNumber of records before removing: &#34;+str(before))
+        print(&#34;\tNumber of records after removing: &#34;+str(after))
+        print(&#34;\t\t{} well records removed without geologic descriptions&#34;.format(before-after))
+
     return df_with_descriptions</code></pre>
 </details>
 </dd>
@@ -3703,9 +3739,10 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     
     if verbose:
         after = df_with_topo.shape[0]
-        print(&#39;Well records removed: &#39;+str(before-after))
-        print(&#34;Number of rows before dropping those without surface elevation information: &#34;+str(before))
-        print(&#34;Number of rows after dropping those without surface elevation information: &#34;+str(after))
+        print(&#39;Removed well records with no surface elevation information. &#39;)
+        print(&#34;\tNumber of records before removing: &#34;+str(before))
+        print(&#34;\tNumber of records after removing: &#34;+str(after))
+        print(&#34;\t\t{} wells records removed without surface elevation information&#34;.format(before-after))
     
     return df_with_topo</code></pre>
 </details>
@@ -3762,8 +3799,11 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     
     if verbose:
         after = df_with_locations.shape[0]
-        print(str(before-after)+&#39; records removed without location information.&#39;)
-        print(str(df_with_locations.shape[0])+&#39; wells remain from &#39;+str(df_with_locations[&#39;API_NUMBER&#39;].unique().shape[0])+&#39; geolocated wells in study area.&#39;)
+        print(&#39;Removed well records with no location information. &#39;)
+        print(&#34;\tNumber of records before removing: &#34;+str(before))
+        print(&#34;\tNumber of records after removing: &#34;+str(after))
+        print(&#34;\t\t{} wells records removed without location information&#34;.format(before-after))
+
     return df_with_locations</code></pre>
 </details>
 </dd>
@@ -3918,33 +3958,33 @@ Polygon is best, but may work with other types if extent is correct.</dd>
         if metadata is None:
             if well_data.is_dir():
                 #If the two files are supposed to be in the same directory (or just want well_data found)
-                downholeDataPATH, headerDataPATH = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
+                well_dataPath, metadataPath = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
             elif well_data.exists():
                 #If well_data is a file, and metadata is not used
-                downholeDataPATH, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
-                headerDataPATH = None
+                well_dataPath, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
+                metadataPath = None
             else:
                 #Need for well_data to exist at the very least
-                IOError(&#39;well_data file does not exist:{}&#39;.format(well_data))
+                raise IOError(&#39;well_data file does not exist:{}&#39;.format(well_data))
         elif isinstance(metadata, pathlib.PurePath) or isinstance(metadata, str):
             #Metdata has specifically been specified by a filepath
             if isinstance(metadata, str):
                 metadata = pathlib.Path(metadata)    
-            downholeDataPATH, headerDataPATH = w4h.file_setup(well_data=well_data, metadata=metadata, **file_setup_kwargs)                
+            well_dataPath, metadataPath = w4h.file_setup(well_data=well_data, metadata=metadata, **file_setup_kwargs)                
         else:
             if isinstance(metadata, pd.DataFrame):
-                downholeDataPATH, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
-                headerDataPATH = metadata
+                well_dataPath, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
+                metadataPath = metadata
             elif metadata is None:
-                downholeDataPATH, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
+                well_dataPath, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
 
     elif isinstance(well_data, pd.DataFrame):
         if isinstance(metadata, pd.DataFrame):
-            downholeDataPATH = well_data
-            headerDataPATH = metadata
+            well_dataPath = well_data
+            metadataPath = metadata
         elif isinstance(metadata, pathlib.PurePath) or isinstance(metadata, str):
-            _, headerDataPATH = w4h.file_setup(well_data=metadata, metadata=metadata, verbose=verbose, log=log, **file_setup_kwargs)                
-            downholeDataPATH = well_data
+            _, metadataPath = w4h.file_setup(well_data=metadata, metadata=metadata, verbose=verbose, log=log, **file_setup_kwargs)                
+            well_dataPath = well_data
         else:
             print(&#39;ERROR: metadata must be a string filepath, a pathlib.Path object, or pandas.DataFrame&#39;)
     else:
@@ -3952,7 +3992,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 
     #Get pandas dataframes from input
     read_raw_txt_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_raw_csv .__code__.co_varnames}
-    well_data_IN, metadata_IN = w4h.read_raw_csv(data_filepath=downholeDataPATH, metadata_filepath=headerDataPATH, verbose=verbose, log=log, **read_raw_txt_kwargs) 
+    well_data_IN, metadata_IN = w4h.read_raw_csv(data_filepath=well_dataPath, metadata_filepath=metadataPath, verbose=verbose, log=log, **read_raw_txt_kwargs) 
     #Functions to read data into dataframes. Also excludes extraneous columns, and drops header data with no location information
 
     #Define data types (file will need to be udpated)
@@ -4085,11 +4125,16 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     layer_interp_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.layer_interp.__code__.co_varnames}
     layers_data = w4h.layer_interp(points=resdf, layers=9, grid=modelGrid, verbose=verbose, log=log, **layer_interp_kwargs)
 
+    nowTime = datetime.datetime.now()
+    nowTime = str(nowTime).replace(&#39;:&#39;, &#39;-&#39;).replace(&#39; &#39;,&#39;_&#39;).split(&#39;.&#39;)[0]
+    nowTimeStr = &#39;_&#39;+str(nowTime)
+
     if export_dir is None:
+        outDir = &#39;Output_&#39;+nowTimeStr
         if well_data.is_dir():
-            export_dir = well_data.joinpath(&#39;Output&#39;)
+            export_dir = well_data.joinpath(outDir)
         else:
-            export_dir = well_data.parent.joinpath(&#39;Outpath&#39;)
+            export_dir = well_data.parent.joinpath(outDir)
         
         if not export_dir.exists():
             try:
@@ -4098,7 +4143,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
                 pass
 
     w4h.export_grids(grid_data=layers_data, out_path=export_dir, file_id=&#39;&#39;,filetype=&#39;tif&#39;, variable_sep=True, date_stamp=True, verbose=verbose, log=log)
-    #UPDATE: export points?
+
     return resdf, layers_data</code></pre>
 </details>
 </dd>
@@ -4166,10 +4211,7 @@ new_col : str, optional</dd>
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     if verbose:
-        nowTime = datetime.datetime.now()
-        expectMin = (points_df.shape[0]/3054409) * 14
-        endTime = nowTime+datetime.timedelta(minutes=expectMin)
-        print(new_col+ &#34; sampling should be done by {:d}:{:02d}&#34;.format(endTime.hour, endTime.minute))
+        print(&#34;Sampling grid for {}.&#34;.format(new_col))
 
     #Project points to raster CRS
     rastercrsWKT=raster.spatial_ref.crs_wkt
@@ -4306,8 +4348,12 @@ new_col : str, optional</dd>
     df_Interps[&#39;BEDROCK_FLAG&#39;] = df_Interps[&#39;LITHOLOGY&#39;] == &#39;BEDROCK&#39;
     
     if verbose:
-        print(&#34;Records Classified with full search term: &#34;+str(int(df_Interps[df_Interps[&#39;CLASS_FLAG&#39;]==1][&#39;CLASS_FLAG&#39;].sum())))
-        print(&#34;Records Classified with full search term: &#34;+str(round((df_Interps[df_Interps[&#39;CLASS_FLAG&#39;]==1][&#39;CLASS_FLAG&#39;].sum()/df_Interps.shape[0])*100,2))+&#34;% of data&#34;)
+        print(&#39;Classified well records using exact matches&#39;)
+        numRecsClass = int(df_Interps[df_Interps[&#39;CLASS_FLAG&#39;]==1][&#39;CLASS_FLAG&#39;].sum())
+        recsRemainig = int(df_Interps.shape[0]-numRecsClass)
+        percRecsClass =round((df_Interps[df_Interps[&#39;CLASS_FLAG&#39;]==1][&#39;CLASS_FLAG&#39;].sum()/df_Interps.shape[0])*100,2)
+        print(&#34;\t{} records classified using exact matches ({}% of unclassified data)&#34;.format(numRecsClass, percRecsClass))
+        print(&#39;\t{} records remain unclassified ({}% of unclassified data).&#39;.format(recsRemainig, 1-percRecsClass))
 
     return df_Interps</code></pre>
 </details>
@@ -4360,10 +4406,7 @@ new_col : str, optional</dd>
 
     classifedDF= df[df[classification_col].notna()] #Already-classifed data
     searchDF = df[df[classification_col].isna()] #Unclassified data
-    
-    if verbose:
-        print(str(searchDF.shape[0])+&#39; records unclassified; isolated into searchDF.&#39;)
-    
+        
     return classifedDF, searchDF</code></pre>
 </details>
 </dd>
@@ -4421,12 +4464,12 @@ new_col : str, optional</dd>
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    if verbose:
-        #Estimate when it will end, based on test run
-        estTime = df.shape[0]/3054409 * 6 #It took about 6 minutes to classify data with entire dataframe. This estimates the fraction of that it will take
-        nowTime = datetime.datetime.now()
-        endTime = nowTime+datetime.timedelta(minutes=estTime)
-        print(&#34;Start Term process should be done by {:d}:{:02d}&#34;.format(endTime.hour, endTime.minute))
+    #if verbose:
+    #    #Estimate when it will end, based on test run
+    #    estTime = df.shape[0]/3054409 * 6 #It took about 6 minutes to classify data with entire dataframe. This estimates the fraction of that it will take
+    #    nowTime = datetime.datetime.now()
+    #    endTime = nowTime+datetime.timedelta(minutes=estTime)
+    #    print(&#34;Start Term process should be done by {:d}:{:02d}&#34;.format(endTime.hour, endTime.minute))
 
     #First, for each startterm, find all results in df that start with, add classification flag, and add interpretation.
     for i,s in enumerate(terms_df[terms_col]):
@@ -4435,10 +4478,13 @@ new_col : str, optional</dd>
     df[&#39;BEDROCK_FLAG&#39;].loc[df[&#34;LITHOLOGY&#34;] == &#39;BEDROCK&#39;]
     
     if verbose:
-        print(&#34;Records classified with start search term: &#34;+str(int(df[&#39;CLASS_FLAG&#39;].count())))
-        print(&#34;Records classified with start search term: &#34;+str(round((df[&#39;CLASS_FLAG&#39;].count()/df.shape[0])*100,2))+&#34;% of remaining data&#34;)
-        #print(&#34;Records classified with both search terms: &#34;+str(round(((df[&#39;CLASS_FLAG&#39;].count()+specDF[&#39;CLASS_FLAG&#39;].count())/downholeData_Interps.shape[0])*100,2))+&#34;% of all data&#34;)
-        #This step usually takes about 5-6 minutes
+        numRecsClass = int(df[df[&#39;CLASS_FLAG&#39;]==4][&#39;CLASS_FLAG&#39;].sum())
+        percRecsClass= round((df[df[&#39;CLASS_FLAG&#39;]==4][&#39;CLASS_FLAG&#39;].sum()/df.shape[0])*100,2)
+        recsRemainig = int(df.shape[0]-numRecsClass)
+
+        print(&#39;Classified well records using initial substring matches&#39;)
+        print(&#34;\t{} records classified using initial substring matches ({}% of unclassified  data)&#34;.format(numRecsClass, percRecsClass))
+        print(&#39;\t{} records remain unclassified ({}% of unclassified  data).&#39;.format(recsRemainig, 1-percRecsClass))
     return df</code></pre>
 </details>
 </dd>
@@ -4496,12 +4542,12 @@ new_col : str, optional</dd>
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    if verbose:
-        #Estimate when it will end, based on test run
-        estTime = df.shape[0]/3054409 * 6 #It took about 6 minutes to classify data with entire dataframe. This estimates the fraction of that it will take
-        nowTime = datetime.datetime.now()
-        endTime = nowTime+datetime.timedelta(minutes=estTime)
-        print(&#34;Wildcard Term process should be done by (?) {:d}:{:02d}&#34;.format(endTime.hour, endTime.minute))
+    #if verbose:
+    #    #Estimate when it will end, based on test run
+    #    estTime = df.shape[0]/3054409 * 6 #It took about 6 minutes to classify data with entire dataframe. This estimates the fraction of that it will take
+    #    nowTime = datetime.datetime.now()
+    #    endTime = nowTime+datetime.timedelta(minutes=estTime)
+    #    print(&#34;Wildcard Term process should be done by (?) {:d}:{:02d}&#34;.format(endTime.hour, endTime.minute))
 
     #First, for each startterm, find all results in df that start with, add classification flag, and add interpretation.
     for i,s in enumerate(terms_df[terms_col]):
@@ -4510,10 +4556,13 @@ new_col : str, optional</dd>
     df[&#39;BEDROCK_FLAG&#39;].loc[df[&#34;LITHOLOGY&#34;] == &#39;BEDROCK&#39;]
     
     if verbose:
-        print(&#34;Records classified with wildcard search term: &#34;+str(int(df[&#39;CLASS_FLAG&#39;].count())))
-        print(&#34;Records classified with wildcard search term: &#34;+str(round((df[&#39;CLASS_FLAG&#39;].count()/df.shape[0])*100,2))+&#34;% of remaining data&#34;)
-        #print(&#34;Records classified with both search terms: &#34;+str(round(((df[&#39;CLASS_FLAG&#39;].count()+specDF[&#39;CLASS_FLAG&#39;].count())/downholeData_Interps.shape[0])*100,2))+&#34;% of all data&#34;)
-        #This step usually takes about 5-6 minutes
+        numRecsClass = int(df[df[&#39;CLASS_FLAG&#39;]==5][&#39;CLASS_FLAG&#39;].sum())
+        percRecsClass= round((df[df[&#39;CLASS_FLAG&#39;]==5][&#39;CLASS_FLAG&#39;].sum()/df.shape[0])*100,2)
+        recsRemainig = int(df.shape[0]-numRecsClass)
+
+        print(&#39;Classified well records using any substring (wildcard) match&#39;)
+        print(&#34;\t{} records classified using any substring match ({}% of unclassified  data)&#34;.format(numRecsClass, percRecsClass))
+        print(&#39;\t{} records remain unclassified ({}% of unclassified  data).&#39;.format(recsRemainig, 1-percRecsClass))
     return df</code></pre>
 </details>
 </dd>
