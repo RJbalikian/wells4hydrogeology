@@ -155,10 +155,7 @@ def sample_raster_points(raster, points_df, xcol='LONGITUDE', ycol='LATITUDE', n
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     if verbose:
-        nowTime = datetime.datetime.now()
-        expectMin = (points_df.shape[0]/3054409) * 14
-        endTime = nowTime+datetime.timedelta(minutes=expectMin)
-        print(new_col+ " sampling should be done by {:d}:{:02d}".format(endTime.hour, endTime.minute))
+        print("Sampling grid for {}.".format(new_col))
 
     #Project points to raster CRS
     rastercrsWKT=raster.spatial_ref.crs_wkt

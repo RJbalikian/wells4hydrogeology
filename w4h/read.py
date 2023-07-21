@@ -74,7 +74,7 @@ def get_most_recent(dir=resource_dir, glob_pattern='*', verbose=True):
             break
     
     if verbose:
-        print('Most Recent version of this file is : '+mostRecentFile.name)
+        print('Most Recent version of file fitting {} pattern is: {}'.format(glob_pattern, mostRecentFile.name))
 
     return mostRecentFile
 
@@ -139,9 +139,10 @@ def file_setup(well_data, metadata=None, data_filename='*ISGS_DOWNHOLE_DATA*.txt
     headerDataPATH = pathlib.Path(headerDataFILE)
 
     if verbose:
-        print('Using the following files:')
+        print('Using the following file(s):')
         print('\t', downholeDataFILE)
-        print('\t', headerDataFILE)
+        if headerDataFILE != downholeDataFILE:
+            print('\t', headerDataFILE)
 
     #Define datatypes, to use later
     #downholeDataDTYPES = {'ID':np.uint32, "API_NUMBER":np.uint64,"TABLE_NAME":str,"WHO":str,"INTERPRET_DATE":str,"FORMATION":str,"THICKNESS":np.float64,"TOP":np.float64,"BOTTOM":np.float64}
@@ -350,7 +351,7 @@ def define_dtypes(undefined_df, datatypes=None, verbose=False, log=False):
 
             if not datatypes.exists():
                 if verbose:
-                    print('ERROR: datatypes ({}) does not exist'.format(datatypes))
+                    print("ERROR: datatypes file '{}' does not exist, using inferred datatypes.".format(datatypes),)
                 return dfout
             elif datatypes.is_dir():
                 if verbose:

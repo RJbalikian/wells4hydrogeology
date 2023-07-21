@@ -88,7 +88,7 @@ def merge_tables(data_df, header_df, data_cols=None, header_cols=None, auto_pick
             for i, c in enumerate(header_colCopy):
                 if c in data_cols and c != kwargs['on']:
                     if verbose:
-                        print('REMOVING', header_cols[i-remCount])
+                        print('Removing {} (duplicate columns) from data.'.format(header_cols[i-remCount]))
                     header_cols.pop(i - remCount)
                     remCount += 1
 
@@ -334,6 +334,8 @@ def layer_interp(points, grid, layers=None, method='nearest', return_type='dataa
     if len(points) != layers:
         print('You have specified a different number of layers than what is iterable in the points argument. This may not work properly.')
 
+    if verbose:
+        print('Interpolating target lithology at each layer:')
     daDict = {}
     for lyr in range(1, layers+1):
         
@@ -441,7 +443,7 @@ def layer_interp(points, grid, layers=None, method='nearest', return_type='dataa
         daDict['Layer'+str(lyr).zfill(zFillDigs)] = interp_grid
         del interp_grid
         if verbose:
-            print('Completed {} interpolation for Layer {}'.format(interpType, str(lyr).zfill(zFillDigs)))
+            print('\tCompleted {} interpolation for Layer {}'.format(str(interpType).lower(), str(lyr).zfill(zFillDigs)))
 
     dataAList = ['dataarray', 'da', 'a', 'array']
     dataSList = ['dataset', 'ds', 'set']

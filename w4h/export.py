@@ -28,10 +28,11 @@ def export_dataframe(df, out_dir, filename, date_stamp=True, log=False):
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     if date_stamp:
-        todayDate = datetime.date.today()
-        todayDateStr = '_'+str(todayDate)
+        nowTime = datetime.datetime.now()
+        nowTime = str(nowTime).replace(':', '-').replace(' ','_').split('.')[0]
+        nowTimeStr = '_'+str(nowTime)
     else:
-        todayDateStr=''
+        nowTimeStr=''
 
     if type(out_dir) is str or isinstance(out_dir, pathlib.PurePath):
         out_dir = str(out_dir)
@@ -43,15 +44,15 @@ def export_dataframe(df, out_dir, filename, date_stamp=True, log=False):
         return
 
     if type(filename) is str:
-        dfOutFile =  out_dir+filename+todayDateStr+'.csv'
+        dfOutFile =  out_dir+filename+nowTimeStr+'.csv'
         df.to_csv(dfOutFile, index_label='ID')
-        print('Exported '+filename+todayDateStr+'.csv')
+        print('Exported '+filename+nowTimeStr+'.csv')
     elif type(filename) is list and type(df) is list and len(df) == len(filename):
         for i, f in enumerate(df):
             fname = filename[i]
-            dfOutFile =  out_dir+fname+todayDateStr+'.csv'
+            dfOutFile =  out_dir+fname+nowTimeStr+'.csv'
             f.to_csv(dfOutFile, index_label='ID')
-            print('Exported '+fname+todayDateStr+'.csv')
+            print('Exported '+fname+nowTimeStr+'.csv')
 
 #Export (rio)xarray dataarrays and datasets
 
@@ -122,10 +123,11 @@ def export_grids(grid_data, out_path, file_id='',filetype='tif', variable_sep=Tr
     
     #Format datestamp, if desired in output filename
     if date_stamp:
-        todayDate = datetime.date.today()
-        todayDateStr = '_'+str(todayDate)
+        nowTime = datetime.datetime.now()
+        nowTime = str(nowTime).replace(':', '-').replace(' ','_').split('.')[0]
+        nowTimeStr = '_'+str(nowTime)
     else:
-        todayDateStr=''
+        nowTimeStr=''
 
     #Ensure the file suffix includes .
     if filetype[0] == '.':
@@ -143,7 +145,7 @@ def export_grids(grid_data, out_path, file_id='',filetype='tif', variable_sep=Tr
         
     outPaths = []
     for f in filenames:
-        currOutPath = out_path+f+file_id+todayDateStr+filetype
+        currOutPath = out_path+f+file_id+nowTimeStr+filetype
         outPaths.append(currOutPath)
         if verbose:
             print('\t {}'.format(currOutPath))
