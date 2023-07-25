@@ -3,6 +3,7 @@ import logging
 import os
 import pathlib
 
+import geopandas as gpd
 import pandas as pd
 
 import w4h
