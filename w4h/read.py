@@ -561,13 +561,14 @@ def read_lithologies(lith_file=None, interp_col='LITHOLOGY', target_col='CODE', 
 
     if lith_file is None:
         #Find resources
-        lith_file='Lithology_Interp_FineCoarse.csv'
+        import w4h
+        lith_file= w4h.get_resources()['LithInterps_FineCoarse']
     
     if not isinstance(lith_file, pathlib.PurePath):
         lith_file = pathlib.Path(lith_file)
 
     if use_cols is None:
-        use_cols = ['LITHOLOGY', 'CODE']
+        use_cols = [interp_col, target_col]
 
     lithoDF = pd.read_csv(lith_file, usecols=use_cols)
 
@@ -580,7 +581,7 @@ def add_control_points(df_without_control, df_control=None,  xcol='LONGITUDE', y
 
     Parameters
     ----------
-    df : pandas.DataFrame
+    df_without_control : pandas.DataFrame
         Dataframe with current working data
     df_control : str, pathlib.Purepath, or pandas.DataFrame
         Pandas dataframe with control points

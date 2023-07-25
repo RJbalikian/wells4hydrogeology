@@ -29,7 +29,7 @@ def merge_tables(data_df, header_df, data_cols=None, header_cols=None, auto_pick
     header_cols : list, optional
         List of strings of columns names, for columns to be included in merged table after merge from "right" table (metadata). If None, all columns are kept, by default None
     auto_pick_cols : bool, default = False
-        Whether to autopick the columns from the metadata table. If True, the following column names are kept:['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'BEDROCK_ELEV_FT', 'SURFACE_ELEV_FT', 'BEDROCK_DEPTH_FT', 'LAYER_THICK_FT'], by default False
+        Whether to autopick the columns from the metadata table. If True, the following column names are kept:['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'BEDROCK_ELEV', 'SURFACE_ELEV', 'BEDROCK_DEPTH', 'LAYER_THICK'], by default False
     drop_duplicate_cols : bool, optional
         If True, drops duplicate columns from the tables so that columns do not get renamed upon merge, by default True
     log : bool, default = False
@@ -58,7 +58,7 @@ def merge_tables(data_df, header_df, data_cols=None, header_cols=None, auto_pick
         mergedTable = data_df
     else:   
         if auto_pick_cols:
-            header_cols = ['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'BEDROCK_ELEV_FT', 'SURFACE_ELEV_FT', 'BEDROCK_DEPTH_FT', 'LAYER_THICK_FT']
+            header_cols = ['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'BEDROCK_ELEV', 'SURFACE_ELEV', 'BEDROCK_DEPTH', 'LAYER_THICK']
             for c in header_df.columns:
                 if c.startswith('ELEV_') or c.startswith('DEPTH'):
                     header_cols.append(c)
@@ -99,14 +99,14 @@ def merge_tables(data_df, header_df, data_cols=None, header_cols=None, auto_pick
     return mergedTable
 
 #Get layer depths of each layer, based on precalculated layer thickness
-def get_layer_depths(df_with_depths, no_layers=9, log=False):
+def get_layer_depths(df_with_depths, surface_elev_col='SURFACE_ELEV', layer_thick_col='LAYER_THICK', layers=9, log=False):
     """Function to calculate depths and elevations of each model layer at each well based on surface elevation, bedrock elevation, and number of layers/layer thickness
 
     Parameters
     ----------
     df_with_depths : pandas.DataFrame
         Dataframe containing well metdata
-    no_layers : int, default=9
+    layers : int, default=9
         Number of layers. This should correlate with get_drift_thick() input parameter, if drift thickness was calculated using that function, by default 9.
     log : bool, default = False
         Whether to log inputs and outputs to log file.
@@ -118,21 +118,22 @@ def get_layer_depths(df_with_depths, no_layers=9, log=False):
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    for layer in range(0, no_layers): #For each layer
+    for layer in range(0, layers): #For each layer
         #Make column names
-        depthColName  = 'DEPTH_FT_LAYER'+str(layer+1)
+        depthColName  = 'DEPTH_LAYER'+str(layer+1)
         #depthMcolName = 'Depth_M_LAYER'+str(layer) 
 
         #Calculate depth to each layer at each well, in feet and meters
-        df_with_depths[depthColName]  = df_with_depths['LAYER_THICK_FT'] * layer
+        df_with_depths[depthColName]  = df_with_depths[layer_thick_col] * layer
         #headerData[depthMcolName] = headerData[depthColName] * 0.3048
 
-    for layer in range(0, no_layers): #For each layer
-        elevColName = 'ELEV_FT_LAYER'+str(layer+1)
+    for layer in range(0, layers): #For each layer
+        elevColName = 'ELEV_LAYER'+str(layer+1)
         #elevMColName = 'ELEV_M_LAYER'+str(layer)
             
-        df_with_depths[elevColName]  = df_with_depths['SURFACE_ELEV_FT'] - df_with_depths['LAYER_THICK_FT'] * layer
+        df_with_depths[elevColName]  = df_with_depths[surface_elev_col] - df_with_depths[layer_thick_col] * layer
         #headerData[elevMColName]  = headerData['SURFACE_ELEV_M'] - headerData['LAYER_THICK_M'] * layer
+        
     return df_with_depths
 
 #Function to export the result of thickness of target sediments in each layer
@@ -166,8 +167,8 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    df['TOP_ELEV_FT'] = df['SURFACE_ELEV_FT'] - df[depth_top_col]
-    df['BOT_ELEV_FT'] = df['SURFACE_ELEV_FT'] - df[depth_bot_col]
+    df['TOP_ELEV_FT'] = df['SURFACE_ELEV'] - df[depth_top_col]
+    df['BOT_ELEV_FT'] = df['SURFACE_ELEV'] - df[depth_bot_col]
 
     layerList = range(1,layers+1)
     res_list = []
@@ -223,7 +224,7 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
         
         #Cannot have negative thicknesses
         res['TARG_THICK_FT'].clip(lower=0, inplace=True)
-        res['LAYER_THICK_FT'].clip(lower=0, inplace=True)
+        res['LAYER_THICK'].clip(lower=0, inplace=True)
         
         #Get geometrys for each unique API/well
         res_df = res.groupby(by=['API_NUMBER','LATITUDE','LONGITUDE'], as_index=False).sum(numeric_only=True)#Calculate thickness for each well interval in the layer indicated (e.g., if there are two well intervals from same well in one model layer)
@@ -232,13 +233,13 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
         geomCol = pd.DataFrame(geomCol[~geomCol.index.duplicated(keep='first')]).reset_index()
         
 
-        res_df['TARG_THICK_PER'] =  pd.DataFrame(np.round(res_df['TARG_THICK_FT']/res_df['LAYER_THICK_FT'],3)) #Calculate thickness as percent of total layer thickness
+        res_df['TARG_THICK_PER'] =  pd.DataFrame(np.round(res_df['TARG_THICK_FT']/res_df['LAYER_THICK'],3)) #Calculate thickness as percent of total layer thickness
         #Replace np.inf and np.nans with 0
         res_df['TARG_THICK_PER'] = res_df['TARG_THICK_PER'].where(res_df['TARG_THICK_PER']!=np.inf, other=0) 
         res_df['TARG_THICK_PER'] = res_df['TARG_THICK_PER'].where(res_df['TARG_THICK_PER']!=np.nan, other=0) 
 
         res_df["LAYER"] = layer #Just to have as part of the output file, include the present layer in the file itself as a separate column
-        res_df = res_df[['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'LATITUDE_PROJ', 'LONGITUDE_PROJ','TOP', 'BOTTOM', 'TOP_ELEV_FT', 'BOT_ELEV_FT', 'SURFACE_ELEV_FT', topCol, botCol,'LAYER_THICK_FT','TARG_THICK_FT', 'TARG_THICK_PER', 'LAYER']].copy() #Format dataframe for output
+        res_df = res_df[['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'LATITUDE_PROJ', 'LONGITUDE_PROJ','TOP', 'BOTTOM', 'TOP_ELEV_FT', 'BOT_ELEV_FT', 'SURFACE_ELEV', topCol, botCol,'LAYER_THICK','TARG_THICK_FT', 'TARG_THICK_PER', 'LAYER']].copy() #Format dataframe for output
         res_df = gpd.GeoDataFrame(res_df, geometry=geomCol.loc[:,'geometry'])
         resdf_list.append(res_df)
         res_list.append(res)
