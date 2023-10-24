@@ -163,10 +163,16 @@ def sample_raster_points(raster, points_df, xcol='LONGITUDE', ycol='LATITUDE', n
     points_df[yCOLOUT] = points_df['geometry'].y
     xData = np.array(points_df[xCOLOUT].values)
     yData = np.array(points_df[yCOLOUT].values)
-    sampleArr=raster.sel(x=xData, y=yData, method='nearest').values
-    sampleArr = np.diag(sampleArr)
-    sampleDF = pd.DataFrame(sampleArr, columns=[new_col])
-    points_df[new_col] = sampleDF[new_col]
+    zData = []
+    # Loop over DataFrame rows
+    for i, row in points_df.iterrows():
+        # Select data from DataArray at current coordinates and append to list
+        zData.append(raster.sel(x=row[xCOLOUT], y=row[yCOLOUT], method='nearest').item())
+    print(zData)
+    #sampleArr=raster.sel(x=xData, y=yData, method='nearest').values
+    #sampleArr = np.diag(sampleArr)
+    #sampleDF = pd.DataFrame(sampleArr, columns=[new_col])
+    points_df[new_col] = zData#sampleDF[new_col]
     return points_df
 
 #Merge xyz dataframe into a metadata dataframe
@@ -558,7 +564,7 @@ def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_g
             noDataVal = no_data_val_grid
 
         modelGrid = modelGrid.where(modelGrid != noDataVal, other=np.nan)   #Replace no data values with NaNs
-        modelGrid = modelGrid.where(modelGrid = np.nan, other=1) #Replace all other values with 1
+        modelGrid = modelGrid.where(modelGrid == np.nan, other=1) #Replace all other values with 1
         modelGrid.rio.reproject(grid_crs, inplace=True)
         
     elif model_grid_path is None and study_area is None:

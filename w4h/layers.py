@@ -184,6 +184,7 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
         else: #Otherwise, ...
             botCol = "BEDROCK_"+zStr+"_FT" #Use the (corrected) bedrock depth
 
+        print(df.columns)
         #Divide records into 4 separate categories for ease of calculation, to be joined back together later  
             #Category 1: Well interval starts above layer top, ends within model layer
             #Category 2: Well interval is entirely contained withing model layer
