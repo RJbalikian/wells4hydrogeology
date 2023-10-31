@@ -38,11 +38,8 @@ The package is organized by module, but all functions can be accessed directly u
 - mapping: functions for mapping or performing geospatial analysis
 - read: functions for reading in various files
 
-# Included resources
-The w4h package "ships" with some definition files that are read in/used by the scripts
-- ISGS_HEADER_yyyy-mm-dd.TXT: tabular data exported from ISGS oracle database containing "header" information (i.e., metadata) about all the wells
-- ISGS_DOWNHOLE_DATA_yyyy-mm-dd.TXT: tabular data exported from ISGS oracle database containing geologic information about wells in the state
-- xyzData_yyyy-mm-dd.csv: most recent update of statewide wells with API, Latitude, Longitude, and surface elevation extracted from statewide lidar topography
-
 # Intended workflow
 Diagram for workflow available <a href="https://github.com/RJbalikian/wells4hydrogeology/wiki/Intended-Workflow-%5BDRAFT%5D">here</a>.
+
+# Disclaimers
+wells4hydrogeology is a python tool developed jointly by the Illinois State Water Survey and the Illinois State Geological Survey, both part of the Prairie Research Institute at the University of Illinois. By using this repository, you agree to the Terms of Use contained in the <a href="https://isgs.illinois.edu/terms-of-use/">Data Use License Agreement</a>.
