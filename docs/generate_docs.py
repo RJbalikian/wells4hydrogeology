@@ -15,7 +15,7 @@ CONVERT_MD=True
 RTD_THEME=False #Not currently working
 RUN_TESTS=True
 LINT_IT=False
-RELEASE_VERSION = "0.0.16"
+RELEASE_VERSION = "0.0.17"
 
 # Set the filepaths
 currentDir = pathlib.Path((__file__)).parent
