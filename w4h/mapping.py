@@ -77,21 +77,17 @@ def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELE
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    df = df_no_geometry.copy()
-
-    ptCRS=input_coords_crs
-
-    x = df[xcol].to_numpy()
-    y = df[ycol].to_numpy()
-    z = df[zcol].to_numpy()
+    x = df_no_geometry[xcol].to_numpy()
+    y = df_no_geometry[ycol].to_numpy()
 
     #coords = pd.concat([y, x], axis=1)
     if use_z:
-        df["geometry"] = gpd.points_from_xy(x, y, z=z, crs=ptCRS)
+        z = df_no_geometry[zcol].to_numpy()
+        df_no_geometry["geometry"] = gpd.points_from_xy(x, y, z=z, crs=input_coords_crs)
     else:
-        df["geometry"] = gpd.points_from_xy(x, y, crs=ptCRS)
+        df_no_geometry["geometry"] = gpd.points_from_xy(x, y, crs=input_coords_crs)
         
-    gdf = gpd.GeoDataFrame(df, crs=ptCRS)
+    gdf = gpd.GeoDataFrame(df_no_geometry, crs=input_coords_crs)
     return gdf
 
 #Clip a geodataframe to a study area
@@ -167,10 +163,16 @@ def sample_raster_points(raster, points_df, xcol='LONGITUDE', ycol='LATITUDE', n
     points_df[yCOLOUT] = points_df['geometry'].y
     xData = np.array(points_df[xCOLOUT].values)
     yData = np.array(points_df[yCOLOUT].values)
-    sampleArr=raster.sel(x=xData, y=yData, method='nearest').values
-    sampleArr = np.diag(sampleArr)
-    sampleDF = pd.DataFrame(sampleArr, columns=[new_col])
-    points_df[new_col] = sampleDF[new_col]
+    zData = []
+    # Loop over DataFrame rows
+    for i, row in points_df.iterrows():
+        # Select data from DataArray at current coordinates and append to list
+        zData.append(raster.sel(x=row[xCOLOUT], y=row[yCOLOUT], method='nearest').item())
+    print(zData)
+    #sampleArr=raster.sel(x=xData, y=yData, method='nearest').values
+    #sampleArr = np.diag(sampleArr)
+    #sampleDF = pd.DataFrame(sampleArr, columns=[new_col])
+    points_df[new_col] = zData#sampleDF[new_col]
     return points_df
 
 #Merge xyz dataframe into a metadata dataframe
@@ -559,10 +561,12 @@ def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_g
         try:
             noDataVal = float(modelGrid.attrs['_FillValue']) #Extract from dataset itsel
         except:
-            noDataVal = -5000000
+            noDataVal = no_data_val_grid
 
         modelGrid = modelGrid.where(modelGrid != noDataVal, other=np.nan)   #Replace no data values with NaNs
+        modelGrid = modelGrid.where(modelGrid == np.nan, other=1) #Replace all other values with 1
         modelGrid.rio.reproject(grid_crs, inplace=True)
+        
     elif model_grid_path is None and study_area is None:
         if verbose:
             print("ERROR: Either model_grid_path or study_area must be defined.")
@@ -615,7 +619,7 @@ def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_g
         coords = {'x':x,'y':yIn, 'spatial_ref':0}
         dims = {'x':x,'y':yIn}
         
-        modelGrid = xr.DataArray(data=zz,coords=coords,attrs={'_FillValue':3.402823466e+38}, dims=dims)
+        modelGrid = xr.DataArray(data=zz,coords=coords,attrs={'_FillValue':no_data_val_grid}, dims=dims)
         modelGrid.spatial_ref.attrs['spatial_ref'] = {}
         if grid_crs is None or grid_crs=='isws' or grid_crs=='ISWS':
             for k in spatRefDict:
@@ -665,9 +669,11 @@ def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service
         elif use_service.lower()=='wcs':
             gridIN = read_wcs(study_area, wcs_url=lidarURL, **kwargs)
         elif use_service.lower()=='wms':
-            pass
             gridIN = read_wms(study_area, wcs_url=lidarURL, **kwargs)
-            
+        elif use_service:
+            #Deafults to wms
+            gridIN = read_wms(study_area, wcs_url=lidarURL, **kwargs)
+
         if study_area is not None:
             if grid_crs is None:
                 try:

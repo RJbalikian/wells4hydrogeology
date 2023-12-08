@@ -27,8 +27,8 @@ def specific_define(df, terms_df, description_col='FORMATION', terms_col='DESCRI
         Dataframe containing the classifications
     description_col : str, default='FORMATION'
         Column name in df containing the well descriptions, by default 'FORMATION'.
-    terms_col : str, default='FORMATION'
-        Column name in terms_df containing the classified descriptions, by default 'FORMATION'.
+    terms_col : str, default='DESCRIPTION'
+        Column name in terms_df containing the classified descriptions, by default 'DESCRIPTION'.
     verbose : bool, default=False
         Whether to print up results, by default False.
 
@@ -214,17 +214,17 @@ def remerge_data(classifieddf, searchdf):
 
 #Define well intervals by depth
 
-def depth_define(dfIN, top_col='TOP', thresh=550.0, verbose=False, log=False):
+def depth_define(df, top_col='TOP', thresh=550.0, verbose=False, log=False):
     """Function to define all intervals lower than thresh as bedrock
 
     Parameters
     ----------
-    dfIN : pandas.DataFrame
+    df : pandas.DataFrame
         Dataframe to classify
     top_col : str, default = 'TOP'
         Name of column that contains the depth information, likely of the top of the well interval, by default 'TOP'
     thresh : float, default = 550.0
-        Depth (in units used in dfIN['top_col']) below which all intervals will be classified as bedrock, by default 550.0.
+        Depth (in units used in df['top_col']) below which all intervals will be classified as bedrock, by default 550.0.
     verbose : bool, default = False
         Whether to print results, by default False
     log : bool, default = True
@@ -237,7 +237,7 @@ def depth_define(dfIN, top_col='TOP', thresh=550.0, verbose=False, log=False):
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    df = dfIN.copy()
+    df = df.copy()
     df['CLASS_FLAG'].mask(df[top_col]>thresh, 3 ,inplace=True) #Add a Classification Flag of 3 (bedrock b/c it's deepter than 550') to all records where the top of the interval is >550'
     df['BEDROCK_FLAG'].mask(df[top_col]>thresh, True, inplace=True)
 
@@ -246,7 +246,7 @@ def depth_define(dfIN, top_col='TOP', thresh=550.0, verbose=False, log=False):
             brDepthClass = 0
         else:
             brDepthClass = df['CLASS_FLAG'].value_counts()[3.0]
-        total = dfIN.shape[0]
+        total = df.shape[0]
 
         numRecsClass = int(df[df['CLASS_FLAG']==3]['CLASS_FLAG'].sum())
         percRecsClass= round((df[df['CLASS_FLAG']==3]['CLASS_FLAG'].sum()/df.shape[0])*100,2)
@@ -314,12 +314,12 @@ def fill_unclassified(df, classification_col='CLASS_FLAG'):
     return df
 
 #Merge lithologies to main df based on classifications
-def merge_lithologies(df, targinterps_df, interp_col='INTERPRETATION', target_col='TARGET', target_class='bool'):
+def merge_lithologies(well_data_df, targinterps_df, interp_col='INTERPRETATION', target_col='TARGET', target_class='bool'):
     """Function to merge lithologies and target booleans based on classifications
     
     Parameters
     ----------
-    df : pandas.DataFrame
+    well_data_df : pandas.DataFrame
         Dataframe containing classified well data
     targinterps_df : pandas.DataFrame
         Dataframe containing lithologies and their target interpretations, depending on what the target is for this analysis (often, coarse materials=1, fine=0)
@@ -344,7 +344,7 @@ def merge_lithologies(df, targinterps_df, interp_col='INTERPRETATION', target_co
         targinterps_df[target_col].fillna(value=-2, inplace=True)
         targinterps_df[target_col].astype(np.int8)
 
-    df_targ = pd.merge(df, targinterps_df.set_index(interp_col), right_on=interp_col, left_on='LITHOLOGY', how='left')
+    df_targ = pd.merge(well_data_df, targinterps_df.set_index(interp_col), right_on=interp_col, left_on='LITHOLOGY', how='left')
     
     return df_targ
 
