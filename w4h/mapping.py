@@ -168,7 +168,6 @@ def sample_raster_points(raster, points_df, xcol='LONGITUDE', ycol='LATITUDE', n
     for i, row in points_df.iterrows():
         # Select data from DataArray at current coordinates and append to list
         zData.append(raster.sel(x=row[xCOLOUT], y=row[yCOLOUT], method='nearest').item())
-    print(zData)
     #sampleArr=raster.sel(x=xData, y=yData, method='nearest').values
     #sampleArr = np.diag(sampleArr)
     #sampleDF = pd.DataFrame(sampleArr, columns=[new_col])

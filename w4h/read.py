@@ -462,15 +462,15 @@ def read_dictionary_terms(dict_file, id_col='ID', search_col='DESCRIPTION', defi
         dict_terms.append(df)
         dict_file = ['']
     elif type(dict_file) is list:
-        for f in dict_file:
+        for i, f in enumerate(dict_file):
             if not f.exists():
                 df = pd.DataFrame(columns=['ID', 'DESCRIPTION', 'LITHOLOGY', 'CLASS_FLAGS'])
                 dict_terms.append(df)
             else:
                 dict_terms.append(pd.read_csv(f))
 
-            if id_col in dict_terms.columns:
-                dict_terms.set_index(id_col, drop=True, inplace=True)
+            if id_col in dict_terms[i].columns:
+                dict_terms[i].set_index(id_col, drop=True, inplace=True)
     else:
         dict_file = pathlib.Path(dict_file)
         if dict_file.exists() and dict_file.is_file():
@@ -620,7 +620,7 @@ def add_control_points(df_without_control, df_control=None,  xcol='LONGITUDE', y
     elif isinstance(df_control, pd.DataFrame) or isinstance(df_control, gpd.GeoDataFrame):
         pass
     else:
-        read_csv_kwargs = {k: v for k, v in locals()['kwargs'].items() if k in pd.read_csv.__code__.co_varnames}
+        read_csv_kwargs = {k: v for k, v in locals()['kwargs'].items() if k in inspect.signature(pd.read_csv).parameters.keys()}
         df_control = pd.read_csv(df_control, **read_csv_kwargs)
     
     #Drop unnecessary columns, if needed
@@ -639,7 +639,7 @@ def add_control_points(df_without_control, df_control=None,  xcol='LONGITUDE', y
         df_control = coords2geometry(df_no_geometry=df_control, xcol=xcol, ycol=ycol, zcol=zcol, input_coords_crs=controlpoints_crs, log=log)
 
     #Get kwargs passed to pd.concat, and set defaults for ignore_index and join
-    concat_kwargs = {k: v for k, v in locals()['kwargs'].items() if k in pd.concat.__code__.co_varnames}
+    concat_kwargs = {k: v for k, v in locals()['kwargs'].items() if k in inspect.signature(pd.concat).parameters.keys()}
     if 'ignore_index' not in concat_kwargs.keys():
         concat_kwargs['ignore_index'] = True
     if 'join' not in concat_kwargs.keys():
