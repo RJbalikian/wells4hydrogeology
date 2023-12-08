@@ -10,8 +10,7 @@ def test_run():
     """"Test basic functionality"""
     try:
         resource_dict = w4h.get_resources()
-        print(resource_dict)
         test_passed=True
-    except:
+    except Exception:
         test_passed=False
     assert test_passed
