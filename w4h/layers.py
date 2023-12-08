@@ -184,8 +184,7 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
         else: #Otherwise, ...
             botCol = "BEDROCK_"+zStr+"_FT" #Use the (corrected) bedrock depth
 
-        print(df.columns)
-        #Divide records into 4 separate categories for ease of calculation, to be joined back together later  
+        #Divide records into 4 categories for ease of calculation, to be joined back together later  
             #Category 1: Well interval starts above layer top, ends within model layer
             #Category 2: Well interval is entirely contained withing model layer
             #Category 3: Well interval starts within model layer, continues through bottom of model layer
@@ -276,9 +275,8 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
     else:
         return resdf_list
 
-
 #Interpolate layers to model grid
-def layer_interp(points, grid, layers=None, method='nearest', return_type='dataarray', export_dir=None, targetcol='TARG_THICK_PER', lyrcol='LAYER', xcol=None, ycol=None, xcoord='x', ycoord='y', log=False, verbose=False, **kwargs):
+def layer_interp(points, grid, layers=None, interp_kind='nearest', return_type='dataarray', export_dir=None, target_col='TARG_THICK_PER', layer_col='LAYER', xcol=None, ycol=None, xcoord='x', ycoord='y', log=False, verbose=False, **kwargs):
     """Function to interpolate results, going from points to grid data. Uses scipy.interpolate module.
 
     Parameters
@@ -286,18 +284,18 @@ def layer_interp(points, grid, layers=None, method='nearest', return_type='dataa
     points : list
         List containing pandas dataframes or geopandas geoadataframes containing the point data. Should be resDF_list output from layer_target_thick().
     grid : xr.DataArray or xr.Dataset
-        Xarray dataarray with the coordinates/spatial reference of the output grid to interpolate to
+        Xarray DataArray or DataSet with the coordinates/spatial reference of the output grid to interpolate to
     layers : int, default=None
         Number of layers for interpolation. If None, uses the length ofthe points list to determine number of layers. By default None.
-    method : str, {'nearest', 'interp2d','linear', 'cloughtocher', 'radial basis function'}
+    interp_kind : str, {'nearest', 'interp2d','linear', 'cloughtocher', 'radial basis function'}
         Type of interpolation to use. See scipy.interpolate N-D scattered. Values can be any of the following (also shown in "kind" column of N-D scattered section of table here: https://docs.scipy.org/doc/scipy/tutorial/interpolate.html). By default 'nearest'
     return_type : str, {'dataarray', 'dataset'}
         Type of xarray object to return, either xr.DataArray or xr.Dataset, by default 'dataarray.'
     export_dir : str or pathlib.Path, default=None
         Export directory for interpolated grids, using w4h.export_grids(). If None, does not export, by default None.
-    targetcol : str, default = 'TARG_THICK_PER'
+    target_col : str, default = 'TARG_THICK_PER'
         Name of column in points containing data to be interpolated, by default 'TARG_THICK_PER'.
-    lyrcol : str, default = 'Layer'
+    layer_col : str, default = 'Layer'
         Name of column containing layer number. Not currently used, by default 'LAYER'
     xcol : str, default = 'None'
         Name of column containing x coordinates. If None, will look for 'geometry' column, as in a geopandas.GeoDataframe. By default None
@@ -310,7 +308,7 @@ def layer_interp(points, grid, layers=None, method='nearest', return_type='dataa
     log : bool, default = True
         Whether to log inputs and outputs to log file.
     **kwargs
-        Keyword arguments to be read directly into whichever scipy.interpolate function is designated by the method parameter.
+        Keyword arguments to be read directly into whichever scipy.interpolate function is designated by the interp_kind parameter.
 
     Returns
     -------
@@ -364,8 +362,8 @@ def layer_interp(points, grid, layers=None, method='nearest', return_type='dataa
         else:
             dataY = pts[ycol]
 
-        #layer = pts[lyrcol]        
-        interpVal = pts[targetcol]
+        #layer = pts[layer_col]        
+        interpVal = pts[target_col]
 
         #return points
         dataX.dropna(inplace=True)
@@ -381,39 +379,39 @@ def layer_interp(points, grid, layers=None, method='nearest', return_type='dataa
         dataY = dataY.reset_index(drop=True)
         interpVal = interpVal.reset_index(drop=True)
         
-        if method.lower() in nnList:
+        if interp_kind.lower() in nnList:
             interpType = 'Nearest Neighbor'
             X, Y = np.meshgrid(X, Y, sparse=True) #2D Grid for interpolation
             dataPoints = np.array(list(zip(dataX, dataY)))
             interp = interpolate.NearestNDInterpolator(dataPoints, interpVal, **kwargs)
             Z = interp(X, Y)
-        elif method.lower() in linList:
+        elif interp_kind.lower() in linList:
             interpType = 'Linear' 
             dataPoints = np.array(list(zip(dataX, dataY)))
             interp = interpolate.LinearNDInterpolator(dataPoints, interpVal, **kwargs)
             X, Y = np.meshgrid(X, Y, sparse=True) #2D Grid for interpolation
             Z = interp(X, Y)
-        elif method.lower() in ctList:
+        elif interp_kind.lower() in ctList:
             interpType = 'Clough-Toucher'
             X, Y = np.meshgrid(X, Y, sparse=True) #2D Grid for interpolation
             if 'tol' not in kwargs:
                 kwargs['tol'] = 1e10
             interp = interpolate.CloughTocher2DInterpolator(list(zip(dataX, dataY)), interpVal, **kwargs)
             Z = interp(X, Y) 
-        elif method.lower() in rbfList:
+        elif interp_kind.lower() in rbfList:
             interpType = 'Radial Basis'
             dataXY=  np.column_stack((dataX, dataY))
             interp = interpolate.RBFInterpolator(dataXY, interpVal, **kwargs)
-            print("Radial Basis Function does not work well with many well-based datasets. Consider instead specifying 'nearest', 'linear', 'spline', or 'clough tocher' for interpolation method.")
+            print("Radial Basis Function does not work well with many well-based datasets. Consider instead specifying 'nearest', 'linear', 'spline', or 'clough tocher' for interpolation interp_kind.")
             Z = interp(np.column_stack((X.ravel(), Y.ravel()))).reshape(X.shape)
-        elif method.lower() in splineList:
+        elif interp_kind.lower() in splineList:
             interpType = 'Spline Interpolation'
             Z = interpolate.bisplrep(dataX, dataY, interpVal, **kwargs)
                 #interp = interpolate.interp2d(dataX, dataY, interpVal, kind=lin_kind, **kwargs)
                 #Z = interp(X, Y)
         else:
             if verbose:
-                print('Specified interpolation method not recognized, using nearest neighbor.')
+                print('Specified interpolation interp_kind not recognized, using nearest neighbor.')
             interpType = 'Nearest Neighbor'
             X, Y = np.meshgrid(X, Y, sparse=True) #2D Grid for interpolation
             interp = interpolate.NearestNDInterpolator(list(zip(dataX, dataY)), interpVal, **kwargs)
@@ -457,6 +455,8 @@ def layer_interp(points, grid, layers=None, method='nearest', return_type='dataa
         interp_data = xr.Dataset(daDict)
         if verbose:
             print('Done with interpolation, getting global attrs')
+
+        #Get common attributes from all layers to use as "global" attributes
         common_attrs = {}
         for i, (var_name, data_array) in enumerate(interp_data.data_vars.items()):
             if i == 0:
@@ -465,13 +465,13 @@ def layer_interp(points, grid, layers=None, method='nearest', return_type='dataa
                 common_attrs = {k: v for k, v in common_attrs.items() if k in data_array.attrs and data_array.attrs[k] == v}
         interp_data.attrs.update(common_attrs)
     else:
-        print("{} is not a valid input for return_type. Please set return_type to either 'dataarray' or 'dataset'".format(return_type))
+        print(f"{return_type} is not a valid input for return_type. Please set return_type to either 'dataarray' or 'dataset'")
         return
 
     if verbose:
         for i, layer_data in enumerate(interp_data):
             pts = points[i]
-            pts.plot(c=pts[targetcol])
+            pts.plot(c=pts[target_col])
 
     if export_dir is None:
         pass

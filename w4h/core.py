@@ -190,7 +190,7 @@ def run(well_data,
     modelGridPath = model_grid
     surfaceElevPath = surf_elev_grid
     bedrockElevPath = bedrock_elev_grid
-    
+
     modelGrid = w4h.read_grid(grid_path=modelGridPath, grid_type='model', study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
     surfaceElevGridIN = w4h.read_grid(grid_path=surfaceElevPath, grid_type='surface', study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
     bedrockElevGridIN = w4h.read_grid(grid_path=bedrockElevPath, grid_type='bedrock', study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
@@ -199,7 +199,7 @@ def run(well_data,
     #Add control points
     add_control_points_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.add_control_points).parameters.keys()}
     well_data_xyz = w4h.add_control_points(df_without_control=well_data_xyz, xcol=xcol, ycol=ycol, zcol=zcol, top_col=top_col, bottom_col=bottom_col, description_col=description_col, verbose=verbose, log=log, **add_control_points_kwargs)
-    
+
     #Clean up data
     well_data_xyz = w4h.remove_nonlocated(df_with_locations=well_data_xyz, log=log, verbose=verbose)
     well_data_xyz = w4h.remove_no_topo(df_with_topo=well_data_xyz, zcol=zcol, verbose=verbose, log=log)
