@@ -10,12 +10,11 @@ import sys
 
 import markdown
 
-
 #Whether to CONVERT_MD using markdown library (True), or let github do it (False)
 CONVERT_MD=True
 RTD_THEME=False #Not currently working
 RUN_TESTS=True
-LINT_IT=True
+LINT_IT=False
 RELEASE_VERSION = "0.0.16"
 
 # Set the filepaths
@@ -32,8 +31,6 @@ layersPath = w4hDir.joinpath('layers.py')
 mappingPath = w4hDir.joinpath('mapping.py')
 readPath = w4hDir.joinpath('read.py')
 
-
-SUB_DIR = docsDir.joinpath('w4h')
 OUTPUT_DIR = docsDir
 
 venvPath = pathlib.Path(sys.executable).parent.parent
@@ -42,10 +39,11 @@ os.environ['PYTHONPATH'] = '..' + os.pathsep + os.environ.get('PYTHONPATH', '')
 # Run the pdoc command
 if RTD_THEME:
     themePath = venvPath.as_posix()+'/lib/site-packages/sphinx_RTD_THEME/'
-    subprocess.run(['pdoc', '--html', '-o', OUTPUT_DIR, '--force', '--template-dir', themePath, SUB_DIR], check=False)
+    subprocess.run(['pdoc', '--html', '-o', OUTPUT_DIR, '--force', '--template-dir', themePath, w4hDir], check=False)
 else:
-    subprocess.run(['pdoc', '--html', '-o', OUTPUT_DIR, '--force', SUB_DIR], check=False)
+    subprocess.run(['pdoc', '--html', '-o', OUTPUT_DIR, '--force', w4hDir], check=False)
 
+#Not used anymore, probably
 workDir = repoDir
 if workDir.stem == 'docs':
     pass
@@ -56,16 +54,15 @@ else:
         if 'docs\\' in str(p):
             docsPath = pathlib.Path(str(p)[:str(p).find('docs')+ 4])
             os.chdir(docsPath)
-            print('yep')
             break
 
-src_path = w4hDir#.joinpath('w4h')
+src_path = docsDir.joinpath('w4h')
 trg_path = docsDir
 
-print('Reading .py files from', src_path.absolute())
+print('Reading .html files from', src_path.absolute())
 print('Placing html files in', trg_path.absolute())
 
-# Moveitemsback into main docs folder
+# Move items back into main docs folder
 keepList = ['generate_docs', 'conf']
 
 for f in trg_path.iterdir():
@@ -81,13 +78,13 @@ for each_file in src_path.glob('*.*'): # grabs all files
         os.remove(destFilePath)
     each_file = each_file.rename(destFilePath) # moves to parent folder.
     if each_file.name == 'index.html':
-        mainhtmlFPath = each_file.parent.parent.joinpath('main.html')
+        mainhtmlFPath = docsDir.joinpath('main.html')
         if mainhtmlFPath.is_file():
             os.remove(mainhtmlFPath)
         each_file.rename(mainhtmlFPath)
-os.rmdir(SUB_DIR)
+os.rmdir(src_path)
 
-readmePath=repoDir.joinpath("Readme.md")
+readmePath=repoDir.joinpath("README.md")
 
 if CONVERT_MD:
     with open(readmePath.as_posix(), mode='r', encoding='utf-8') as f:
@@ -131,24 +128,24 @@ for cFile in confFilePaths:
         with open(cFile.as_posix(), mode='r', encoding='utf-8') as f:
             cFileText = f.read()
 
-    #Update which file is being analyzed for version number
-    #Intended for setup.py
-    VERTEXT = r'version=".*?"'
-    NEWVERTEXT = r'version="'+RELEASE_VERSION+'"'
-    cFileText = re.sub(VERTEXT, NEWVERTEXT, cFileText, flags=re.DOTALL)
+        #Update which file is being analyzed for version number
+        #Intended for setup.py
+        VERTEXT = r'version=".*?"'
+        NEWVERTEXT = r'version="'+RELEASE_VERSION+'"'
+        cFileText = re.sub(VERTEXT, NEWVERTEXT, cFileText, flags=re.DOTALL)
 
-    #intended for pyproject.toml
-    VERTEXT = r'version:\s+\d+\.\d+\.\d+[^\n]*'
-    NEWVERTEXT = r'version: '+RELEASE_VERSION
-    cFileText = re.sub(VERTEXT, NEWVERTEXT, cFileText, flags=re.DOTALL)
+        #intended for pyproject.toml
+        VERTEXT = r'version:\s+\d+\.\d+\.\d+[^\n]*'
+        NEWVERTEXT = r'version: '+RELEASE_VERSION
+        cFileText = re.sub(VERTEXT, NEWVERTEXT, cFileText, flags=re.DOTALL)
 
-    #intended for conda/meta.yaml, if used
-    VERTEXT = r'git_tag:\s+v+\d+\.\d+\.\d+[^\n]*'
-    NEWVERTEXT = r'git_tag: v'+RELEASE_VERSION
-    cFileText = re.sub(VERTEXT, NEWVERTEXT, cFileText, flags=re.DOTALL)
+        #intended for conda/meta.yaml, if used
+        VERTEXT = r'git_tag:\s+v+\d+\.\d+\.\d+[^\n]*'
+        NEWVERTEXT = r'git_tag: v'+RELEASE_VERSION
+        cFileText = re.sub(VERTEXT, NEWVERTEXT, cFileText, flags=re.DOTALL)
 
-    with open(cFile.as_posix(), mode='w', encoding='utf-8') as f:
-        f.write(cFileText)
+        with open(cFile.as_posix(), mode='w', encoding='utf-8') as f:
+            f.write(cFileText)
 
 if LINT_IT:
     print('Running linting')
@@ -159,5 +156,16 @@ if LINT_IT:
         STR_IGNORE_LIST =  "--ignore="+str(str(ignoreList)[1:-1].replace(' ', '').replace("'",""))
         result = subprocess.run(['flake8', STR_IGNORE_LIST, fileP.as_posix(),], stdout=subprocess.PIPE, check=False)
         print(result.stdout.decode('utf-8'))
+
+if RUN_TESTS:
+    print('Testing w4h')
+    SHELL_TYPE=True
+    if sys.platform == 'linux':
+        SHELL_TYPE = False
+    try:
+        subprocess.run(["python", "-m", "pytest", repoDir.as_posix()], shell=SHELL_TYPE, check=False)
+    except Exception:
+        subprocess.run(["pytest", repoDir.as_posix()], shell=SHELL_TYPE, check=False)
+
 
 print('docs updated')
