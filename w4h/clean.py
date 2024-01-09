@@ -3,7 +3,7 @@ import inspect
 import numpy as np
 import pandas as pd
 
-from w4h import logger_function
+from w4h import logger_function, verbose_print
 
 #This function removes all data from the downholeData table where there is no location information (in the headerData table). This includes elevation info too
 def remove_nonlocated(df_with_locations, xcol='LONGITUDE', ycol='LATITUDE', no_data_val_table='', verbose=False, log=False):
@@ -24,6 +24,8 @@ def remove_nonlocated(df_with_locations, xcol='LONGITUDE', ycol='LATITUDE', no_d
         Pandas dataframe containing only data with location information
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+    if verbose:
+        verbose_print(remove_nonlocated, locals())
 
     before = df_with_locations.shape[0] #Extract length of data before this process
 
@@ -69,6 +71,9 @@ def remove_no_topo(df_with_topo, zcol='ELEVATION', no_data_val_table='', verbose
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
+    if verbose:
+        verbose_print(remove_no_topo, locals())
+
     before = df_with_topo.shape[0]
     
     df_with_topo[zcol].replace(no_data_val_table, np.nan, inplace=True)
@@ -109,6 +114,9 @@ def remove_no_depth(df_with_depth, top_col='TOP', bottom_col='BOTTOM', no_data_v
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
+    if verbose:
+        verbose_print(remove_no_depth, locals())
+        
     #Replace empty cells in top and bottom columns with nan
     df_with_depth[top_col] = df_with_depth[top_col].replace(no_data_val_table, np.nan)
     df_with_depth[bottom_col] = df_with_depth[bottom_col].replace(no_data_val_table, np.nan)
@@ -155,6 +163,8 @@ def remove_bad_depth(df_with_depth, top_col='TOP', bottom_col='BOTTOM', depth_ty
         Pandas dataframe with the records remvoed where the top is indicatd to be below the bottom.
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+    if verbose:
+        verbose_print(remove_bad_depth, locals())
 
     if depth_type.lower() =='depth':
         df_with_depth['THICKNESS'] = df_with_depth[bottom_col] - df_with_depth[top_col] #Calculate interval thickness
@@ -196,7 +206,8 @@ def remove_no_description(df_with_descriptions, description_col='FORMATION', no_
         Pandas dataframe with records with no description removed.
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(remove_no_description, locals())
     #Replace empty cells in formation column with nans
     df_with_descriptions[description_col] = df_with_descriptions[description_col].replace(no_data_val_table, np.nan) 
     before = df_with_descriptions.shape[0] #Calculate number of rows before dropping

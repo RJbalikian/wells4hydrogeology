@@ -2,17 +2,16 @@ import datetime
 import inspect
 import json
 import os
+import pkg_resources
 import pathlib
 
 import geopandas as gpd
 import pandas as pd
 import numpy as np
 
+from w4h import logger_function, verbose_print
+
 repoDir = pathlib.Path(os.getcwd())
-
-from w4h import logger_function
-
-import pkg_resources
 
 resource_dir = pathlib.Path(pkg_resources.resource_filename(__name__, 'resources/resources_home.txt')).parent
 
@@ -49,6 +48,9 @@ def get_most_recent(dir=resource_dir, glob_pattern='*', verbose=True):
     pathlib.Path object
         Pathlib Path object of the most recent file fitting the glob pattern indicated in the glob_pattern parameter.
     """
+    if verbose:
+        verbose_print(get_most_recent, locals())
+
     todayDate = datetime.date.today()
     todayDateStr = str(todayDate)
 
@@ -109,7 +111,8 @@ def file_setup(well_data, metadata=None, data_filename='*ISGS_DOWNHOLE_DATA*.txt
         Tuple with paths to (well_data, metadata)
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(file_setup, locals())
     #Define  filepath variables to be used later for reading/writing files
     data_path = pathlib.Path(well_data)
     if metadata is None:
@@ -184,7 +187,8 @@ def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols
         Tuple/list with two pandas dataframes: (well_data, metadata) metadata is None if only well_data is used
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(read_raw_csv, locals())
     #Check if input data is already dataframe, otherwise, read it in as dataframe
     if not isinstance(data_filepath, pd.DataFrame) or isinstance(data_filepath, gpd.GeoDataFrame):
         downholeDataIN = pd.read_csv(data_filepath, sep=',', header='infer', encoding=encoding, **read_csv_kwargs)
@@ -261,7 +265,8 @@ def read_xyz(xyzpath, datatypes=None, verbose=False, log=False):
         Pandas dataframe containing the elevation and location data
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(read_xyz, locals())
     if datatypes is None:
         xyzDTypes = {'ID':np.uint32,'API_NUMBER':np.uint64,'LATITUDE':np.float64,'LONGITUDE':np.float64,'ELEV_FT':np.float64}
 
@@ -316,6 +321,8 @@ def define_dtypes(undefined_df, datatypes=None, verbose=False, log=False):
     dfout : pandas.DataFrame
         Pandas dataframe containing redefined columns
     """
+    if verbose:
+        verbose_print(define_dtypes, locals())
     if undefined_df is None:
         dfout = None
     else:
@@ -358,7 +365,7 @@ def define_dtypes(undefined_df, datatypes=None, verbose=False, log=False):
 def get_search_terms(spec_path=str(repoDir)+'/resources/', spec_glob_pattern='*SearchTerms-Specific*', 
                      start_path=None, start_glob_pattern = '*SearchTerms-Start*', 
                      wildcard_path=None, wildcard_glob_pattern='*SearchTerms-Wildcard',
-                     log=False):
+                     verbose=False, log=False):
     """Read in dictionary files for downhole data
 
     Parameters
@@ -384,7 +391,8 @@ def get_search_terms(spec_path=str(repoDir)+'/resources/', spec_glob_pattern='*S
         Tuple containing the pandas dataframes with specific search terms,  with start search terms, and with wildcard search terms
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-    
+    if verbose:
+        verbose_print(get_search_terms, locals())    
     #specTermsFile = "SearchTerms-Specific_BedrockOrNo_2022-09.csv" #Specific matches
     #startTermsFile = "SearchTerms-Start_BedrockOrNo.csv" #Wildcard matches for the start of the description
 
@@ -424,7 +432,7 @@ def get_search_terms(spec_path=str(repoDir)+'/resources/', spec_glob_pattern='*S
     return specTermsPath, startTermsPath, wilcardTermsPath
 
 #Read files into pandas dataframes
-def read_dictionary_terms(dict_file, id_col='ID', search_col='DESCRIPTION', definition_col='LITHOLOGY', class_flag_col='CLASS_FLAG', dictionary_type=None, class_flag=6, rem_extra_cols=True, log=False):
+def read_dictionary_terms(dict_file, id_col='ID', search_col='DESCRIPTION', definition_col='LITHOLOGY', class_flag_col='CLASS_FLAG', dictionary_type=None, class_flag=6, rem_extra_cols=True, verbose=False, log=False):
     """Function to read dictionary terms from file into pandas dataframe
 
     Parameters
@@ -454,7 +462,8 @@ def read_dictionary_terms(dict_file, id_col='ID', search_col='DESCRIPTION', defi
         Pandas dataframe with formatting ready to be used in the classification steps of this package
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(read_dictionary_terms, locals())    
     #Read files into pandas dataframes
     dict_terms = []
     if dict_file is None:
@@ -536,7 +545,7 @@ def read_dictionary_terms(dict_file, id_col='ID', search_col='DESCRIPTION', defi
     return dict_terms
 
 #Function to read lithology file into pandas dataframe
-def read_lithologies(lith_file=None, interp_col='LITHOLOGY', target_col='CODE', use_cols=None, log=False):
+def read_lithologies(lith_file=None, interp_col='LITHOLOGY', target_col='CODE', use_cols=None, verbose=False,  log=False):
     """Function to read lithology file into pandas dataframe
 
     Parameters
@@ -558,7 +567,8 @@ def read_lithologies(lith_file=None, interp_col='LITHOLOGY', target_col='CODE', 
         Pandas dataframe with lithology information
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(read_lithologies, locals())   
     if lith_file is None:
         #Find resources
         import w4h
@@ -613,7 +623,8 @@ def add_control_points(df_without_control, df_control=None,  xcol='LONGITUDE', y
     pandas.DataFrame
         Pandas DataFrame with original data and control points formatted the same way and concatenated together
     """
-    import geopandas as gpd
+    if verbose:
+        verbose_print(add_control_points, locals())   
 
     if df_control is None:
         return df_without_control

@@ -12,7 +12,7 @@ from shapely.geometry import Point
 from scipy import interpolate
 
 import w4h
-from w4h import logger_function
+from w4h import logger_function, verbose_print
 
 #Function to Merge tables
 def merge_tables(data_df, header_df, data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, verbose=False, **kwargs):
@@ -43,7 +43,8 @@ def merge_tables(data_df, header_df, data_cols=None, header_cols=None, auto_pick
         Merged dataframe
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(merge_tables, locals())
     if header_df is None:
         #Figure out which columns to include
         if data_cols is None:
@@ -316,6 +317,9 @@ def layer_interp(points, grid, layers=None, interp_kind='nearest', return_type='
         By default, returns an xr.DataArray object with the layers added as a new dimension called Layer. Can also specify return_type='dataset' to return an xr.Dataset with each layer as a separate variable.
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
+    if verbose:
+        verbose_print(layer_interp, locals())
 
     nnList = ['nearest', 'nearest neighbor', 'nearestneighbor','neighbor',  'nn','n']
     splineList = ['interp2d', 'interp2', 'interp', 'spline', 'spl', 'sp', 's']

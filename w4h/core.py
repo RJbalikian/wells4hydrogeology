@@ -88,8 +88,11 @@ def run(well_data,
         Keyword parameters used by any of the functions throughout the process. See list of functions above, and the API documentation for their possible parameters
     """
 
+    if verbose:
+        verbose_print(run, locals())
+
     #Get data (files or otherwise)
-    file_setup_kwargs = {k: v for k, v in locals()['kwparams'].items() if k in inspect.signature(w4h.file_setup).parameters.keys()}
+    file_setup_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.file_setup).parameters.keys()}
     
     #Check how well_data and metadata were defined
     if isinstance(well_data, pathlib.PurePath) or isinstance(well_data, str):
@@ -146,6 +149,7 @@ def run(well_data,
                 export_dir = well_dataPath.parent.joinpath(outDir)
         else:
             raise IOError('export_dir should be explicitly defined if well_data is not a filepath')
+            pass
 
         if not export_dir.exists():
             try:
@@ -155,7 +159,7 @@ def run(well_data,
 
     #Get pandas dataframes from input
     read_raw_txt_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.read_raw_csv).parameters.keys()}
-    well_data_IN, metadata_IN = w4h.read_raw_csv(data_filepath=well_dataPath, metadata_filepath=metadataPath, verbose=verbose, log=log, **read_raw_txt_kwargs) 
+    well_data_IN, metadata_IN = w4h.read_raw_csv(data_filepath=well_dataPath, metadata_filepath=metadataPath, verbose=verbose, log=log, **read_raw_txt_kwargs)
     #Functions to read data into dataframes. Also excludes extraneous columns, and drops header data with no location information
 
     #Define data types (file will need to be udpated)
@@ -302,7 +306,6 @@ def run(well_data,
 
     return resdf, layers_data
 
-
 log_filename=None #Set up so exists but is None
 def logger_function(logtocommence, parameters, func_name):
     """Function to log other functions, to be called from within other functions
@@ -369,6 +372,25 @@ def logger_function(logtocommence, parameters, func_name):
             #Don't log if log=False
             pass
     return
+
+def verbose_print(func, local_variables):
+    print_list = []
+    sTime = datetime.datetime.now()
+    print_list.append(f"{func.__name__}")
+    print_list.append(f"\tStarted at {sTime}.")
+    print_list.append(f"\tParameters:")
+    for k, v in local_variables.items():
+        if k in inspect.signature(func).parameters:
+            if 'kwargs' in k:
+                print_list.append(f"\t\t{k}")
+                for kk, vv in k.items():                    
+                    print_list.append(f"\t\t\t{kk}={vv}")
+            else:
+                print_list.append(f"\t\t{k}={v}")
+
+    for line in print_list:
+        print(line)
+    return print_list
 
 #Get filepaths for package resources in dictionary format
 resource_dir = pathlib.Path(pkg_resources.resource_filename(__name__, 'resources/resources_home.txt')).parent

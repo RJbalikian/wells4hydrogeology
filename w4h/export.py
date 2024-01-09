@@ -5,7 +5,7 @@ import pathlib
 import pandas as pd
 import xarray as xr
 
-from w4h import logger_function
+from w4h import logger_function, verbose_print
 
 #Export data
 
@@ -77,7 +77,8 @@ def export_grids(grid_data, out_path, file_id='',filetype='tif', variable_sep=Tr
         Whether to log inputs and outputs to log file.        
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(export_grids, locals())
     #Initialize lists to determine which filetype will be used for export
     ncdfList = ['netcdf', 'ncdf', 'n']
     tifList = ['tif', 'tiff', 'geotiff', 'geotif', 't']

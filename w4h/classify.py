@@ -4,7 +4,7 @@ import inspect
 import pandas as pd
 import numpy as np
 
-from w4h import logger_function
+from w4h import logger_function, verbose_print
 #The following flags are used to mark the classification method:
 #- 0: Not classified
 #- 1: Specific Search Term Match
@@ -38,6 +38,8 @@ def specific_define(df, terms_df, description_col='FORMATION', terms_col='DESCRI
         Dataframe containing the well descriptions and their matched classifications.
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+    if verbose:
+        verbose_print(specific_define, locals())
 
     if description_col != terms_col:
         terms_df.rename(columns={terms_col:description_col}, inplace=True)
@@ -54,17 +56,17 @@ def specific_define(df, terms_df, description_col='FORMATION', terms_col='DESCRI
     terms_df.drop_duplicates(subset=terms_col, keep='last', inplace=True)
     terms_df.reset_index(drop=True, inplace=True)
     
-    df_Interps = pd.merge(df, terms_df.set_index(terms_col), on=description_col, how='left')
+    df_Interps = pd.merge(left=df, right=terms_df.set_index(terms_col), on=description_col, how='left')
     df_Interps.rename(columns={description_col:'FORMATION'}, inplace=True)
     df_Interps['BEDROCK_FLAG'] = df_Interps['LITHOLOGY'] == 'BEDROCK'
     
     if verbose:
         print('Classified well records using exact matches')
         numRecsClass = int(df_Interps[df_Interps['CLASS_FLAG']==1]['CLASS_FLAG'].sum())
-        recsRemaining = int(df_Interps.shape[0]-numRecsClass)
+        recsRemainig = int(df_Interps.shape[0]-numRecsClass)
         percRecsClass =round((df_Interps[df_Interps['CLASS_FLAG']==1]['CLASS_FLAG'].sum()/df_Interps.shape[0])*100,2)
         print("\t{} records classified using exact matches ({}% of unclassified data)".format(numRecsClass, percRecsClass))
-        print('\t{} records remain unclassified ({}% of unclassified data).'.format(recsRemaining, 1-percRecsClass))
+        print('\t{} records remain unclassified ({}% of unclassified data).'.format(recsRemainig, 1-percRecsClass))
 
     return df_Interps
 
@@ -120,7 +122,8 @@ def start_define(df, terms_df, description_col='FORMATION', terms_col='DESCRIPTI
         Dataframe containing the original data and new classifications
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(start_define, locals())
     #if verbose:
     #    #Estimate when it will end, based on test run
     #    estTime = df.shape[0]/3054409 * 6 #It took about 6 minutes to classify data with entire dataframe. This estimates the fraction of that it will take
@@ -137,11 +140,11 @@ def start_define(df, terms_df, description_col='FORMATION', terms_col='DESCRIPTI
     if verbose:
         numRecsClass = int(df[df['CLASS_FLAG']==4]['CLASS_FLAG'].sum())
         percRecsClass= round((df[df['CLASS_FLAG']==4]['CLASS_FLAG'].sum()/df.shape[0])*100,2)
-        recsRemaining = int(df.shape[0]-numRecsClass)
+        recsRemainig = int(df.shape[0]-numRecsClass)
 
         print('Classified well records using initial substring matches')
         print("\t{} records classified using initial substring matches ({}% of unclassified  data)".format(numRecsClass, percRecsClass))
-        print('\t{} records remain unclassified ({}% of unclassified  data).'.format(recsRemaining, 1-percRecsClass))
+        print('\t{} records remain unclassified ({}% of unclassified  data).'.format(recsRemainig, 1-percRecsClass))
     return df
 
 #Classify downhole data by any substring
@@ -169,7 +172,8 @@ def wildcard_define(df, terms_df, description_col='FORMATION', terms_col='DESCRI
         Dataframe containing the original data and new classifications
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(wildcard_define, locals())
     #if verbose:
     #    #Estimate when it will end, based on test run
     #    estTime = df.shape[0]/3054409 * 6 #It took about 6 minutes to classify data with entire dataframe. This estimates the fraction of that it will take
@@ -186,11 +190,11 @@ def wildcard_define(df, terms_df, description_col='FORMATION', terms_col='DESCRI
     if verbose:
         numRecsClass = int(df[df['CLASS_FLAG']==5]['CLASS_FLAG'].sum())
         percRecsClass= round((df[df['CLASS_FLAG']==5]['CLASS_FLAG'].sum()/df.shape[0])*100,2)
-        recsRemaining = int(df.shape[0]-numRecsClass)
+        recsRemainig = int(df.shape[0]-numRecsClass)
 
         print('Classified well records using any substring (wildcard) match')
         print("\t{} records classified using any substring match ({}% of unclassified  data)".format(numRecsClass, percRecsClass))
-        print('\t{} records remain unclassified ({}% of unclassified  data).'.format(recsRemaining, 1-percRecsClass))
+        print('\t{} records remain unclassified ({}% of unclassified  data).'.format(recsRemainig, 1-percRecsClass))
     return df
 
 #Merge data back together
@@ -236,7 +240,8 @@ def depth_define(df, top_col='TOP', thresh=550.0, verbose=False, log=False):
         Dataframe containing intervals classified as bedrock due to depth
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(depth_define, locals())
     df = df.copy()
     df['CLASS_FLAG'].mask(df[top_col]>thresh, 3 ,inplace=True) #Add a Classification Flag of 3 (bedrock b/c it's deepter than 550') to all records where the top of the interval is >550'
     df['BEDROCK_FLAG'].mask(df[top_col]>thresh, True, inplace=True)
@@ -250,11 +255,11 @@ def depth_define(df, top_col='TOP', thresh=550.0, verbose=False, log=False):
 
         numRecsClass = int(df[df['CLASS_FLAG']==3]['CLASS_FLAG'].sum())
         percRecsClass= round((df[df['CLASS_FLAG']==3]['CLASS_FLAG'].sum()/df.shape[0])*100,2)
-        recsRemaining = int(df.shape[0]-numRecsClass)
+        recsRemainig = int(df.shape[0]-numRecsClass)
 
-        print(f'Classified bedrock well records using depth threshold at depth of {thresh}')
-        print(f"\t{numRecsClass} records classified using bedrock threshold depth ({percRecsClass}% of unclassified  data)")
-        print(f'\t{recsRemaining} records remain unclassified ({1-percRecsClass}% of unclassified  data).')
+        print('Classified bedrock well records using depth threshold at depth of {}'.format(thresh))
+        print("\t{} records classified using bedrock threshold depth ({}% of unclassified  data)".format(numRecsClass, percRecsClass))
+        print('\t{} records remain unclassified ({}% of unclassified  data).'.format(recsRemainig, 1-percRecsClass))
         
     return df
 
@@ -275,6 +280,8 @@ def export_undefined(df, outdir):
         Dataframe containing only unclassified terms, and the number of times they occur
     """
     import pathlib
+    
+    
     if isinstance(outdir, pathlib.PurePath):
         if not outdir.is_dir() or not outdir.exists():
             print('Please specify a valid directory for export. Filename is generated automatically.')
@@ -368,7 +375,8 @@ def get_unique_wells(df, wellid_col='API_NUMBER', verbose=False, log=False):
         DataFrame containing only the unique well IDs
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(get_unique_wells, locals())    
     #Get Unique well APIs
     uniqueWells = df[wellid_col].unique()
     wellsDF = pd.DataFrame(uniqueWells)
