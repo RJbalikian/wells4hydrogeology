@@ -383,7 +383,7 @@ def verbose_print(func, local_variables):
         if k in inspect.signature(func).parameters:
             if 'kwargs' in k:
                 print_list.append(f"\t\t{k}")
-                for kk, vv in k.items():                    
+                for kk, vv in local_variables[k].items():
                     print_list.append(f"\t\t\t{kk}={vv}")
             else:
                 print_list.append(f"\t\t{k}={v}")
