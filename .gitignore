@@ -3,5 +3,5 @@
 .vscode
 testnotebook.ipynb
 cache/
-__pycache__
-w4h/__pycache__
+w4h/__pycache__/
+

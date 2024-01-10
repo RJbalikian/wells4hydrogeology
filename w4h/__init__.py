@@ -4,8 +4,9 @@
 #from w4h import classify, clean, export, layers, mapping, read
 
 from w4h.core import(logger_function,
-                          run,
-                          get_resources)
+                        verbose_print,
+                        run,
+                        get_resources)
 
 from w4h.classify import (specific_define, 
                           split_defined, 
@@ -60,7 +61,7 @@ from w4h.read import (get_current_date,
                       add_control_points)
 
 
-__all__=('logger_function','run','get_resources',
+__all__=('logger_function','verbose_print', 'run', 'get_resources',
         'specific_define', 
         'split_defined', 
         'start_define',

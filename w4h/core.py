@@ -1,14 +1,16 @@
+"""This module contains core functions of the package, 
+including the main run() function that allows rapid data analysis."""
+
 import datetime
+import inspect
 import logging
-import os
 import pathlib
+import pkg_resources
 
 import geopandas as gpd
 import pandas as pd
 
 import w4h
-
-import pkg_resources
 
 def run(well_data, 
         surf_elev_grid,
@@ -24,7 +26,7 @@ def run(well_data,
         export_dir=None,
         verbose=False,
         log=False,
-        **keyword_parameters):
+        **kw_params):
     
     """Function to run entire process with one line of code. 
     
@@ -82,12 +84,15 @@ def run(well_data,
         Whether to print updates/results
     log : bool, default = False
         Whether to send parameters and outputs to log file, to be saved in export_dir, or the same directory as well_data if export_dir not defined.
-    **keyword_parameters
+    **kw_params
         Keyword parameters used by any of the functions throughout the process. See list of functions above, and the API documentation for their possible parameters
     """
 
+    if verbose:
+        verbose_print(run, locals())
+
     #Get data (files or otherwise)
-    file_setup_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.file_setup.__code__.co_varnames}
+    file_setup_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.file_setup).parameters.keys()}
     
     #Check how well_data and metadata were defined
     if isinstance(well_data, pathlib.PurePath) or isinstance(well_data, str):
@@ -130,30 +135,34 @@ def run(well_data,
     else:
         print('ERROR: well_data must be a string filepath, a pathlib.Path object, or pandas.DataFrame')
 
-    if export_dir is None:
-        nowTime = datetime.datetime.now()
-        nowTime = str(nowTime).replace(':', '-').replace(' ','_').split('.')[0]
-        nowTimeStr = '_'+str(nowTime)
-        outDir = 'Output_'+nowTimeStr
-        if isinstance(well_dataPath, pd.DataFrame) or isinstance(well_dataPath, gpd.GeoDataFrame):
-            export_dir = pathlib.Path(outDir)
-        elif isinstance(well_dataPath, pathlib.PurePath):
-            if well_dataPath.is_dir():
-                export_dir = well_dataPath.joinpath(outDir)
-            else:
-                export_dir = well_dataPath.parent.joinpath(outDir)
+    if not export_dir:
+        if export_dir is False:
+            pass
         else:
-            raise IOError('export_dir should be explicitly defined if well_data is not a filepath')
-
-        if not export_dir.exists():
-            try:
-                export_dir.mkdir()
-            except:
+            nowTime = datetime.datetime.now()
+            nowTime = str(nowTime).replace(':', '-').replace(' ','_').split('.')[0]
+            nowTimeStr = '_'+str(nowTime)
+            outDir = 'Output_'+nowTimeStr
+            if isinstance(well_dataPath, pd.DataFrame) or isinstance(well_dataPath, gpd.GeoDataFrame):
+                export_dir = pathlib.Path(outDir)
+            elif isinstance(well_dataPath, pathlib.PurePath):
+                if well_dataPath.is_dir():
+                    export_dir = well_dataPath.joinpath(outDir)
+                else:
+                    export_dir = well_dataPath.parent.joinpath(outDir)
+            else:
+                raise IOError('export_dir should be explicitly defined if well_data is not a filepath')
                 pass
 
+            if not export_dir.exists():
+                try:
+                    export_dir.mkdir()
+                except:
+                    pass
+
     #Get pandas dataframes from input
-    read_raw_txt_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.read_raw_csv .__code__.co_varnames}
-    well_data_IN, metadata_IN = w4h.read_raw_csv(data_filepath=well_dataPath, metadata_filepath=metadataPath, verbose=verbose, log=log, **read_raw_txt_kwargs) 
+    read_raw_txt_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.read_raw_csv).parameters.keys()}
+    well_data_IN, metadata_IN = w4h.read_raw_csv(data_filepath=well_dataPath, metadata_filepath=metadataPath, verbose=verbose, log=log, **read_raw_txt_kwargs)
     #Functions to read data into dataframes. Also excludes extraneous columns, and drops header data with no location information
 
     #Define data types (file will need to be udpated)
@@ -163,15 +172,15 @@ def run(well_data,
     if metadata_DF is None:
         well_data_xyz = well_data_DF
     else:
-        merge_tables_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.merge_tables.__code__.co_varnames}
+        merge_tables_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.merge_tables).parameters.keys()}
         well_data_xyz = w4h.merge_tables(data_df=well_data_DF, header_df=metadata_DF, data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, **merge_tables_kwargs)
 
     #Convert well_data_xyz to have geometry
-    coords2geometry_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.coords2geometry.__code__.co_varnames}
+    coords2geometry_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.coords2geometry).parameters.keys()}
     well_data_xyz = w4h.coords2geometry(df_no_geometry=well_data_xyz, xcol=xcol, ycol=ycol, zcol=zcol, log=log, **coords2geometry_kwargs)
 
     #Get Study area
-    read_study_area_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.read_study_area.__code__.co_varnames}
+    read_study_area_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.read_study_area).parameters.keys()}
     if study_area is None:
         studyAreaIN = None
         use_study_area = False
@@ -179,43 +188,42 @@ def run(well_data,
         studyAreaIN = w4h.read_study_area(study_area_path=study_area, log=log, **read_study_area_kwargs)
         use_study_area = True
 
-    clip_gdf2study_area_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.clip_gdf2study_area.__code__.co_varnames}
+    clip_gdf2study_area_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.clip_gdf2study_area).parameters.keys()}
     well_data_xyz = w4h.clip_gdf2study_area(study_area=studyAreaIN, gdf=well_data_xyz, log=log, **clip_gdf2study_area_kwargs)
-
     #Get surfaces and grid(s)
-    read_grid_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.read_grid.__code__.co_varnames}
+    read_grid_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.read_grid).parameters.keys()}
 
     modelGridPath = model_grid
     surfaceElevPath = surf_elev_grid
     bedrockElevPath = bedrock_elev_grid
-    
+
     modelGrid = w4h.read_grid(grid_path=modelGridPath, grid_type='model', study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
     surfaceElevGridIN = w4h.read_grid(grid_path=surfaceElevPath, grid_type='surface', study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
     bedrockElevGridIN = w4h.read_grid(grid_path=bedrockElevPath, grid_type='bedrock', study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
 
     #UPDATE: MAKE SURE CRS's all align ***
     #Add control points
-    add_control_points_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.add_control_points.__code__.co_varnames}
+    add_control_points_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.add_control_points).parameters.keys()}
     well_data_xyz = w4h.add_control_points(df_without_control=well_data_xyz, xcol=xcol, ycol=ycol, zcol=zcol, top_col=top_col, bottom_col=bottom_col, description_col=description_col, verbose=verbose, log=log, **add_control_points_kwargs)
-    
+
     #Clean up data
     well_data_xyz = w4h.remove_nonlocated(df_with_locations=well_data_xyz, log=log, verbose=verbose)
     well_data_xyz = w4h.remove_no_topo(df_with_topo=well_data_xyz, zcol=zcol, verbose=verbose, log=log)
 
-    remove_no_depth_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.remove_no_depth.__code__.co_varnames}
+    remove_no_depth_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.remove_no_depth).parameters.keys()}
     well_data_xyz = w4h.remove_no_depth(well_data_xyz, verbose=verbose, top_col=top_col, bottom_col=bottom_col, log=log, **remove_no_depth_kwargs) #Drop records with no depth information
 
-    remove_bad_depth_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.remove_bad_depth.__code__.co_varnames}
+    remove_bad_depth_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.remove_bad_depth).parameters.keys()}
     well_data_xyz = w4h.remove_bad_depth(well_data_xyz, verbose=verbose, top_col=top_col, bottom_col=bottom_col, depth_type=depth_type, log=log, **remove_bad_depth_kwargs)#Drop records with bad depth information (i.e., top depth > bottom depth) (Also calculates thickness of each record)
 
-    remove_no_formation_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.remove_no_description.__code__.co_varnames}
+    remove_no_formation_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.remove_no_description).parameters.keys()}
     well_data_xyz = w4h.remove_no_description(well_data_xyz, description_col=description_col, verbose=verbose, log=log, **remove_no_formation_kwargs)
 
     #CLASSIFICATION
     #Read dictionary definitions and classify
-    get_search_terms_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.get_search_terms.__code__.co_varnames}
+    get_search_terms_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.get_search_terms).parameters.keys()}
     specTermsPATH, startTermsPATH, wildcardTermsPATH, = w4h.get_search_terms(spec_path=lith_dict, start_path=lith_dict_start, wildcard_path=lith_dict_wildcard, log=log, **get_search_terms_kwargs)
-    read_dictionary_terms_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.read_dictionary_terms.__code__.co_varnames}
+    read_dictionary_terms_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.read_dictionary_terms).parameters.keys()}
     if 'class_flag' in read_dictionary_terms_kwargs.keys():
         del read_dictionary_terms_kwargs['class_flag'] #This is specific to an invidiual dict terms file, so don't want to use for all
     specTerms = w4h.read_dictionary_terms(dict_file=specTermsPATH, log=log, **read_dictionary_terms_kwargs)
@@ -261,10 +269,9 @@ def run(well_data,
     well_data_xyz = w4h.fill_unclassified(well_data_xyz, classification_col='CLASS_FLAG')
 
     #Add target interpratations
-    read_lithologies_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.read_lithologies.__code__.co_varnames}
+    read_lithologies_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.read_lithologies).parameters.keys()}
     targetInterpDF = w4h.read_lithologies(lith_file=target_dict, log=log, **read_lithologies_kwargs)
     well_data_xyz = w4h.merge_lithologies(well_data_df=well_data_xyz, targinterps_df=targetInterpDF, target_col='TARGET', target_class='bool')
-
 
     #Sort dataframe to prepare for next steps
     #well_data_xyz = w4h.sort_dataframe(df=well_data_xyz, sort_cols=['API_NUMBER','TOP'], remove_nans=True)
@@ -282,24 +289,26 @@ def run(well_data,
     well_data_xyz = w4h.sample_raster_points(raster=driftThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col='BEDROCK_DEPTH', verbose=verbose, log=log)
     well_data_xyz = w4h.sample_raster_points(raster=layerThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col='LAYER_THICK', verbose=verbose, log=log)
     well_data_xyz = w4h.get_layer_depths(df_with_depths=well_data_xyz, layers=layers, log=log)
+    #print('Layer Depths:', well_data_xyz['geometry'].head(25))
 
-    layer_target_thick_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.layer_target_thick.__code__.co_varnames}
+    layer_target_thick_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.layer_target_thick).parameters.keys()}
     if 'return_all' in layer_target_thick_kwargs.keys():
         del layer_target_thick_kwargs['return_all'] #This needs to be set to False, so we don't want it reading in twice
+
     resdf = w4h.layer_target_thick(df=well_data_xyz, layers=layers, return_all=False, export_dir=export_dir, depth_top_col=top_col, depth_bot_col=bottom_col, log=log, **layer_target_thick_kwargs)
+    #print('TargetThick:', resdf[0].head(25))
     
-    layer_interp_kwargs = {k: v for k, v in locals()['keyword_parameters'].items() if k in w4h.layer_interp.__code__.co_varnames}
+    layer_interp_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.layer_interp).parameters.keys()}
     layers_data = w4h.layer_interp(points=resdf, grid=modelGrid, layers=9, verbose=verbose, log=log, **layer_interp_kwargs)
 
     nowTime = datetime.datetime.now()
     nowTime = str(nowTime).replace(':', '-').replace(' ','_').split('.')[0]
     nowTimeStr = '_'+str(nowTime)
 
-    #THIS MAY BE REPEAT OF LAST LINES OF layer_interp() 
+    #THIS MAY BE REPEAT OF LAST LINES OF layer_interp()
     w4h.export_grids(grid_data=layers_data, out_path=export_dir, file_id=target_name,filetype='tif', variable_sep=True, date_stamp=True, verbose=verbose, log=log)
 
     return resdf, layers_data
-
 
 log_filename=None #Set up so exists but is None
 def logger_function(logtocommence, parameters, func_name):
@@ -368,6 +377,27 @@ def logger_function(logtocommence, parameters, func_name):
             pass
     return
 
+def verbose_print(func, local_variables, exclude_params=[]):
+    print_list = ['\n']
+    sTime = datetime.datetime.now()
+    print_list.append(f"{func.__name__}")
+    print_list.append(f"\tStarted at {sTime}.")
+    print_list.append(f"\tParameters:")
+    for k, v in local_variables.items():
+        if k in inspect.signature(func).parameters:
+            if 'kwargs' in k:
+                print_list.append(f"\t\t{k}")
+                for kk, vv in local_variables[k].items():
+                    print_list.append(f"\t\t\t{kk}={vv}")
+            elif k in exclude_params:
+                print_list.append(f"\t\t{k}=<input object>")
+            else:
+                print_list.append(f"\t\t{k}={v}")
+
+    for line in print_list:
+        print(line)
+    return print_list
+
 #Get filepaths for package resources in dictionary format
 resource_dir = pathlib.Path(pkg_resources.resource_filename(__name__, 'resources/resources_home.txt')).parent
 def get_resources(verbose=False):
@@ -406,6 +436,13 @@ def get_resources(verbose=False):
     resources_dict['metadata_dtypes'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='headerDataTypes.txt', verbose=verbose)
     resources_dict['ISWS_CRS'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='isws_crs.txt', verbose=verbose)
     resources_dict['xyz_dtypes'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='xyzDataTypes.txt', verbose=verbose)
+
+    resources_dict['well_data'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_well_data.csv', verbose=verbose)
+    resources_dict['study_area'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_studyArea.zip', verbose=verbose)
+
+    resources_dict['model_grid'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='grid_625_raster.tif', verbose=verbose)
+    resources_dict['surf_elev'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_surface_elev_10m_fromlidar_estl.tif', verbose=verbose)
+    resources_dict['bedrock_elev'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_bedrock_elev_grimleyphillips_ESTL.tif', verbose=verbose)
 
     return resources_dict
 
