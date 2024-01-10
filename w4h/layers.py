@@ -44,7 +44,7 @@ def merge_tables(data_df, header_df, data_cols=None, header_cols=None, auto_pick
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
-        verbose_print(merge_tables, locals())
+        verbose_print(merge_tables, locals(), exclude_params=['data_df', 'header_df'])
     if header_df is None:
         #Figure out which columns to include
         if data_cols is None:
@@ -138,7 +138,7 @@ def get_layer_depths(df_with_depths, surface_elev_col='SURFACE_ELEV', layer_thic
     return df_with_depths
 
 #Function to export the result of thickness of target sediments in each layer
-def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_prefix='', depth_top_col='TOP', depth_bot_col='BOTTOM', log=False):
+def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_prefix=None, depth_top_col='TOP', depth_bot_col='BOTTOM', log=False):
     """Function to calculate thickness of target material in each layer at each well point
 
     Parameters
@@ -152,7 +152,7 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
         If False, return list of geopandas.geodataframes with only essential information for each layer.
     export_dir : str or pathlib.Path, default=None
         If str or pathlib.Path, should be directory to which to export dataframes built in function.
-    outfile_prefix : str, default=''
+    outfile_prefix : str, default=None
         Only used if export_dir is set. Will be used at the start of the exported filenames
     depth_top_col : str, default='TOP'
         Name of column containing data for depth to top of described well intervals
@@ -167,23 +167,23 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
         Geopandas geodataframe containing only important information needed for next stage of analysis.
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
-    df['TOP_ELEV_FT'] = df['SURFACE_ELEV'] - df[depth_top_col]
-    df['BOT_ELEV_FT'] = df['SURFACE_ELEV'] - df[depth_bot_col]
+    df['TOP_ELEV'] = df['SURFACE_ELEV'] - df[depth_top_col]
+    df['BOT_ELEV'] = df['SURFACE_ELEV'] - df[depth_bot_col]
 
     layerList = range(1,layers+1)
     res_list = []
     resdf_list = []
+    print(df.columns)
     #Generate Column names based on (looped) integers
     for layer in layerList:
         zStr = 'ELEV'
-        zColT = 'TOP_ELEV_FT'
-        zColB = 'BOT_ELEV_FT'
-        topCol = zStr+'_FT_LAYER'+str(layer)
+        zColT = 'TOP_ELEV'
+        zColB = 'BOT_ELEV'
+        topCol = zStr+'_LAYER'+str(layer)
         if layer != 9: #For all layers except the bottom layer....
-            botCol = zStr+'_FT_LAYER'+str(layer+1) #use the layer below it to 
+            botCol = zStr+'_LAYER'+str(layer+1) #use the layer below it to 
         else: #Otherwise, ...
-            botCol = "BEDROCK_"+zStr+"_FT" #Use the (corrected) bedrock depth
+            botCol = "BEDROCK_"+zStr #Use the (corrected) bedrock depth
 
         #Divide records into 4 categories for ease of calculation, to be joined back together later  
             #Category 1: Well interval starts above layer top, ends within model layer
@@ -192,60 +192,59 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
             #Category 4: well interval begins and ends on either side of model layer (model layer is contained within well layer)
 
         #records1 = intervals that go through the top of the layer and bottom is within layer
-        records1 = df.loc[(df[zColT] >= df[topCol]) & #Top of the well is above or equal to the top of the layer
+        records1 = df.loc[(df[zColT] >= df[topCol]) & #Top of the well interval is above or equal to the top of the layer
                         (df[zColB] <= df[topCol]) & # & #Bottom is below the top of the layer
                         (df[zColB] <= df[zColT])].copy() #Bottom is deeper than top (should already be the case)
-        records1['TARG_THICK_FT'] = pd.DataFrame(np.round((records1.loc[:,topCol]-records1.loc[: , zColB]) * records1['TARGET'],3)).copy() #Multiply "target" (1 or 0) by length within layer            
-        
+        records1['TARG_THICK'] = pd.DataFrame(np.round((records1.loc[:,topCol]-records1.loc[: , zColB]) * records1['TARGET'],3)).copy() #Multiply "target" (1 or 0) by length within layer            
         #records2 = entire interval is within layer
         records2 = df.loc[(df[zColT] <= df[topCol]) & #Top of the well is lower than top of the layer 
                     (df[zColB] >= df[botCol]) & #Bottom of the well is above bottom of the layer 
                     (df[zColB] <= df[zColT])].copy() #Bottom ofthe well is deeper than or equal to top (should already be the case)
-        records2['TARG_THICK_FT'] = pd.DataFrame(np.round((records2.loc[: , zColT] - records2.loc[: , zColB]) * records2['TARGET'],3)).copy()
+        records2['TARG_THICK'] = pd.DataFrame(np.round((records2.loc[: , zColT] - records2.loc[: , zColB]) * records2['TARGET'],3)).copy()
 
         #records3 = intervals with top within layer and bottom of interval going through bottom of layer
         records3 = df.loc[(df[zColT] > df[botCol]) & #Top of the well is above bottom of layer
                     (df[zColB] < df[botCol]) & #Bottom of the well is below bottom of layer
                     (df[zColT] <= df[topCol]) & #Top of well is below top of layer
                     (df[zColB] <= df[zColT])].copy() #Bottom is deeper than top (should already be the case)
-        records3['TARG_THICK_FT'] = pd.DataFrame(np.round((records3.loc[: , zColT] - (records3.loc[:,botCol]))*records3['TARGET'],3)).copy()
+        records3['TARG_THICK'] = pd.DataFrame(np.round((records3.loc[: , zColT] - (records3.loc[:,botCol]))*records3['TARGET'],3)).copy()
 
         #records4 = interval goes through entire layer
         records4 = df.loc[(df[zColT] >= df[topCol]) & #Top of well is above top of layer
                     (df[zColB] < df[botCol]) & #Bottom of well is below bottom of layer
                     (df[zColB] <= df[zColT])].copy() #Bottom of well is below top of well
-        records4['TARG_THICK_FT'] = pd.DataFrame(np.round((records4.loc[: , topCol]-records4.loc[: , botCol]) * records4['TARGET'],3)).copy()
-        
+        records4['TARG_THICK'] = pd.DataFrame(np.round((records4.loc[: , topCol]-records4.loc[: , botCol]) * records4['TARGET'],3)).copy()
+
         #Put the four calculated record categories back together into single dataframe
         res = pd.concat([records1, records2, records3, records4])
-
         #The sign may be reversed if using depth rather than elevation
-        if (res['TARG_THICK_FT'] < 0).all():
-            res['TARG_THICK_FT'] = res['TARG_THICK_FT'] * -1
+        if (res['TARG_THICK'] < 0).all():
+            res['TARG_THICK'] = res['TARG_THICK'] * -1
         
         #Cannot have negative thicknesses
-        res['TARG_THICK_FT'].clip(lower=0, inplace=True)
+        res['TARG_THICK'].clip(lower=0, inplace=True)
         res['LAYER_THICK'].clip(lower=0, inplace=True)
         
         #Get geometrys for each unique API/well
+        res.reset_index(drop=True, inplace=True)
         res_df = res.groupby(by=['API_NUMBER','LATITUDE','LONGITUDE'], as_index=False).sum(numeric_only=True)#Calculate thickness for each well interval in the layer indicated (e.g., if there are two well intervals from same well in one model layer)
-        uniqInd = pd.DataFrame([v.values[0] for k, v in res.groupby('API_NUMBER').groups.items()]).loc[:,0]
+        uniqInd = pd.DataFrame([v.values[0] for k, v in res.groupby(by=['API_NUMBER','LATITUDE','LONGITUDE']).groups.items()]).loc[:,0]
         geomCol = res.loc[uniqInd, 'geometry']
         geomCol = pd.DataFrame(geomCol[~geomCol.index.duplicated(keep='first')]).reset_index()
         
 
-        res_df['TARG_THICK_PER'] =  pd.DataFrame(np.round(res_df['TARG_THICK_FT']/res_df['LAYER_THICK'],3)) #Calculate thickness as percent of total layer thickness
+        res_df['TARG_THICK_PER'] =  pd.DataFrame(np.round(res_df['TARG_THICK']/res_df['LAYER_THICK'],3)) #Calculate thickness as percent of total layer thickness
         #Replace np.inf and np.nans with 0
-        res_df['TARG_THICK_PER'] = res_df['TARG_THICK_PER'].where(res_df['TARG_THICK_PER']!=np.inf, other=0) 
-        res_df['TARG_THICK_PER'] = res_df['TARG_THICK_PER'].where(res_df['TARG_THICK_PER']!=np.nan, other=0) 
+        res_df['TARG_THICK_PER'] = res_df['TARG_THICK_PER'].where(res_df['TARG_THICK_PER']!=np.inf, other=0)
+        res_df['TARG_THICK_PER'] = res_df['TARG_THICK_PER'].where(res_df['TARG_THICK_PER']!=np.nan, other=0)
 
         res_df["LAYER"] = layer #Just to have as part of the output file, include the present layer in the file itself as a separate column
-        res_df = res_df[['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'LATITUDE_PROJ', 'LONGITUDE_PROJ','TOP', 'BOTTOM', 'TOP_ELEV_FT', 'BOT_ELEV_FT', 'SURFACE_ELEV', topCol, botCol,'LAYER_THICK','TARG_THICK_FT', 'TARG_THICK_PER', 'LAYER']].copy() #Format dataframe for output
+        res_df = res_df[['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'LATITUDE_PROJ', 'LONGITUDE_PROJ','TOP', 'BOTTOM', 'TOP_ELEV', 'BOT_ELEV', 'SURFACE_ELEV', topCol, botCol,'LAYER_THICK','TARG_THICK', 'TARG_THICK_PER', 'LAYER']].copy() #Format dataframe for output
         res_df = gpd.GeoDataFrame(res_df, geometry=geomCol.loc[:,'geometry'])
         resdf_list.append(res_df)
         res_list.append(res)
 
-        if isinstance(export_dir, pathlib.PurePath) or type(export_dir) is str:
+        if isinstance(export_dir, (pathlib.PurePath, str)):
             export_dir = pathlib.Path(export_dir)
             if export_dir.is_dir():
                 pass
@@ -258,8 +257,12 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
             #Format and build export filepath
             export_dir = str(export_dir).replace('\\', '/').replace('\\'[0], '/')
             zFillDigs = len(str(len(layerList)))
-            if outfile_prefix[-1]=='_':
+            if str(outfile_prefix).endswith('_'):
                 outfile_prefix = outfile_prefix[:-1]
+            elif outfile_prefix is None:
+                outfile_prefix = ''
+            
+
             if export_dir[-1] =='/':
                 export_dir = export_dir[:-1]
             nowStr = str(datetime.datetime.today().date())+'_'+str(datetime.datetime.today().hour)+'-'+str(datetime.datetime.today().minute)+'-'+str(datetime.datetime.today().second)
@@ -319,7 +322,7 @@ def layer_interp(points, grid, layers=None, interp_kind='nearest', return_type='
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     if verbose:
-        verbose_print(layer_interp, locals())
+        verbose_print(layer_interp, locals(), exclude_params=['points', 'grid'])
 
     nnList = ['nearest', 'nearest neighbor', 'nearestneighbor','neighbor',  'nn','n']
     splineList = ['interp2d', 'interp2', 'interp', 'spline', 'spl', 'sp', 's']
