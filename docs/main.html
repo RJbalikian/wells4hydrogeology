@@ -185,7 +185,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 <div class="desc"><p>Function to add control points, primarily to aid in interpolation. This may be useful when conditions are known but do not exist in input well database</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
+<dt><strong><code>df_without_control</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
 <dd>Dataframe with current working data</dd>
 <dt><strong><code>df_control</code></strong> :&ensp;<code>str, pathlib.Purepath,</code> or <code>pandas.DataFrame</code></dt>
 <dd>Pandas dataframe with control points</dd>
@@ -226,7 +226,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 
     Parameters
     ----------
-    df : pandas.DataFrame
+    df_without_control : pandas.DataFrame
         Dataframe with current working data
     df_control : str, pathlib.Purepath, or pandas.DataFrame
         Pandas dataframe with control points
@@ -540,21 +540,17 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    df = df_no_geometry.copy()
-
-    ptCRS=input_coords_crs
-
-    x = df[xcol].to_numpy()
-    y = df[ycol].to_numpy()
-    z = df[zcol].to_numpy()
+    x = df_no_geometry[xcol].to_numpy()
+    y = df_no_geometry[ycol].to_numpy()
 
     #coords = pd.concat([y, x], axis=1)
     if use_z:
-        df[&#34;geometry&#34;] = gpd.points_from_xy(x, y, z=z, crs=ptCRS)
+        z = df_no_geometry[zcol].to_numpy()
+        df_no_geometry[&#34;geometry&#34;] = gpd.points_from_xy(x, y, z=z, crs=input_coords_crs)
     else:
-        df[&#34;geometry&#34;] = gpd.points_from_xy(x, y, crs=ptCRS)
+        df_no_geometry[&#34;geometry&#34;] = gpd.points_from_xy(x, y, crs=input_coords_crs)
         
-    gdf = gpd.GeoDataFrame(df, crs=ptCRS)
+    gdf = gpd.GeoDataFrame(df_no_geometry, crs=input_coords_crs)
     return gdf</code></pre>
 </details>
 </dd>
@@ -638,18 +634,18 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 </details>
 </dd>
 <dt id="w4h.depth_define"><code class="name flex">
-<span>def <span class="ident">depth_define</span></span>(<span>dfIN, top_col='TOP', thresh=550.0, verbose=False, log=False)</span>
+<span>def <span class="ident">depth_define</span></span>(<span>df, top_col='TOP', thresh=550.0, verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to define all intervals lower than thresh as bedrock</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>dfIN</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
+<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
 <dd>Dataframe to classify</dd>
 <dt><strong><code>top_col</code></strong> :&ensp;<code>str</code>, default <code>= 'TOP'</code></dt>
 <dd>Name of column that contains the depth information, likely of the top of the well interval, by default 'TOP'</dd>
 <dt><strong><code>thresh</code></strong> :&ensp;<code>float</code>, default <code>= 550.0</code></dt>
-<dd>Depth (in units used in dfIN['top_col']) below which all intervals will be classified as bedrock, by default 550.0.</dd>
+<dd>Depth (in units used in df['top_col']) below which all intervals will be classified as bedrock, by default 550.0.</dd>
 <dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
 <dd>Whether to print results, by default False</dd>
 <dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= True</code></dt>
@@ -664,17 +660,17 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def depth_define(dfIN, top_col=&#39;TOP&#39;, thresh=550.0, verbose=False, log=False):
+<pre><code class="python">def depth_define(df, top_col=&#39;TOP&#39;, thresh=550.0, verbose=False, log=False):
     &#34;&#34;&#34;Function to define all intervals lower than thresh as bedrock
 
     Parameters
     ----------
-    dfIN : pandas.DataFrame
+    df : pandas.DataFrame
         Dataframe to classify
     top_col : str, default = &#39;TOP&#39;
         Name of column that contains the depth information, likely of the top of the well interval, by default &#39;TOP&#39;
     thresh : float, default = 550.0
-        Depth (in units used in dfIN[&#39;top_col&#39;]) below which all intervals will be classified as bedrock, by default 550.0.
+        Depth (in units used in df[&#39;top_col&#39;]) below which all intervals will be classified as bedrock, by default 550.0.
     verbose : bool, default = False
         Whether to print results, by default False
     log : bool, default = True
@@ -687,7 +683,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    df = dfIN.copy()
+    df = df.copy()
     df[&#39;CLASS_FLAG&#39;].mask(df[top_col]&gt;thresh, 3 ,inplace=True) #Add a Classification Flag of 3 (bedrock b/c it&#39;s deepter than 550&#39;) to all records where the top of the interval is &gt;550&#39;
     df[&#39;BEDROCK_FLAG&#39;].mask(df[top_col]&gt;thresh, True, inplace=True)
 
@@ -696,7 +692,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
             brDepthClass = 0
         else:
             brDepthClass = df[&#39;CLASS_FLAG&#39;].value_counts()[3.0]
-        total = dfIN.shape[0]
+        total = df.shape[0]
 
         numRecsClass = int(df[df[&#39;CLASS_FLAG&#39;]==3][&#39;CLASS_FLAG&#39;].sum())
         percRecsClass= round((df[df[&#39;CLASS_FLAG&#39;]==3][&#39;CLASS_FLAG&#39;].sum()/df.shape[0])*100,2)
@@ -1252,7 +1248,7 @@ It may also be of use to simply skip this function altogether and directly defin
 </details>
 </dd>
 <dt id="w4h.get_layer_depths"><code class="name flex">
-<span>def <span class="ident">get_layer_depths</span></span>(<span>df_with_depths, no_layers=9, log=False)</span>
+<span>def <span class="ident">get_layer_depths</span></span>(<span>df_with_depths, surface_elev_col='SURFACE_ELEV', layer_thick_col='LAYER_THICK', layers=9, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to calculate depths and elevations of each model layer at each well based on surface elevation, bedrock elevation, and number of layers/layer thickness</p>
@@ -1260,7 +1256,7 @@ It may also be of use to simply skip this function altogether and directly defin
 <dl>
 <dt><strong><code>df_with_depths</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
 <dd>Dataframe containing well metdata</dd>
-<dt><strong><code>no_layers</code></strong> :&ensp;<code>int</code>, default=<code>9</code></dt>
+<dt><strong><code>layers</code></strong> :&ensp;<code>int</code>, default=<code>9</code></dt>
 <dd>Number of layers. This should correlate with get_drift_thick() input parameter, if drift thickness was calculated using that function, by default 9.</dd>
 <dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
 <dd>Whether to log inputs and outputs to log file.</dd>
@@ -1274,14 +1270,14 @@ It may also be of use to simply skip this function altogether and directly defin
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_layer_depths(df_with_depths, no_layers=9, log=False):
+<pre><code class="python">def get_layer_depths(df_with_depths, surface_elev_col=&#39;SURFACE_ELEV&#39;, layer_thick_col=&#39;LAYER_THICK&#39;, layers=9, log=False):
     &#34;&#34;&#34;Function to calculate depths and elevations of each model layer at each well based on surface elevation, bedrock elevation, and number of layers/layer thickness
 
     Parameters
     ----------
     df_with_depths : pandas.DataFrame
         Dataframe containing well metdata
-    no_layers : int, default=9
+    layers : int, default=9
         Number of layers. This should correlate with get_drift_thick() input parameter, if drift thickness was calculated using that function, by default 9.
     log : bool, default = False
         Whether to log inputs and outputs to log file.
@@ -1293,26 +1289,27 @@ It may also be of use to simply skip this function altogether and directly defin
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    for layer in range(0, no_layers): #For each layer
+    for layer in range(0, layers): #For each layer
         #Make column names
-        depthColName  = &#39;DEPTH_FT_LAYER&#39;+str(layer+1)
+        depthColName  = &#39;DEPTH_LAYER&#39;+str(layer+1)
         #depthMcolName = &#39;Depth_M_LAYER&#39;+str(layer) 
 
         #Calculate depth to each layer at each well, in feet and meters
-        df_with_depths[depthColName]  = df_with_depths[&#39;LAYER_THICK_FT&#39;] * layer
+        df_with_depths[depthColName]  = df_with_depths[layer_thick_col] * layer
         #headerData[depthMcolName] = headerData[depthColName] * 0.3048
 
-    for layer in range(0, no_layers): #For each layer
-        elevColName = &#39;ELEV_FT_LAYER&#39;+str(layer+1)
+    for layer in range(0, layers): #For each layer
+        elevColName = &#39;ELEV_LAYER&#39;+str(layer+1)
         #elevMColName = &#39;ELEV_M_LAYER&#39;+str(layer)
             
-        df_with_depths[elevColName]  = df_with_depths[&#39;SURFACE_ELEV_FT&#39;] - df_with_depths[&#39;LAYER_THICK_FT&#39;] * layer
+        df_with_depths[elevColName]  = df_with_depths[surface_elev_col] - df_with_depths[layer_thick_col] * layer
         #headerData[elevMColName]  = headerData[&#39;SURFACE_ELEV_M&#39;] - headerData[&#39;LAYER_THICK_M&#39;] * layer
+        
     return df_with_depths</code></pre>
 </details>
 </dd>
 <dt id="w4h.get_most_recent"><code class="name flex">
-<span>def <span class="ident">get_most_recent</span></span>(<span>dir=WindowsPath('C:/Users/riley/LocalData/Code/Github/wells4hydrogeology/w4h/resources'), glob_pattern='*', verbose=True)</span>
+<span>def <span class="ident">get_most_recent</span></span>(<span>dir=PosixPath('/home/riley/LocalData/Github/wells4hydrogeology/w4h/resources'), glob_pattern='*', verbose=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to find the most recent file with the indicated pattern, using pathlib.glob function.</p>
@@ -1437,7 +1434,7 @@ It may also be of use to simply skip this function altogether and directly defin
 </details>
 </dd>
 <dt id="w4h.get_search_terms"><code class="name flex">
-<span>def <span class="ident">get_search_terms</span></span>(<span>spec_path='C:\\Users\\riley\\LocalData\\Code\\Github\\wells4hydrogeology/resources/', spec_glob_pattern='*SearchTerms-Specific*', start_path=None, start_glob_pattern='*SearchTerms-Start*', wildcard_path=None, wildcard_glob_pattern='*SearchTerms-Wildcard', log=False)</span>
+<span>def <span class="ident">get_search_terms</span></span>(<span>spec_path='/home/riley/LocalData/Github/wells4hydrogeology/resources/', spec_glob_pattern='*SearchTerms-Specific*', start_path=None, start_glob_pattern='*SearchTerms-Start*', wildcard_path=None, wildcard_glob_pattern='*SearchTerms-Wildcard', log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Read in dictionary files for downhole data</p>
@@ -1987,8 +1984,8 @@ If False, return list of geopandas.geodataframes with only essential information
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    df[&#39;TOP_ELEV_FT&#39;] = df[&#39;SURFACE_ELEV_FT&#39;] - df[depth_top_col]
-    df[&#39;BOT_ELEV_FT&#39;] = df[&#39;SURFACE_ELEV_FT&#39;] - df[depth_bot_col]
+    df[&#39;TOP_ELEV_FT&#39;] = df[&#39;SURFACE_ELEV&#39;] - df[depth_top_col]
+    df[&#39;BOT_ELEV_FT&#39;] = df[&#39;SURFACE_ELEV&#39;] - df[depth_bot_col]
 
     layerList = range(1,layers+1)
     res_list = []
@@ -2004,6 +2001,7 @@ If False, return list of geopandas.geodataframes with only essential information
         else: #Otherwise, ...
             botCol = &#34;BEDROCK_&#34;+zStr+&#34;_FT&#34; #Use the (corrected) bedrock depth
 
+        print(df.columns)
         #Divide records into 4 separate categories for ease of calculation, to be joined back together later  
             #Category 1: Well interval starts above layer top, ends within model layer
             #Category 2: Well interval is entirely contained withing model layer
@@ -2044,7 +2042,7 @@ If False, return list of geopandas.geodataframes with only essential information
         
         #Cannot have negative thicknesses
         res[&#39;TARG_THICK_FT&#39;].clip(lower=0, inplace=True)
-        res[&#39;LAYER_THICK_FT&#39;].clip(lower=0, inplace=True)
+        res[&#39;LAYER_THICK&#39;].clip(lower=0, inplace=True)
         
         #Get geometrys for each unique API/well
         res_df = res.groupby(by=[&#39;API_NUMBER&#39;,&#39;LATITUDE&#39;,&#39;LONGITUDE&#39;], as_index=False).sum(numeric_only=True)#Calculate thickness for each well interval in the layer indicated (e.g., if there are two well intervals from same well in one model layer)
@@ -2053,13 +2051,13 @@ If False, return list of geopandas.geodataframes with only essential information
         geomCol = pd.DataFrame(geomCol[~geomCol.index.duplicated(keep=&#39;first&#39;)]).reset_index()
         
 
-        res_df[&#39;TARG_THICK_PER&#39;] =  pd.DataFrame(np.round(res_df[&#39;TARG_THICK_FT&#39;]/res_df[&#39;LAYER_THICK_FT&#39;],3)) #Calculate thickness as percent of total layer thickness
+        res_df[&#39;TARG_THICK_PER&#39;] =  pd.DataFrame(np.round(res_df[&#39;TARG_THICK_FT&#39;]/res_df[&#39;LAYER_THICK&#39;],3)) #Calculate thickness as percent of total layer thickness
         #Replace np.inf and np.nans with 0
         res_df[&#39;TARG_THICK_PER&#39;] = res_df[&#39;TARG_THICK_PER&#39;].where(res_df[&#39;TARG_THICK_PER&#39;]!=np.inf, other=0) 
         res_df[&#39;TARG_THICK_PER&#39;] = res_df[&#39;TARG_THICK_PER&#39;].where(res_df[&#39;TARG_THICK_PER&#39;]!=np.nan, other=0) 
 
         res_df[&#34;LAYER&#34;] = layer #Just to have as part of the output file, include the present layer in the file itself as a separate column
-        res_df = res_df[[&#39;API_NUMBER&#39;, &#39;LATITUDE&#39;, &#39;LONGITUDE&#39;, &#39;LATITUDE_PROJ&#39;, &#39;LONGITUDE_PROJ&#39;,&#39;TOP&#39;, &#39;BOTTOM&#39;, &#39;TOP_ELEV_FT&#39;, &#39;BOT_ELEV_FT&#39;, &#39;SURFACE_ELEV_FT&#39;, topCol, botCol,&#39;LAYER_THICK_FT&#39;,&#39;TARG_THICK_FT&#39;, &#39;TARG_THICK_PER&#39;, &#39;LAYER&#39;]].copy() #Format dataframe for output
+        res_df = res_df[[&#39;API_NUMBER&#39;, &#39;LATITUDE&#39;, &#39;LONGITUDE&#39;, &#39;LATITUDE_PROJ&#39;, &#39;LONGITUDE_PROJ&#39;,&#39;TOP&#39;, &#39;BOTTOM&#39;, &#39;TOP_ELEV_FT&#39;, &#39;BOT_ELEV_FT&#39;, &#39;SURFACE_ELEV&#39;, topCol, botCol,&#39;LAYER_THICK&#39;,&#39;TARG_THICK_FT&#39;, &#39;TARG_THICK_PER&#39;, &#39;LAYER&#39;]].copy() #Format dataframe for output
         res_df = gpd.GeoDataFrame(res_df, geometry=geomCol.loc[:,&#39;geometry&#39;])
         resdf_list.append(res_df)
         res_list.append(res)
@@ -2182,13 +2180,13 @@ If False, return list of geopandas.geodataframes with only essential information
 </details>
 </dd>
 <dt id="w4h.merge_lithologies"><code class="name flex">
-<span>def <span class="ident">merge_lithologies</span></span>(<span>df, targinterps_df, interp_col='INTERPRETATION', target_col='TARGET', target_class='bool')</span>
+<span>def <span class="ident">merge_lithologies</span></span>(<span>well_data_df, targinterps_df, interp_col='INTERPRETATION', target_col='TARGET', target_class='bool')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to merge lithologies and target booleans based on classifications</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
+<dt><strong><code>well_data_df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
 <dd>Dataframe containing classified well data</dd>
 <dt><strong><code>targinterps_df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
 <dd>Dataframe containing lithologies and their target interpretations, depending on what the target is for this analysis (often, coarse materials=1, fine=0)</dd>
@@ -2206,12 +2204,12 @@ Whether the input column is using boolean values as its target indicator</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def merge_lithologies(df, targinterps_df, interp_col=&#39;INTERPRETATION&#39;, target_col=&#39;TARGET&#39;, target_class=&#39;bool&#39;):
+<pre><code class="python">def merge_lithologies(well_data_df, targinterps_df, interp_col=&#39;INTERPRETATION&#39;, target_col=&#39;TARGET&#39;, target_class=&#39;bool&#39;):
     &#34;&#34;&#34;Function to merge lithologies and target booleans based on classifications
     
     Parameters
     ----------
-    df : pandas.DataFrame
+    well_data_df : pandas.DataFrame
         Dataframe containing classified well data
     targinterps_df : pandas.DataFrame
         Dataframe containing lithologies and their target interpretations, depending on what the target is for this analysis (often, coarse materials=1, fine=0)
@@ -2236,7 +2234,7 @@ Whether the input column is using boolean values as its target indicator</p>
         targinterps_df[target_col].fillna(value=-2, inplace=True)
         targinterps_df[target_col].astype(np.int8)
 
-    df_targ = pd.merge(df, targinterps_df.set_index(interp_col), right_on=interp_col, left_on=&#39;LITHOLOGY&#39;, how=&#39;left&#39;)
+    df_targ = pd.merge(well_data_df, targinterps_df.set_index(interp_col), right_on=interp_col, left_on=&#39;LITHOLOGY&#39;, how=&#39;left&#39;)
     
     return df_targ</code></pre>
 </details>
@@ -2257,7 +2255,7 @@ Whether the input column is using boolean values as its target indicator</p>
 <dt><strong><code>header_cols</code></strong> :&ensp;<code>list</code>, optional</dt>
 <dd>List of strings of columns names, for columns to be included in merged table after merge from "right" table (metadata). If None, all columns are kept, by default None</dd>
 <dt><strong><code>auto_pick_cols</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
-<dd>Whether to autopick the columns from the metadata table. If True, the following column names are kept:['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'BEDROCK_ELEV_FT', 'SURFACE_ELEV_FT', 'BEDROCK_DEPTH_FT', 'LAYER_THICK_FT'], by default False</dd>
+<dd>Whether to autopick the columns from the metadata table. If True, the following column names are kept:['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'BEDROCK_ELEV', 'SURFACE_ELEV', 'BEDROCK_DEPTH', 'LAYER_THICK'], by default False</dd>
 <dt><strong><code>drop_duplicate_cols</code></strong> :&ensp;<code>bool</code>, optional</dt>
 <dd>If True, drops duplicate columns from the tables so that columns do not get renamed upon merge, by default True</dd>
 <dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
@@ -2288,7 +2286,7 @@ Whether the input column is using boolean values as its target indicator</p>
     header_cols : list, optional
         List of strings of columns names, for columns to be included in merged table after merge from &#34;right&#34; table (metadata). If None, all columns are kept, by default None
     auto_pick_cols : bool, default = False
-        Whether to autopick the columns from the metadata table. If True, the following column names are kept:[&#39;API_NUMBER&#39;, &#39;LATITUDE&#39;, &#39;LONGITUDE&#39;, &#39;BEDROCK_ELEV_FT&#39;, &#39;SURFACE_ELEV_FT&#39;, &#39;BEDROCK_DEPTH_FT&#39;, &#39;LAYER_THICK_FT&#39;], by default False
+        Whether to autopick the columns from the metadata table. If True, the following column names are kept:[&#39;API_NUMBER&#39;, &#39;LATITUDE&#39;, &#39;LONGITUDE&#39;, &#39;BEDROCK_ELEV&#39;, &#39;SURFACE_ELEV&#39;, &#39;BEDROCK_DEPTH&#39;, &#39;LAYER_THICK&#39;], by default False
     drop_duplicate_cols : bool, optional
         If True, drops duplicate columns from the tables so that columns do not get renamed upon merge, by default True
     log : bool, default = False
@@ -2317,7 +2315,7 @@ Whether the input column is using boolean values as its target indicator</p>
         mergedTable = data_df
     else:   
         if auto_pick_cols:
-            header_cols = [&#39;API_NUMBER&#39;, &#39;LATITUDE&#39;, &#39;LONGITUDE&#39;, &#39;BEDROCK_ELEV_FT&#39;, &#39;SURFACE_ELEV_FT&#39;, &#39;BEDROCK_DEPTH_FT&#39;, &#39;LAYER_THICK_FT&#39;]
+            header_cols = [&#39;API_NUMBER&#39;, &#39;LATITUDE&#39;, &#39;LONGITUDE&#39;, &#39;BEDROCK_ELEV&#39;, &#39;SURFACE_ELEV&#39;, &#39;BEDROCK_DEPTH&#39;, &#39;LAYER_THICK&#39;]
             for c in header_df.columns:
                 if c.startswith(&#39;ELEV_&#39;) or c.startswith(&#39;DEPTH&#39;):
                     header_cols.append(c)
@@ -2628,9 +2626,11 @@ Whether the input column is using boolean values as its target indicator</p>
         elif use_service.lower()==&#39;wcs&#39;:
             gridIN = read_wcs(study_area, wcs_url=lidarURL, **kwargs)
         elif use_service.lower()==&#39;wms&#39;:
-            pass
             gridIN = read_wms(study_area, wcs_url=lidarURL, **kwargs)
-            
+        elif use_service:
+            #Deafults to wms
+            gridIN = read_wms(study_area, wcs_url=lidarURL, **kwargs)
+
         if study_area is not None:
             if grid_crs is None:
                 try:
@@ -2711,13 +2711,14 @@ Whether the input column is using boolean values as its target indicator</p>
 
     if lith_file is None:
         #Find resources
-        lith_file=&#39;Lithology_Interp_FineCoarse.csv&#39;
+        import w4h
+        lith_file= w4h.get_resources()[&#39;LithInterps_FineCoarse&#39;]
     
     if not isinstance(lith_file, pathlib.PurePath):
         lith_file = pathlib.Path(lith_file)
 
     if use_cols is None:
-        use_cols = [&#39;LITHOLOGY&#39;, &#39;CODE&#39;]
+        use_cols = [interp_col, target_col]
 
     lithoDF = pd.read_csv(lith_file, usecols=use_cols)
 
@@ -2821,10 +2822,12 @@ Whether the input column is using boolean values as its target indicator</p>
         try:
             noDataVal = float(modelGrid.attrs[&#39;_FillValue&#39;]) #Extract from dataset itsel
         except:
-            noDataVal = -5000000
+            noDataVal = no_data_val_grid
 
         modelGrid = modelGrid.where(modelGrid != noDataVal, other=np.nan)   #Replace no data values with NaNs
+        modelGrid = modelGrid.where(modelGrid == np.nan, other=1) #Replace all other values with 1
         modelGrid.rio.reproject(grid_crs, inplace=True)
+        
     elif model_grid_path is None and study_area is None:
         if verbose:
             print(&#34;ERROR: Either model_grid_path or study_area must be defined.&#34;)
@@ -2877,7 +2880,7 @@ Whether the input column is using boolean values as its target indicator</p>
         coords = {&#39;x&#39;:x,&#39;y&#39;:yIn, &#39;spatial_ref&#39;:0}
         dims = {&#39;x&#39;:x,&#39;y&#39;:yIn}
         
-        modelGrid = xr.DataArray(data=zz,coords=coords,attrs={&#39;_FillValue&#39;:3.402823466e+38}, dims=dims)
+        modelGrid = xr.DataArray(data=zz,coords=coords,attrs={&#39;_FillValue&#39;:no_data_val_grid}, dims=dims)
         modelGrid.spatial_ref.attrs[&#39;spatial_ref&#39;] = {}
         if grid_crs is None or grid_crs==&#39;isws&#39; or grid_crs==&#39;ISWS&#39;:
             for k in spatRefDict:
@@ -3808,7 +3811,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 </details>
 </dd>
 <dt id="w4h.run"><code class="name flex">
-<span>def <span class="ident">run</span></span>(<span>well_data, well_data_cols=None, metadata=None, well_metadata_cols=None, layers=9, description_col='FORMATION', top_col='TOP', bottom_col='BOTTOM', depth_type='depth', study_area=None, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEVATION', well_id_col='API_NUMBER', output_crs='EPSG:4269', surf_elev_file=None, bedrock_elev_file=None, model_grid=None, lith_dict=None, lith_dict_start=None, lith_dict_wildcard=None, target_dict=None, target_name='CoarseFine', export_dir=None, verbose=False, log=False, **keyword_parameters)</span>
+<span>def <span class="ident">run</span></span>(<span>well_data, surf_elev_grid, bedrock_elev_grid, model_grid=None, metadata=None, layers=9, well_data_cols=None, well_metadata_cols=None, description_col='FORMATION', top_col='TOP', bottom_col='BOTTOM', depth_type='depth', study_area=None, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEVATION', well_id_col='API_NUMBER', output_crs='EPSG:4269', lith_dict=None, lith_dict_start=None, lith_dict_wildcard=None, target_dict=None, target_name='', export_dir=None, verbose=False, log=False, **keyword_parameters)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to run entire process with one line of code. </p>
@@ -3817,10 +3820,16 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 <dl>
 <dt><strong><code>well_data</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path obj</code></dt>
 <dd>Filepath to file or directory containing well data.</dd>
+<dt><strong><code>surf_elev_grid</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code></dt>
+<dd><em>description</em></dd>
+<dt><strong><code>bedrock_elev_grid</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code></dt>
+<dd><em>description</em></dd>
+<dt><strong><code>model_grid</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object,</code> or <code>model grid parameters (see model_grid function)</code></dt>
+<dd><em>description</em></dd>
+<dt><strong><code>metadata</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object,</code> or <code>None</code>, default=<code>None</code></dt>
+<dd>Filepath to file or directory containing well metadata, such as location and elevation. If None, will check if well_data is a directory, and if so, will use metadata_filename to search in same directory.</dd>
 <dt><strong><code>well_data_cols</code></strong> :&ensp;<code>List</code> or <code>list-like</code></dt>
 <dd>Columns to</dd>
-<dt><strong><code>metadata</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code></dt>
-<dd>Filepath to file or directory containing well metadata, such as location and elevation.</dd>
 <dt><strong><code>well_metadata_cols</code></strong> :&ensp;<code>List</code> or <code>list-like</code></dt>
 <dd><em>description</em></dd>
 <dt><strong><code>layers</code></strong> :&ensp;<code>int</code>, default <code>= 9</code></dt>
@@ -3843,12 +3852,6 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 <dd>Name of column containing z coordinates. This column should be in metadata unless metadata is not read, then it should be in well_data.</dd>
 <dt><strong><code>output_crs</code></strong> :&ensp;<code>crs definition accepted by pyproj</code>, default <code>= 'EPSG:4269'</code></dt>
 <dd>CRS to output all of the data into</dd>
-<dt><strong><code>surf_elev_file</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code></dt>
-<dd><em>description</em></dd>
-<dt><strong><code>bedrock_elev_file</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code></dt>
-<dd><em>description</em></dd>
-<dt><strong><code>model_grid</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object,</code> or <code>model grid parameters (see model_grid function)</code></dt>
-<dd><em>description</em></dd>
 <dt><strong><code>lith_dict</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object,</code> or <code>pandas.DataFrame</code></dt>
 <dd><em>description</em></dd>
 <dt><strong><code>lith_dict_start</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object,</code> or <code>pandas.DataFrame</code></dt>
@@ -3872,15 +3875,17 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def run(well_data, well_data_cols=None, 
-        metadata=None, well_metadata_cols=None, 
+<pre><code class="python">def run(well_data, 
+        surf_elev_grid,
+        bedrock_elev_grid,
+        model_grid=None,
+        metadata=None,
         layers = 9,
-        description_col=&#39;FORMATION&#39;, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, depth_type=&#39;depth&#39;,
+        well_data_cols=None, well_metadata_cols=None, description_col=&#39;FORMATION&#39;, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, depth_type=&#39;depth&#39;,
         study_area=None, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEVATION&#39;, well_id_col=&#39;API_NUMBER&#39;, output_crs=&#39;EPSG:4269&#39;,
-        surf_elev_file=None, bedrock_elev_file=None, model_grid=None,
         lith_dict=None, lith_dict_start=None, lith_dict_wildcard=None,
         target_dict=None,
-        target_name=&#39;CoarseFine&#39;,
+        target_name=&#39;&#39;,
         export_dir=None,
         verbose=False,
         log=False,
@@ -3894,10 +3899,16 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     ----------
     well_data : str or pathlib.Path obj
         Filepath to file or directory containing well data.
+    surf_elev_grid : str or pathlib.Path object
+        _description_
+    bedrock_elev_grid : str or pathlib.Path object
+        _description_
+    model_grid : str or pathlib.Path object, or model grid parameters (see model_grid function)
+        _description_        
+    metadata : str or pathlib.Path object, or None, default=None
+        Filepath to file or directory containing well metadata, such as location and elevation. If None, will check if well_data is a directory, and if so, will use metadata_filename to search in same directory.
     well_data_cols : List or list-like
         Columns to 
-    metadata : str or pathlib.Path object
-        Filepath to file or directory containing well metadata, such as location and elevation.
     well_metadata_cols : List or list-like
         _description_
     layers : int, default = 9
@@ -3920,12 +3931,6 @@ Polygon is best, but may work with other types if extent is correct.</dd>
         Name of column containing z coordinates. This column should be in metadata unless metadata is not read, then it should be in well_data.
     output_crs : crs definition accepted by pyproj, default = &#39;EPSG:4269&#39;
         CRS to output all of the data into
-    surf_elev_file : str or pathlib.Path object
-        _description_
-    bedrock_elev_file : str or pathlib.Path object
-        _description_
-    model_grid : str or pathlib.Path object, or model grid parameters (see model_grid function)
-        _description_
     lith_dict : str or pathlib.Path object, or pandas.DataFrame
         _description_
     lith_dict_start : str or pathlib.Path object, or pandas.DataFrame
@@ -3990,6 +3995,27 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     else:
         print(&#39;ERROR: well_data must be a string filepath, a pathlib.Path object, or pandas.DataFrame&#39;)
 
+    if export_dir is None:
+        nowTime = datetime.datetime.now()
+        nowTime = str(nowTime).replace(&#39;:&#39;, &#39;-&#39;).replace(&#39; &#39;,&#39;_&#39;).split(&#39;.&#39;)[0]
+        nowTimeStr = &#39;_&#39;+str(nowTime)
+        outDir = &#39;Output_&#39;+nowTimeStr
+        if isinstance(well_dataPath, pd.DataFrame) or isinstance(well_dataPath, gpd.GeoDataFrame):
+            export_dir = pathlib.Path(outDir)
+        elif isinstance(well_dataPath, pathlib.PurePath):
+            if well_dataPath.is_dir():
+                export_dir = well_dataPath.joinpath(outDir)
+            else:
+                export_dir = well_dataPath.parent.joinpath(outDir)
+        else:
+            raise IOError(&#39;export_dir should be explicitly defined if well_data is not a filepath&#39;)
+
+        if not export_dir.exists():
+            try:
+                export_dir.mkdir()
+            except:
+                pass
+
     #Get pandas dataframes from input
     read_raw_txt_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_raw_csv .__code__.co_varnames}
     well_data_IN, metadata_IN = w4h.read_raw_csv(data_filepath=well_dataPath, metadata_filepath=metadataPath, verbose=verbose, log=log, **read_raw_txt_kwargs) 
@@ -4025,16 +4051,15 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     read_grid_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_grid.__code__.co_varnames}
 
     modelGridPath = model_grid
-    surfaceElevPath = surf_elev_file
-    bedrockElevPath = bedrock_elev_file
-    #UPDATE: allow other types of model grid read ***
+    surfaceElevPath = surf_elev_grid
+    bedrockElevPath = bedrock_elev_grid
+    
     modelGrid = w4h.read_grid(grid_path=modelGridPath, grid_type=&#39;model&#39;, study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
     surfaceElevGridIN = w4h.read_grid(grid_path=surfaceElevPath, grid_type=&#39;surface&#39;, study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
     bedrockElevGridIN = w4h.read_grid(grid_path=bedrockElevPath, grid_type=&#39;bedrock&#39;, study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
 
     #UPDATE: MAKE SURE CRS&#39;s all align ***
     #Add control points
-    #UPDATE: Code here for adding in control points ***
     add_control_points_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.add_control_points.__code__.co_varnames}
     well_data_xyz = w4h.add_control_points(df_without_control=well_data_xyz, xcol=xcol, ycol=ycol, zcol=zcol, top_col=top_col, bottom_col=bottom_col, description_col=description_col, verbose=verbose, log=log, **add_control_points_kwargs)
     
@@ -4056,6 +4081,8 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     get_search_terms_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.get_search_terms.__code__.co_varnames}
     specTermsPATH, startTermsPATH, wildcardTermsPATH, = w4h.get_search_terms(spec_path=lith_dict, start_path=lith_dict_start, wildcard_path=lith_dict_wildcard, log=log, **get_search_terms_kwargs)
     read_dictionary_terms_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_dictionary_terms.__code__.co_varnames}
+    if &#39;class_flag&#39; in read_dictionary_terms_kwargs.keys():
+        del read_dictionary_terms_kwargs[&#39;class_flag&#39;] #This is specific to an invidiual dict terms file, so don&#39;t want to use for all
     specTerms = w4h.read_dictionary_terms(dict_file=specTermsPATH, log=log, **read_dictionary_terms_kwargs)
     startTerms = w4h.read_dictionary_terms(dict_file=startTermsPATH, log=log, **read_dictionary_terms_kwargs)
     wildcardTerms = w4h.read_dictionary_terms(dict_file=wildcardTermsPATH, log=log, **read_dictionary_terms_kwargs)
@@ -4078,7 +4105,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 
     #CLASSIFICATIONS
     #Exact match classifications
-    well_data_xyz = w4h.specific_define(well_data_xyz, specTerms, description_col=description_col, verbose=verbose, log=log)
+    well_data_xyz = w4h.specific_define(well_data_xyz, terms_df=specTerms, description_col=description_col, verbose=verbose, log=log)
     
     #.startswith classifications
     classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
@@ -4092,17 +4119,18 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 
     #Depth classification
     classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
-    searchDF = w4h.depth_define(searchDF, thresh=550, verbose=verbose, log=log)
+    searchDF = w4h.depth_define(df=searchDF, thresh=550, verbose=verbose, log=log)
     well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***
     
     #Fill unclassified data
     well_data_xyz = w4h.fill_unclassified(well_data_xyz, classification_col=&#39;CLASS_FLAG&#39;)
-    
+
     #Add target interpratations
     read_lithologies_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_lithologies.__code__.co_varnames}
     targetInterpDF = w4h.read_lithologies(lith_file=target_dict, log=log, **read_lithologies_kwargs)
-    well_data_xyz = w4h.merge_lithologies(df=well_data_xyz, targinterps_df=targetInterpDF, target_col=&#39;TARGET&#39;, target_class=&#39;bool&#39;)
-    
+    well_data_xyz = w4h.merge_lithologies(well_data_df=well_data_xyz, targinterps_df=targetInterpDF, target_col=&#39;TARGET&#39;, target_class=&#39;bool&#39;)
+
+
     #Sort dataframe to prepare for next steps
     #well_data_xyz = w4h.sort_dataframe(df=well_data_xyz, sort_cols=[&#39;API_NUMBER&#39;,&#39;TOP&#39;], remove_nans=True)
     well_data_xyz = well_data_xyz.sort_values(by=[well_id_col, top_col])
@@ -4113,36 +4141,27 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     #Analyze Surface(s) and grid(s)
     bedrockGrid, surfaceGrid = w4h.align_rasters(grids_unaligned=[bedrockElevGridIN, surfaceElevGridIN], modelgrid=modelGrid, no_data_val_grid=0, log=log)
     driftThickGrid, layerThickGrid = w4h.get_drift_thick(surface=surfaceGrid, bedrock=bedrockGrid, layers=layers, plot=verbose, log=log)
-    #UPDATE: LAYER NAMES SO DON&#34;T INCLUDE FT
-    well_data_xyz = w4h.sample_raster_points(raster=bedrockGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_ELEV_FT&#39;, verbose=verbose, log=log)
-    well_data_xyz = w4h.sample_raster_points(raster=surfaceGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;SURFACE_ELEV_FT&#39;, verbose=verbose, log=log)
-    well_data_xyz = w4h.sample_raster_points(raster=driftThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_DEPTH_FT&#39;, verbose=verbose, log=log)
-    well_data_xyz = w4h.sample_raster_points(raster=layerThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;LAYER_THICK_FT&#39;, verbose=verbose, log=log)
-    well_data_xyz = w4h.get_layer_depths(df_with_depths=well_data_xyz, no_layers=layers, log=log)
+    
+    well_data_xyz = w4h.sample_raster_points(raster=bedrockGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_ELEV&#39;, verbose=verbose, log=log)
+    well_data_xyz = w4h.sample_raster_points(raster=surfaceGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;SURFACE_ELEV&#39;, verbose=verbose, log=log)
+    well_data_xyz = w4h.sample_raster_points(raster=driftThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_DEPTH&#39;, verbose=verbose, log=log)
+    well_data_xyz = w4h.sample_raster_points(raster=layerThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;LAYER_THICK&#39;, verbose=verbose, log=log)
+    well_data_xyz = w4h.get_layer_depths(df_with_depths=well_data_xyz, layers=layers, log=log)
 
-    resdf = w4h.layer_target_thick(well_data_xyz, layers=9, return_all=False, outfile_prefix=&#39;CoarseFine&#39;, export_dir=export_dir, depth_top_col=top_col, depth_bot_col=bottom_col, log=log)
+    layer_target_thick_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.layer_target_thick.__code__.co_varnames}
+    if &#39;return_all&#39; in layer_target_thick_kwargs.keys():
+        del layer_target_thick_kwargs[&#39;return_all&#39;] #This needs to be set to False, so we don&#39;t want it reading in twice
+    resdf = w4h.layer_target_thick(df=well_data_xyz, layers=layers, return_all=False, export_dir=export_dir, depth_top_col=top_col, depth_bot_col=bottom_col, log=log, **layer_target_thick_kwargs)
     
     layer_interp_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.layer_interp.__code__.co_varnames}
-    layers_data = w4h.layer_interp(points=resdf, layers=9, grid=modelGrid, verbose=verbose, log=log, **layer_interp_kwargs)
+    layers_data = w4h.layer_interp(points=resdf, grid=modelGrid, layers=9, verbose=verbose, log=log, **layer_interp_kwargs)
 
     nowTime = datetime.datetime.now()
     nowTime = str(nowTime).replace(&#39;:&#39;, &#39;-&#39;).replace(&#39; &#39;,&#39;_&#39;).split(&#39;.&#39;)[0]
     nowTimeStr = &#39;_&#39;+str(nowTime)
 
-    if export_dir is None:
-        outDir = &#39;Output_&#39;+nowTimeStr
-        if well_data.is_dir():
-            export_dir = well_data.joinpath(outDir)
-        else:
-            export_dir = well_data.parent.joinpath(outDir)
-        
-        if not export_dir.exists():
-            try:
-                export_dir.mkdir()
-            except:
-                pass
-
-    w4h.export_grids(grid_data=layers_data, out_path=export_dir, file_id=&#39;&#39;,filetype=&#39;tif&#39;, variable_sep=True, date_stamp=True, verbose=verbose, log=log)
+    #THIS MAY BE REPEAT OF LAST LINES OF layer_interp() 
+    w4h.export_grids(grid_data=layers_data, out_path=export_dir, file_id=target_name,filetype=&#39;tif&#39;, variable_sep=True, date_stamp=True, verbose=verbose, log=log)
 
     return resdf, layers_data</code></pre>
 </details>
@@ -4223,10 +4242,16 @@ new_col : str, optional</dd>
     points_df[yCOLOUT] = points_df[&#39;geometry&#39;].y
     xData = np.array(points_df[xCOLOUT].values)
     yData = np.array(points_df[yCOLOUT].values)
-    sampleArr=raster.sel(x=xData, y=yData, method=&#39;nearest&#39;).values
-    sampleArr = np.diag(sampleArr)
-    sampleDF = pd.DataFrame(sampleArr, columns=[new_col])
-    points_df[new_col] = sampleDF[new_col]
+    zData = []
+    # Loop over DataFrame rows
+    for i, row in points_df.iterrows():
+        # Select data from DataArray at current coordinates and append to list
+        zData.append(raster.sel(x=row[xCOLOUT], y=row[yCOLOUT], method=&#39;nearest&#39;).item())
+    print(zData)
+    #sampleArr=raster.sel(x=xData, y=yData, method=&#39;nearest&#39;).values
+    #sampleArr = np.diag(sampleArr)
+    #sampleDF = pd.DataFrame(sampleArr, columns=[new_col])
+    points_df[new_col] = zData#sampleDF[new_col]
     return points_df</code></pre>
 </details>
 </dd>
@@ -4291,8 +4316,8 @@ new_col : str, optional</dd>
 <dd>Dataframe containing the classifications</dd>
 <dt><strong><code>description_col</code></strong> :&ensp;<code>str</code>, default=<code>'FORMATION'</code></dt>
 <dd>Column name in df containing the well descriptions, by default 'FORMATION'.</dd>
-<dt><strong><code>terms_col</code></strong> :&ensp;<code>str</code>, default=<code>'FORMATION'</code></dt>
-<dd>Column name in terms_df containing the classified descriptions, by default 'FORMATION'.</dd>
+<dt><strong><code>terms_col</code></strong> :&ensp;<code>str</code>, default=<code>'DESCRIPTION'</code></dt>
+<dd>Column name in terms_df containing the classified descriptions, by default 'DESCRIPTION'.</dd>
 <dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, default=<code>False</code></dt>
 <dd>Whether to print up results, by default False.</dd>
 </dl>
@@ -4316,8 +4341,8 @@ new_col : str, optional</dd>
         Dataframe containing the classifications
     description_col : str, default=&#39;FORMATION&#39;
         Column name in df containing the well descriptions, by default &#39;FORMATION&#39;.
-    terms_col : str, default=&#39;FORMATION&#39;
-        Column name in terms_df containing the classified descriptions, by default &#39;FORMATION&#39;.
+    terms_col : str, default=&#39;DESCRIPTION&#39;
+        Column name in terms_df containing the classified descriptions, by default &#39;DESCRIPTION&#39;.
     verbose : bool, default=False
         Whether to print up results, by default False.
 

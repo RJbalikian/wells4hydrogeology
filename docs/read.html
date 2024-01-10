@@ -589,13 +589,14 @@ def read_lithologies(lith_file=None, interp_col=&#39;LITHOLOGY&#39;, target_col=
 
     if lith_file is None:
         #Find resources
-        lith_file=&#39;Lithology_Interp_FineCoarse.csv&#39;
+        import w4h
+        lith_file= w4h.get_resources()[&#39;LithInterps_FineCoarse&#39;]
     
     if not isinstance(lith_file, pathlib.PurePath):
         lith_file = pathlib.Path(lith_file)
 
     if use_cols is None:
-        use_cols = [&#39;LITHOLOGY&#39;, &#39;CODE&#39;]
+        use_cols = [interp_col, target_col]
 
     lithoDF = pd.read_csv(lith_file, usecols=use_cols)
 
@@ -608,7 +609,7 @@ def add_control_points(df_without_control, df_control=None,  xcol=&#39;LONGITUDE
 
     Parameters
     ----------
-    df : pandas.DataFrame
+    df_without_control : pandas.DataFrame
         Dataframe with current working data
     df_control : str, pathlib.Purepath, or pandas.DataFrame
         Pandas dataframe with control points
@@ -691,7 +692,7 @@ def add_control_points(df_without_control, df_control=None,  xcol=&#39;LONGITUDE
 <div class="desc"><p>Function to add control points, primarily to aid in interpolation. This may be useful when conditions are known but do not exist in input well database</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
+<dt><strong><code>df_without_control</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
 <dd>Dataframe with current working data</dd>
 <dt><strong><code>df_control</code></strong> :&ensp;<code>str, pathlib.Purepath,</code> or <code>pandas.DataFrame</code></dt>
 <dd>Pandas dataframe with control points</dd>
@@ -732,7 +733,7 @@ def add_control_points(df_without_control, df_control=None,  xcol=&#39;LONGITUDE
 
     Parameters
     ----------
-    df : pandas.DataFrame
+    df_without_control : pandas.DataFrame
         Dataframe with current working data
     df_control : str, pathlib.Purepath, or pandas.DataFrame
         Pandas dataframe with control points
@@ -1024,7 +1025,7 @@ It may also be of use to simply skip this function altogether and directly defin
 </details>
 </dd>
 <dt id="w4h.read.get_most_recent"><code class="name flex">
-<span>def <span class="ident">get_most_recent</span></span>(<span>dir=WindowsPath('C:/Users/riley/LocalData/Code/Github/wells4hydrogeology/w4h/resources'), glob_pattern='*', verbose=True)</span>
+<span>def <span class="ident">get_most_recent</span></span>(<span>dir=PosixPath('/home/riley/LocalData/Github/wells4hydrogeology/w4h/resources'), glob_pattern='*', verbose=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to find the most recent file with the indicated pattern, using pathlib.glob function.</p>
@@ -1090,7 +1091,7 @@ It may also be of use to simply skip this function altogether and directly defin
 </details>
 </dd>
 <dt id="w4h.read.get_search_terms"><code class="name flex">
-<span>def <span class="ident">get_search_terms</span></span>(<span>spec_path='C:\\Users\\riley\\LocalData\\Code\\Github\\wells4hydrogeology/resources/', spec_glob_pattern='*SearchTerms-Specific*', start_path=None, start_glob_pattern='*SearchTerms-Start*', wildcard_path=None, wildcard_glob_pattern='*SearchTerms-Wildcard', log=False)</span>
+<span>def <span class="ident">get_search_terms</span></span>(<span>spec_path='/home/riley/LocalData/Github/wells4hydrogeology/resources/', spec_glob_pattern='*SearchTerms-Specific*', start_path=None, start_glob_pattern='*SearchTerms-Start*', wildcard_path=None, wildcard_glob_pattern='*SearchTerms-Wildcard', log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Read in dictionary files for downhole data</p>
@@ -1435,13 +1436,14 @@ with start search terms, and with wildcard search terms</p></div>
 
     if lith_file is None:
         #Find resources
-        lith_file=&#39;Lithology_Interp_FineCoarse.csv&#39;
+        import w4h
+        lith_file= w4h.get_resources()[&#39;LithInterps_FineCoarse&#39;]
     
     if not isinstance(lith_file, pathlib.PurePath):
         lith_file = pathlib.Path(lith_file)
 
     if use_cols is None:
-        use_cols = [&#39;LITHOLOGY&#39;, &#39;CODE&#39;]
+        use_cols = [interp_col, target_col]
 
     lithoDF = pd.read_csv(lith_file, usecols=use_cols)
 

@@ -31,21 +31,24 @@ import logging
 import os
 import pathlib
 
+import geopandas as gpd
 import pandas as pd
 
 import w4h
 
 import pkg_resources
 
-def run(well_data, well_data_cols=None, 
-        metadata=None, well_metadata_cols=None, 
+def run(well_data, 
+        surf_elev_grid,
+        bedrock_elev_grid,
+        model_grid=None,
+        metadata=None,
         layers = 9,
-        description_col=&#39;FORMATION&#39;, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, depth_type=&#39;depth&#39;,
+        well_data_cols=None, well_metadata_cols=None, description_col=&#39;FORMATION&#39;, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, depth_type=&#39;depth&#39;,
         study_area=None, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEVATION&#39;, well_id_col=&#39;API_NUMBER&#39;, output_crs=&#39;EPSG:4269&#39;,
-        surf_elev_file=None, bedrock_elev_file=None, model_grid=None,
         lith_dict=None, lith_dict_start=None, lith_dict_wildcard=None,
         target_dict=None,
-        target_name=&#39;CoarseFine&#39;,
+        target_name=&#39;&#39;,
         export_dir=None,
         verbose=False,
         log=False,
@@ -59,10 +62,16 @@ def run(well_data, well_data_cols=None,
     ----------
     well_data : str or pathlib.Path obj
         Filepath to file or directory containing well data.
+    surf_elev_grid : str or pathlib.Path object
+        _description_
+    bedrock_elev_grid : str or pathlib.Path object
+        _description_
+    model_grid : str or pathlib.Path object, or model grid parameters (see model_grid function)
+        _description_        
+    metadata : str or pathlib.Path object, or None, default=None
+        Filepath to file or directory containing well metadata, such as location and elevation. If None, will check if well_data is a directory, and if so, will use metadata_filename to search in same directory.
     well_data_cols : List or list-like
         Columns to 
-    metadata : str or pathlib.Path object
-        Filepath to file or directory containing well metadata, such as location and elevation.
     well_metadata_cols : List or list-like
         _description_
     layers : int, default = 9
@@ -85,12 +94,6 @@ def run(well_data, well_data_cols=None,
         Name of column containing z coordinates. This column should be in metadata unless metadata is not read, then it should be in well_data.
     output_crs : crs definition accepted by pyproj, default = &#39;EPSG:4269&#39;
         CRS to output all of the data into
-    surf_elev_file : str or pathlib.Path object
-        _description_
-    bedrock_elev_file : str or pathlib.Path object
-        _description_
-    model_grid : str or pathlib.Path object, or model grid parameters (see model_grid function)
-        _description_
     lith_dict : str or pathlib.Path object, or pandas.DataFrame
         _description_
     lith_dict_start : str or pathlib.Path object, or pandas.DataFrame
@@ -155,6 +158,27 @@ def run(well_data, well_data_cols=None,
     else:
         print(&#39;ERROR: well_data must be a string filepath, a pathlib.Path object, or pandas.DataFrame&#39;)
 
+    if export_dir is None:
+        nowTime = datetime.datetime.now()
+        nowTime = str(nowTime).replace(&#39;:&#39;, &#39;-&#39;).replace(&#39; &#39;,&#39;_&#39;).split(&#39;.&#39;)[0]
+        nowTimeStr = &#39;_&#39;+str(nowTime)
+        outDir = &#39;Output_&#39;+nowTimeStr
+        if isinstance(well_dataPath, pd.DataFrame) or isinstance(well_dataPath, gpd.GeoDataFrame):
+            export_dir = pathlib.Path(outDir)
+        elif isinstance(well_dataPath, pathlib.PurePath):
+            if well_dataPath.is_dir():
+                export_dir = well_dataPath.joinpath(outDir)
+            else:
+                export_dir = well_dataPath.parent.joinpath(outDir)
+        else:
+            raise IOError(&#39;export_dir should be explicitly defined if well_data is not a filepath&#39;)
+
+        if not export_dir.exists():
+            try:
+                export_dir.mkdir()
+            except:
+                pass
+
     #Get pandas dataframes from input
     read_raw_txt_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_raw_csv .__code__.co_varnames}
     well_data_IN, metadata_IN = w4h.read_raw_csv(data_filepath=well_dataPath, metadata_filepath=metadataPath, verbose=verbose, log=log, **read_raw_txt_kwargs) 
@@ -190,16 +214,15 @@ def run(well_data, well_data_cols=None,
     read_grid_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_grid.__code__.co_varnames}
 
     modelGridPath = model_grid
-    surfaceElevPath = surf_elev_file
-    bedrockElevPath = bedrock_elev_file
-    #UPDATE: allow other types of model grid read ***
+    surfaceElevPath = surf_elev_grid
+    bedrockElevPath = bedrock_elev_grid
+    
     modelGrid = w4h.read_grid(grid_path=modelGridPath, grid_type=&#39;model&#39;, study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
     surfaceElevGridIN = w4h.read_grid(grid_path=surfaceElevPath, grid_type=&#39;surface&#39;, study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
     bedrockElevGridIN = w4h.read_grid(grid_path=bedrockElevPath, grid_type=&#39;bedrock&#39;, study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
 
     #UPDATE: MAKE SURE CRS&#39;s all align ***
     #Add control points
-    #UPDATE: Code here for adding in control points ***
     add_control_points_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.add_control_points.__code__.co_varnames}
     well_data_xyz = w4h.add_control_points(df_without_control=well_data_xyz, xcol=xcol, ycol=ycol, zcol=zcol, top_col=top_col, bottom_col=bottom_col, description_col=description_col, verbose=verbose, log=log, **add_control_points_kwargs)
     
@@ -221,6 +244,8 @@ def run(well_data, well_data_cols=None,
     get_search_terms_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.get_search_terms.__code__.co_varnames}
     specTermsPATH, startTermsPATH, wildcardTermsPATH, = w4h.get_search_terms(spec_path=lith_dict, start_path=lith_dict_start, wildcard_path=lith_dict_wildcard, log=log, **get_search_terms_kwargs)
     read_dictionary_terms_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_dictionary_terms.__code__.co_varnames}
+    if &#39;class_flag&#39; in read_dictionary_terms_kwargs.keys():
+        del read_dictionary_terms_kwargs[&#39;class_flag&#39;] #This is specific to an invidiual dict terms file, so don&#39;t want to use for all
     specTerms = w4h.read_dictionary_terms(dict_file=specTermsPATH, log=log, **read_dictionary_terms_kwargs)
     startTerms = w4h.read_dictionary_terms(dict_file=startTermsPATH, log=log, **read_dictionary_terms_kwargs)
     wildcardTerms = w4h.read_dictionary_terms(dict_file=wildcardTermsPATH, log=log, **read_dictionary_terms_kwargs)
@@ -243,7 +268,7 @@ def run(well_data, well_data_cols=None,
 
     #CLASSIFICATIONS
     #Exact match classifications
-    well_data_xyz = w4h.specific_define(well_data_xyz, specTerms, description_col=description_col, verbose=verbose, log=log)
+    well_data_xyz = w4h.specific_define(well_data_xyz, terms_df=specTerms, description_col=description_col, verbose=verbose, log=log)
     
     #.startswith classifications
     classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
@@ -257,17 +282,18 @@ def run(well_data, well_data_cols=None,
 
     #Depth classification
     classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
-    searchDF = w4h.depth_define(searchDF, thresh=550, verbose=verbose, log=log)
+    searchDF = w4h.depth_define(df=searchDF, thresh=550, verbose=verbose, log=log)
     well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***
     
     #Fill unclassified data
     well_data_xyz = w4h.fill_unclassified(well_data_xyz, classification_col=&#39;CLASS_FLAG&#39;)
-    
+
     #Add target interpratations
     read_lithologies_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_lithologies.__code__.co_varnames}
     targetInterpDF = w4h.read_lithologies(lith_file=target_dict, log=log, **read_lithologies_kwargs)
-    well_data_xyz = w4h.merge_lithologies(df=well_data_xyz, targinterps_df=targetInterpDF, target_col=&#39;TARGET&#39;, target_class=&#39;bool&#39;)
-    
+    well_data_xyz = w4h.merge_lithologies(well_data_df=well_data_xyz, targinterps_df=targetInterpDF, target_col=&#39;TARGET&#39;, target_class=&#39;bool&#39;)
+
+
     #Sort dataframe to prepare for next steps
     #well_data_xyz = w4h.sort_dataframe(df=well_data_xyz, sort_cols=[&#39;API_NUMBER&#39;,&#39;TOP&#39;], remove_nans=True)
     well_data_xyz = well_data_xyz.sort_values(by=[well_id_col, top_col])
@@ -278,36 +304,27 @@ def run(well_data, well_data_cols=None,
     #Analyze Surface(s) and grid(s)
     bedrockGrid, surfaceGrid = w4h.align_rasters(grids_unaligned=[bedrockElevGridIN, surfaceElevGridIN], modelgrid=modelGrid, no_data_val_grid=0, log=log)
     driftThickGrid, layerThickGrid = w4h.get_drift_thick(surface=surfaceGrid, bedrock=bedrockGrid, layers=layers, plot=verbose, log=log)
-    #UPDATE: LAYER NAMES SO DON&#34;T INCLUDE FT
-    well_data_xyz = w4h.sample_raster_points(raster=bedrockGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_ELEV_FT&#39;, verbose=verbose, log=log)
-    well_data_xyz = w4h.sample_raster_points(raster=surfaceGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;SURFACE_ELEV_FT&#39;, verbose=verbose, log=log)
-    well_data_xyz = w4h.sample_raster_points(raster=driftThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_DEPTH_FT&#39;, verbose=verbose, log=log)
-    well_data_xyz = w4h.sample_raster_points(raster=layerThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;LAYER_THICK_FT&#39;, verbose=verbose, log=log)
-    well_data_xyz = w4h.get_layer_depths(df_with_depths=well_data_xyz, no_layers=layers, log=log)
+    
+    well_data_xyz = w4h.sample_raster_points(raster=bedrockGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_ELEV&#39;, verbose=verbose, log=log)
+    well_data_xyz = w4h.sample_raster_points(raster=surfaceGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;SURFACE_ELEV&#39;, verbose=verbose, log=log)
+    well_data_xyz = w4h.sample_raster_points(raster=driftThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_DEPTH&#39;, verbose=verbose, log=log)
+    well_data_xyz = w4h.sample_raster_points(raster=layerThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;LAYER_THICK&#39;, verbose=verbose, log=log)
+    well_data_xyz = w4h.get_layer_depths(df_with_depths=well_data_xyz, layers=layers, log=log)
 
-    resdf = w4h.layer_target_thick(well_data_xyz, layers=9, return_all=False, outfile_prefix=&#39;CoarseFine&#39;, export_dir=export_dir, depth_top_col=top_col, depth_bot_col=bottom_col, log=log)
+    layer_target_thick_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.layer_target_thick.__code__.co_varnames}
+    if &#39;return_all&#39; in layer_target_thick_kwargs.keys():
+        del layer_target_thick_kwargs[&#39;return_all&#39;] #This needs to be set to False, so we don&#39;t want it reading in twice
+    resdf = w4h.layer_target_thick(df=well_data_xyz, layers=layers, return_all=False, export_dir=export_dir, depth_top_col=top_col, depth_bot_col=bottom_col, log=log, **layer_target_thick_kwargs)
     
     layer_interp_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.layer_interp.__code__.co_varnames}
-    layers_data = w4h.layer_interp(points=resdf, layers=9, grid=modelGrid, verbose=verbose, log=log, **layer_interp_kwargs)
+    layers_data = w4h.layer_interp(points=resdf, grid=modelGrid, layers=9, verbose=verbose, log=log, **layer_interp_kwargs)
 
     nowTime = datetime.datetime.now()
     nowTime = str(nowTime).replace(&#39;:&#39;, &#39;-&#39;).replace(&#39; &#39;,&#39;_&#39;).split(&#39;.&#39;)[0]
     nowTimeStr = &#39;_&#39;+str(nowTime)
 
-    if export_dir is None:
-        outDir = &#39;Output_&#39;+nowTimeStr
-        if well_data.is_dir():
-            export_dir = well_data.joinpath(outDir)
-        else:
-            export_dir = well_data.parent.joinpath(outDir)
-        
-        if not export_dir.exists():
-            try:
-                export_dir.mkdir()
-            except:
-                pass
-
-    w4h.export_grids(grid_data=layers_data, out_path=export_dir, file_id=&#39;&#39;,filetype=&#39;tif&#39;, variable_sep=True, date_stamp=True, verbose=verbose, log=log)
+    #THIS MAY BE REPEAT OF LAST LINES OF layer_interp() 
+    w4h.export_grids(grid_data=layers_data, out_path=export_dir, file_id=target_name,filetype=&#39;tif&#39;, variable_sep=True, date_stamp=True, verbose=verbose, log=log)
 
     return resdf, layers_data
 
@@ -628,7 +645,7 @@ def __check_parameter_names(verbose=True):
 </details>
 </dd>
 <dt id="w4h.core.run"><code class="name flex">
-<span>def <span class="ident">run</span></span>(<span>well_data, well_data_cols=None, metadata=None, well_metadata_cols=None, layers=9, description_col='FORMATION', top_col='TOP', bottom_col='BOTTOM', depth_type='depth', study_area=None, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEVATION', well_id_col='API_NUMBER', output_crs='EPSG:4269', surf_elev_file=None, bedrock_elev_file=None, model_grid=None, lith_dict=None, lith_dict_start=None, lith_dict_wildcard=None, target_dict=None, target_name='CoarseFine', export_dir=None, verbose=False, log=False, **keyword_parameters)</span>
+<span>def <span class="ident">run</span></span>(<span>well_data, surf_elev_grid, bedrock_elev_grid, model_grid=None, metadata=None, layers=9, well_data_cols=None, well_metadata_cols=None, description_col='FORMATION', top_col='TOP', bottom_col='BOTTOM', depth_type='depth', study_area=None, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEVATION', well_id_col='API_NUMBER', output_crs='EPSG:4269', lith_dict=None, lith_dict_start=None, lith_dict_wildcard=None, target_dict=None, target_name='', export_dir=None, verbose=False, log=False, **keyword_parameters)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to run entire process with one line of code. </p>
@@ -637,10 +654,16 @@ def __check_parameter_names(verbose=True):
 <dl>
 <dt><strong><code>well_data</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path obj</code></dt>
 <dd>Filepath to file or directory containing well data.</dd>
+<dt><strong><code>surf_elev_grid</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code></dt>
+<dd><em>description</em></dd>
+<dt><strong><code>bedrock_elev_grid</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code></dt>
+<dd><em>description</em></dd>
+<dt><strong><code>model_grid</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object,</code> or <code>model grid parameters (see model_grid function)</code></dt>
+<dd><em>description</em></dd>
+<dt><strong><code>metadata</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object,</code> or <code>None</code>, default=<code>None</code></dt>
+<dd>Filepath to file or directory containing well metadata, such as location and elevation. If None, will check if well_data is a directory, and if so, will use metadata_filename to search in same directory.</dd>
 <dt><strong><code>well_data_cols</code></strong> :&ensp;<code>List</code> or <code>list-like</code></dt>
 <dd>Columns to</dd>
-<dt><strong><code>metadata</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code></dt>
-<dd>Filepath to file or directory containing well metadata, such as location and elevation.</dd>
 <dt><strong><code>well_metadata_cols</code></strong> :&ensp;<code>List</code> or <code>list-like</code></dt>
 <dd><em>description</em></dd>
 <dt><strong><code>layers</code></strong> :&ensp;<code>int</code>, default <code>= 9</code></dt>
@@ -663,12 +686,6 @@ def __check_parameter_names(verbose=True):
 <dd>Name of column containing z coordinates. This column should be in metadata unless metadata is not read, then it should be in well_data.</dd>
 <dt><strong><code>output_crs</code></strong> :&ensp;<code>crs definition accepted by pyproj</code>, default <code>= 'EPSG:4269'</code></dt>
 <dd>CRS to output all of the data into</dd>
-<dt><strong><code>surf_elev_file</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code></dt>
-<dd><em>description</em></dd>
-<dt><strong><code>bedrock_elev_file</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code></dt>
-<dd><em>description</em></dd>
-<dt><strong><code>model_grid</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object,</code> or <code>model grid parameters (see model_grid function)</code></dt>
-<dd><em>description</em></dd>
 <dt><strong><code>lith_dict</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object,</code> or <code>pandas.DataFrame</code></dt>
 <dd><em>description</em></dd>
 <dt><strong><code>lith_dict_start</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object,</code> or <code>pandas.DataFrame</code></dt>
@@ -692,15 +709,17 @@ def __check_parameter_names(verbose=True):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def run(well_data, well_data_cols=None, 
-        metadata=None, well_metadata_cols=None, 
+<pre><code class="python">def run(well_data, 
+        surf_elev_grid,
+        bedrock_elev_grid,
+        model_grid=None,
+        metadata=None,
         layers = 9,
-        description_col=&#39;FORMATION&#39;, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, depth_type=&#39;depth&#39;,
+        well_data_cols=None, well_metadata_cols=None, description_col=&#39;FORMATION&#39;, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, depth_type=&#39;depth&#39;,
         study_area=None, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEVATION&#39;, well_id_col=&#39;API_NUMBER&#39;, output_crs=&#39;EPSG:4269&#39;,
-        surf_elev_file=None, bedrock_elev_file=None, model_grid=None,
         lith_dict=None, lith_dict_start=None, lith_dict_wildcard=None,
         target_dict=None,
-        target_name=&#39;CoarseFine&#39;,
+        target_name=&#39;&#39;,
         export_dir=None,
         verbose=False,
         log=False,
@@ -714,10 +733,16 @@ def __check_parameter_names(verbose=True):
     ----------
     well_data : str or pathlib.Path obj
         Filepath to file or directory containing well data.
+    surf_elev_grid : str or pathlib.Path object
+        _description_
+    bedrock_elev_grid : str or pathlib.Path object
+        _description_
+    model_grid : str or pathlib.Path object, or model grid parameters (see model_grid function)
+        _description_        
+    metadata : str or pathlib.Path object, or None, default=None
+        Filepath to file or directory containing well metadata, such as location and elevation. If None, will check if well_data is a directory, and if so, will use metadata_filename to search in same directory.
     well_data_cols : List or list-like
         Columns to 
-    metadata : str or pathlib.Path object
-        Filepath to file or directory containing well metadata, such as location and elevation.
     well_metadata_cols : List or list-like
         _description_
     layers : int, default = 9
@@ -740,12 +765,6 @@ def __check_parameter_names(verbose=True):
         Name of column containing z coordinates. This column should be in metadata unless metadata is not read, then it should be in well_data.
     output_crs : crs definition accepted by pyproj, default = &#39;EPSG:4269&#39;
         CRS to output all of the data into
-    surf_elev_file : str or pathlib.Path object
-        _description_
-    bedrock_elev_file : str or pathlib.Path object
-        _description_
-    model_grid : str or pathlib.Path object, or model grid parameters (see model_grid function)
-        _description_
     lith_dict : str or pathlib.Path object, or pandas.DataFrame
         _description_
     lith_dict_start : str or pathlib.Path object, or pandas.DataFrame
@@ -810,6 +829,27 @@ def __check_parameter_names(verbose=True):
     else:
         print(&#39;ERROR: well_data must be a string filepath, a pathlib.Path object, or pandas.DataFrame&#39;)
 
+    if export_dir is None:
+        nowTime = datetime.datetime.now()
+        nowTime = str(nowTime).replace(&#39;:&#39;, &#39;-&#39;).replace(&#39; &#39;,&#39;_&#39;).split(&#39;.&#39;)[0]
+        nowTimeStr = &#39;_&#39;+str(nowTime)
+        outDir = &#39;Output_&#39;+nowTimeStr
+        if isinstance(well_dataPath, pd.DataFrame) or isinstance(well_dataPath, gpd.GeoDataFrame):
+            export_dir = pathlib.Path(outDir)
+        elif isinstance(well_dataPath, pathlib.PurePath):
+            if well_dataPath.is_dir():
+                export_dir = well_dataPath.joinpath(outDir)
+            else:
+                export_dir = well_dataPath.parent.joinpath(outDir)
+        else:
+            raise IOError(&#39;export_dir should be explicitly defined if well_data is not a filepath&#39;)
+
+        if not export_dir.exists():
+            try:
+                export_dir.mkdir()
+            except:
+                pass
+
     #Get pandas dataframes from input
     read_raw_txt_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_raw_csv .__code__.co_varnames}
     well_data_IN, metadata_IN = w4h.read_raw_csv(data_filepath=well_dataPath, metadata_filepath=metadataPath, verbose=verbose, log=log, **read_raw_txt_kwargs) 
@@ -845,16 +885,15 @@ def __check_parameter_names(verbose=True):
     read_grid_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_grid.__code__.co_varnames}
 
     modelGridPath = model_grid
-    surfaceElevPath = surf_elev_file
-    bedrockElevPath = bedrock_elev_file
-    #UPDATE: allow other types of model grid read ***
+    surfaceElevPath = surf_elev_grid
+    bedrockElevPath = bedrock_elev_grid
+    
     modelGrid = w4h.read_grid(grid_path=modelGridPath, grid_type=&#39;model&#39;, study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
     surfaceElevGridIN = w4h.read_grid(grid_path=surfaceElevPath, grid_type=&#39;surface&#39;, study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
     bedrockElevGridIN = w4h.read_grid(grid_path=bedrockElevPath, grid_type=&#39;bedrock&#39;, study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
 
     #UPDATE: MAKE SURE CRS&#39;s all align ***
     #Add control points
-    #UPDATE: Code here for adding in control points ***
     add_control_points_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.add_control_points.__code__.co_varnames}
     well_data_xyz = w4h.add_control_points(df_without_control=well_data_xyz, xcol=xcol, ycol=ycol, zcol=zcol, top_col=top_col, bottom_col=bottom_col, description_col=description_col, verbose=verbose, log=log, **add_control_points_kwargs)
     
@@ -876,6 +915,8 @@ def __check_parameter_names(verbose=True):
     get_search_terms_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.get_search_terms.__code__.co_varnames}
     specTermsPATH, startTermsPATH, wildcardTermsPATH, = w4h.get_search_terms(spec_path=lith_dict, start_path=lith_dict_start, wildcard_path=lith_dict_wildcard, log=log, **get_search_terms_kwargs)
     read_dictionary_terms_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_dictionary_terms.__code__.co_varnames}
+    if &#39;class_flag&#39; in read_dictionary_terms_kwargs.keys():
+        del read_dictionary_terms_kwargs[&#39;class_flag&#39;] #This is specific to an invidiual dict terms file, so don&#39;t want to use for all
     specTerms = w4h.read_dictionary_terms(dict_file=specTermsPATH, log=log, **read_dictionary_terms_kwargs)
     startTerms = w4h.read_dictionary_terms(dict_file=startTermsPATH, log=log, **read_dictionary_terms_kwargs)
     wildcardTerms = w4h.read_dictionary_terms(dict_file=wildcardTermsPATH, log=log, **read_dictionary_terms_kwargs)
@@ -898,7 +939,7 @@ def __check_parameter_names(verbose=True):
 
     #CLASSIFICATIONS
     #Exact match classifications
-    well_data_xyz = w4h.specific_define(well_data_xyz, specTerms, description_col=description_col, verbose=verbose, log=log)
+    well_data_xyz = w4h.specific_define(well_data_xyz, terms_df=specTerms, description_col=description_col, verbose=verbose, log=log)
     
     #.startswith classifications
     classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
@@ -912,17 +953,18 @@ def __check_parameter_names(verbose=True):
 
     #Depth classification
     classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
-    searchDF = w4h.depth_define(searchDF, thresh=550, verbose=verbose, log=log)
+    searchDF = w4h.depth_define(df=searchDF, thresh=550, verbose=verbose, log=log)
     well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***
     
     #Fill unclassified data
     well_data_xyz = w4h.fill_unclassified(well_data_xyz, classification_col=&#39;CLASS_FLAG&#39;)
-    
+
     #Add target interpratations
     read_lithologies_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_lithologies.__code__.co_varnames}
     targetInterpDF = w4h.read_lithologies(lith_file=target_dict, log=log, **read_lithologies_kwargs)
-    well_data_xyz = w4h.merge_lithologies(df=well_data_xyz, targinterps_df=targetInterpDF, target_col=&#39;TARGET&#39;, target_class=&#39;bool&#39;)
-    
+    well_data_xyz = w4h.merge_lithologies(well_data_df=well_data_xyz, targinterps_df=targetInterpDF, target_col=&#39;TARGET&#39;, target_class=&#39;bool&#39;)
+
+
     #Sort dataframe to prepare for next steps
     #well_data_xyz = w4h.sort_dataframe(df=well_data_xyz, sort_cols=[&#39;API_NUMBER&#39;,&#39;TOP&#39;], remove_nans=True)
     well_data_xyz = well_data_xyz.sort_values(by=[well_id_col, top_col])
@@ -933,36 +975,27 @@ def __check_parameter_names(verbose=True):
     #Analyze Surface(s) and grid(s)
     bedrockGrid, surfaceGrid = w4h.align_rasters(grids_unaligned=[bedrockElevGridIN, surfaceElevGridIN], modelgrid=modelGrid, no_data_val_grid=0, log=log)
     driftThickGrid, layerThickGrid = w4h.get_drift_thick(surface=surfaceGrid, bedrock=bedrockGrid, layers=layers, plot=verbose, log=log)
-    #UPDATE: LAYER NAMES SO DON&#34;T INCLUDE FT
-    well_data_xyz = w4h.sample_raster_points(raster=bedrockGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_ELEV_FT&#39;, verbose=verbose, log=log)
-    well_data_xyz = w4h.sample_raster_points(raster=surfaceGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;SURFACE_ELEV_FT&#39;, verbose=verbose, log=log)
-    well_data_xyz = w4h.sample_raster_points(raster=driftThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_DEPTH_FT&#39;, verbose=verbose, log=log)
-    well_data_xyz = w4h.sample_raster_points(raster=layerThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;LAYER_THICK_FT&#39;, verbose=verbose, log=log)
-    well_data_xyz = w4h.get_layer_depths(df_with_depths=well_data_xyz, no_layers=layers, log=log)
+    
+    well_data_xyz = w4h.sample_raster_points(raster=bedrockGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_ELEV&#39;, verbose=verbose, log=log)
+    well_data_xyz = w4h.sample_raster_points(raster=surfaceGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;SURFACE_ELEV&#39;, verbose=verbose, log=log)
+    well_data_xyz = w4h.sample_raster_points(raster=driftThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_DEPTH&#39;, verbose=verbose, log=log)
+    well_data_xyz = w4h.sample_raster_points(raster=layerThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;LAYER_THICK&#39;, verbose=verbose, log=log)
+    well_data_xyz = w4h.get_layer_depths(df_with_depths=well_data_xyz, layers=layers, log=log)
 
-    resdf = w4h.layer_target_thick(well_data_xyz, layers=9, return_all=False, outfile_prefix=&#39;CoarseFine&#39;, export_dir=export_dir, depth_top_col=top_col, depth_bot_col=bottom_col, log=log)
+    layer_target_thick_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.layer_target_thick.__code__.co_varnames}
+    if &#39;return_all&#39; in layer_target_thick_kwargs.keys():
+        del layer_target_thick_kwargs[&#39;return_all&#39;] #This needs to be set to False, so we don&#39;t want it reading in twice
+    resdf = w4h.layer_target_thick(df=well_data_xyz, layers=layers, return_all=False, export_dir=export_dir, depth_top_col=top_col, depth_bot_col=bottom_col, log=log, **layer_target_thick_kwargs)
     
     layer_interp_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.layer_interp.__code__.co_varnames}
-    layers_data = w4h.layer_interp(points=resdf, layers=9, grid=modelGrid, verbose=verbose, log=log, **layer_interp_kwargs)
+    layers_data = w4h.layer_interp(points=resdf, grid=modelGrid, layers=9, verbose=verbose, log=log, **layer_interp_kwargs)
 
     nowTime = datetime.datetime.now()
     nowTime = str(nowTime).replace(&#39;:&#39;, &#39;-&#39;).replace(&#39; &#39;,&#39;_&#39;).split(&#39;.&#39;)[0]
     nowTimeStr = &#39;_&#39;+str(nowTime)
 
-    if export_dir is None:
-        outDir = &#39;Output_&#39;+nowTimeStr
-        if well_data.is_dir():
-            export_dir = well_data.joinpath(outDir)
-        else:
-            export_dir = well_data.parent.joinpath(outDir)
-        
-        if not export_dir.exists():
-            try:
-                export_dir.mkdir()
-            except:
-                pass
-
-    w4h.export_grids(grid_data=layers_data, out_path=export_dir, file_id=&#39;&#39;,filetype=&#39;tif&#39;, variable_sep=True, date_stamp=True, verbose=verbose, log=log)
+    #THIS MAY BE REPEAT OF LAST LINES OF layer_interp() 
+    w4h.export_grids(grid_data=layers_data, out_path=export_dir, file_id=target_name,filetype=&#39;tif&#39;, variable_sep=True, date_stamp=True, verbose=verbose, log=log)
 
     return resdf, layers_data</code></pre>
 </details>

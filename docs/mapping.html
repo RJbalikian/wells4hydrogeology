@@ -105,21 +105,17 @@ def coords2geometry(df_no_geometry, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    df = df_no_geometry.copy()
-
-    ptCRS=input_coords_crs
-
-    x = df[xcol].to_numpy()
-    y = df[ycol].to_numpy()
-    z = df[zcol].to_numpy()
+    x = df_no_geometry[xcol].to_numpy()
+    y = df_no_geometry[ycol].to_numpy()
 
     #coords = pd.concat([y, x], axis=1)
     if use_z:
-        df[&#34;geometry&#34;] = gpd.points_from_xy(x, y, z=z, crs=ptCRS)
+        z = df_no_geometry[zcol].to_numpy()
+        df_no_geometry[&#34;geometry&#34;] = gpd.points_from_xy(x, y, z=z, crs=input_coords_crs)
     else:
-        df[&#34;geometry&#34;] = gpd.points_from_xy(x, y, crs=ptCRS)
+        df_no_geometry[&#34;geometry&#34;] = gpd.points_from_xy(x, y, crs=input_coords_crs)
         
-    gdf = gpd.GeoDataFrame(df, crs=ptCRS)
+    gdf = gpd.GeoDataFrame(df_no_geometry, crs=input_coords_crs)
     return gdf
 
 #Clip a geodataframe to a study area
@@ -195,10 +191,16 @@ def sample_raster_points(raster, points_df, xcol=&#39;LONGITUDE&#39;, ycol=&#39;
     points_df[yCOLOUT] = points_df[&#39;geometry&#39;].y
     xData = np.array(points_df[xCOLOUT].values)
     yData = np.array(points_df[yCOLOUT].values)
-    sampleArr=raster.sel(x=xData, y=yData, method=&#39;nearest&#39;).values
-    sampleArr = np.diag(sampleArr)
-    sampleDF = pd.DataFrame(sampleArr, columns=[new_col])
-    points_df[new_col] = sampleDF[new_col]
+    zData = []
+    # Loop over DataFrame rows
+    for i, row in points_df.iterrows():
+        # Select data from DataArray at current coordinates and append to list
+        zData.append(raster.sel(x=row[xCOLOUT], y=row[yCOLOUT], method=&#39;nearest&#39;).item())
+    print(zData)
+    #sampleArr=raster.sel(x=xData, y=yData, method=&#39;nearest&#39;).values
+    #sampleArr = np.diag(sampleArr)
+    #sampleDF = pd.DataFrame(sampleArr, columns=[new_col])
+    points_df[new_col] = zData#sampleDF[new_col]
     return points_df
 
 #Merge xyz dataframe into a metadata dataframe
@@ -587,10 +589,12 @@ def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_g
         try:
             noDataVal = float(modelGrid.attrs[&#39;_FillValue&#39;]) #Extract from dataset itsel
         except:
-            noDataVal = -5000000
+            noDataVal = no_data_val_grid
 
         modelGrid = modelGrid.where(modelGrid != noDataVal, other=np.nan)   #Replace no data values with NaNs
+        modelGrid = modelGrid.where(modelGrid == np.nan, other=1) #Replace all other values with 1
         modelGrid.rio.reproject(grid_crs, inplace=True)
+        
     elif model_grid_path is None and study_area is None:
         if verbose:
             print(&#34;ERROR: Either model_grid_path or study_area must be defined.&#34;)
@@ -643,7 +647,7 @@ def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_g
         coords = {&#39;x&#39;:x,&#39;y&#39;:yIn, &#39;spatial_ref&#39;:0}
         dims = {&#39;x&#39;:x,&#39;y&#39;:yIn}
         
-        modelGrid = xr.DataArray(data=zz,coords=coords,attrs={&#39;_FillValue&#39;:3.402823466e+38}, dims=dims)
+        modelGrid = xr.DataArray(data=zz,coords=coords,attrs={&#39;_FillValue&#39;:no_data_val_grid}, dims=dims)
         modelGrid.spatial_ref.attrs[&#39;spatial_ref&#39;] = {}
         if grid_crs is None or grid_crs==&#39;isws&#39; or grid_crs==&#39;ISWS&#39;:
             for k in spatRefDict:
@@ -693,9 +697,11 @@ def read_grid(grid_path=None, grid_type=&#39;model&#39;, no_data_val_grid=0, use
         elif use_service.lower()==&#39;wcs&#39;:
             gridIN = read_wcs(study_area, wcs_url=lidarURL, **kwargs)
         elif use_service.lower()==&#39;wms&#39;:
-            pass
             gridIN = read_wms(study_area, wcs_url=lidarURL, **kwargs)
-            
+        elif use_service:
+            #Deafults to wms
+            gridIN = read_wms(study_area, wcs_url=lidarURL, **kwargs)
+
         if study_area is not None:
             if grid_crs is None:
                 try:
@@ -1013,21 +1019,17 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    df = df_no_geometry.copy()
-
-    ptCRS=input_coords_crs
-
-    x = df[xcol].to_numpy()
-    y = df[ycol].to_numpy()
-    z = df[zcol].to_numpy()
+    x = df_no_geometry[xcol].to_numpy()
+    y = df_no_geometry[ycol].to_numpy()
 
     #coords = pd.concat([y, x], axis=1)
     if use_z:
-        df[&#34;geometry&#34;] = gpd.points_from_xy(x, y, z=z, crs=ptCRS)
+        z = df_no_geometry[zcol].to_numpy()
+        df_no_geometry[&#34;geometry&#34;] = gpd.points_from_xy(x, y, z=z, crs=input_coords_crs)
     else:
-        df[&#34;geometry&#34;] = gpd.points_from_xy(x, y, crs=ptCRS)
+        df_no_geometry[&#34;geometry&#34;] = gpd.points_from_xy(x, y, crs=input_coords_crs)
         
-    gdf = gpd.GeoDataFrame(df, crs=ptCRS)
+    gdf = gpd.GeoDataFrame(df_no_geometry, crs=input_coords_crs)
     return gdf</code></pre>
 </details>
 </dd>
@@ -1271,9 +1273,11 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
         elif use_service.lower()==&#39;wcs&#39;:
             gridIN = read_wcs(study_area, wcs_url=lidarURL, **kwargs)
         elif use_service.lower()==&#39;wms&#39;:
-            pass
             gridIN = read_wms(study_area, wcs_url=lidarURL, **kwargs)
-            
+        elif use_service:
+            #Deafults to wms
+            gridIN = read_wms(study_area, wcs_url=lidarURL, **kwargs)
+
         if study_area is not None:
             if grid_crs is None:
                 try:
@@ -1397,10 +1401,12 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
         try:
             noDataVal = float(modelGrid.attrs[&#39;_FillValue&#39;]) #Extract from dataset itsel
         except:
-            noDataVal = -5000000
+            noDataVal = no_data_val_grid
 
         modelGrid = modelGrid.where(modelGrid != noDataVal, other=np.nan)   #Replace no data values with NaNs
+        modelGrid = modelGrid.where(modelGrid == np.nan, other=1) #Replace all other values with 1
         modelGrid.rio.reproject(grid_crs, inplace=True)
+        
     elif model_grid_path is None and study_area is None:
         if verbose:
             print(&#34;ERROR: Either model_grid_path or study_area must be defined.&#34;)
@@ -1453,7 +1459,7 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
         coords = {&#39;x&#39;:x,&#39;y&#39;:yIn, &#39;spatial_ref&#39;:0}
         dims = {&#39;x&#39;:x,&#39;y&#39;:yIn}
         
-        modelGrid = xr.DataArray(data=zz,coords=coords,attrs={&#39;_FillValue&#39;:3.402823466e+38}, dims=dims)
+        modelGrid = xr.DataArray(data=zz,coords=coords,attrs={&#39;_FillValue&#39;:no_data_val_grid}, dims=dims)
         modelGrid.spatial_ref.attrs[&#39;spatial_ref&#39;] = {}
         if grid_crs is None or grid_crs==&#39;isws&#39; or grid_crs==&#39;ISWS&#39;:
             for k in spatRefDict:
@@ -1891,10 +1897,16 @@ new_col : str, optional</dd>
     points_df[yCOLOUT] = points_df[&#39;geometry&#39;].y
     xData = np.array(points_df[xCOLOUT].values)
     yData = np.array(points_df[yCOLOUT].values)
-    sampleArr=raster.sel(x=xData, y=yData, method=&#39;nearest&#39;).values
-    sampleArr = np.diag(sampleArr)
-    sampleDF = pd.DataFrame(sampleArr, columns=[new_col])
-    points_df[new_col] = sampleDF[new_col]
+    zData = []
+    # Loop over DataFrame rows
+    for i, row in points_df.iterrows():
+        # Select data from DataArray at current coordinates and append to list
+        zData.append(raster.sel(x=row[xCOLOUT], y=row[yCOLOUT], method=&#39;nearest&#39;).item())
+    print(zData)
+    #sampleArr=raster.sel(x=xData, y=yData, method=&#39;nearest&#39;).values
+    #sampleArr = np.diag(sampleArr)
+    #sampleDF = pd.DataFrame(sampleArr, columns=[new_col])
+    points_df[new_col] = zData#sampleDF[new_col]
     return points_df</code></pre>
 </details>
 </dd>

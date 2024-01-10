@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "wells4hydrogeology"
 dynamic = ["readme"]
 license = {file = "LICENSE"}
-version="0.0.15"
+version="0.0.17"
 description = "A package to read in geology data from wells and create a layered, gridded hydrogeologic model of a study region, all within a python environment, automating and performing tasks often carried out in a dedicated GIS software."
 keywords = ["hydrogeology", "modflow", "water wells", "geology", 'water', 'geotechnical']
 requires-python = "<3.13, >=3.9"
@@ -17,9 +17,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent"]
 
-[tool.setuptools.dynamic]
-readme = {file = ["README.md"]}
-
 [project.urls]
 "Homepage" = "https://github.com/RJbalikian/wells4hydrogeology"
 "API Documentation" = "https://rjbalikian.github.io/wells4hydrogeology/main.html"
+"Tutorials & Wiki" = "https://github.com/RJbalikian/wells4hydrogeology/wiki"
