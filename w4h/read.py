@@ -112,7 +112,7 @@ def file_setup(well_data, metadata=None, data_filename='*ISGS_DOWNHOLE_DATA*.txt
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
-        verbose_print(file_setup, locals())
+        verbose_print(file_setup, locals(), exclude_params=['well_data'])
     #Define  filepath variables to be used later for reading/writing files
     data_path = pathlib.Path(well_data)
     if metadata is None:
@@ -322,7 +322,7 @@ def define_dtypes(undefined_df, datatypes=None, verbose=False, log=False):
         Pandas dataframe containing redefined columns
     """
     if verbose:
-        verbose_print(define_dtypes, locals())
+        verbose_print(define_dtypes, locals(), exclude_params=['undefined_df'])
     if undefined_df is None:
         dfout = None
     else:
@@ -624,7 +624,7 @@ def add_control_points(df_without_control, df_control=None,  xcol='LONGITUDE', y
         Pandas DataFrame with original data and control points formatted the same way and concatenated together
     """
     if verbose:
-        verbose_print(add_control_points, locals())   
+        verbose_print(add_control_points, locals(), exclude_params=['df_without_control', 'df_control'])
 
     if df_control is None:
         return df_without_control
