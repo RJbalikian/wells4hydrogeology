@@ -25,7 +25,7 @@ def remove_nonlocated(df_with_locations, xcol='LONGITUDE', ycol='LATITUDE', no_d
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
-        verbose_print(remove_nonlocated, locals())
+        verbose_print(remove_nonlocated, locals(), exclude_params=['df_with_locations'])
 
     before = df_with_locations.shape[0] #Extract length of data before this process
 
@@ -72,7 +72,7 @@ def remove_no_topo(df_with_topo, zcol='ELEVATION', no_data_val_table='', verbose
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     if verbose:
-        verbose_print(remove_no_topo, locals())
+        verbose_print(remove_no_topo, locals(), exclude_params=['df_with_topo'])
 
     before = df_with_topo.shape[0]
     
@@ -115,7 +115,7 @@ def remove_no_depth(df_with_depth, top_col='TOP', bottom_col='BOTTOM', no_data_v
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     if verbose:
-        verbose_print(remove_no_depth, locals())
+        verbose_print(remove_no_depth, locals(), exclude_params=['df_with_depth'])
         
     #Replace empty cells in top and bottom columns with nan
     df_with_depth[top_col] = df_with_depth[top_col].replace(no_data_val_table, np.nan)
@@ -164,7 +164,7 @@ def remove_bad_depth(df_with_depth, top_col='TOP', bottom_col='BOTTOM', depth_ty
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
-        verbose_print(remove_bad_depth, locals())
+        verbose_print(remove_bad_depth, locals(), exclude_params=['df_with_depth'])
 
     if depth_type.lower() =='depth':
         df_with_depth['THICKNESS'] = df_with_depth[bottom_col] - df_with_depth[top_col] #Calculate interval thickness
@@ -207,7 +207,7 @@ def remove_no_description(df_with_descriptions, description_col='FORMATION', no_
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
-        verbose_print(remove_no_description, locals())
+        verbose_print(remove_no_description, locals(), exclude_params=['df_with_descriptions'])
     #Replace empty cells in formation column with nans
     df_with_descriptions[description_col] = df_with_descriptions[description_col].replace(no_data_val_table, np.nan) 
     before = df_with_descriptions.shape[0] #Calculate number of rows before dropping
