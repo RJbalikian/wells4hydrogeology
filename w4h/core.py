@@ -135,27 +135,30 @@ def run(well_data,
     else:
         print('ERROR: well_data must be a string filepath, a pathlib.Path object, or pandas.DataFrame')
 
-    if export_dir is None:
-        nowTime = datetime.datetime.now()
-        nowTime = str(nowTime).replace(':', '-').replace(' ','_').split('.')[0]
-        nowTimeStr = '_'+str(nowTime)
-        outDir = 'Output_'+nowTimeStr
-        if isinstance(well_dataPath, pd.DataFrame) or isinstance(well_dataPath, gpd.GeoDataFrame):
-            export_dir = pathlib.Path(outDir)
-        elif isinstance(well_dataPath, pathlib.PurePath):
-            if well_dataPath.is_dir():
-                export_dir = well_dataPath.joinpath(outDir)
-            else:
-                export_dir = well_dataPath.parent.joinpath(outDir)
-        else:
-            raise IOError('export_dir should be explicitly defined if well_data is not a filepath')
+    if not export_dir:
+        if export_dir is False:
             pass
-
-        if not export_dir.exists():
-            try:
-                export_dir.mkdir()
-            except:
+        else:
+            nowTime = datetime.datetime.now()
+            nowTime = str(nowTime).replace(':', '-').replace(' ','_').split('.')[0]
+            nowTimeStr = '_'+str(nowTime)
+            outDir = 'Output_'+nowTimeStr
+            if isinstance(well_dataPath, pd.DataFrame) or isinstance(well_dataPath, gpd.GeoDataFrame):
+                export_dir = pathlib.Path(outDir)
+            elif isinstance(well_dataPath, pathlib.PurePath):
+                if well_dataPath.is_dir():
+                    export_dir = well_dataPath.joinpath(outDir)
+                else:
+                    export_dir = well_dataPath.parent.joinpath(outDir)
+            else:
+                raise IOError('export_dir should be explicitly defined if well_data is not a filepath')
                 pass
+
+            if not export_dir.exists():
+                try:
+                    export_dir.mkdir()
+                except:
+                    pass
 
     #Get pandas dataframes from input
     read_raw_txt_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.read_raw_csv).parameters.keys()}
@@ -187,7 +190,6 @@ def run(well_data,
 
     clip_gdf2study_area_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.clip_gdf2study_area).parameters.keys()}
     well_data_xyz = w4h.clip_gdf2study_area(study_area=studyAreaIN, gdf=well_data_xyz, log=log, **clip_gdf2study_area_kwargs)
-
     #Get surfaces and grid(s)
     read_grid_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.read_grid).parameters.keys()}
 
@@ -271,7 +273,6 @@ def run(well_data,
     targetInterpDF = w4h.read_lithologies(lith_file=target_dict, log=log, **read_lithologies_kwargs)
     well_data_xyz = w4h.merge_lithologies(well_data_df=well_data_xyz, targinterps_df=targetInterpDF, target_col='TARGET', target_class='bool')
 
-
     #Sort dataframe to prepare for next steps
     #well_data_xyz = w4h.sort_dataframe(df=well_data_xyz, sort_cols=['API_NUMBER','TOP'], remove_nans=True)
     well_data_xyz = well_data_xyz.sort_values(by=[well_id_col, top_col])
@@ -288,11 +289,14 @@ def run(well_data,
     well_data_xyz = w4h.sample_raster_points(raster=driftThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col='BEDROCK_DEPTH', verbose=verbose, log=log)
     well_data_xyz = w4h.sample_raster_points(raster=layerThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col='LAYER_THICK', verbose=verbose, log=log)
     well_data_xyz = w4h.get_layer_depths(df_with_depths=well_data_xyz, layers=layers, log=log)
+    #print('Layer Depths:', well_data_xyz['geometry'].head(25))
 
     layer_target_thick_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.layer_target_thick).parameters.keys()}
     if 'return_all' in layer_target_thick_kwargs.keys():
         del layer_target_thick_kwargs['return_all'] #This needs to be set to False, so we don't want it reading in twice
+
     resdf = w4h.layer_target_thick(df=well_data_xyz, layers=layers, return_all=False, export_dir=export_dir, depth_top_col=top_col, depth_bot_col=bottom_col, log=log, **layer_target_thick_kwargs)
+    #print('TargetThick:', resdf[0].head(25))
     
     layer_interp_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.layer_interp).parameters.keys()}
     layers_data = w4h.layer_interp(points=resdf, grid=modelGrid, layers=9, verbose=verbose, log=log, **layer_interp_kwargs)
@@ -301,7 +305,7 @@ def run(well_data,
     nowTime = str(nowTime).replace(':', '-').replace(' ','_').split('.')[0]
     nowTimeStr = '_'+str(nowTime)
 
-    #THIS MAY BE REPEAT OF LAST LINES OF layer_interp() 
+    #THIS MAY BE REPEAT OF LAST LINES OF layer_interp()
     w4h.export_grids(grid_data=layers_data, out_path=export_dir, file_id=target_name,filetype='tif', variable_sep=True, date_stamp=True, verbose=verbose, log=log)
 
     return resdf, layers_data
@@ -373,8 +377,8 @@ def logger_function(logtocommence, parameters, func_name):
             pass
     return
 
-def verbose_print(func, local_variables):
-    print_list = []
+def verbose_print(func, local_variables, exclude_params=[]):
+    print_list = ['\n']
     sTime = datetime.datetime.now()
     print_list.append(f"{func.__name__}")
     print_list.append(f"\tStarted at {sTime}.")
@@ -385,6 +389,8 @@ def verbose_print(func, local_variables):
                 print_list.append(f"\t\t{k}")
                 for kk, vv in local_variables[k].items():
                     print_list.append(f"\t\t\t{kk}={vv}")
+            elif k in exclude_params:
+                print_list.append(f"\t\t{k}=<input object>")
             else:
                 print_list.append(f"\t\t{k}={v}")
 
@@ -430,6 +436,13 @@ def get_resources(verbose=False):
     resources_dict['metadata_dtypes'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='headerDataTypes.txt', verbose=verbose)
     resources_dict['ISWS_CRS'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='isws_crs.txt', verbose=verbose)
     resources_dict['xyz_dtypes'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='xyzDataTypes.txt', verbose=verbose)
+
+    resources_dict['well_data'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_well_data.csv', verbose=verbose)
+    resources_dict['study_area'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_studyArea.zip', verbose=verbose)
+
+    resources_dict['model_grid'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='grid_625_raster.tif', verbose=verbose)
+    resources_dict['surf_elev'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='ILStateLidar_ClipExtentESL.tif', verbose=verbose)
+    resources_dict['bedrock_elev'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='BedTopo_EStLClip_GrimlyPhillips_bt57_20m_foc2_.tif', verbose=verbose)
 
     return resources_dict
 
