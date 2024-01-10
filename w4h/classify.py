@@ -39,7 +39,7 @@ def specific_define(df, terms_df, description_col='FORMATION', terms_col='DESCRI
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
-        verbose_print(specific_define, locals())
+        verbose_print(specific_define, locals(), exclude_params=['df', 'terms_df'])
 
     if description_col != terms_col:
         terms_df.rename(columns={terms_col:description_col}, inplace=True)
@@ -123,7 +123,7 @@ def start_define(df, terms_df, description_col='FORMATION', terms_col='DESCRIPTI
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
-        verbose_print(start_define, locals())
+        verbose_print(start_define, locals(), exclude_params=['df', 'terms_df'])
     #if verbose:
     #    #Estimate when it will end, based on test run
     #    estTime = df.shape[0]/3054409 * 6 #It took about 6 minutes to classify data with entire dataframe. This estimates the fraction of that it will take
@@ -173,7 +173,7 @@ def wildcard_define(df, terms_df, description_col='FORMATION', terms_col='DESCRI
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
-        verbose_print(wildcard_define, locals())
+        verbose_print(wildcard_define, locals(), exclude_params=['df', 'terms_df'])
     #if verbose:
     #    #Estimate when it will end, based on test run
     #    estTime = df.shape[0]/3054409 * 6 #It took about 6 minutes to classify data with entire dataframe. This estimates the fraction of that it will take
@@ -241,7 +241,7 @@ def depth_define(df, top_col='TOP', thresh=550.0, verbose=False, log=False):
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
-        verbose_print(depth_define, locals())
+        verbose_print(depth_define, locals(), exclude_params=['df'])
     df = df.copy()
     df['CLASS_FLAG'].mask(df[top_col]>thresh, 3 ,inplace=True) #Add a Classification Flag of 3 (bedrock b/c it's deepter than 550') to all records where the top of the interval is >550'
     df['BEDROCK_FLAG'].mask(df[top_col]>thresh, True, inplace=True)
@@ -376,7 +376,7 @@ def get_unique_wells(df, wellid_col='API_NUMBER', verbose=False, log=False):
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
-        verbose_print(get_unique_wells, locals())    
+        verbose_print(get_unique_wells, locals(), exclude_params=['df'])
     #Get Unique well APIs
     uniqueWells = df[wellid_col].unique()
     wellsDF = pd.DataFrame(uniqueWells)
