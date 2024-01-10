@@ -441,8 +441,8 @@ def get_resources(verbose=False):
     resources_dict['study_area'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_studyArea.zip', verbose=verbose)
 
     resources_dict['model_grid'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='grid_625_raster.tif', verbose=verbose)
-    resources_dict['surf_elev'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='ILStateLidar_ClipExtentESL.tif', verbose=verbose)
-    resources_dict['bedrock_elev'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='BedTopo_EStLClip_GrimlyPhillips_bt57_20m_foc2_.tif', verbose=verbose)
+    resources_dict['surf_elev'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_surface_elev_10m_fromlidar_estl.tif', verbose=verbose)
+    resources_dict['bedrock_elev'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_bedrock_elev_grimleyphillips_ESTL.tif', verbose=verbose)
 
     return resources_dict
 
