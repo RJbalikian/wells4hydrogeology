@@ -4,7 +4,6 @@ import json
 import pathlib
 import os
 
-
 import rioxarray as rxr
 import xarray as xr
 import geopandas as gpd
@@ -79,7 +78,7 @@ def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELE
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     if verbose:
-        verbose_print(coords2geometry, locals())
+        verbose_print(coords2geometry, locals(), exclude_params=['df_no_geometry'])
 
     x = df_no_geometry[xcol].to_numpy()
     y = df_no_geometry[ycol].to_numpy()
@@ -116,7 +115,7 @@ def clip_gdf2study_area(study_area, gdf, log=False, verbose=False):
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     if verbose:
-        verbose_print(clip_gdf2study_area, locals())
+        verbose_print(clip_gdf2study_area, locals(), exclude_params=['study_area', 'gdf'])
 
     if study_area is None:
         return gdf
@@ -158,7 +157,7 @@ def sample_raster_points(raster, points_df, xcol='LONGITUDE', ycol='LATITUDE', n
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     if verbose:
-        verbose_print(sample_raster_points, locals())        
+        verbose_print(sample_raster_points, locals(), exclude_params=['raster', 'points_df'])
         print("Sampling grid for {}.".format(new_col))
 
     #Project points to raster CRS
@@ -203,7 +202,7 @@ def xyz_metadata_merge(xyz, metadata, verbose=False, log=False):
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
-        verbose_print(xyz_metadata_merge, locals())       
+        verbose_print(xyz_metadata_merge, locals(), exclude_params=['xyz'])
     headerXYZData = metadata.merge(xyz, how='left', on='API_NUMBER')
     headerXYZData.drop(['LATITUDE_x', 'LONGITUDE_x'], axis=1, inplace=True)
     headerXYZData.rename({'LATITUDE_y':'LATITUDE', 'LONGITUDE_y':'LONGITUDE'}, axis=1, inplace=True)
@@ -248,7 +247,7 @@ def read_wcs(study_area, wcs_url=lidarURL, res_x=30, res_y=30, verbose=False, lo
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     if verbose:
-        verbose_print(read_wcs, locals())      
+        verbose_print(read_wcs, locals(), exclude_params=['study_area'])      
 
     if 'wcs_url' in kwargs:
         wcs_url = kwargs['wcs_url']
@@ -374,7 +373,7 @@ def read_wms(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:None', wms_url=l
     
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
-        verbose_print(read_wms, locals())      
+        verbose_print(read_wms, locals(), exclude_params=['study_area'])
     from owslib.wms import WebMapService
     # Define WMS endpoint URL
     if 'wms_url' in kwargs:
@@ -478,7 +477,7 @@ def grid2study_area(study_area, grid, study_area_crs='', grid_crs='', verbose=Fa
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
-        verbose_print(grid2study_area, locals())    
+        verbose_print(grid2study_area, locals(), exclude_params=['study_area', 'grid'])
     if study_area_crs=='':
         study_area_crs=study_area.crs
 
@@ -544,7 +543,7 @@ def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_g
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
-        verbose_print(read_model_grid, locals())  
+        verbose_print(read_model_grid, locals(), exclude_params='study_area')
     if read_grid and model_grid_path is not None:
         modelGridIN = rxr.open_rasterio(model_grid_path)
 
@@ -674,7 +673,7 @@ def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
-        verbose_print(read_grid, locals())
+        verbose_print(read_grid, locals(), exclude_params=['study_area'])
     if grid_type=='model':
         if 'read_grid' in list(kwargs.keys()):
             rgrid = kwargs['read_grid']
@@ -741,7 +740,7 @@ def align_rasters(grids_unaligned, modelgrid, no_data_val_grid=0, verbose=False,
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
-        verbose_print(align_rasters, locals())
+        verbose_print(align_rasters, locals(), exclude_params=['grids_unaligned', 'modelgrid'])
     if type(grids_unaligned) is list:
         alignedGrids=[]
         for g in grids_unaligned:
@@ -792,7 +791,7 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, verbose=False, log=F
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
-        verbose_print(get_drift_thick, locals())
+        verbose_print(get_drift_thick, locals(), exclude_params=['surface', 'bedrock'])
     xr.set_options(keep_attrs=True)
 
     driftThick = surface - bedrock
