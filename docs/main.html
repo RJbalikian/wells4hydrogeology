@@ -32,8 +32,9 @@
 #from w4h import classify, clean, export, layers, mapping, read
 
 from w4h.core import(logger_function,
-                          run,
-                          get_resources)
+                        verbose_print,
+                        run,
+                        get_resources)
 
 from w4h.classify import (specific_define, 
                           split_defined, 
@@ -88,7 +89,7 @@ from w4h.read import (get_current_date,
                       add_control_points)
 
 
-__all__=(&#39;logger_function&#39;,&#39;run&#39;,&#39;get_resources&#39;,
+__all__=(&#39;logger_function&#39;,&#39;verbose_print&#39;, &#39;run&#39;, &#39;get_resources&#39;,
         &#39;specific_define&#39;, 
         &#39;split_defined&#39;, 
         &#39;start_define&#39;,
@@ -153,7 +154,8 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 </dd>
 <dt><code class="name"><a title="w4h.core" href="core.html">w4h.core</a></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>This module contains core functions of the package,
+including the main run() function that allows rapid data analysis.</p></div>
 </dd>
 <dt><code class="name"><a title="w4h.export" href="export.html">w4h.export</a></code></dt>
 <dd>
@@ -258,14 +260,15 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
     pandas.DataFrame
         Pandas DataFrame with original data and control points formatted the same way and concatenated together
     &#34;&#34;&#34;
-    import geopandas as gpd
+    if verbose:
+        verbose_print(add_control_points, locals(), exclude_params=[&#39;df_without_control&#39;, &#39;df_control&#39;])
 
     if df_control is None:
         return df_without_control
     elif isinstance(df_control, pd.DataFrame) or isinstance(df_control, gpd.GeoDataFrame):
         pass
     else:
-        read_csv_kwargs = {k: v for k, v in locals()[&#39;kwargs&#39;].items() if k in pd.read_csv.__code__.co_varnames}
+        read_csv_kwargs = {k: v for k, v in locals()[&#39;kwargs&#39;].items() if k in inspect.signature(pd.read_csv).parameters.keys()}
         df_control = pd.read_csv(df_control, **read_csv_kwargs)
     
     #Drop unnecessary columns, if needed
@@ -284,7 +287,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
         df_control = coords2geometry(df_no_geometry=df_control, xcol=xcol, ycol=ycol, zcol=zcol, input_coords_crs=controlpoints_crs, log=log)
 
     #Get kwargs passed to pd.concat, and set defaults for ignore_index and join
-    concat_kwargs = {k: v for k, v in locals()[&#39;kwargs&#39;].items() if k in pd.concat.__code__.co_varnames}
+    concat_kwargs = {k: v for k, v in locals()[&#39;kwargs&#39;].items() if k in inspect.signature(pd.concat).parameters.keys()}
     if &#39;ignore_index&#39; not in concat_kwargs.keys():
         concat_kwargs[&#39;ignore_index&#39;] = True
     if &#39;join&#39; not in concat_kwargs.keys():
@@ -296,7 +299,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 </details>
 </dd>
 <dt id="w4h.align_rasters"><code class="name flex">
-<span>def <span class="ident">align_rasters</span></span>(<span>grids_unaligned, modelgrid, no_data_val_grid=0, log=False)</span>
+<span>def <span class="ident">align_rasters</span></span>(<span>grids_unaligned, modelgrid, no_data_val_grid=0, verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Reprojects two rasters and aligns their pixels</p>
@@ -320,7 +323,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def align_rasters(grids_unaligned, modelgrid, no_data_val_grid=0, log=False):
+<pre><code class="python">def align_rasters(grids_unaligned, modelgrid, no_data_val_grid=0, verbose=False, log=False):
     &#34;&#34;&#34;Reprojects two rasters and aligns their pixels
 
     Parameters
@@ -340,7 +343,8 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
         Contains aligned grids
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(align_rasters, locals(), exclude_params=[&#39;grids_unaligned&#39;, &#39;modelgrid&#39;])
     if type(grids_unaligned) is list:
         alignedGrids=[]
         for g in grids_unaligned:
@@ -368,7 +372,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 </details>
 </dd>
 <dt id="w4h.clip_gdf2study_area"><code class="name flex">
-<span>def <span class="ident">clip_gdf2study_area</span></span>(<span>study_area, gdf, log=False)</span>
+<span>def <span class="ident">clip_gdf2study_area</span></span>(<span>study_area, gdf, log=False, verbose=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Clips dataframe to only include things within study area.</p>
@@ -390,7 +394,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def clip_gdf2study_area(study_area, gdf, log=False):
+<pre><code class="python">def clip_gdf2study_area(study_area, gdf, log=False, verbose=False):
     &#34;&#34;&#34;Clips dataframe to only include things within study area.
 
     Parameters
@@ -409,6 +413,9 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
     
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
+    if verbose:
+        verbose_print(clip_gdf2study_area, locals(), exclude_params=[&#39;study_area&#39;, &#39;gdf&#39;])
 
     if study_area is None:
         return gdf
@@ -482,7 +489,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 </details>
 </dd>
 <dt id="w4h.coords2geometry"><code class="name flex">
-<span>def <span class="ident">coords2geometry</span></span>(<span>df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', input_coords_crs='EPSG:4269', use_z=False, log=False)</span>
+<span>def <span class="ident">coords2geometry</span></span>(<span>df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', input_coords_crs='EPSG:4269', use_z=False, verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Adds geometry to points with xy coordinates in the specified coordinate reference system.</p>
@@ -512,7 +519,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def coords2geometry(df_no_geometry, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEV_FT&#39;, input_coords_crs=&#39;EPSG:4269&#39;, use_z=False, log=False):
+<pre><code class="python">def coords2geometry(df_no_geometry, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEV_FT&#39;, input_coords_crs=&#39;EPSG:4269&#39;, use_z=False, verbose=False, log=False):
     &#34;&#34;&#34;Adds geometry to points with xy coordinates in the specified coordinate reference system.
 
     Parameters
@@ -539,6 +546,9 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
+    if verbose:
+        verbose_print(coords2geometry, locals(), exclude_params=[&#39;df_no_geometry&#39;])
 
     x = df_no_geometry[xcol].to_numpy()
     y = df_no_geometry[ycol].to_numpy()
@@ -594,6 +604,8 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
     dfout : pandas.DataFrame
         Pandas dataframe containing redefined columns
     &#34;&#34;&#34;
+    if verbose:
+        verbose_print(define_dtypes, locals(), exclude_params=[&#39;undefined_df&#39;])
     if undefined_df is None:
         dfout = None
     else:
@@ -682,7 +694,8 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
         Dataframe containing intervals classified as bedrock due to depth
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(depth_define, locals(), exclude_params=[&#39;df&#39;])
     df = df.copy()
     df[&#39;CLASS_FLAG&#39;].mask(df[top_col]&gt;thresh, 3 ,inplace=True) #Add a Classification Flag of 3 (bedrock b/c it&#39;s deepter than 550&#39;) to all records where the top of the interval is &gt;550&#39;
     df[&#39;BEDROCK_FLAG&#39;].mask(df[top_col]&gt;thresh, True, inplace=True)
@@ -820,7 +833,8 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
         Whether to log inputs and outputs to log file.        
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(export_grids, locals(), exclude_params=[&#39;grid_data&#39;])
     #Initialize lists to determine which filetype will be used for export
     ncdfList = [&#39;netcdf&#39;, &#39;ncdf&#39;, &#39;n&#39;]
     tifList = [&#39;tif&#39;, &#39;tiff&#39;, &#39;geotiff&#39;, &#39;geotif&#39;, &#39;t&#39;]
@@ -830,7 +844,7 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
 
     #Format output string(s)
     #Format output filepath
-    if type(out_path) is str or isinstance(out_path, pathlib.PurePath):
+    if isinstance(out_path, (pathlib.PurePath, str)):
         if isinstance(out_path, pathlib.PurePath):
             pass
         else:
@@ -859,9 +873,8 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
         else:
             filenames = [out_path.stem]
             out_path = out_path.parent
-
     else:
-        print(&#39;Please input string or pathlib object for out_path parameters&#39;)
+        print(&#39;No output path specified (out_path). Please input string or pathlib object for out_path parameters&#39;)
         return
     
     #Format datestamp, if desired in output filename
@@ -968,6 +981,8 @@ __author__=&#39;Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski&#39;</co
         Dataframe containing only unclassified terms, and the number of times they occur
     &#34;&#34;&#34;
     import pathlib
+    
+    
     if isinstance(outdir, pathlib.PurePath):
         if not outdir.is_dir() or not outdir.exists():
             print(&#39;Please specify a valid directory for export. Filename is generated automatically.&#39;)
@@ -1054,7 +1069,8 @@ It may also be of use to simply skip this function altogether and directly defin
         Tuple with paths to (well_data, metadata)
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(file_setup, locals(), exclude_params=[&#39;well_data&#39;])
     #Define  filepath variables to be used later for reading/writing files
     data_path = pathlib.Path(well_data)
     if metadata is None:
@@ -1170,7 +1186,7 @@ It may also be of use to simply skip this function altogether and directly defin
 </details>
 </dd>
 <dt id="w4h.get_drift_thick"><code class="name flex">
-<span>def <span class="ident">get_drift_thick</span></span>(<span>surface, bedrock, layers=9, plot=False, log=False)</span>
+<span>def <span class="ident">get_drift_thick</span></span>(<span>surface, bedrock, layers=9, plot=False, verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Finds the distance from surface to bedrock and then divides by number of layers to get layer thickness.</p>
@@ -1196,7 +1212,7 @@ It may also be of use to simply skip this function altogether and directly defin
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_drift_thick(surface, bedrock, layers=9, plot=False, log=False):
+<pre><code class="python">def get_drift_thick(surface, bedrock, layers=9, plot=False, verbose=False, log=False):
     &#34;&#34;&#34;Finds the distance from surface to bedrock and then divides by number of layers to get layer thickness.
 
     Parameters
@@ -1219,7 +1235,8 @@ It may also be of use to simply skip this function altogether and directly defin
 
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(get_drift_thick, locals(), exclude_params=[&#39;surface&#39;, &#39;bedrock&#39;])
     xr.set_options(keep_attrs=True)
 
     driftThick = surface - bedrock
@@ -1309,7 +1326,7 @@ It may also be of use to simply skip this function altogether and directly defin
 </details>
 </dd>
 <dt id="w4h.get_most_recent"><code class="name flex">
-<span>def <span class="ident">get_most_recent</span></span>(<span>dir=PosixPath('/home/riley/LocalData/Github/wells4hydrogeology/w4h/resources'), glob_pattern='*', verbose=True)</span>
+<span>def <span class="ident">get_most_recent</span></span>(<span>dir=WindowsPath('c:/Users/riley/LocalData/Github/wells4hydrogeology/w4h/resources'), glob_pattern='*', verbose=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to find the most recent file with the indicated pattern, using pathlib.glob function.</p>
@@ -1344,6 +1361,9 @@ It may also be of use to simply skip this function altogether and directly defin
     pathlib.Path object
         Pathlib Path object of the most recent file fitting the glob pattern indicated in the glob_pattern parameter.
     &#34;&#34;&#34;
+    if verbose:
+        verbose_print(get_most_recent, locals())
+
     todayDate = datetime.date.today()
     todayDateStr = str(todayDate)
 
@@ -1430,11 +1450,18 @@ It may also be of use to simply skip this function altogether and directly defin
     resources_dict[&#39;ISWS_CRS&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;isws_crs.txt&#39;, verbose=verbose)
     resources_dict[&#39;xyz_dtypes&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;xyzDataTypes.txt&#39;, verbose=verbose)
 
+    resources_dict[&#39;well_data&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;sample_well_data.csv&#39;, verbose=verbose)
+    resources_dict[&#39;study_area&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;sample_studyArea.zip&#39;, verbose=verbose)
+
+    resources_dict[&#39;model_grid&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;grid_625_raster.tif&#39;, verbose=verbose)
+    resources_dict[&#39;surf_elev&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;sample_surface_elev_10m_fromlidar_estl.tif&#39;, verbose=verbose)
+    resources_dict[&#39;bedrock_elev&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;sample_bedrock_elev_grimleyphillips_ESTL.tif&#39;, verbose=verbose)
+
     return resources_dict</code></pre>
 </details>
 </dd>
 <dt id="w4h.get_search_terms"><code class="name flex">
-<span>def <span class="ident">get_search_terms</span></span>(<span>spec_path='/home/riley/LocalData/Github/wells4hydrogeology/resources/', spec_glob_pattern='*SearchTerms-Specific*', start_path=None, start_glob_pattern='*SearchTerms-Start*', wildcard_path=None, wildcard_glob_pattern='*SearchTerms-Wildcard', log=False)</span>
+<span>def <span class="ident">get_search_terms</span></span>(<span>spec_path='C:\\Users\\riley\\LocalData\\Github\\wells4hydrogeology/resources/', spec_glob_pattern='*SearchTerms-Specific*', start_path=None, start_glob_pattern='*SearchTerms-Start*', wildcard_path=None, wildcard_glob_pattern='*SearchTerms-Wildcard', verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Read in dictionary files for downhole data</p>
@@ -1466,7 +1493,7 @@ with start search terms, and with wildcard search terms</p></div>
 <pre><code class="python">def get_search_terms(spec_path=str(repoDir)+&#39;/resources/&#39;, spec_glob_pattern=&#39;*SearchTerms-Specific*&#39;, 
                      start_path=None, start_glob_pattern = &#39;*SearchTerms-Start*&#39;, 
                      wildcard_path=None, wildcard_glob_pattern=&#39;*SearchTerms-Wildcard&#39;,
-                     log=False):
+                     verbose=False, log=False):
     &#34;&#34;&#34;Read in dictionary files for downhole data
 
     Parameters
@@ -1492,7 +1519,8 @@ with start search terms, and with wildcard search terms</p></div>
         Tuple containing the pandas dataframes with specific search terms,  with start search terms, and with wildcard search terms
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-    
+    if verbose:
+        verbose_print(get_search_terms, locals())    
     #specTermsFile = &#34;SearchTerms-Specific_BedrockOrNo_2022-09.csv&#34; #Specific matches
     #startTermsFile = &#34;SearchTerms-Start_BedrockOrNo.csv&#34; #Wildcard matches for the start of the description
 
@@ -1573,7 +1601,8 @@ with start search terms, and with wildcard search terms</p></div>
         DataFrame containing only the unique well IDs
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(get_unique_wells, locals(), exclude_params=[&#39;df&#39;])
     #Get Unique well APIs
     uniqueWells = df[wellid_col].unique()
     wellsDF = pd.DataFrame(uniqueWells)
@@ -1585,7 +1614,7 @@ with start search terms, and with wildcard search terms</p></div>
 </details>
 </dd>
 <dt id="w4h.grid2study_area"><code class="name flex">
-<span>def <span class="ident">grid2study_area</span></span>(<span>study_area, grid, study_area_crs='', grid_crs='', log=False)</span>
+<span>def <span class="ident">grid2study_area</span></span>(<span>study_area, grid, study_area_crs='', grid_crs='', verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Clips grid to study area.</p>
@@ -1611,7 +1640,7 @@ with start search terms, and with wildcard search terms</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def grid2study_area(study_area, grid, study_area_crs=&#39;&#39;, grid_crs=&#39;&#39;, log=False):
+<pre><code class="python">def grid2study_area(study_area, grid, study_area_crs=&#39;&#39;, grid_crs=&#39;&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Clips grid to study area.
 
     Parameters
@@ -1634,7 +1663,8 @@ with start search terms, and with wildcard search terms</p></div>
 
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-    
+    if verbose:
+        verbose_print(grid2study_area, locals(), exclude_params=[&#39;study_area&#39;, &#39;grid&#39;])
     if study_area_crs==&#39;&#39;:
         study_area_crs=study_area.crs
 
@@ -1672,7 +1702,7 @@ with start search terms, and with wildcard search terms</p></div>
 </details>
 </dd>
 <dt id="w4h.layer_interp"><code class="name flex">
-<span>def <span class="ident">layer_interp</span></span>(<span>points, grid, layers=None, method='nearest', return_type='dataarray', export_dir=None, targetcol='TARG_THICK_PER', lyrcol='LAYER', xcol=None, ycol=None, xcoord='x', ycoord='y', log=False, verbose=False, **kwargs)</span>
+<span>def <span class="ident">layer_interp</span></span>(<span>points, grid, layers=None, interp_kind='nearest', return_type='dataarray', export_dir=None, target_col='TARG_THICK_PER', layer_col='LAYER', xcol=None, ycol=None, xcoord='x', ycoord='y', log=False, verbose=False, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to interpolate results, going from points to grid data. Uses scipy.interpolate module.</p>
@@ -1681,18 +1711,18 @@ with start search terms, and with wildcard search terms</p></div>
 <dt><strong><code>points</code></strong> :&ensp;<code>list</code></dt>
 <dd>List containing pandas dataframes or geopandas geoadataframes containing the point data. Should be resDF_list output from layer_target_thick().</dd>
 <dt><strong><code>grid</code></strong> :&ensp;<code>xr.DataArray</code> or <code>xr.Dataset</code></dt>
-<dd>Xarray dataarray with the coordinates/spatial reference of the output grid to interpolate to</dd>
+<dd>Xarray DataArray or DataSet with the coordinates/spatial reference of the output grid to interpolate to</dd>
 <dt><strong><code>layers</code></strong> :&ensp;<code>int</code>, default=<code>None</code></dt>
 <dd>Number of layers for interpolation. If None, uses the length ofthe points list to determine number of layers. By default None.</dd>
-<dt><strong><code>method</code></strong> :&ensp;<code>str, {'nearest', 'interp2d','linear', 'cloughtocher', 'radial basis function'}</code></dt>
+<dt><strong><code>interp_kind</code></strong> :&ensp;<code>str, {'nearest', 'interp2d','linear', 'cloughtocher', 'radial basis function'}</code></dt>
 <dd>Type of interpolation to use. See scipy.interpolate N-D scattered. Values can be any of the following (also shown in "kind" column of N-D scattered section of table here: <a href="https://docs.scipy.org/doc/scipy/tutorial/interpolate.html">https://docs.scipy.org/doc/scipy/tutorial/interpolate.html</a>). By default 'nearest'</dd>
 <dt><strong><code>return_type</code></strong> :&ensp;<code>str, {'dataarray', 'dataset'}</code></dt>
 <dd>Type of xarray object to return, either xr.DataArray or xr.Dataset, by default 'dataarray.'</dd>
 <dt><strong><code>export_dir</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path</code>, default=<code>None</code></dt>
 <dd>Export directory for interpolated grids, using w4h.export_grids(). If None, does not export, by default None.</dd>
-<dt><strong><code>targetcol</code></strong> :&ensp;<code>str</code>, default <code>= 'TARG_THICK_PER'</code></dt>
+<dt><strong><code>target_col</code></strong> :&ensp;<code>str</code>, default <code>= 'TARG_THICK_PER'</code></dt>
 <dd>Name of column in points containing data to be interpolated, by default 'TARG_THICK_PER'.</dd>
-<dt><strong><code>lyrcol</code></strong> :&ensp;<code>str</code>, default <code>= 'Layer'</code></dt>
+<dt><strong><code>layer_col</code></strong> :&ensp;<code>str</code>, default <code>= 'Layer'</code></dt>
 <dd>Name of column containing layer number. Not currently used, by default 'LAYER'</dd>
 <dt><strong><code>xcol</code></strong> :&ensp;<code>str</code>, default <code>= 'None'</code></dt>
 <dd>Name of column containing x coordinates. If None, will look for 'geometry' column, as in a geopandas.GeoDataframe. By default None</dd>
@@ -1705,7 +1735,7 @@ with start search terms, and with wildcard search terms</p></div>
 <dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= True</code></dt>
 <dd>Whether to log inputs and outputs to log file.</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
-<dd>Keyword arguments to be read directly into whichever scipy.interpolate function is designated by the method parameter.</dd>
+<dd>Keyword arguments to be read directly into whichever scipy.interpolate function is designated by the interp_kind parameter.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -1716,7 +1746,7 @@ with start search terms, and with wildcard search terms</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def layer_interp(points, grid, layers=None, method=&#39;nearest&#39;, return_type=&#39;dataarray&#39;, export_dir=None, targetcol=&#39;TARG_THICK_PER&#39;, lyrcol=&#39;LAYER&#39;, xcol=None, ycol=None, xcoord=&#39;x&#39;, ycoord=&#39;y&#39;, log=False, verbose=False, **kwargs):
+<pre><code class="python">def layer_interp(points, grid, layers=None, interp_kind=&#39;nearest&#39;, return_type=&#39;dataarray&#39;, export_dir=None, target_col=&#39;TARG_THICK_PER&#39;, layer_col=&#39;LAYER&#39;, xcol=None, ycol=None, xcoord=&#39;x&#39;, ycoord=&#39;y&#39;, log=False, verbose=False, **kwargs):
     &#34;&#34;&#34;Function to interpolate results, going from points to grid data. Uses scipy.interpolate module.
 
     Parameters
@@ -1724,18 +1754,18 @@ with start search terms, and with wildcard search terms</p></div>
     points : list
         List containing pandas dataframes or geopandas geoadataframes containing the point data. Should be resDF_list output from layer_target_thick().
     grid : xr.DataArray or xr.Dataset
-        Xarray dataarray with the coordinates/spatial reference of the output grid to interpolate to
+        Xarray DataArray or DataSet with the coordinates/spatial reference of the output grid to interpolate to
     layers : int, default=None
         Number of layers for interpolation. If None, uses the length ofthe points list to determine number of layers. By default None.
-    method : str, {&#39;nearest&#39;, &#39;interp2d&#39;,&#39;linear&#39;, &#39;cloughtocher&#39;, &#39;radial basis function&#39;}
+    interp_kind : str, {&#39;nearest&#39;, &#39;interp2d&#39;,&#39;linear&#39;, &#39;cloughtocher&#39;, &#39;radial basis function&#39;}
         Type of interpolation to use. See scipy.interpolate N-D scattered. Values can be any of the following (also shown in &#34;kind&#34; column of N-D scattered section of table here: https://docs.scipy.org/doc/scipy/tutorial/interpolate.html). By default &#39;nearest&#39;
     return_type : str, {&#39;dataarray&#39;, &#39;dataset&#39;}
         Type of xarray object to return, either xr.DataArray or xr.Dataset, by default &#39;dataarray.&#39;
     export_dir : str or pathlib.Path, default=None
         Export directory for interpolated grids, using w4h.export_grids(). If None, does not export, by default None.
-    targetcol : str, default = &#39;TARG_THICK_PER&#39;
+    target_col : str, default = &#39;TARG_THICK_PER&#39;
         Name of column in points containing data to be interpolated, by default &#39;TARG_THICK_PER&#39;.
-    lyrcol : str, default = &#39;Layer&#39;
+    layer_col : str, default = &#39;Layer&#39;
         Name of column containing layer number. Not currently used, by default &#39;LAYER&#39;
     xcol : str, default = &#39;None&#39;
         Name of column containing x coordinates. If None, will look for &#39;geometry&#39; column, as in a geopandas.GeoDataframe. By default None
@@ -1748,7 +1778,7 @@ with start search terms, and with wildcard search terms</p></div>
     log : bool, default = True
         Whether to log inputs and outputs to log file.
     **kwargs
-        Keyword arguments to be read directly into whichever scipy.interpolate function is designated by the method parameter.
+        Keyword arguments to be read directly into whichever scipy.interpolate function is designated by the interp_kind parameter.
 
     Returns
     -------
@@ -1756,6 +1786,9 @@ with start search terms, and with wildcard search terms</p></div>
         By default, returns an xr.DataArray object with the layers added as a new dimension called Layer. Can also specify return_type=&#39;dataset&#39; to return an xr.Dataset with each layer as a separate variable.
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
+    if verbose:
+        verbose_print(layer_interp, locals(), exclude_params=[&#39;points&#39;, &#39;grid&#39;])
 
     nnList = [&#39;nearest&#39;, &#39;nearest neighbor&#39;, &#39;nearestneighbor&#39;,&#39;neighbor&#39;,  &#39;nn&#39;,&#39;n&#39;]
     splineList = [&#39;interp2d&#39;, &#39;interp2&#39;, &#39;interp&#39;, &#39;spline&#39;, &#39;spl&#39;, &#39;sp&#39;, &#39;s&#39;]
@@ -1802,8 +1835,8 @@ with start search terms, and with wildcard search terms</p></div>
         else:
             dataY = pts[ycol]
 
-        #layer = pts[lyrcol]        
-        interpVal = pts[targetcol]
+        #layer = pts[layer_col]        
+        interpVal = pts[target_col]
 
         #return points
         dataX.dropna(inplace=True)
@@ -1819,39 +1852,39 @@ with start search terms, and with wildcard search terms</p></div>
         dataY = dataY.reset_index(drop=True)
         interpVal = interpVal.reset_index(drop=True)
         
-        if method.lower() in nnList:
+        if interp_kind.lower() in nnList:
             interpType = &#39;Nearest Neighbor&#39;
             X, Y = np.meshgrid(X, Y, sparse=True) #2D Grid for interpolation
             dataPoints = np.array(list(zip(dataX, dataY)))
             interp = interpolate.NearestNDInterpolator(dataPoints, interpVal, **kwargs)
             Z = interp(X, Y)
-        elif method.lower() in linList:
+        elif interp_kind.lower() in linList:
             interpType = &#39;Linear&#39; 
             dataPoints = np.array(list(zip(dataX, dataY)))
             interp = interpolate.LinearNDInterpolator(dataPoints, interpVal, **kwargs)
             X, Y = np.meshgrid(X, Y, sparse=True) #2D Grid for interpolation
             Z = interp(X, Y)
-        elif method.lower() in ctList:
+        elif interp_kind.lower() in ctList:
             interpType = &#39;Clough-Toucher&#39;
             X, Y = np.meshgrid(X, Y, sparse=True) #2D Grid for interpolation
             if &#39;tol&#39; not in kwargs:
                 kwargs[&#39;tol&#39;] = 1e10
             interp = interpolate.CloughTocher2DInterpolator(list(zip(dataX, dataY)), interpVal, **kwargs)
             Z = interp(X, Y) 
-        elif method.lower() in rbfList:
+        elif interp_kind.lower() in rbfList:
             interpType = &#39;Radial Basis&#39;
             dataXY=  np.column_stack((dataX, dataY))
             interp = interpolate.RBFInterpolator(dataXY, interpVal, **kwargs)
-            print(&#34;Radial Basis Function does not work well with many well-based datasets. Consider instead specifying &#39;nearest&#39;, &#39;linear&#39;, &#39;spline&#39;, or &#39;clough tocher&#39; for interpolation method.&#34;)
+            print(&#34;Radial Basis Function does not work well with many well-based datasets. Consider instead specifying &#39;nearest&#39;, &#39;linear&#39;, &#39;spline&#39;, or &#39;clough tocher&#39; for interpolation interp_kind.&#34;)
             Z = interp(np.column_stack((X.ravel(), Y.ravel()))).reshape(X.shape)
-        elif method.lower() in splineList:
+        elif interp_kind.lower() in splineList:
             interpType = &#39;Spline Interpolation&#39;
             Z = interpolate.bisplrep(dataX, dataY, interpVal, **kwargs)
                 #interp = interpolate.interp2d(dataX, dataY, interpVal, kind=lin_kind, **kwargs)
                 #Z = interp(X, Y)
         else:
             if verbose:
-                print(&#39;Specified interpolation method not recognized, using nearest neighbor.&#39;)
+                print(&#39;Specified interpolation interp_kind not recognized, using nearest neighbor.&#39;)
             interpType = &#39;Nearest Neighbor&#39;
             X, Y = np.meshgrid(X, Y, sparse=True) #2D Grid for interpolation
             interp = interpolate.NearestNDInterpolator(list(zip(dataX, dataY)), interpVal, **kwargs)
@@ -1895,6 +1928,8 @@ with start search terms, and with wildcard search terms</p></div>
         interp_data = xr.Dataset(daDict)
         if verbose:
             print(&#39;Done with interpolation, getting global attrs&#39;)
+
+        #Get common attributes from all layers to use as &#34;global&#34; attributes
         common_attrs = {}
         for i, (var_name, data_array) in enumerate(interp_data.data_vars.items()):
             if i == 0:
@@ -1903,13 +1938,13 @@ with start search terms, and with wildcard search terms</p></div>
                 common_attrs = {k: v for k, v in common_attrs.items() if k in data_array.attrs and data_array.attrs[k] == v}
         interp_data.attrs.update(common_attrs)
     else:
-        print(&#34;{} is not a valid input for return_type. Please set return_type to either &#39;dataarray&#39; or &#39;dataset&#39;&#34;.format(return_type))
+        print(f&#34;{return_type} is not a valid input for return_type. Please set return_type to either &#39;dataarray&#39; or &#39;dataset&#39;&#34;)
         return
 
     if verbose:
         for i, layer_data in enumerate(interp_data):
             pts = points[i]
-            pts.plot(c=pts[targetcol])
+            pts.plot(c=pts[target_col])
 
     if export_dir is None:
         pass
@@ -1921,7 +1956,7 @@ with start search terms, and with wildcard search terms</p></div>
 </details>
 </dd>
 <dt id="w4h.layer_target_thick"><code class="name flex">
-<span>def <span class="ident">layer_target_thick</span></span>(<span>df, layers=9, return_all=False, export_dir=None, outfile_prefix='', depth_top_col='TOP', depth_bot_col='BOTTOM', log=False)</span>
+<span>def <span class="ident">layer_target_thick</span></span>(<span>df, layers=9, return_all=False, export_dir=None, outfile_prefix=None, depth_top_col='TOP', depth_bot_col='BOTTOM', log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to calculate thickness of target material in each layer at each well point</p>
@@ -1936,7 +1971,7 @@ with start search terms, and with wildcard search terms</p></div>
 If False, return list of geopandas.geodataframes with only essential information for each layer.</dd>
 <dt><strong><code>export_dir</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path</code>, default=<code>None</code></dt>
 <dd>If str or pathlib.Path, should be directory to which to export dataframes built in function.</dd>
-<dt><strong><code>outfile_prefix</code></strong> :&ensp;<code>str</code>, default=<code>''</code></dt>
+<dt><strong><code>outfile_prefix</code></strong> :&ensp;<code>str</code>, default=<code>None</code></dt>
 <dd>Only used if export_dir is set. Will be used at the start of the exported filenames</dd>
 <dt><strong><code>depth_top_col</code></strong> :&ensp;<code>str</code>, default=<code>'TOP'</code></dt>
 <dd>Name of column containing data for depth to top of described well intervals</dd>
@@ -1954,7 +1989,7 @@ If False, return list of geopandas.geodataframes with only essential information
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_prefix=&#39;&#39;, depth_top_col=&#39;TOP&#39;, depth_bot_col=&#39;BOTTOM&#39;, log=False):
+<pre><code class="python">def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_prefix=None, depth_top_col=&#39;TOP&#39;, depth_bot_col=&#39;BOTTOM&#39;, log=False):
     &#34;&#34;&#34;Function to calculate thickness of target material in each layer at each well point
 
     Parameters
@@ -1968,7 +2003,7 @@ If False, return list of geopandas.geodataframes with only essential information
         If False, return list of geopandas.geodataframes with only essential information for each layer.
     export_dir : str or pathlib.Path, default=None
         If str or pathlib.Path, should be directory to which to export dataframes built in function.
-    outfile_prefix : str, default=&#39;&#39;
+    outfile_prefix : str, default=None
         Only used if export_dir is set. Will be used at the start of the exported filenames
     depth_top_col : str, default=&#39;TOP&#39;
         Name of column containing data for depth to top of described well intervals
@@ -1983,86 +2018,84 @@ If False, return list of geopandas.geodataframes with only essential information
         Geopandas geodataframe containing only important information needed for next stage of analysis.
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
-    df[&#39;TOP_ELEV_FT&#39;] = df[&#39;SURFACE_ELEV&#39;] - df[depth_top_col]
-    df[&#39;BOT_ELEV_FT&#39;] = df[&#39;SURFACE_ELEV&#39;] - df[depth_bot_col]
+    df[&#39;TOP_ELEV&#39;] = df[&#39;SURFACE_ELEV&#39;] - df[depth_top_col]
+    df[&#39;BOT_ELEV&#39;] = df[&#39;SURFACE_ELEV&#39;] - df[depth_bot_col]
 
     layerList = range(1,layers+1)
     res_list = []
     resdf_list = []
+    print(df.columns)
     #Generate Column names based on (looped) integers
     for layer in layerList:
         zStr = &#39;ELEV&#39;
-        zColT = &#39;TOP_ELEV_FT&#39;
-        zColB = &#39;BOT_ELEV_FT&#39;
-        topCol = zStr+&#39;_FT_LAYER&#39;+str(layer)
+        zColT = &#39;TOP_ELEV&#39;
+        zColB = &#39;BOT_ELEV&#39;
+        topCol = zStr+&#39;_LAYER&#39;+str(layer)
         if layer != 9: #For all layers except the bottom layer....
-            botCol = zStr+&#39;_FT_LAYER&#39;+str(layer+1) #use the layer below it to 
+            botCol = zStr+&#39;_LAYER&#39;+str(layer+1) #use the layer below it to 
         else: #Otherwise, ...
-            botCol = &#34;BEDROCK_&#34;+zStr+&#34;_FT&#34; #Use the (corrected) bedrock depth
+            botCol = &#34;BEDROCK_&#34;+zStr #Use the (corrected) bedrock depth
 
-        print(df.columns)
-        #Divide records into 4 separate categories for ease of calculation, to be joined back together later  
+        #Divide records into 4 categories for ease of calculation, to be joined back together later  
             #Category 1: Well interval starts above layer top, ends within model layer
             #Category 2: Well interval is entirely contained withing model layer
             #Category 3: Well interval starts within model layer, continues through bottom of model layer
             #Category 4: well interval begins and ends on either side of model layer (model layer is contained within well layer)
 
         #records1 = intervals that go through the top of the layer and bottom is within layer
-        records1 = df.loc[(df[zColT] &gt;= df[topCol]) &amp; #Top of the well is above or equal to the top of the layer
+        records1 = df.loc[(df[zColT] &gt;= df[topCol]) &amp; #Top of the well interval is above or equal to the top of the layer
                         (df[zColB] &lt;= df[topCol]) &amp; # &amp; #Bottom is below the top of the layer
                         (df[zColB] &lt;= df[zColT])].copy() #Bottom is deeper than top (should already be the case)
-        records1[&#39;TARG_THICK_FT&#39;] = pd.DataFrame(np.round((records1.loc[:,topCol]-records1.loc[: , zColB]) * records1[&#39;TARGET&#39;],3)).copy() #Multiply &#34;target&#34; (1 or 0) by length within layer            
-        
+        records1[&#39;TARG_THICK&#39;] = pd.DataFrame(np.round((records1.loc[:,topCol]-records1.loc[: , zColB]) * records1[&#39;TARGET&#39;],3)).copy() #Multiply &#34;target&#34; (1 or 0) by length within layer            
         #records2 = entire interval is within layer
         records2 = df.loc[(df[zColT] &lt;= df[topCol]) &amp; #Top of the well is lower than top of the layer 
                     (df[zColB] &gt;= df[botCol]) &amp; #Bottom of the well is above bottom of the layer 
                     (df[zColB] &lt;= df[zColT])].copy() #Bottom ofthe well is deeper than or equal to top (should already be the case)
-        records2[&#39;TARG_THICK_FT&#39;] = pd.DataFrame(np.round((records2.loc[: , zColT] - records2.loc[: , zColB]) * records2[&#39;TARGET&#39;],3)).copy()
+        records2[&#39;TARG_THICK&#39;] = pd.DataFrame(np.round((records2.loc[: , zColT] - records2.loc[: , zColB]) * records2[&#39;TARGET&#39;],3)).copy()
 
         #records3 = intervals with top within layer and bottom of interval going through bottom of layer
         records3 = df.loc[(df[zColT] &gt; df[botCol]) &amp; #Top of the well is above bottom of layer
                     (df[zColB] &lt; df[botCol]) &amp; #Bottom of the well is below bottom of layer
                     (df[zColT] &lt;= df[topCol]) &amp; #Top of well is below top of layer
                     (df[zColB] &lt;= df[zColT])].copy() #Bottom is deeper than top (should already be the case)
-        records3[&#39;TARG_THICK_FT&#39;] = pd.DataFrame(np.round((records3.loc[: , zColT] - (records3.loc[:,botCol]))*records3[&#39;TARGET&#39;],3)).copy()
+        records3[&#39;TARG_THICK&#39;] = pd.DataFrame(np.round((records3.loc[: , zColT] - (records3.loc[:,botCol]))*records3[&#39;TARGET&#39;],3)).copy()
 
         #records4 = interval goes through entire layer
         records4 = df.loc[(df[zColT] &gt;= df[topCol]) &amp; #Top of well is above top of layer
                     (df[zColB] &lt; df[botCol]) &amp; #Bottom of well is below bottom of layer
                     (df[zColB] &lt;= df[zColT])].copy() #Bottom of well is below top of well
-        records4[&#39;TARG_THICK_FT&#39;] = pd.DataFrame(np.round((records4.loc[: , topCol]-records4.loc[: , botCol]) * records4[&#39;TARGET&#39;],3)).copy()
-        
+        records4[&#39;TARG_THICK&#39;] = pd.DataFrame(np.round((records4.loc[: , topCol]-records4.loc[: , botCol]) * records4[&#39;TARGET&#39;],3)).copy()
+
         #Put the four calculated record categories back together into single dataframe
         res = pd.concat([records1, records2, records3, records4])
-
         #The sign may be reversed if using depth rather than elevation
-        if (res[&#39;TARG_THICK_FT&#39;] &lt; 0).all():
-            res[&#39;TARG_THICK_FT&#39;] = res[&#39;TARG_THICK_FT&#39;] * -1
+        if (res[&#39;TARG_THICK&#39;] &lt; 0).all():
+            res[&#39;TARG_THICK&#39;] = res[&#39;TARG_THICK&#39;] * -1
         
         #Cannot have negative thicknesses
-        res[&#39;TARG_THICK_FT&#39;].clip(lower=0, inplace=True)
+        res[&#39;TARG_THICK&#39;].clip(lower=0, inplace=True)
         res[&#39;LAYER_THICK&#39;].clip(lower=0, inplace=True)
         
         #Get geometrys for each unique API/well
+        res.reset_index(drop=True, inplace=True)
         res_df = res.groupby(by=[&#39;API_NUMBER&#39;,&#39;LATITUDE&#39;,&#39;LONGITUDE&#39;], as_index=False).sum(numeric_only=True)#Calculate thickness for each well interval in the layer indicated (e.g., if there are two well intervals from same well in one model layer)
-        uniqInd = pd.DataFrame([v.values[0] for k, v in res.groupby(&#39;API_NUMBER&#39;).groups.items()]).loc[:,0]
+        uniqInd = pd.DataFrame([v.values[0] for k, v in res.groupby(by=[&#39;API_NUMBER&#39;,&#39;LATITUDE&#39;,&#39;LONGITUDE&#39;]).groups.items()]).loc[:,0]
         geomCol = res.loc[uniqInd, &#39;geometry&#39;]
         geomCol = pd.DataFrame(geomCol[~geomCol.index.duplicated(keep=&#39;first&#39;)]).reset_index()
         
 
-        res_df[&#39;TARG_THICK_PER&#39;] =  pd.DataFrame(np.round(res_df[&#39;TARG_THICK_FT&#39;]/res_df[&#39;LAYER_THICK&#39;],3)) #Calculate thickness as percent of total layer thickness
+        res_df[&#39;TARG_THICK_PER&#39;] =  pd.DataFrame(np.round(res_df[&#39;TARG_THICK&#39;]/res_df[&#39;LAYER_THICK&#39;],3)) #Calculate thickness as percent of total layer thickness
         #Replace np.inf and np.nans with 0
-        res_df[&#39;TARG_THICK_PER&#39;] = res_df[&#39;TARG_THICK_PER&#39;].where(res_df[&#39;TARG_THICK_PER&#39;]!=np.inf, other=0) 
-        res_df[&#39;TARG_THICK_PER&#39;] = res_df[&#39;TARG_THICK_PER&#39;].where(res_df[&#39;TARG_THICK_PER&#39;]!=np.nan, other=0) 
+        res_df[&#39;TARG_THICK_PER&#39;] = res_df[&#39;TARG_THICK_PER&#39;].where(res_df[&#39;TARG_THICK_PER&#39;]!=np.inf, other=0)
+        res_df[&#39;TARG_THICK_PER&#39;] = res_df[&#39;TARG_THICK_PER&#39;].where(res_df[&#39;TARG_THICK_PER&#39;]!=np.nan, other=0)
 
         res_df[&#34;LAYER&#34;] = layer #Just to have as part of the output file, include the present layer in the file itself as a separate column
-        res_df = res_df[[&#39;API_NUMBER&#39;, &#39;LATITUDE&#39;, &#39;LONGITUDE&#39;, &#39;LATITUDE_PROJ&#39;, &#39;LONGITUDE_PROJ&#39;,&#39;TOP&#39;, &#39;BOTTOM&#39;, &#39;TOP_ELEV_FT&#39;, &#39;BOT_ELEV_FT&#39;, &#39;SURFACE_ELEV&#39;, topCol, botCol,&#39;LAYER_THICK&#39;,&#39;TARG_THICK_FT&#39;, &#39;TARG_THICK_PER&#39;, &#39;LAYER&#39;]].copy() #Format dataframe for output
+        res_df = res_df[[&#39;API_NUMBER&#39;, &#39;LATITUDE&#39;, &#39;LONGITUDE&#39;, &#39;LATITUDE_PROJ&#39;, &#39;LONGITUDE_PROJ&#39;,&#39;TOP&#39;, &#39;BOTTOM&#39;, &#39;TOP_ELEV&#39;, &#39;BOT_ELEV&#39;, &#39;SURFACE_ELEV&#39;, topCol, botCol,&#39;LAYER_THICK&#39;,&#39;TARG_THICK&#39;, &#39;TARG_THICK_PER&#39;, &#39;LAYER&#39;]].copy() #Format dataframe for output
         res_df = gpd.GeoDataFrame(res_df, geometry=geomCol.loc[:,&#39;geometry&#39;])
         resdf_list.append(res_df)
         res_list.append(res)
 
-        if isinstance(export_dir, pathlib.PurePath) or type(export_dir) is str:
+        if isinstance(export_dir, (pathlib.PurePath, str)):
             export_dir = pathlib.Path(export_dir)
             if export_dir.is_dir():
                 pass
@@ -2075,8 +2108,12 @@ If False, return list of geopandas.geodataframes with only essential information
             #Format and build export filepath
             export_dir = str(export_dir).replace(&#39;\\&#39;, &#39;/&#39;).replace(&#39;\\&#39;[0], &#39;/&#39;)
             zFillDigs = len(str(len(layerList)))
-            if outfile_prefix[-1]==&#39;_&#39;:
+            if str(outfile_prefix).endswith(&#39;_&#39;):
                 outfile_prefix = outfile_prefix[:-1]
+            elif outfile_prefix is None:
+                outfile_prefix = &#39;&#39;
+            
+
             if export_dir[-1] ==&#39;/&#39;:
                 export_dir = export_dir[:-1]
             nowStr = str(datetime.datetime.today().date())+&#39;_&#39;+str(datetime.datetime.today().hour)+&#39;-&#39;+str(datetime.datetime.today().minute)+&#39;-&#39;+str(datetime.datetime.today().second)
@@ -2300,7 +2337,8 @@ Whether the input column is using boolean values as its target indicator</p>
         Merged dataframe
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(merge_tables, locals(), exclude_params=[&#39;data_df&#39;, &#39;header_df&#39;])
     if header_df is None:
         #Figure out which columns to include
         if data_cols is None:
@@ -2405,7 +2443,7 @@ Whether the input column is using boolean values as its target indicator</p>
 </details>
 </dd>
 <dt id="w4h.read_dictionary_terms"><code class="name flex">
-<span>def <span class="ident">read_dictionary_terms</span></span>(<span>dict_file, id_col='ID', search_col='DESCRIPTION', definition_col='LITHOLOGY', class_flag_col='CLASS_FLAG', dictionary_type=None, class_flag=6, rem_extra_cols=True, log=False)</span>
+<span>def <span class="ident">read_dictionary_terms</span></span>(<span>dict_file, id_col='ID', search_col='DESCRIPTION', definition_col='LITHOLOGY', class_flag_col='CLASS_FLAG', dictionary_type=None, class_flag=6, rem_extra_cols=True, verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to read dictionary terms from file into pandas dataframe</p>
@@ -2439,7 +2477,7 @@ Whether the input column is using boolean values as its target indicator</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_dictionary_terms(dict_file, id_col=&#39;ID&#39;, search_col=&#39;DESCRIPTION&#39;, definition_col=&#39;LITHOLOGY&#39;, class_flag_col=&#39;CLASS_FLAG&#39;, dictionary_type=None, class_flag=6, rem_extra_cols=True, log=False):
+<pre><code class="python">def read_dictionary_terms(dict_file, id_col=&#39;ID&#39;, search_col=&#39;DESCRIPTION&#39;, definition_col=&#39;LITHOLOGY&#39;, class_flag_col=&#39;CLASS_FLAG&#39;, dictionary_type=None, class_flag=6, rem_extra_cols=True, verbose=False, log=False):
     &#34;&#34;&#34;Function to read dictionary terms from file into pandas dataframe
 
     Parameters
@@ -2469,7 +2507,8 @@ Whether the input column is using boolean values as its target indicator</p>
         Pandas dataframe with formatting ready to be used in the classification steps of this package
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(read_dictionary_terms, locals())    
     #Read files into pandas dataframes
     dict_terms = []
     if dict_file is None:
@@ -2477,15 +2516,15 @@ Whether the input column is using boolean values as its target indicator</p>
         dict_terms.append(df)
         dict_file = [&#39;&#39;]
     elif type(dict_file) is list:
-        for f in dict_file:
+        for i, f in enumerate(dict_file):
             if not f.exists():
                 df = pd.DataFrame(columns=[&#39;ID&#39;, &#39;DESCRIPTION&#39;, &#39;LITHOLOGY&#39;, &#39;CLASS_FLAGS&#39;])
                 dict_terms.append(df)
             else:
                 dict_terms.append(pd.read_csv(f))
 
-            if id_col in dict_terms.columns:
-                dict_terms.set_index(id_col, drop=True, inplace=True)
+            if id_col in dict_terms[i].columns:
+                dict_terms[i].set_index(id_col, drop=True, inplace=True)
     else:
         dict_file = pathlib.Path(dict_file)
         if dict_file.exists() and dict_file.is_file():
@@ -2613,7 +2652,8 @@ Whether the input column is using boolean values as its target indicator</p>
     
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(read_grid, locals(), exclude_params=[&#39;study_area&#39;])
     if grid_type==&#39;model&#39;:
         if &#39;read_grid&#39; in list(kwargs.keys()):
             rgrid = kwargs[&#39;read_grid&#39;]
@@ -2660,7 +2700,7 @@ Whether the input column is using boolean values as its target indicator</p>
 </details>
 </dd>
 <dt id="w4h.read_lithologies"><code class="name flex">
-<span>def <span class="ident">read_lithologies</span></span>(<span>lith_file=None, interp_col='LITHOLOGY', target_col='CODE', use_cols=None, log=False)</span>
+<span>def <span class="ident">read_lithologies</span></span>(<span>lith_file=None, interp_col='LITHOLOGY', target_col='CODE', use_cols=None, verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to read lithology file into pandas dataframe</p>
@@ -2686,7 +2726,7 @@ Whether the input column is using boolean values as its target indicator</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_lithologies(lith_file=None, interp_col=&#39;LITHOLOGY&#39;, target_col=&#39;CODE&#39;, use_cols=None, log=False):
+<pre><code class="python">def read_lithologies(lith_file=None, interp_col=&#39;LITHOLOGY&#39;, target_col=&#39;CODE&#39;, use_cols=None, verbose=False,  log=False):
     &#34;&#34;&#34;Function to read lithology file into pandas dataframe
 
     Parameters
@@ -2708,7 +2748,8 @@ Whether the input column is using boolean values as its target indicator</p>
         Pandas dataframe with lithology information
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(read_lithologies, locals())   
     if lith_file is None:
         #Find resources
         import w4h
@@ -2788,7 +2829,8 @@ Whether the input column is using boolean values as its target indicator</p>
         Data array containing model grid
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-    
+    if verbose:
+        verbose_print(read_model_grid, locals(), exclude_params=&#39;study_area&#39;)
     if read_grid and model_grid_path is not None:
         modelGridIN = rxr.open_rasterio(model_grid_path)
 
@@ -2959,7 +3001,8 @@ Tuple/list with two pandas dataframes: (well_data, metadata) metadata is None if
         Tuple/list with two pandas dataframes: (well_data, metadata) metadata is None if only well_data is used
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(read_raw_csv, locals())
     #Check if input data is already dataframe, otherwise, read it in as dataframe
     if not isinstance(data_filepath, pd.DataFrame) or isinstance(data_filepath, gpd.GeoDataFrame):
         downholeDataIN = pd.read_csv(data_filepath, sep=&#39;,&#39;, header=&#39;infer&#39;, encoding=encoding, **read_csv_kwargs)
@@ -3017,7 +3060,7 @@ Tuple/list with two pandas dataframes: (well_data, metadata) metadata is None if
 </details>
 </dd>
 <dt id="w4h.read_study_area"><code class="name flex">
-<span>def <span class="ident">read_study_area</span></span>(<span>study_area_path, study_area_crs='EPSG:4269', log=False)</span>
+<span>def <span class="ident">read_study_area</span></span>(<span>study_area_path, study_area_crs='EPSG:4269', log=False, verbose=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Read study area geospatial file into geopandas</p>
@@ -3040,7 +3083,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_study_area(study_area_path, study_area_crs=&#39;EPSG:4269&#39;, log=False):
+<pre><code class="python">def read_study_area(study_area_path, study_area_crs=&#39;EPSG:4269&#39;, log=False, verbose=False):
     &#34;&#34;&#34;Read study area geospatial file into geopandas
 
     Parameters
@@ -3059,7 +3102,8 @@ Polygon is best, but may work with other types if extent is correct.</dd>
         Geopandas dataframe with polygon geometry.
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(read_study_area, locals())
     studyAreaIN = gpd.read_file(study_area_path)
     studyAreaIN.to_crs(study_area_crs, inplace=True)
 
@@ -3067,7 +3111,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 </details>
 </dd>
 <dt id="w4h.read_wcs"><code class="name flex">
-<span>def <span class="ident">read_wcs</span></span>(<span>study_area, wcs_url='https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS', res_x=30, res_y=30, log=False, **kwargs)</span>
+<span>def <span class="ident">read_wcs</span></span>(<span>study_area, wcs_url='https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS', res_x=30, res_y=30, verbose=False, log=False, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Reads a WebCoverageService from a url and returns a rioxarray dataset containing it.</p>
@@ -3096,7 +3140,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_wcs(study_area, wcs_url=lidarURL, res_x=30, res_y=30, log=False, **kwargs):
+<pre><code class="python">def read_wcs(study_area, wcs_url=lidarURL, res_x=30, res_y=30, verbose=False, log=False, **kwargs):
     &#34;&#34;&#34;Reads a WebCoverageService from a url and returns a rioxarray dataset containing it.
 
     Parameters
@@ -3132,6 +3176,9 @@ Polygon is best, but may work with other types if extent is correct.</dd>
         return
 
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
+    if verbose:
+        verbose_print(read_wcs, locals(), exclude_params=[&#39;study_area&#39;])      
 
     if &#39;wcs_url&#39; in kwargs:
         wcs_url = kwargs[&#39;wcs_url&#39;]
@@ -3217,7 +3264,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 </details>
 </dd>
 <dt id="w4h.read_wms"><code class="name flex">
-<span>def <span class="ident">read_wms</span></span>(<span>study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:None', wms_url='https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS', srs='EPSG:3857', clip_to_studyarea=True, bbox=[-9889002.6155, 5134541.069716, -9737541.607038, 5239029.6274], res_x=30, res_y=30, size_x=512, size_y=512, format='image/tiff', log=False, **kwargs)</span>
+<span>def <span class="ident">read_wms</span></span>(<span>study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:None', wms_url='https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS', srs='EPSG:3857', clip_to_studyarea=True, bbox=[-9889002.6155, 5134541.069716, -9737541.607038, 5239029.6274], res_x=30, res_y=30, size_x=512, size_y=512, format='image/tiff', verbose=False, log=False, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Reads a WebMapService from a url and returns a rioxarray dataset containing it.</p>
@@ -3253,7 +3300,10 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_wms(study_area, layer_name=&#39;IL_Statewide_Lidar_DEM_WGS:None&#39;, wms_url=lidarURL, srs=&#39;EPSG:3857&#39;, clip_to_studyarea=True, bbox=[-9889002.615500,5134541.069716,-9737541.607038,5239029.627400],res_x=30, res_y=30, size_x=512, size_y=512, format=&#39;image/tiff&#39;, log=False, **kwargs):
+<pre><code class="python">def read_wms(study_area, layer_name=&#39;IL_Statewide_Lidar_DEM_WGS:None&#39;, wms_url=lidarURL, srs=&#39;EPSG:3857&#39;, 
+             clip_to_studyarea=True, bbox=[-9889002.615500,5134541.069716,-9737541.607038,5239029.627400],
+             res_x=30, res_y=30, size_x=512, size_y=512, 
+             format=&#39;image/tiff&#39;, verbose=False, log=False, **kwargs):
     &#34;&#34;&#34;
     Reads a WebMapService from a url and returns a rioxarray dataset containing it.
 
@@ -3290,7 +3340,8 @@ Polygon is best, but may work with other types if extent is correct.</dd>
         return
     
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(read_wms, locals(), exclude_params=[&#39;study_area&#39;])
     from owslib.wms import WebMapService
     # Define WMS endpoint URL
     if &#39;wms_url&#39; in kwargs:
@@ -3415,7 +3466,8 @@ Polygon is best, but may work with other types if extent is correct.</dd>
         Pandas dataframe containing the elevation and location data
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(read_xyz, locals())
     if datatypes is None:
         xyzDTypes = {&#39;ID&#39;:np.uint32,&#39;API_NUMBER&#39;:np.uint64,&#39;LATITUDE&#39;:np.float64,&#39;LONGITUDE&#39;:np.float64,&#39;ELEV_FT&#39;:np.float64}
 
@@ -3519,6 +3571,8 @@ Polygon is best, but may work with other types if extent is correct.</dd>
         Pandas dataframe with the records remvoed where the top is indicatd to be below the bottom.
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+    if verbose:
+        verbose_print(remove_bad_depth, locals(), exclude_params=[&#39;df_with_depth&#39;])
 
     if depth_type.lower() ==&#39;depth&#39;:
         df_with_depth[&#39;THICKNESS&#39;] = df_with_depth[bottom_col] - df_with_depth[top_col] #Calculate interval thickness
@@ -3592,6 +3646,9 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
+    if verbose:
+        verbose_print(remove_no_depth, locals(), exclude_params=[&#39;df_with_depth&#39;])
+        
     #Replace empty cells in top and bottom columns with nan
     df_with_depth[top_col] = df_with_depth[top_col].replace(no_data_val_table, np.nan)
     df_with_depth[bottom_col] = df_with_depth[bottom_col].replace(no_data_val_table, np.nan)
@@ -3663,7 +3720,8 @@ Polygon is best, but may work with other types if extent is correct.</dd>
         Pandas dataframe with records with no description removed.
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(remove_no_description, locals(), exclude_params=[&#39;df_with_descriptions&#39;])
     #Replace empty cells in formation column with nans
     df_with_descriptions[description_col] = df_with_descriptions[description_col].replace(no_data_val_table, np.nan) 
     before = df_with_descriptions.shape[0] #Calculate number of rows before dropping
@@ -3735,6 +3793,9 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
+    if verbose:
+        verbose_print(remove_no_topo, locals(), exclude_params=[&#39;df_with_topo&#39;])
+
     before = df_with_topo.shape[0]
     
     df_with_topo[zcol].replace(no_data_val_table, np.nan, inplace=True)
@@ -3791,6 +3852,8 @@ Polygon is best, but may work with other types if extent is correct.</dd>
         Pandas dataframe containing only data with location information
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+    if verbose:
+        verbose_print(remove_nonlocated, locals(), exclude_params=[&#39;df_with_locations&#39;])
 
     before = df_with_locations.shape[0] #Extract length of data before this process
 
@@ -3811,7 +3874,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 </details>
 </dd>
 <dt id="w4h.run"><code class="name flex">
-<span>def <span class="ident">run</span></span>(<span>well_data, surf_elev_grid, bedrock_elev_grid, model_grid=None, metadata=None, layers=9, well_data_cols=None, well_metadata_cols=None, description_col='FORMATION', top_col='TOP', bottom_col='BOTTOM', depth_type='depth', study_area=None, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEVATION', well_id_col='API_NUMBER', output_crs='EPSG:4269', lith_dict=None, lith_dict_start=None, lith_dict_wildcard=None, target_dict=None, target_name='', export_dir=None, verbose=False, log=False, **keyword_parameters)</span>
+<span>def <span class="ident">run</span></span>(<span>well_data, surf_elev_grid, bedrock_elev_grid, model_grid=None, metadata=None, layers=9, well_data_cols=None, well_metadata_cols=None, description_col='FORMATION', top_col='TOP', bottom_col='BOTTOM', depth_type='depth', study_area=None, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEVATION', well_id_col='API_NUMBER', output_crs='EPSG:4269', lith_dict=None, lith_dict_start=None, lith_dict_wildcard=None, target_dict=None, target_name='', export_dir=None, verbose=False, log=False, **kw_params)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to run entire process with one line of code. </p>
@@ -3868,7 +3931,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 <dd>Whether to print updates/results</dd>
 <dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
 <dd>Whether to send parameters and outputs to log file, to be saved in export_dir, or the same directory as well_data if export_dir not defined.</dd>
-<dt><strong><code>**keyword_parameters</code></strong></dt>
+<dt><strong><code>**kw_params</code></strong></dt>
 <dd>Keyword parameters used by any of the functions throughout the process. See list of functions above, and the API documentation for their possible parameters</dd>
 </dl></div>
 <details class="source">
@@ -3889,7 +3952,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
         export_dir=None,
         verbose=False,
         log=False,
-        **keyword_parameters):
+        **kw_params):
     
     &#34;&#34;&#34;Function to run entire process with one line of code. 
     
@@ -3947,12 +4010,15 @@ Polygon is best, but may work with other types if extent is correct.</dd>
         Whether to print updates/results
     log : bool, default = False
         Whether to send parameters and outputs to log file, to be saved in export_dir, or the same directory as well_data if export_dir not defined.
-    **keyword_parameters
+    **kw_params
         Keyword parameters used by any of the functions throughout the process. See list of functions above, and the API documentation for their possible parameters
     &#34;&#34;&#34;
 
+    if verbose:
+        verbose_print(run, locals())
+
     #Get data (files or otherwise)
-    file_setup_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.file_setup.__code__.co_varnames}
+    file_setup_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.file_setup).parameters.keys()}
     
     #Check how well_data and metadata were defined
     if isinstance(well_data, pathlib.PurePath) or isinstance(well_data, str):
@@ -3995,30 +4061,34 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     else:
         print(&#39;ERROR: well_data must be a string filepath, a pathlib.Path object, or pandas.DataFrame&#39;)
 
-    if export_dir is None:
-        nowTime = datetime.datetime.now()
-        nowTime = str(nowTime).replace(&#39;:&#39;, &#39;-&#39;).replace(&#39; &#39;,&#39;_&#39;).split(&#39;.&#39;)[0]
-        nowTimeStr = &#39;_&#39;+str(nowTime)
-        outDir = &#39;Output_&#39;+nowTimeStr
-        if isinstance(well_dataPath, pd.DataFrame) or isinstance(well_dataPath, gpd.GeoDataFrame):
-            export_dir = pathlib.Path(outDir)
-        elif isinstance(well_dataPath, pathlib.PurePath):
-            if well_dataPath.is_dir():
-                export_dir = well_dataPath.joinpath(outDir)
-            else:
-                export_dir = well_dataPath.parent.joinpath(outDir)
+    if not export_dir:
+        if export_dir is False:
+            pass
         else:
-            raise IOError(&#39;export_dir should be explicitly defined if well_data is not a filepath&#39;)
-
-        if not export_dir.exists():
-            try:
-                export_dir.mkdir()
-            except:
+            nowTime = datetime.datetime.now()
+            nowTime = str(nowTime).replace(&#39;:&#39;, &#39;-&#39;).replace(&#39; &#39;,&#39;_&#39;).split(&#39;.&#39;)[0]
+            nowTimeStr = &#39;_&#39;+str(nowTime)
+            outDir = &#39;Output_&#39;+nowTimeStr
+            if isinstance(well_dataPath, pd.DataFrame) or isinstance(well_dataPath, gpd.GeoDataFrame):
+                export_dir = pathlib.Path(outDir)
+            elif isinstance(well_dataPath, pathlib.PurePath):
+                if well_dataPath.is_dir():
+                    export_dir = well_dataPath.joinpath(outDir)
+                else:
+                    export_dir = well_dataPath.parent.joinpath(outDir)
+            else:
+                raise IOError(&#39;export_dir should be explicitly defined if well_data is not a filepath&#39;)
                 pass
 
+            if not export_dir.exists():
+                try:
+                    export_dir.mkdir()
+                except:
+                    pass
+
     #Get pandas dataframes from input
-    read_raw_txt_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_raw_csv .__code__.co_varnames}
-    well_data_IN, metadata_IN = w4h.read_raw_csv(data_filepath=well_dataPath, metadata_filepath=metadataPath, verbose=verbose, log=log, **read_raw_txt_kwargs) 
+    read_raw_txt_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.read_raw_csv).parameters.keys()}
+    well_data_IN, metadata_IN = w4h.read_raw_csv(data_filepath=well_dataPath, metadata_filepath=metadataPath, verbose=verbose, log=log, **read_raw_txt_kwargs)
     #Functions to read data into dataframes. Also excludes extraneous columns, and drops header data with no location information
 
     #Define data types (file will need to be udpated)
@@ -4028,15 +4098,15 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     if metadata_DF is None:
         well_data_xyz = well_data_DF
     else:
-        merge_tables_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.merge_tables.__code__.co_varnames}
+        merge_tables_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.merge_tables).parameters.keys()}
         well_data_xyz = w4h.merge_tables(data_df=well_data_DF, header_df=metadata_DF, data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, **merge_tables_kwargs)
 
     #Convert well_data_xyz to have geometry
-    coords2geometry_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.coords2geometry.__code__.co_varnames}
+    coords2geometry_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.coords2geometry).parameters.keys()}
     well_data_xyz = w4h.coords2geometry(df_no_geometry=well_data_xyz, xcol=xcol, ycol=ycol, zcol=zcol, log=log, **coords2geometry_kwargs)
 
     #Get Study area
-    read_study_area_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_study_area.__code__.co_varnames}
+    read_study_area_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.read_study_area).parameters.keys()}
     if study_area is None:
         studyAreaIN = None
         use_study_area = False
@@ -4044,43 +4114,42 @@ Polygon is best, but may work with other types if extent is correct.</dd>
         studyAreaIN = w4h.read_study_area(study_area_path=study_area, log=log, **read_study_area_kwargs)
         use_study_area = True
 
-    clip_gdf2study_area_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.clip_gdf2study_area.__code__.co_varnames}
+    clip_gdf2study_area_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.clip_gdf2study_area).parameters.keys()}
     well_data_xyz = w4h.clip_gdf2study_area(study_area=studyAreaIN, gdf=well_data_xyz, log=log, **clip_gdf2study_area_kwargs)
-
     #Get surfaces and grid(s)
-    read_grid_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_grid.__code__.co_varnames}
+    read_grid_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.read_grid).parameters.keys()}
 
     modelGridPath = model_grid
     surfaceElevPath = surf_elev_grid
     bedrockElevPath = bedrock_elev_grid
-    
+
     modelGrid = w4h.read_grid(grid_path=modelGridPath, grid_type=&#39;model&#39;, study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
     surfaceElevGridIN = w4h.read_grid(grid_path=surfaceElevPath, grid_type=&#39;surface&#39;, study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
     bedrockElevGridIN = w4h.read_grid(grid_path=bedrockElevPath, grid_type=&#39;bedrock&#39;, study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
 
     #UPDATE: MAKE SURE CRS&#39;s all align ***
     #Add control points
-    add_control_points_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.add_control_points.__code__.co_varnames}
+    add_control_points_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.add_control_points).parameters.keys()}
     well_data_xyz = w4h.add_control_points(df_without_control=well_data_xyz, xcol=xcol, ycol=ycol, zcol=zcol, top_col=top_col, bottom_col=bottom_col, description_col=description_col, verbose=verbose, log=log, **add_control_points_kwargs)
-    
+
     #Clean up data
     well_data_xyz = w4h.remove_nonlocated(df_with_locations=well_data_xyz, log=log, verbose=verbose)
     well_data_xyz = w4h.remove_no_topo(df_with_topo=well_data_xyz, zcol=zcol, verbose=verbose, log=log)
 
-    remove_no_depth_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.remove_no_depth.__code__.co_varnames}
+    remove_no_depth_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.remove_no_depth).parameters.keys()}
     well_data_xyz = w4h.remove_no_depth(well_data_xyz, verbose=verbose, top_col=top_col, bottom_col=bottom_col, log=log, **remove_no_depth_kwargs) #Drop records with no depth information
 
-    remove_bad_depth_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.remove_bad_depth.__code__.co_varnames}
+    remove_bad_depth_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.remove_bad_depth).parameters.keys()}
     well_data_xyz = w4h.remove_bad_depth(well_data_xyz, verbose=verbose, top_col=top_col, bottom_col=bottom_col, depth_type=depth_type, log=log, **remove_bad_depth_kwargs)#Drop records with bad depth information (i.e., top depth &gt; bottom depth) (Also calculates thickness of each record)
 
-    remove_no_formation_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.remove_no_description.__code__.co_varnames}
+    remove_no_formation_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.remove_no_description).parameters.keys()}
     well_data_xyz = w4h.remove_no_description(well_data_xyz, description_col=description_col, verbose=verbose, log=log, **remove_no_formation_kwargs)
 
     #CLASSIFICATION
     #Read dictionary definitions and classify
-    get_search_terms_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.get_search_terms.__code__.co_varnames}
+    get_search_terms_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.get_search_terms).parameters.keys()}
     specTermsPATH, startTermsPATH, wildcardTermsPATH, = w4h.get_search_terms(spec_path=lith_dict, start_path=lith_dict_start, wildcard_path=lith_dict_wildcard, log=log, **get_search_terms_kwargs)
-    read_dictionary_terms_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_dictionary_terms.__code__.co_varnames}
+    read_dictionary_terms_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.read_dictionary_terms).parameters.keys()}
     if &#39;class_flag&#39; in read_dictionary_terms_kwargs.keys():
         del read_dictionary_terms_kwargs[&#39;class_flag&#39;] #This is specific to an invidiual dict terms file, so don&#39;t want to use for all
     specTerms = w4h.read_dictionary_terms(dict_file=specTermsPATH, log=log, **read_dictionary_terms_kwargs)
@@ -4126,10 +4195,9 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     well_data_xyz = w4h.fill_unclassified(well_data_xyz, classification_col=&#39;CLASS_FLAG&#39;)
 
     #Add target interpratations
-    read_lithologies_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.read_lithologies.__code__.co_varnames}
+    read_lithologies_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.read_lithologies).parameters.keys()}
     targetInterpDF = w4h.read_lithologies(lith_file=target_dict, log=log, **read_lithologies_kwargs)
     well_data_xyz = w4h.merge_lithologies(well_data_df=well_data_xyz, targinterps_df=targetInterpDF, target_col=&#39;TARGET&#39;, target_class=&#39;bool&#39;)
-
 
     #Sort dataframe to prepare for next steps
     #well_data_xyz = w4h.sort_dataframe(df=well_data_xyz, sort_cols=[&#39;API_NUMBER&#39;,&#39;TOP&#39;], remove_nans=True)
@@ -4147,20 +4215,23 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     well_data_xyz = w4h.sample_raster_points(raster=driftThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_DEPTH&#39;, verbose=verbose, log=log)
     well_data_xyz = w4h.sample_raster_points(raster=layerThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;LAYER_THICK&#39;, verbose=verbose, log=log)
     well_data_xyz = w4h.get_layer_depths(df_with_depths=well_data_xyz, layers=layers, log=log)
+    #print(&#39;Layer Depths:&#39;, well_data_xyz[&#39;geometry&#39;].head(25))
 
-    layer_target_thick_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.layer_target_thick.__code__.co_varnames}
+    layer_target_thick_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.layer_target_thick).parameters.keys()}
     if &#39;return_all&#39; in layer_target_thick_kwargs.keys():
         del layer_target_thick_kwargs[&#39;return_all&#39;] #This needs to be set to False, so we don&#39;t want it reading in twice
+
     resdf = w4h.layer_target_thick(df=well_data_xyz, layers=layers, return_all=False, export_dir=export_dir, depth_top_col=top_col, depth_bot_col=bottom_col, log=log, **layer_target_thick_kwargs)
+    #print(&#39;TargetThick:&#39;, resdf[0].head(25))
     
-    layer_interp_kwargs = {k: v for k, v in locals()[&#39;keyword_parameters&#39;].items() if k in w4h.layer_interp.__code__.co_varnames}
+    layer_interp_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.layer_interp).parameters.keys()}
     layers_data = w4h.layer_interp(points=resdf, grid=modelGrid, layers=9, verbose=verbose, log=log, **layer_interp_kwargs)
 
     nowTime = datetime.datetime.now()
     nowTime = str(nowTime).replace(&#39;:&#39;, &#39;-&#39;).replace(&#39; &#39;,&#39;_&#39;).split(&#39;.&#39;)[0]
     nowTimeStr = &#39;_&#39;+str(nowTime)
 
-    #THIS MAY BE REPEAT OF LAST LINES OF layer_interp() 
+    #THIS MAY BE REPEAT OF LAST LINES OF layer_interp()
     w4h.export_grids(grid_data=layers_data, out_path=export_dir, file_id=target_name,filetype=&#39;tif&#39;, variable_sep=True, date_stamp=True, verbose=verbose, log=log)
 
     return resdf, layers_data</code></pre>
@@ -4230,6 +4301,7 @@ new_col : str, optional</dd>
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     if verbose:
+        verbose_print(sample_raster_points, locals(), exclude_params=[&#39;raster&#39;, &#39;points_df&#39;])
         print(&#34;Sampling grid for {}.&#34;.format(new_col))
 
     #Project points to raster CRS
@@ -4247,7 +4319,6 @@ new_col : str, optional</dd>
     for i, row in points_df.iterrows():
         # Select data from DataArray at current coordinates and append to list
         zData.append(raster.sel(x=row[xCOLOUT], y=row[yCOLOUT], method=&#39;nearest&#39;).item())
-    print(zData)
     #sampleArr=raster.sel(x=xData, y=yData, method=&#39;nearest&#39;).values
     #sampleArr = np.diag(sampleArr)
     #sampleDF = pd.DataFrame(sampleArr, columns=[new_col])
@@ -4352,6 +4423,8 @@ new_col : str, optional</dd>
         Dataframe containing the well descriptions and their matched classifications.
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+    if verbose:
+        verbose_print(specific_define, locals(), exclude_params=[&#39;df&#39;, &#39;terms_df&#39;])
 
     if description_col != terms_col:
         terms_df.rename(columns={terms_col:description_col}, inplace=True)
@@ -4368,7 +4441,7 @@ new_col : str, optional</dd>
     terms_df.drop_duplicates(subset=terms_col, keep=&#39;last&#39;, inplace=True)
     terms_df.reset_index(drop=True, inplace=True)
     
-    df_Interps = pd.merge(df, terms_df.set_index(terms_col), on=description_col, how=&#39;left&#39;)
+    df_Interps = pd.merge(left=df, right=terms_df.set_index(terms_col), on=description_col, how=&#39;left&#39;)
     df_Interps.rename(columns={description_col:&#39;FORMATION&#39;}, inplace=True)
     df_Interps[&#39;BEDROCK_FLAG&#39;] = df_Interps[&#39;LITHOLOGY&#39;] == &#39;BEDROCK&#39;
     
@@ -4488,7 +4561,8 @@ new_col : str, optional</dd>
         Dataframe containing the original data and new classifications
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(start_define, locals(), exclude_params=[&#39;df&#39;, &#39;terms_df&#39;])
     #if verbose:
     #    #Estimate when it will end, based on test run
     #    estTime = df.shape[0]/3054409 * 6 #It took about 6 minutes to classify data with entire dataframe. This estimates the fraction of that it will take
@@ -4511,6 +4585,37 @@ new_col : str, optional</dd>
         print(&#34;\t{} records classified using initial substring matches ({}% of unclassified  data)&#34;.format(numRecsClass, percRecsClass))
         print(&#39;\t{} records remain unclassified ({}% of unclassified  data).&#39;.format(recsRemainig, 1-percRecsClass))
     return df</code></pre>
+</details>
+</dd>
+<dt id="w4h.verbose_print"><code class="name flex">
+<span>def <span class="ident">verbose_print</span></span>(<span>func, local_variables, exclude_params=[])</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def verbose_print(func, local_variables, exclude_params=[]):
+    print_list = [&#39;\n&#39;]
+    sTime = datetime.datetime.now()
+    print_list.append(f&#34;{func.__name__}&#34;)
+    print_list.append(f&#34;\tStarted at {sTime}.&#34;)
+    print_list.append(f&#34;\tParameters:&#34;)
+    for k, v in local_variables.items():
+        if k in inspect.signature(func).parameters:
+            if &#39;kwargs&#39; in k:
+                print_list.append(f&#34;\t\t{k}&#34;)
+                for kk, vv in local_variables[k].items():
+                    print_list.append(f&#34;\t\t\t{kk}={vv}&#34;)
+            elif k in exclude_params:
+                print_list.append(f&#34;\t\t{k}=&lt;input object&gt;&#34;)
+            else:
+                print_list.append(f&#34;\t\t{k}={v}&#34;)
+
+    for line in print_list:
+        print(line)
+    return print_list</code></pre>
 </details>
 </dd>
 <dt id="w4h.wildcard_define"><code class="name flex">
@@ -4566,7 +4671,8 @@ new_col : str, optional</dd>
         Dataframe containing the original data and new classifications
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(wildcard_define, locals(), exclude_params=[&#39;df&#39;, &#39;terms_df&#39;])
     #if verbose:
     #    #Estimate when it will end, based on test run
     #    estTime = df.shape[0]/3054409 * 6 #It took about 6 minutes to classify data with entire dataframe. This estimates the fraction of that it will take
@@ -4592,7 +4698,7 @@ new_col : str, optional</dd>
 </details>
 </dd>
 <dt id="w4h.xyz_metadata_merge"><code class="name flex">
-<span>def <span class="ident">xyz_metadata_merge</span></span>(<span>xyz, metadata, log=False)</span>
+<span>def <span class="ident">xyz_metadata_merge</span></span>(<span>xyz, metadata, verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Add elevation to header data file.</p>
@@ -4614,7 +4720,7 @@ new_col : str, optional</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def xyz_metadata_merge(xyz, metadata, log=False):
+<pre><code class="python">def xyz_metadata_merge(xyz, metadata, verbose=False, log=False):
     &#34;&#34;&#34;Add elevation to header data file.
 
     Parameters
@@ -4633,7 +4739,8 @@ new_col : str, optional</dd>
 
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(xyz_metadata_merge, locals(), exclude_params=[&#39;xyz&#39;])
     headerXYZData = metadata.merge(xyz, how=&#39;left&#39;, on=&#39;API_NUMBER&#39;)
     headerXYZData.drop([&#39;LATITUDE_x&#39;, &#39;LONGITUDE_x&#39;], axis=1, inplace=True)
     headerXYZData.rename({&#39;LATITUDE_y&#39;:&#39;LATITUDE&#39;, &#39;LONGITUDE_y&#39;:&#39;LONGITUDE&#39;}, axis=1, inplace=True)
@@ -4711,6 +4818,7 @@ new_col : str, optional</dd>
 <li><code><a title="w4h.specific_define" href="#w4h.specific_define">specific_define</a></code></li>
 <li><code><a title="w4h.split_defined" href="#w4h.split_defined">split_defined</a></code></li>
 <li><code><a title="w4h.start_define" href="#w4h.start_define">start_define</a></code></li>
+<li><code><a title="w4h.verbose_print" href="#w4h.verbose_print">verbose_print</a></code></li>
 <li><code><a title="w4h.wildcard_define" href="#w4h.wildcard_define">wildcard_define</a></code></li>
 <li><code><a title="w4h.xyz_metadata_merge" href="#w4h.xyz_metadata_merge">xyz_metadata_merge</a></code></li>
 </ul>

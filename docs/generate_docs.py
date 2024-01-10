@@ -15,7 +15,7 @@ CONVERT_MD=True
 RTD_THEME=False #Not currently working
 RUN_TESTS=True
 LINT_IT=False
-RELEASE_VERSION = "0.0.17"
+RELEASE_VERSION = "0.0.18"
 
 # Set the filepaths
 currentDir = pathlib.Path((__file__)).parent
@@ -41,7 +41,7 @@ if RTD_THEME:
     themePath = venvPath.as_posix()+'/lib/site-packages/sphinx_RTD_THEME/'
     subprocess.run(['pdoc', '--html', '-o', OUTPUT_DIR, '--force', '--template-dir', themePath, w4hDir], check=False)
 else:
-    subprocess.run(['pdoc', '--html', '-o', OUTPUT_DIR, '--force', w4hDir], check=False)
+    subprocess.run(['pdoc', '--html', '-o', OUTPUT_DIR.as_posix(), '--force', w4hDir.as_posix()], check=False)
 
 #Not used anymore, probably
 workDir = repoDir

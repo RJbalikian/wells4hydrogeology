@@ -33,10 +33,9 @@ import pathlib
 import pandas as pd
 import xarray as xr
 
-from w4h import logger_function
+from w4h import logger_function, verbose_print
 
 #Export data
-
 def export_dataframe(df, out_dir, filename, date_stamp=True, log=False):
     &#34;&#34;&#34;Function to export dataframes
 
@@ -105,7 +104,8 @@ def export_grids(grid_data, out_path, file_id=&#39;&#39;,filetype=&#39;tif&#39;,
         Whether to log inputs and outputs to log file.        
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(export_grids, locals(), exclude_params=[&#39;grid_data&#39;])
     #Initialize lists to determine which filetype will be used for export
     ncdfList = [&#39;netcdf&#39;, &#39;ncdf&#39;, &#39;n&#39;]
     tifList = [&#39;tif&#39;, &#39;tiff&#39;, &#39;geotiff&#39;, &#39;geotif&#39;, &#39;t&#39;]
@@ -115,7 +115,7 @@ def export_grids(grid_data, out_path, file_id=&#39;&#39;,filetype=&#39;tif&#39;,
 
     #Format output string(s)
     #Format output filepath
-    if type(out_path) is str or isinstance(out_path, pathlib.PurePath):
+    if isinstance(out_path, (pathlib.PurePath, str)):
         if isinstance(out_path, pathlib.PurePath):
             pass
         else:
@@ -144,9 +144,8 @@ def export_grids(grid_data, out_path, file_id=&#39;&#39;,filetype=&#39;tif&#39;,
         else:
             filenames = [out_path.stem]
             out_path = out_path.parent
-
     else:
-        print(&#39;Please input string or pathlib object for out_path parameters&#39;)
+        print(&#39;No output path specified (out_path). Please input string or pathlib object for out_path parameters&#39;)
         return
     
     #Format datestamp, if desired in output filename
@@ -338,7 +337,8 @@ def export_grids(grid_data, out_path, file_id=&#39;&#39;,filetype=&#39;tif&#39;,
         Whether to log inputs and outputs to log file.        
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(export_grids, locals(), exclude_params=[&#39;grid_data&#39;])
     #Initialize lists to determine which filetype will be used for export
     ncdfList = [&#39;netcdf&#39;, &#39;ncdf&#39;, &#39;n&#39;]
     tifList = [&#39;tif&#39;, &#39;tiff&#39;, &#39;geotiff&#39;, &#39;geotif&#39;, &#39;t&#39;]
@@ -348,7 +348,7 @@ def export_grids(grid_data, out_path, file_id=&#39;&#39;,filetype=&#39;tif&#39;,
 
     #Format output string(s)
     #Format output filepath
-    if type(out_path) is str or isinstance(out_path, pathlib.PurePath):
+    if isinstance(out_path, (pathlib.PurePath, str)):
         if isinstance(out_path, pathlib.PurePath):
             pass
         else:
@@ -377,9 +377,8 @@ def export_grids(grid_data, out_path, file_id=&#39;&#39;,filetype=&#39;tif&#39;,
         else:
             filenames = [out_path.stem]
             out_path = out_path.parent
-
     else:
-        print(&#39;Please input string or pathlib object for out_path parameters&#39;)
+        print(&#39;No output path specified (out_path). Please input string or pathlib object for out_path parameters&#39;)
         return
     
     #Format datestamp, if desired in output filename

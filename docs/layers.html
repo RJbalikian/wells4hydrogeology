@@ -40,7 +40,7 @@ from shapely.geometry import Point
 from scipy import interpolate
 
 import w4h
-from w4h import logger_function
+from w4h import logger_function, verbose_print
 
 #Function to Merge tables
 def merge_tables(data_df, header_df, data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, verbose=False, **kwargs):
@@ -71,7 +71,8 @@ def merge_tables(data_df, header_df, data_cols=None, header_cols=None, auto_pick
         Merged dataframe
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(merge_tables, locals(), exclude_params=[&#39;data_df&#39;, &#39;header_df&#39;])
     if header_df is None:
         #Figure out which columns to include
         if data_cols is None:
@@ -165,7 +166,7 @@ def get_layer_depths(df_with_depths, surface_elev_col=&#39;SURFACE_ELEV&#39;, la
     return df_with_depths
 
 #Function to export the result of thickness of target sediments in each layer
-def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_prefix=&#39;&#39;, depth_top_col=&#39;TOP&#39;, depth_bot_col=&#39;BOTTOM&#39;, log=False):
+def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_prefix=None, depth_top_col=&#39;TOP&#39;, depth_bot_col=&#39;BOTTOM&#39;, log=False):
     &#34;&#34;&#34;Function to calculate thickness of target material in each layer at each well point
 
     Parameters
@@ -179,7 +180,7 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
         If False, return list of geopandas.geodataframes with only essential information for each layer.
     export_dir : str or pathlib.Path, default=None
         If str or pathlib.Path, should be directory to which to export dataframes built in function.
-    outfile_prefix : str, default=&#39;&#39;
+    outfile_prefix : str, default=None
         Only used if export_dir is set. Will be used at the start of the exported filenames
     depth_top_col : str, default=&#39;TOP&#39;
         Name of column containing data for depth to top of described well intervals
@@ -194,86 +195,84 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
         Geopandas geodataframe containing only important information needed for next stage of analysis.
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
-    df[&#39;TOP_ELEV_FT&#39;] = df[&#39;SURFACE_ELEV&#39;] - df[depth_top_col]
-    df[&#39;BOT_ELEV_FT&#39;] = df[&#39;SURFACE_ELEV&#39;] - df[depth_bot_col]
+    df[&#39;TOP_ELEV&#39;] = df[&#39;SURFACE_ELEV&#39;] - df[depth_top_col]
+    df[&#39;BOT_ELEV&#39;] = df[&#39;SURFACE_ELEV&#39;] - df[depth_bot_col]
 
     layerList = range(1,layers+1)
     res_list = []
     resdf_list = []
+    print(df.columns)
     #Generate Column names based on (looped) integers
     for layer in layerList:
         zStr = &#39;ELEV&#39;
-        zColT = &#39;TOP_ELEV_FT&#39;
-        zColB = &#39;BOT_ELEV_FT&#39;
-        topCol = zStr+&#39;_FT_LAYER&#39;+str(layer)
+        zColT = &#39;TOP_ELEV&#39;
+        zColB = &#39;BOT_ELEV&#39;
+        topCol = zStr+&#39;_LAYER&#39;+str(layer)
         if layer != 9: #For all layers except the bottom layer....
-            botCol = zStr+&#39;_FT_LAYER&#39;+str(layer+1) #use the layer below it to 
+            botCol = zStr+&#39;_LAYER&#39;+str(layer+1) #use the layer below it to 
         else: #Otherwise, ...
-            botCol = &#34;BEDROCK_&#34;+zStr+&#34;_FT&#34; #Use the (corrected) bedrock depth
+            botCol = &#34;BEDROCK_&#34;+zStr #Use the (corrected) bedrock depth
 
-        print(df.columns)
-        #Divide records into 4 separate categories for ease of calculation, to be joined back together later  
+        #Divide records into 4 categories for ease of calculation, to be joined back together later  
             #Category 1: Well interval starts above layer top, ends within model layer
             #Category 2: Well interval is entirely contained withing model layer
             #Category 3: Well interval starts within model layer, continues through bottom of model layer
             #Category 4: well interval begins and ends on either side of model layer (model layer is contained within well layer)
 
         #records1 = intervals that go through the top of the layer and bottom is within layer
-        records1 = df.loc[(df[zColT] &gt;= df[topCol]) &amp; #Top of the well is above or equal to the top of the layer
+        records1 = df.loc[(df[zColT] &gt;= df[topCol]) &amp; #Top of the well interval is above or equal to the top of the layer
                         (df[zColB] &lt;= df[topCol]) &amp; # &amp; #Bottom is below the top of the layer
                         (df[zColB] &lt;= df[zColT])].copy() #Bottom is deeper than top (should already be the case)
-        records1[&#39;TARG_THICK_FT&#39;] = pd.DataFrame(np.round((records1.loc[:,topCol]-records1.loc[: , zColB]) * records1[&#39;TARGET&#39;],3)).copy() #Multiply &#34;target&#34; (1 or 0) by length within layer            
-        
+        records1[&#39;TARG_THICK&#39;] = pd.DataFrame(np.round((records1.loc[:,topCol]-records1.loc[: , zColB]) * records1[&#39;TARGET&#39;],3)).copy() #Multiply &#34;target&#34; (1 or 0) by length within layer            
         #records2 = entire interval is within layer
         records2 = df.loc[(df[zColT] &lt;= df[topCol]) &amp; #Top of the well is lower than top of the layer 
                     (df[zColB] &gt;= df[botCol]) &amp; #Bottom of the well is above bottom of the layer 
                     (df[zColB] &lt;= df[zColT])].copy() #Bottom ofthe well is deeper than or equal to top (should already be the case)
-        records2[&#39;TARG_THICK_FT&#39;] = pd.DataFrame(np.round((records2.loc[: , zColT] - records2.loc[: , zColB]) * records2[&#39;TARGET&#39;],3)).copy()
+        records2[&#39;TARG_THICK&#39;] = pd.DataFrame(np.round((records2.loc[: , zColT] - records2.loc[: , zColB]) * records2[&#39;TARGET&#39;],3)).copy()
 
         #records3 = intervals with top within layer and bottom of interval going through bottom of layer
         records3 = df.loc[(df[zColT] &gt; df[botCol]) &amp; #Top of the well is above bottom of layer
                     (df[zColB] &lt; df[botCol]) &amp; #Bottom of the well is below bottom of layer
                     (df[zColT] &lt;= df[topCol]) &amp; #Top of well is below top of layer
                     (df[zColB] &lt;= df[zColT])].copy() #Bottom is deeper than top (should already be the case)
-        records3[&#39;TARG_THICK_FT&#39;] = pd.DataFrame(np.round((records3.loc[: , zColT] - (records3.loc[:,botCol]))*records3[&#39;TARGET&#39;],3)).copy()
+        records3[&#39;TARG_THICK&#39;] = pd.DataFrame(np.round((records3.loc[: , zColT] - (records3.loc[:,botCol]))*records3[&#39;TARGET&#39;],3)).copy()
 
         #records4 = interval goes through entire layer
         records4 = df.loc[(df[zColT] &gt;= df[topCol]) &amp; #Top of well is above top of layer
                     (df[zColB] &lt; df[botCol]) &amp; #Bottom of well is below bottom of layer
                     (df[zColB] &lt;= df[zColT])].copy() #Bottom of well is below top of well
-        records4[&#39;TARG_THICK_FT&#39;] = pd.DataFrame(np.round((records4.loc[: , topCol]-records4.loc[: , botCol]) * records4[&#39;TARGET&#39;],3)).copy()
-        
+        records4[&#39;TARG_THICK&#39;] = pd.DataFrame(np.round((records4.loc[: , topCol]-records4.loc[: , botCol]) * records4[&#39;TARGET&#39;],3)).copy()
+
         #Put the four calculated record categories back together into single dataframe
         res = pd.concat([records1, records2, records3, records4])
-
         #The sign may be reversed if using depth rather than elevation
-        if (res[&#39;TARG_THICK_FT&#39;] &lt; 0).all():
-            res[&#39;TARG_THICK_FT&#39;] = res[&#39;TARG_THICK_FT&#39;] * -1
+        if (res[&#39;TARG_THICK&#39;] &lt; 0).all():
+            res[&#39;TARG_THICK&#39;] = res[&#39;TARG_THICK&#39;] * -1
         
         #Cannot have negative thicknesses
-        res[&#39;TARG_THICK_FT&#39;].clip(lower=0, inplace=True)
+        res[&#39;TARG_THICK&#39;].clip(lower=0, inplace=True)
         res[&#39;LAYER_THICK&#39;].clip(lower=0, inplace=True)
         
         #Get geometrys for each unique API/well
+        res.reset_index(drop=True, inplace=True)
         res_df = res.groupby(by=[&#39;API_NUMBER&#39;,&#39;LATITUDE&#39;,&#39;LONGITUDE&#39;], as_index=False).sum(numeric_only=True)#Calculate thickness for each well interval in the layer indicated (e.g., if there are two well intervals from same well in one model layer)
-        uniqInd = pd.DataFrame([v.values[0] for k, v in res.groupby(&#39;API_NUMBER&#39;).groups.items()]).loc[:,0]
+        uniqInd = pd.DataFrame([v.values[0] for k, v in res.groupby(by=[&#39;API_NUMBER&#39;,&#39;LATITUDE&#39;,&#39;LONGITUDE&#39;]).groups.items()]).loc[:,0]
         geomCol = res.loc[uniqInd, &#39;geometry&#39;]
         geomCol = pd.DataFrame(geomCol[~geomCol.index.duplicated(keep=&#39;first&#39;)]).reset_index()
         
 
-        res_df[&#39;TARG_THICK_PER&#39;] =  pd.DataFrame(np.round(res_df[&#39;TARG_THICK_FT&#39;]/res_df[&#39;LAYER_THICK&#39;],3)) #Calculate thickness as percent of total layer thickness
+        res_df[&#39;TARG_THICK_PER&#39;] =  pd.DataFrame(np.round(res_df[&#39;TARG_THICK&#39;]/res_df[&#39;LAYER_THICK&#39;],3)) #Calculate thickness as percent of total layer thickness
         #Replace np.inf and np.nans with 0
-        res_df[&#39;TARG_THICK_PER&#39;] = res_df[&#39;TARG_THICK_PER&#39;].where(res_df[&#39;TARG_THICK_PER&#39;]!=np.inf, other=0) 
-        res_df[&#39;TARG_THICK_PER&#39;] = res_df[&#39;TARG_THICK_PER&#39;].where(res_df[&#39;TARG_THICK_PER&#39;]!=np.nan, other=0) 
+        res_df[&#39;TARG_THICK_PER&#39;] = res_df[&#39;TARG_THICK_PER&#39;].where(res_df[&#39;TARG_THICK_PER&#39;]!=np.inf, other=0)
+        res_df[&#39;TARG_THICK_PER&#39;] = res_df[&#39;TARG_THICK_PER&#39;].where(res_df[&#39;TARG_THICK_PER&#39;]!=np.nan, other=0)
 
         res_df[&#34;LAYER&#34;] = layer #Just to have as part of the output file, include the present layer in the file itself as a separate column
-        res_df = res_df[[&#39;API_NUMBER&#39;, &#39;LATITUDE&#39;, &#39;LONGITUDE&#39;, &#39;LATITUDE_PROJ&#39;, &#39;LONGITUDE_PROJ&#39;,&#39;TOP&#39;, &#39;BOTTOM&#39;, &#39;TOP_ELEV_FT&#39;, &#39;BOT_ELEV_FT&#39;, &#39;SURFACE_ELEV&#39;, topCol, botCol,&#39;LAYER_THICK&#39;,&#39;TARG_THICK_FT&#39;, &#39;TARG_THICK_PER&#39;, &#39;LAYER&#39;]].copy() #Format dataframe for output
+        res_df = res_df[[&#39;API_NUMBER&#39;, &#39;LATITUDE&#39;, &#39;LONGITUDE&#39;, &#39;LATITUDE_PROJ&#39;, &#39;LONGITUDE_PROJ&#39;,&#39;TOP&#39;, &#39;BOTTOM&#39;, &#39;TOP_ELEV&#39;, &#39;BOT_ELEV&#39;, &#39;SURFACE_ELEV&#39;, topCol, botCol,&#39;LAYER_THICK&#39;,&#39;TARG_THICK&#39;, &#39;TARG_THICK_PER&#39;, &#39;LAYER&#39;]].copy() #Format dataframe for output
         res_df = gpd.GeoDataFrame(res_df, geometry=geomCol.loc[:,&#39;geometry&#39;])
         resdf_list.append(res_df)
         res_list.append(res)
 
-        if isinstance(export_dir, pathlib.PurePath) or type(export_dir) is str:
+        if isinstance(export_dir, (pathlib.PurePath, str)):
             export_dir = pathlib.Path(export_dir)
             if export_dir.is_dir():
                 pass
@@ -286,8 +285,12 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
             #Format and build export filepath
             export_dir = str(export_dir).replace(&#39;\\&#39;, &#39;/&#39;).replace(&#39;\\&#39;[0], &#39;/&#39;)
             zFillDigs = len(str(len(layerList)))
-            if outfile_prefix[-1]==&#39;_&#39;:
+            if str(outfile_prefix).endswith(&#39;_&#39;):
                 outfile_prefix = outfile_prefix[:-1]
+            elif outfile_prefix is None:
+                outfile_prefix = &#39;&#39;
+            
+
             if export_dir[-1] ==&#39;/&#39;:
                 export_dir = export_dir[:-1]
             nowStr = str(datetime.datetime.today().date())+&#39;_&#39;+str(datetime.datetime.today().hour)+&#39;-&#39;+str(datetime.datetime.today().minute)+&#39;-&#39;+str(datetime.datetime.today().second)
@@ -304,9 +307,8 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
     else:
         return resdf_list
 
-
 #Interpolate layers to model grid
-def layer_interp(points, grid, layers=None, method=&#39;nearest&#39;, return_type=&#39;dataarray&#39;, export_dir=None, targetcol=&#39;TARG_THICK_PER&#39;, lyrcol=&#39;LAYER&#39;, xcol=None, ycol=None, xcoord=&#39;x&#39;, ycoord=&#39;y&#39;, log=False, verbose=False, **kwargs):
+def layer_interp(points, grid, layers=None, interp_kind=&#39;nearest&#39;, return_type=&#39;dataarray&#39;, export_dir=None, target_col=&#39;TARG_THICK_PER&#39;, layer_col=&#39;LAYER&#39;, xcol=None, ycol=None, xcoord=&#39;x&#39;, ycoord=&#39;y&#39;, log=False, verbose=False, **kwargs):
     &#34;&#34;&#34;Function to interpolate results, going from points to grid data. Uses scipy.interpolate module.
 
     Parameters
@@ -314,18 +316,18 @@ def layer_interp(points, grid, layers=None, method=&#39;nearest&#39;, return_typ
     points : list
         List containing pandas dataframes or geopandas geoadataframes containing the point data. Should be resDF_list output from layer_target_thick().
     grid : xr.DataArray or xr.Dataset
-        Xarray dataarray with the coordinates/spatial reference of the output grid to interpolate to
+        Xarray DataArray or DataSet with the coordinates/spatial reference of the output grid to interpolate to
     layers : int, default=None
         Number of layers for interpolation. If None, uses the length ofthe points list to determine number of layers. By default None.
-    method : str, {&#39;nearest&#39;, &#39;interp2d&#39;,&#39;linear&#39;, &#39;cloughtocher&#39;, &#39;radial basis function&#39;}
+    interp_kind : str, {&#39;nearest&#39;, &#39;interp2d&#39;,&#39;linear&#39;, &#39;cloughtocher&#39;, &#39;radial basis function&#39;}
         Type of interpolation to use. See scipy.interpolate N-D scattered. Values can be any of the following (also shown in &#34;kind&#34; column of N-D scattered section of table here: https://docs.scipy.org/doc/scipy/tutorial/interpolate.html). By default &#39;nearest&#39;
     return_type : str, {&#39;dataarray&#39;, &#39;dataset&#39;}
         Type of xarray object to return, either xr.DataArray or xr.Dataset, by default &#39;dataarray.&#39;
     export_dir : str or pathlib.Path, default=None
         Export directory for interpolated grids, using w4h.export_grids(). If None, does not export, by default None.
-    targetcol : str, default = &#39;TARG_THICK_PER&#39;
+    target_col : str, default = &#39;TARG_THICK_PER&#39;
         Name of column in points containing data to be interpolated, by default &#39;TARG_THICK_PER&#39;.
-    lyrcol : str, default = &#39;Layer&#39;
+    layer_col : str, default = &#39;Layer&#39;
         Name of column containing layer number. Not currently used, by default &#39;LAYER&#39;
     xcol : str, default = &#39;None&#39;
         Name of column containing x coordinates. If None, will look for &#39;geometry&#39; column, as in a geopandas.GeoDataframe. By default None
@@ -338,7 +340,7 @@ def layer_interp(points, grid, layers=None, method=&#39;nearest&#39;, return_typ
     log : bool, default = True
         Whether to log inputs and outputs to log file.
     **kwargs
-        Keyword arguments to be read directly into whichever scipy.interpolate function is designated by the method parameter.
+        Keyword arguments to be read directly into whichever scipy.interpolate function is designated by the interp_kind parameter.
 
     Returns
     -------
@@ -346,6 +348,9 @@ def layer_interp(points, grid, layers=None, method=&#39;nearest&#39;, return_typ
         By default, returns an xr.DataArray object with the layers added as a new dimension called Layer. Can also specify return_type=&#39;dataset&#39; to return an xr.Dataset with each layer as a separate variable.
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
+    if verbose:
+        verbose_print(layer_interp, locals(), exclude_params=[&#39;points&#39;, &#39;grid&#39;])
 
     nnList = [&#39;nearest&#39;, &#39;nearest neighbor&#39;, &#39;nearestneighbor&#39;,&#39;neighbor&#39;,  &#39;nn&#39;,&#39;n&#39;]
     splineList = [&#39;interp2d&#39;, &#39;interp2&#39;, &#39;interp&#39;, &#39;spline&#39;, &#39;spl&#39;, &#39;sp&#39;, &#39;s&#39;]
@@ -392,8 +397,8 @@ def layer_interp(points, grid, layers=None, method=&#39;nearest&#39;, return_typ
         else:
             dataY = pts[ycol]
 
-        #layer = pts[lyrcol]        
-        interpVal = pts[targetcol]
+        #layer = pts[layer_col]        
+        interpVal = pts[target_col]
 
         #return points
         dataX.dropna(inplace=True)
@@ -409,39 +414,39 @@ def layer_interp(points, grid, layers=None, method=&#39;nearest&#39;, return_typ
         dataY = dataY.reset_index(drop=True)
         interpVal = interpVal.reset_index(drop=True)
         
-        if method.lower() in nnList:
+        if interp_kind.lower() in nnList:
             interpType = &#39;Nearest Neighbor&#39;
             X, Y = np.meshgrid(X, Y, sparse=True) #2D Grid for interpolation
             dataPoints = np.array(list(zip(dataX, dataY)))
             interp = interpolate.NearestNDInterpolator(dataPoints, interpVal, **kwargs)
             Z = interp(X, Y)
-        elif method.lower() in linList:
+        elif interp_kind.lower() in linList:
             interpType = &#39;Linear&#39; 
             dataPoints = np.array(list(zip(dataX, dataY)))
             interp = interpolate.LinearNDInterpolator(dataPoints, interpVal, **kwargs)
             X, Y = np.meshgrid(X, Y, sparse=True) #2D Grid for interpolation
             Z = interp(X, Y)
-        elif method.lower() in ctList:
+        elif interp_kind.lower() in ctList:
             interpType = &#39;Clough-Toucher&#39;
             X, Y = np.meshgrid(X, Y, sparse=True) #2D Grid for interpolation
             if &#39;tol&#39; not in kwargs:
                 kwargs[&#39;tol&#39;] = 1e10
             interp = interpolate.CloughTocher2DInterpolator(list(zip(dataX, dataY)), interpVal, **kwargs)
             Z = interp(X, Y) 
-        elif method.lower() in rbfList:
+        elif interp_kind.lower() in rbfList:
             interpType = &#39;Radial Basis&#39;
             dataXY=  np.column_stack((dataX, dataY))
             interp = interpolate.RBFInterpolator(dataXY, interpVal, **kwargs)
-            print(&#34;Radial Basis Function does not work well with many well-based datasets. Consider instead specifying &#39;nearest&#39;, &#39;linear&#39;, &#39;spline&#39;, or &#39;clough tocher&#39; for interpolation method.&#34;)
+            print(&#34;Radial Basis Function does not work well with many well-based datasets. Consider instead specifying &#39;nearest&#39;, &#39;linear&#39;, &#39;spline&#39;, or &#39;clough tocher&#39; for interpolation interp_kind.&#34;)
             Z = interp(np.column_stack((X.ravel(), Y.ravel()))).reshape(X.shape)
-        elif method.lower() in splineList:
+        elif interp_kind.lower() in splineList:
             interpType = &#39;Spline Interpolation&#39;
             Z = interpolate.bisplrep(dataX, dataY, interpVal, **kwargs)
                 #interp = interpolate.interp2d(dataX, dataY, interpVal, kind=lin_kind, **kwargs)
                 #Z = interp(X, Y)
         else:
             if verbose:
-                print(&#39;Specified interpolation method not recognized, using nearest neighbor.&#39;)
+                print(&#39;Specified interpolation interp_kind not recognized, using nearest neighbor.&#39;)
             interpType = &#39;Nearest Neighbor&#39;
             X, Y = np.meshgrid(X, Y, sparse=True) #2D Grid for interpolation
             interp = interpolate.NearestNDInterpolator(list(zip(dataX, dataY)), interpVal, **kwargs)
@@ -485,6 +490,8 @@ def layer_interp(points, grid, layers=None, method=&#39;nearest&#39;, return_typ
         interp_data = xr.Dataset(daDict)
         if verbose:
             print(&#39;Done with interpolation, getting global attrs&#39;)
+
+        #Get common attributes from all layers to use as &#34;global&#34; attributes
         common_attrs = {}
         for i, (var_name, data_array) in enumerate(interp_data.data_vars.items()):
             if i == 0:
@@ -493,13 +500,13 @@ def layer_interp(points, grid, layers=None, method=&#39;nearest&#39;, return_typ
                 common_attrs = {k: v for k, v in common_attrs.items() if k in data_array.attrs and data_array.attrs[k] == v}
         interp_data.attrs.update(common_attrs)
     else:
-        print(&#34;{} is not a valid input for return_type. Please set return_type to either &#39;dataarray&#39; or &#39;dataset&#39;&#34;.format(return_type))
+        print(f&#34;{return_type} is not a valid input for return_type. Please set return_type to either &#39;dataarray&#39; or &#39;dataset&#39;&#34;)
         return
 
     if verbose:
         for i, layer_data in enumerate(interp_data):
             pts = points[i]
-            pts.plot(c=pts[targetcol])
+            pts.plot(c=pts[target_col])
 
     if export_dir is None:
         pass
@@ -674,7 +681,7 @@ def combine_dataset(layer_dataset, surface_elev, bedrock_elev, layer_thick, log=
 </details>
 </dd>
 <dt id="w4h.layers.layer_interp"><code class="name flex">
-<span>def <span class="ident">layer_interp</span></span>(<span>points, grid, layers=None, method='nearest', return_type='dataarray', export_dir=None, targetcol='TARG_THICK_PER', lyrcol='LAYER', xcol=None, ycol=None, xcoord='x', ycoord='y', log=False, verbose=False, **kwargs)</span>
+<span>def <span class="ident">layer_interp</span></span>(<span>points, grid, layers=None, interp_kind='nearest', return_type='dataarray', export_dir=None, target_col='TARG_THICK_PER', layer_col='LAYER', xcol=None, ycol=None, xcoord='x', ycoord='y', log=False, verbose=False, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to interpolate results, going from points to grid data. Uses scipy.interpolate module.</p>
@@ -683,18 +690,18 @@ def combine_dataset(layer_dataset, surface_elev, bedrock_elev, layer_thick, log=
 <dt><strong><code>points</code></strong> :&ensp;<code>list</code></dt>
 <dd>List containing pandas dataframes or geopandas geoadataframes containing the point data. Should be resDF_list output from layer_target_thick().</dd>
 <dt><strong><code>grid</code></strong> :&ensp;<code>xr.DataArray</code> or <code>xr.Dataset</code></dt>
-<dd>Xarray dataarray with the coordinates/spatial reference of the output grid to interpolate to</dd>
+<dd>Xarray DataArray or DataSet with the coordinates/spatial reference of the output grid to interpolate to</dd>
 <dt><strong><code>layers</code></strong> :&ensp;<code>int</code>, default=<code>None</code></dt>
 <dd>Number of layers for interpolation. If None, uses the length ofthe points list to determine number of layers. By default None.</dd>
-<dt><strong><code>method</code></strong> :&ensp;<code>str, {'nearest', 'interp2d','linear', 'cloughtocher', 'radial basis function'}</code></dt>
+<dt><strong><code>interp_kind</code></strong> :&ensp;<code>str, {'nearest', 'interp2d','linear', 'cloughtocher', 'radial basis function'}</code></dt>
 <dd>Type of interpolation to use. See scipy.interpolate N-D scattered. Values can be any of the following (also shown in "kind" column of N-D scattered section of table here: <a href="https://docs.scipy.org/doc/scipy/tutorial/interpolate.html">https://docs.scipy.org/doc/scipy/tutorial/interpolate.html</a>). By default 'nearest'</dd>
 <dt><strong><code>return_type</code></strong> :&ensp;<code>str, {'dataarray', 'dataset'}</code></dt>
 <dd>Type of xarray object to return, either xr.DataArray or xr.Dataset, by default 'dataarray.'</dd>
 <dt><strong><code>export_dir</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path</code>, default=<code>None</code></dt>
 <dd>Export directory for interpolated grids, using w4h.export_grids(). If None, does not export, by default None.</dd>
-<dt><strong><code>targetcol</code></strong> :&ensp;<code>str</code>, default <code>= 'TARG_THICK_PER'</code></dt>
+<dt><strong><code>target_col</code></strong> :&ensp;<code>str</code>, default <code>= 'TARG_THICK_PER'</code></dt>
 <dd>Name of column in points containing data to be interpolated, by default 'TARG_THICK_PER'.</dd>
-<dt><strong><code>lyrcol</code></strong> :&ensp;<code>str</code>, default <code>= 'Layer'</code></dt>
+<dt><strong><code>layer_col</code></strong> :&ensp;<code>str</code>, default <code>= 'Layer'</code></dt>
 <dd>Name of column containing layer number. Not currently used, by default 'LAYER'</dd>
 <dt><strong><code>xcol</code></strong> :&ensp;<code>str</code>, default <code>= 'None'</code></dt>
 <dd>Name of column containing x coordinates. If None, will look for 'geometry' column, as in a geopandas.GeoDataframe. By default None</dd>
@@ -707,7 +714,7 @@ def combine_dataset(layer_dataset, surface_elev, bedrock_elev, layer_thick, log=
 <dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= True</code></dt>
 <dd>Whether to log inputs and outputs to log file.</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
-<dd>Keyword arguments to be read directly into whichever scipy.interpolate function is designated by the method parameter.</dd>
+<dd>Keyword arguments to be read directly into whichever scipy.interpolate function is designated by the interp_kind parameter.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -718,7 +725,7 @@ def combine_dataset(layer_dataset, surface_elev, bedrock_elev, layer_thick, log=
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def layer_interp(points, grid, layers=None, method=&#39;nearest&#39;, return_type=&#39;dataarray&#39;, export_dir=None, targetcol=&#39;TARG_THICK_PER&#39;, lyrcol=&#39;LAYER&#39;, xcol=None, ycol=None, xcoord=&#39;x&#39;, ycoord=&#39;y&#39;, log=False, verbose=False, **kwargs):
+<pre><code class="python">def layer_interp(points, grid, layers=None, interp_kind=&#39;nearest&#39;, return_type=&#39;dataarray&#39;, export_dir=None, target_col=&#39;TARG_THICK_PER&#39;, layer_col=&#39;LAYER&#39;, xcol=None, ycol=None, xcoord=&#39;x&#39;, ycoord=&#39;y&#39;, log=False, verbose=False, **kwargs):
     &#34;&#34;&#34;Function to interpolate results, going from points to grid data. Uses scipy.interpolate module.
 
     Parameters
@@ -726,18 +733,18 @@ def combine_dataset(layer_dataset, surface_elev, bedrock_elev, layer_thick, log=
     points : list
         List containing pandas dataframes or geopandas geoadataframes containing the point data. Should be resDF_list output from layer_target_thick().
     grid : xr.DataArray or xr.Dataset
-        Xarray dataarray with the coordinates/spatial reference of the output grid to interpolate to
+        Xarray DataArray or DataSet with the coordinates/spatial reference of the output grid to interpolate to
     layers : int, default=None
         Number of layers for interpolation. If None, uses the length ofthe points list to determine number of layers. By default None.
-    method : str, {&#39;nearest&#39;, &#39;interp2d&#39;,&#39;linear&#39;, &#39;cloughtocher&#39;, &#39;radial basis function&#39;}
+    interp_kind : str, {&#39;nearest&#39;, &#39;interp2d&#39;,&#39;linear&#39;, &#39;cloughtocher&#39;, &#39;radial basis function&#39;}
         Type of interpolation to use. See scipy.interpolate N-D scattered. Values can be any of the following (also shown in &#34;kind&#34; column of N-D scattered section of table here: https://docs.scipy.org/doc/scipy/tutorial/interpolate.html). By default &#39;nearest&#39;
     return_type : str, {&#39;dataarray&#39;, &#39;dataset&#39;}
         Type of xarray object to return, either xr.DataArray or xr.Dataset, by default &#39;dataarray.&#39;
     export_dir : str or pathlib.Path, default=None
         Export directory for interpolated grids, using w4h.export_grids(). If None, does not export, by default None.
-    targetcol : str, default = &#39;TARG_THICK_PER&#39;
+    target_col : str, default = &#39;TARG_THICK_PER&#39;
         Name of column in points containing data to be interpolated, by default &#39;TARG_THICK_PER&#39;.
-    lyrcol : str, default = &#39;Layer&#39;
+    layer_col : str, default = &#39;Layer&#39;
         Name of column containing layer number. Not currently used, by default &#39;LAYER&#39;
     xcol : str, default = &#39;None&#39;
         Name of column containing x coordinates. If None, will look for &#39;geometry&#39; column, as in a geopandas.GeoDataframe. By default None
@@ -750,7 +757,7 @@ def combine_dataset(layer_dataset, surface_elev, bedrock_elev, layer_thick, log=
     log : bool, default = True
         Whether to log inputs and outputs to log file.
     **kwargs
-        Keyword arguments to be read directly into whichever scipy.interpolate function is designated by the method parameter.
+        Keyword arguments to be read directly into whichever scipy.interpolate function is designated by the interp_kind parameter.
 
     Returns
     -------
@@ -758,6 +765,9 @@ def combine_dataset(layer_dataset, surface_elev, bedrock_elev, layer_thick, log=
         By default, returns an xr.DataArray object with the layers added as a new dimension called Layer. Can also specify return_type=&#39;dataset&#39; to return an xr.Dataset with each layer as a separate variable.
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
+    if verbose:
+        verbose_print(layer_interp, locals(), exclude_params=[&#39;points&#39;, &#39;grid&#39;])
 
     nnList = [&#39;nearest&#39;, &#39;nearest neighbor&#39;, &#39;nearestneighbor&#39;,&#39;neighbor&#39;,  &#39;nn&#39;,&#39;n&#39;]
     splineList = [&#39;interp2d&#39;, &#39;interp2&#39;, &#39;interp&#39;, &#39;spline&#39;, &#39;spl&#39;, &#39;sp&#39;, &#39;s&#39;]
@@ -804,8 +814,8 @@ def combine_dataset(layer_dataset, surface_elev, bedrock_elev, layer_thick, log=
         else:
             dataY = pts[ycol]
 
-        #layer = pts[lyrcol]        
-        interpVal = pts[targetcol]
+        #layer = pts[layer_col]        
+        interpVal = pts[target_col]
 
         #return points
         dataX.dropna(inplace=True)
@@ -821,39 +831,39 @@ def combine_dataset(layer_dataset, surface_elev, bedrock_elev, layer_thick, log=
         dataY = dataY.reset_index(drop=True)
         interpVal = interpVal.reset_index(drop=True)
         
-        if method.lower() in nnList:
+        if interp_kind.lower() in nnList:
             interpType = &#39;Nearest Neighbor&#39;
             X, Y = np.meshgrid(X, Y, sparse=True) #2D Grid for interpolation
             dataPoints = np.array(list(zip(dataX, dataY)))
             interp = interpolate.NearestNDInterpolator(dataPoints, interpVal, **kwargs)
             Z = interp(X, Y)
-        elif method.lower() in linList:
+        elif interp_kind.lower() in linList:
             interpType = &#39;Linear&#39; 
             dataPoints = np.array(list(zip(dataX, dataY)))
             interp = interpolate.LinearNDInterpolator(dataPoints, interpVal, **kwargs)
             X, Y = np.meshgrid(X, Y, sparse=True) #2D Grid for interpolation
             Z = interp(X, Y)
-        elif method.lower() in ctList:
+        elif interp_kind.lower() in ctList:
             interpType = &#39;Clough-Toucher&#39;
             X, Y = np.meshgrid(X, Y, sparse=True) #2D Grid for interpolation
             if &#39;tol&#39; not in kwargs:
                 kwargs[&#39;tol&#39;] = 1e10
             interp = interpolate.CloughTocher2DInterpolator(list(zip(dataX, dataY)), interpVal, **kwargs)
             Z = interp(X, Y) 
-        elif method.lower() in rbfList:
+        elif interp_kind.lower() in rbfList:
             interpType = &#39;Radial Basis&#39;
             dataXY=  np.column_stack((dataX, dataY))
             interp = interpolate.RBFInterpolator(dataXY, interpVal, **kwargs)
-            print(&#34;Radial Basis Function does not work well with many well-based datasets. Consider instead specifying &#39;nearest&#39;, &#39;linear&#39;, &#39;spline&#39;, or &#39;clough tocher&#39; for interpolation method.&#34;)
+            print(&#34;Radial Basis Function does not work well with many well-based datasets. Consider instead specifying &#39;nearest&#39;, &#39;linear&#39;, &#39;spline&#39;, or &#39;clough tocher&#39; for interpolation interp_kind.&#34;)
             Z = interp(np.column_stack((X.ravel(), Y.ravel()))).reshape(X.shape)
-        elif method.lower() in splineList:
+        elif interp_kind.lower() in splineList:
             interpType = &#39;Spline Interpolation&#39;
             Z = interpolate.bisplrep(dataX, dataY, interpVal, **kwargs)
                 #interp = interpolate.interp2d(dataX, dataY, interpVal, kind=lin_kind, **kwargs)
                 #Z = interp(X, Y)
         else:
             if verbose:
-                print(&#39;Specified interpolation method not recognized, using nearest neighbor.&#39;)
+                print(&#39;Specified interpolation interp_kind not recognized, using nearest neighbor.&#39;)
             interpType = &#39;Nearest Neighbor&#39;
             X, Y = np.meshgrid(X, Y, sparse=True) #2D Grid for interpolation
             interp = interpolate.NearestNDInterpolator(list(zip(dataX, dataY)), interpVal, **kwargs)
@@ -897,6 +907,8 @@ def combine_dataset(layer_dataset, surface_elev, bedrock_elev, layer_thick, log=
         interp_data = xr.Dataset(daDict)
         if verbose:
             print(&#39;Done with interpolation, getting global attrs&#39;)
+
+        #Get common attributes from all layers to use as &#34;global&#34; attributes
         common_attrs = {}
         for i, (var_name, data_array) in enumerate(interp_data.data_vars.items()):
             if i == 0:
@@ -905,13 +917,13 @@ def combine_dataset(layer_dataset, surface_elev, bedrock_elev, layer_thick, log=
                 common_attrs = {k: v for k, v in common_attrs.items() if k in data_array.attrs and data_array.attrs[k] == v}
         interp_data.attrs.update(common_attrs)
     else:
-        print(&#34;{} is not a valid input for return_type. Please set return_type to either &#39;dataarray&#39; or &#39;dataset&#39;&#34;.format(return_type))
+        print(f&#34;{return_type} is not a valid input for return_type. Please set return_type to either &#39;dataarray&#39; or &#39;dataset&#39;&#34;)
         return
 
     if verbose:
         for i, layer_data in enumerate(interp_data):
             pts = points[i]
-            pts.plot(c=pts[targetcol])
+            pts.plot(c=pts[target_col])
 
     if export_dir is None:
         pass
@@ -923,7 +935,7 @@ def combine_dataset(layer_dataset, surface_elev, bedrock_elev, layer_thick, log=
 </details>
 </dd>
 <dt id="w4h.layers.layer_target_thick"><code class="name flex">
-<span>def <span class="ident">layer_target_thick</span></span>(<span>df, layers=9, return_all=False, export_dir=None, outfile_prefix='', depth_top_col='TOP', depth_bot_col='BOTTOM', log=False)</span>
+<span>def <span class="ident">layer_target_thick</span></span>(<span>df, layers=9, return_all=False, export_dir=None, outfile_prefix=None, depth_top_col='TOP', depth_bot_col='BOTTOM', log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to calculate thickness of target material in each layer at each well point</p>
@@ -938,7 +950,7 @@ def combine_dataset(layer_dataset, surface_elev, bedrock_elev, layer_thick, log=
 If False, return list of geopandas.geodataframes with only essential information for each layer.</dd>
 <dt><strong><code>export_dir</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path</code>, default=<code>None</code></dt>
 <dd>If str or pathlib.Path, should be directory to which to export dataframes built in function.</dd>
-<dt><strong><code>outfile_prefix</code></strong> :&ensp;<code>str</code>, default=<code>''</code></dt>
+<dt><strong><code>outfile_prefix</code></strong> :&ensp;<code>str</code>, default=<code>None</code></dt>
 <dd>Only used if export_dir is set. Will be used at the start of the exported filenames</dd>
 <dt><strong><code>depth_top_col</code></strong> :&ensp;<code>str</code>, default=<code>'TOP'</code></dt>
 <dd>Name of column containing data for depth to top of described well intervals</dd>
@@ -956,7 +968,7 @@ If False, return list of geopandas.geodataframes with only essential information
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_prefix=&#39;&#39;, depth_top_col=&#39;TOP&#39;, depth_bot_col=&#39;BOTTOM&#39;, log=False):
+<pre><code class="python">def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_prefix=None, depth_top_col=&#39;TOP&#39;, depth_bot_col=&#39;BOTTOM&#39;, log=False):
     &#34;&#34;&#34;Function to calculate thickness of target material in each layer at each well point
 
     Parameters
@@ -970,7 +982,7 @@ If False, return list of geopandas.geodataframes with only essential information
         If False, return list of geopandas.geodataframes with only essential information for each layer.
     export_dir : str or pathlib.Path, default=None
         If str or pathlib.Path, should be directory to which to export dataframes built in function.
-    outfile_prefix : str, default=&#39;&#39;
+    outfile_prefix : str, default=None
         Only used if export_dir is set. Will be used at the start of the exported filenames
     depth_top_col : str, default=&#39;TOP&#39;
         Name of column containing data for depth to top of described well intervals
@@ -985,86 +997,84 @@ If False, return list of geopandas.geodataframes with only essential information
         Geopandas geodataframe containing only important information needed for next stage of analysis.
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
-    df[&#39;TOP_ELEV_FT&#39;] = df[&#39;SURFACE_ELEV&#39;] - df[depth_top_col]
-    df[&#39;BOT_ELEV_FT&#39;] = df[&#39;SURFACE_ELEV&#39;] - df[depth_bot_col]
+    df[&#39;TOP_ELEV&#39;] = df[&#39;SURFACE_ELEV&#39;] - df[depth_top_col]
+    df[&#39;BOT_ELEV&#39;] = df[&#39;SURFACE_ELEV&#39;] - df[depth_bot_col]
 
     layerList = range(1,layers+1)
     res_list = []
     resdf_list = []
+    print(df.columns)
     #Generate Column names based on (looped) integers
     for layer in layerList:
         zStr = &#39;ELEV&#39;
-        zColT = &#39;TOP_ELEV_FT&#39;
-        zColB = &#39;BOT_ELEV_FT&#39;
-        topCol = zStr+&#39;_FT_LAYER&#39;+str(layer)
+        zColT = &#39;TOP_ELEV&#39;
+        zColB = &#39;BOT_ELEV&#39;
+        topCol = zStr+&#39;_LAYER&#39;+str(layer)
         if layer != 9: #For all layers except the bottom layer....
-            botCol = zStr+&#39;_FT_LAYER&#39;+str(layer+1) #use the layer below it to 
+            botCol = zStr+&#39;_LAYER&#39;+str(layer+1) #use the layer below it to 
         else: #Otherwise, ...
-            botCol = &#34;BEDROCK_&#34;+zStr+&#34;_FT&#34; #Use the (corrected) bedrock depth
+            botCol = &#34;BEDROCK_&#34;+zStr #Use the (corrected) bedrock depth
 
-        print(df.columns)
-        #Divide records into 4 separate categories for ease of calculation, to be joined back together later  
+        #Divide records into 4 categories for ease of calculation, to be joined back together later  
             #Category 1: Well interval starts above layer top, ends within model layer
             #Category 2: Well interval is entirely contained withing model layer
             #Category 3: Well interval starts within model layer, continues through bottom of model layer
             #Category 4: well interval begins and ends on either side of model layer (model layer is contained within well layer)
 
         #records1 = intervals that go through the top of the layer and bottom is within layer
-        records1 = df.loc[(df[zColT] &gt;= df[topCol]) &amp; #Top of the well is above or equal to the top of the layer
+        records1 = df.loc[(df[zColT] &gt;= df[topCol]) &amp; #Top of the well interval is above or equal to the top of the layer
                         (df[zColB] &lt;= df[topCol]) &amp; # &amp; #Bottom is below the top of the layer
                         (df[zColB] &lt;= df[zColT])].copy() #Bottom is deeper than top (should already be the case)
-        records1[&#39;TARG_THICK_FT&#39;] = pd.DataFrame(np.round((records1.loc[:,topCol]-records1.loc[: , zColB]) * records1[&#39;TARGET&#39;],3)).copy() #Multiply &#34;target&#34; (1 or 0) by length within layer            
-        
+        records1[&#39;TARG_THICK&#39;] = pd.DataFrame(np.round((records1.loc[:,topCol]-records1.loc[: , zColB]) * records1[&#39;TARGET&#39;],3)).copy() #Multiply &#34;target&#34; (1 or 0) by length within layer            
         #records2 = entire interval is within layer
         records2 = df.loc[(df[zColT] &lt;= df[topCol]) &amp; #Top of the well is lower than top of the layer 
                     (df[zColB] &gt;= df[botCol]) &amp; #Bottom of the well is above bottom of the layer 
                     (df[zColB] &lt;= df[zColT])].copy() #Bottom ofthe well is deeper than or equal to top (should already be the case)
-        records2[&#39;TARG_THICK_FT&#39;] = pd.DataFrame(np.round((records2.loc[: , zColT] - records2.loc[: , zColB]) * records2[&#39;TARGET&#39;],3)).copy()
+        records2[&#39;TARG_THICK&#39;] = pd.DataFrame(np.round((records2.loc[: , zColT] - records2.loc[: , zColB]) * records2[&#39;TARGET&#39;],3)).copy()
 
         #records3 = intervals with top within layer and bottom of interval going through bottom of layer
         records3 = df.loc[(df[zColT] &gt; df[botCol]) &amp; #Top of the well is above bottom of layer
                     (df[zColB] &lt; df[botCol]) &amp; #Bottom of the well is below bottom of layer
                     (df[zColT] &lt;= df[topCol]) &amp; #Top of well is below top of layer
                     (df[zColB] &lt;= df[zColT])].copy() #Bottom is deeper than top (should already be the case)
-        records3[&#39;TARG_THICK_FT&#39;] = pd.DataFrame(np.round((records3.loc[: , zColT] - (records3.loc[:,botCol]))*records3[&#39;TARGET&#39;],3)).copy()
+        records3[&#39;TARG_THICK&#39;] = pd.DataFrame(np.round((records3.loc[: , zColT] - (records3.loc[:,botCol]))*records3[&#39;TARGET&#39;],3)).copy()
 
         #records4 = interval goes through entire layer
         records4 = df.loc[(df[zColT] &gt;= df[topCol]) &amp; #Top of well is above top of layer
                     (df[zColB] &lt; df[botCol]) &amp; #Bottom of well is below bottom of layer
                     (df[zColB] &lt;= df[zColT])].copy() #Bottom of well is below top of well
-        records4[&#39;TARG_THICK_FT&#39;] = pd.DataFrame(np.round((records4.loc[: , topCol]-records4.loc[: , botCol]) * records4[&#39;TARGET&#39;],3)).copy()
-        
+        records4[&#39;TARG_THICK&#39;] = pd.DataFrame(np.round((records4.loc[: , topCol]-records4.loc[: , botCol]) * records4[&#39;TARGET&#39;],3)).copy()
+
         #Put the four calculated record categories back together into single dataframe
         res = pd.concat([records1, records2, records3, records4])
-
         #The sign may be reversed if using depth rather than elevation
-        if (res[&#39;TARG_THICK_FT&#39;] &lt; 0).all():
-            res[&#39;TARG_THICK_FT&#39;] = res[&#39;TARG_THICK_FT&#39;] * -1
+        if (res[&#39;TARG_THICK&#39;] &lt; 0).all():
+            res[&#39;TARG_THICK&#39;] = res[&#39;TARG_THICK&#39;] * -1
         
         #Cannot have negative thicknesses
-        res[&#39;TARG_THICK_FT&#39;].clip(lower=0, inplace=True)
+        res[&#39;TARG_THICK&#39;].clip(lower=0, inplace=True)
         res[&#39;LAYER_THICK&#39;].clip(lower=0, inplace=True)
         
         #Get geometrys for each unique API/well
+        res.reset_index(drop=True, inplace=True)
         res_df = res.groupby(by=[&#39;API_NUMBER&#39;,&#39;LATITUDE&#39;,&#39;LONGITUDE&#39;], as_index=False).sum(numeric_only=True)#Calculate thickness for each well interval in the layer indicated (e.g., if there are two well intervals from same well in one model layer)
-        uniqInd = pd.DataFrame([v.values[0] for k, v in res.groupby(&#39;API_NUMBER&#39;).groups.items()]).loc[:,0]
+        uniqInd = pd.DataFrame([v.values[0] for k, v in res.groupby(by=[&#39;API_NUMBER&#39;,&#39;LATITUDE&#39;,&#39;LONGITUDE&#39;]).groups.items()]).loc[:,0]
         geomCol = res.loc[uniqInd, &#39;geometry&#39;]
         geomCol = pd.DataFrame(geomCol[~geomCol.index.duplicated(keep=&#39;first&#39;)]).reset_index()
         
 
-        res_df[&#39;TARG_THICK_PER&#39;] =  pd.DataFrame(np.round(res_df[&#39;TARG_THICK_FT&#39;]/res_df[&#39;LAYER_THICK&#39;],3)) #Calculate thickness as percent of total layer thickness
+        res_df[&#39;TARG_THICK_PER&#39;] =  pd.DataFrame(np.round(res_df[&#39;TARG_THICK&#39;]/res_df[&#39;LAYER_THICK&#39;],3)) #Calculate thickness as percent of total layer thickness
         #Replace np.inf and np.nans with 0
-        res_df[&#39;TARG_THICK_PER&#39;] = res_df[&#39;TARG_THICK_PER&#39;].where(res_df[&#39;TARG_THICK_PER&#39;]!=np.inf, other=0) 
-        res_df[&#39;TARG_THICK_PER&#39;] = res_df[&#39;TARG_THICK_PER&#39;].where(res_df[&#39;TARG_THICK_PER&#39;]!=np.nan, other=0) 
+        res_df[&#39;TARG_THICK_PER&#39;] = res_df[&#39;TARG_THICK_PER&#39;].where(res_df[&#39;TARG_THICK_PER&#39;]!=np.inf, other=0)
+        res_df[&#39;TARG_THICK_PER&#39;] = res_df[&#39;TARG_THICK_PER&#39;].where(res_df[&#39;TARG_THICK_PER&#39;]!=np.nan, other=0)
 
         res_df[&#34;LAYER&#34;] = layer #Just to have as part of the output file, include the present layer in the file itself as a separate column
-        res_df = res_df[[&#39;API_NUMBER&#39;, &#39;LATITUDE&#39;, &#39;LONGITUDE&#39;, &#39;LATITUDE_PROJ&#39;, &#39;LONGITUDE_PROJ&#39;,&#39;TOP&#39;, &#39;BOTTOM&#39;, &#39;TOP_ELEV_FT&#39;, &#39;BOT_ELEV_FT&#39;, &#39;SURFACE_ELEV&#39;, topCol, botCol,&#39;LAYER_THICK&#39;,&#39;TARG_THICK_FT&#39;, &#39;TARG_THICK_PER&#39;, &#39;LAYER&#39;]].copy() #Format dataframe for output
+        res_df = res_df[[&#39;API_NUMBER&#39;, &#39;LATITUDE&#39;, &#39;LONGITUDE&#39;, &#39;LATITUDE_PROJ&#39;, &#39;LONGITUDE_PROJ&#39;,&#39;TOP&#39;, &#39;BOTTOM&#39;, &#39;TOP_ELEV&#39;, &#39;BOT_ELEV&#39;, &#39;SURFACE_ELEV&#39;, topCol, botCol,&#39;LAYER_THICK&#39;,&#39;TARG_THICK&#39;, &#39;TARG_THICK_PER&#39;, &#39;LAYER&#39;]].copy() #Format dataframe for output
         res_df = gpd.GeoDataFrame(res_df, geometry=geomCol.loc[:,&#39;geometry&#39;])
         resdf_list.append(res_df)
         res_list.append(res)
 
-        if isinstance(export_dir, pathlib.PurePath) or type(export_dir) is str:
+        if isinstance(export_dir, (pathlib.PurePath, str)):
             export_dir = pathlib.Path(export_dir)
             if export_dir.is_dir():
                 pass
@@ -1077,8 +1087,12 @@ If False, return list of geopandas.geodataframes with only essential information
             #Format and build export filepath
             export_dir = str(export_dir).replace(&#39;\\&#39;, &#39;/&#39;).replace(&#39;\\&#39;[0], &#39;/&#39;)
             zFillDigs = len(str(len(layerList)))
-            if outfile_prefix[-1]==&#39;_&#39;:
+            if str(outfile_prefix).endswith(&#39;_&#39;):
                 outfile_prefix = outfile_prefix[:-1]
+            elif outfile_prefix is None:
+                outfile_prefix = &#39;&#39;
+            
+
             if export_dir[-1] ==&#39;/&#39;:
                 export_dir = export_dir[:-1]
             nowStr = str(datetime.datetime.today().date())+&#39;_&#39;+str(datetime.datetime.today().hour)+&#39;-&#39;+str(datetime.datetime.today().minute)+&#39;-&#39;+str(datetime.datetime.today().second)
@@ -1157,7 +1171,8 @@ If False, return list of geopandas.geodataframes with only essential information
         Merged dataframe
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
+    if verbose:
+        verbose_print(merge_tables, locals(), exclude_params=[&#39;data_df&#39;, &#39;header_df&#39;])
     if header_df is None:
         #Figure out which columns to include
         if data_cols is None:
