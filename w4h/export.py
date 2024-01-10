@@ -8,7 +8,6 @@ import xarray as xr
 from w4h import logger_function, verbose_print
 
 #Export data
-
 def export_dataframe(df, out_dir, filename, date_stamp=True, log=False):
     """Function to export dataframes
 
@@ -78,7 +77,7 @@ def export_grids(grid_data, out_path, file_id='',filetype='tif', variable_sep=Tr
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
-        verbose_print(export_grids, locals())
+        verbose_print(export_grids, locals(), exclude_params=['grid_data'])
     #Initialize lists to determine which filetype will be used for export
     ncdfList = ['netcdf', 'ncdf', 'n']
     tifList = ['tif', 'tiff', 'geotiff', 'geotif', 't']
@@ -88,7 +87,7 @@ def export_grids(grid_data, out_path, file_id='',filetype='tif', variable_sep=Tr
 
     #Format output string(s)
     #Format output filepath
-    if type(out_path) is str or isinstance(out_path, pathlib.PurePath):
+    if isinstance(out_path, (pathlib.PurePath, str)):
         if isinstance(out_path, pathlib.PurePath):
             pass
         else:
@@ -117,9 +116,8 @@ def export_grids(grid_data, out_path, file_id='',filetype='tif', variable_sep=Tr
         else:
             filenames = [out_path.stem]
             out_path = out_path.parent
-
     else:
-        print('Please input string or pathlib object for out_path parameters')
+        print('No output path specified (out_path). Please input string or pathlib object for out_path parameters')
         return
     
     #Format datestamp, if desired in output filename
