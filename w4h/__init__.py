@@ -30,7 +30,7 @@ from w4h.export import (export_dataframe,
                         export_grids)
 
 from w4h.layers import (get_layer_depths,
-                        merge_tables, 
+                        merge_metadata, 
                         layer_target_thick, 
                         layer_interp,
                         combine_dataset)
@@ -81,7 +81,7 @@ __all__=('logger_function','verbose_print', 'run', 'get_resources',
         'export_dataframe',
         'export_grids',
          'get_layer_depths',
-         'merge_tables', 
+         'merge_metadata', 
          'layer_target_thick', 
          'layer_interp',
          'combine_dataset',

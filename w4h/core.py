@@ -3,12 +3,17 @@ including the main run() function that allows rapid data analysis."""
 
 import datetime
 import inspect
+import json
 import logging
 import pathlib
 import pkg_resources
 
 import geopandas as gpd
 import pandas as pd
+import rioxarray as rxr
+from shapely import wkt
+import xarray as xarray
+
 
 import w4h
 
@@ -172,8 +177,8 @@ def run(well_data,
     if metadata_DF is None:
         well_data_xyz = well_data_DF
     else:
-        merge_tables_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.merge_tables).parameters.keys()}
-        well_data_xyz = w4h.merge_tables(data_df=well_data_DF, header_df=metadata_DF, data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, **merge_tables_kwargs)
+        merge_metadata_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.merge_metadata).parameters.keys()}
+        well_data_xyz = w4h.merge_metadata(data_df=well_data_DF, header_df=metadata_DF, data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, **merge_metadata_kwargs)
 
     #Convert well_data_xyz to have geometry
     coords2geometry_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.coords2geometry).parameters.keys()}
@@ -400,11 +405,13 @@ def verbose_print(func, local_variables, exclude_params=[]):
 
 #Get filepaths for package resources in dictionary format
 resource_dir = pathlib.Path(pkg_resources.resource_filename(__name__, 'resources/resources_home.txt')).parent
-def get_resources(verbose=False):
+def get_resources(resource_type='filepaths', verbose=False):
     """Function to get filepaths for resources included with package
 
     Parameters
     ----------
+    resource_type : str, {'filepaths', 'data'}
+        If filepaths, will return dictionary with filepaths to sample data. If data, returns dictionary with data objects.
     verbose : bool, optional
         Whether to print results to terminal, by default False
 
@@ -434,15 +441,51 @@ def get_resources(verbose=False):
     #Get other resource filepaths
     resources_dict['well_data_dtypes'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='downholeDataTypes.txt', verbose=verbose)
     resources_dict['metadata_dtypes'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='headerDataTypes.txt', verbose=verbose)
-    resources_dict['ISWS_CRS'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='isws_crs.txt', verbose=verbose)
-    resources_dict['xyz_dtypes'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='xyzDataTypes.txt', verbose=verbose)
+    resources_dict['ISWS_CRS'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='isws_crs.json', verbose=verbose)
+    resources_dict['xyz_dtypes'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='xyzDataTypes.json', verbose=verbose)
 
     resources_dict['well_data'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_well_data.csv', verbose=verbose)
     resources_dict['study_area'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_studyArea.zip', verbose=verbose)
 
     resources_dict['model_grid'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='grid_625_raster.tif', verbose=verbose)
-    resources_dict['surf_elev'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_surface_elev_10m_fromlidar_estl.tif', verbose=verbose)
+    resources_dict['surf_elev'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_surface_bedrock_lidarresampled100ft.tif', verbose=verbose)
     resources_dict['bedrock_elev'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_bedrock_elev_grimleyphillips_ESTL.tif', verbose=verbose)
+
+    dataObjList = ['data', 'objects', 'do', 'data objects', 'dataobjects']
+    if resource_type.lower() in dataObjList:
+        resources_dict['LithologyDict_Exact'] = pd.read_csv(resources_dict['LithologyDict_Exact'], 
+                                                            dtype={"ID":int, "DESCRIPTION":str, "LITHOLOGY":str,
+                                                            "COLOR":str, "CONSISTENCY":str, "MOD1":str, "MOD2":str,
+                                                            "INTERPRETED":str, "COMPLETED":str, "ORIGIN_INDIANA":str},
+                                                            index_col='ID')
+        resources_dict['LithologyDict_Start'] = pd.read_csv(resources_dict['LithologyDict_Start'])
+        resources_dict['LithologyDict_Wildcard'] = pd.read_csv(resources_dict['LithologyDict_Wildcard'])
+
+        resources_dict['LithInterps_FineCoarse'] = pd.read_csv(resources_dict['LithInterps_FineCoarse'])
+        resources_dict['LithInterps_Clay'] = pd.read_csv(resources_dict['LithInterps_Clay'])
+        resources_dict['LithInterps_Silt'] = pd.read_csv(resources_dict['LithInterps_Silt'])
+        resources_dict['LithInterps_Sand'] = pd.read_csv(resources_dict['LithInterps_Sand'])
+        resources_dict['LithInterps_Gravel'] = pd.read_csv(resources_dict['LithInterps_Gravel'])
+
+        resources_dict['well_data_dtypes'] = pd.read_csv(resources_dict['well_data_dtypes'])
+        resources_dict['metadata_dtypes'] = pd.read_csv(resources_dict['metadata_dtypes'])
+
+        with open(resources_dict['ISWS_CRS'], 'r', encoding='utf-8') as f:
+            resources_dict['ISWS_CRS'] = json.load(f)
+        
+        with open(resources_dict['xyz_dtypes'], 'r', encoding='utf-8') as f:
+            resources_dict['xyz_dtypes'] = json.load(f)
+
+
+        df = pd.read_csv(resources_dict['well_data'])
+        df['geometry'] = df['geometry'].apply(wkt.loads)
+        resources_dict['well_data'] = gpd.GeoDataFrame(df, geometry='geometry')
+
+        resources_dict['study_area'] = gpd.read_file(resources_dict['study_area'], geometry='geometry', crs='EPSG:4269')
+
+        resources_dict['model_grid'] = rxr.open_rasterio(resources_dict['model_grid'])
+        resources_dict['surf_elev'] = rxr.open_rasterio(resources_dict['surf_elev'])
+        resources_dict['bedrock_elev'] = rxr.open_rasterio(resources_dict['bedrock_elev'])
 
     return resources_dict
 
