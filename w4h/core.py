@@ -7,12 +7,15 @@ import json
 import logging
 import pathlib
 import pkg_resources
+import zipfile
 
 import geopandas as gpd
 import pandas as pd
 import rioxarray as rxr
 from shapely import wkt
 import xarray as xarray
+
+from shapely.geometry import Point
 
 
 import w4h
@@ -405,13 +408,15 @@ def verbose_print(func, local_variables, exclude_params=[]):
 
 #Get filepaths for package resources in dictionary format
 resource_dir = pathlib.Path(pkg_resources.resource_filename(__name__, 'resources/resources_home.txt')).parent
-def get_resources(resource_type='filepaths', verbose=False):
+def get_resources(resource_type='filepaths', scope='local', verbose=False):
     """Function to get filepaths for resources included with package
 
     Parameters
     ----------
     resource_type : str, {'filepaths', 'data'}
         If filepaths, will return dictionary with filepaths to sample data. If data, returns dictionary with data objects.
+    scope : str, {'local', 'statewide'}
+        If 'local', will read in sample data for a local (around county sized) project. If 'state', will read in sample data for a statewide project (Illinois)
     verbose : bool, optional
         Whether to print results to terminal, by default False
 
@@ -444,12 +449,22 @@ def get_resources(resource_type='filepaths', verbose=False):
     resources_dict['ISWS_CRS'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='isws_crs.json', verbose=verbose)
     resources_dict['xyz_dtypes'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='xyzDataTypes.json', verbose=verbose)
 
-    resources_dict['well_data'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_well_data.csv', verbose=verbose)
-    resources_dict['study_area'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_studyArea.zip', verbose=verbose)
-
     resources_dict['model_grid'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='grid_625_raster.tif', verbose=verbose)
-    resources_dict['surf_elev'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_surface_bedrock_lidarresampled100ft.tif', verbose=verbose)
-    resources_dict['bedrock_elev'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_bedrock_elev_grimleyphillips_ESTL.tif', verbose=verbose)
+
+    statewideSampleDir = sample_data_dir.joinpath('statewide_sample_data')
+    statewideList = ['statewide', 'state', 'regional', 'region', 's', 'r']
+    if scope.lower() in statewideList:
+        resources_dict['well_data'] = statewideSampleDir.joinpath("IL_Statewide_WellData_XYz_2023-07-20_cleaned.zip")
+
+        resources_dict['surf_elev'] = w4h.get_most_recent(dir=statewideSampleDir, glob_pattern='sample_studyArea.zip', verbose=verbose)
+        resources_dict['bedrock_elev'] = w4h.get_most_recent(dir=statewideSampleDir, glob_pattern='sample_studyArea.zip', verbose=verbose)
+        resources_dict['study_area'] = w4h.get_most_recent(dir=statewideSampleDir, glob_pattern='sample_studyArea.zip', verbose=verbose)
+    else:
+        resources_dict['study_area'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_studyArea.zip', verbose=verbose)
+        resources_dict['surf_elev'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_surface_bedrock_lidarresampled100ft.tif', verbose=verbose)
+        resources_dict['bedrock_elev'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_bedrock_elev_grimleyphillips_ESTL.tif', verbose=verbose)
+
+        resources_dict['well_data'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_well_data.csv', verbose=verbose)
 
     dataObjList = ['data', 'objects', 'do', 'data objects', 'dataobjects']
     if resource_type.lower() in dataObjList:
@@ -470,6 +485,7 @@ def get_resources(resource_type='filepaths', verbose=False):
         resources_dict['well_data_dtypes'] = pd.read_csv(resources_dict['well_data_dtypes'])
         resources_dict['metadata_dtypes'] = pd.read_csv(resources_dict['metadata_dtypes'])
 
+
         with open(resources_dict['ISWS_CRS'], 'r', encoding='utf-8') as f:
             resources_dict['ISWS_CRS'] = json.load(f)
         
@@ -477,11 +493,26 @@ def get_resources(resource_type='filepaths', verbose=False):
             resources_dict['xyz_dtypes'] = json.load(f)
 
 
-        df = pd.read_csv(resources_dict['well_data'])
-        df['geometry'] = df['geometry'].apply(wkt.loads)
-        resources_dict['well_data'] = gpd.GeoDataFrame(df, geometry='geometry')
+        if scope.lower() in statewideList:
+            sacrs = resources_dict['ISWS_CRS']
+            with zipfile.ZipFile(resources_dict['well_data'].as_posix(), 'r') as archive:
+                for file_name in archive.namelist():
+                    with archive.open(file_name) as file:
+                        if 'HEADER' in file_name:
+                            metaDF = pd.read_csv(file)
+                        else:
+                            resources_dict['well_data'] = pd.read_csv(file)
+            geometry = [Point(xy) for xy in zip(resources_dict['well_data']['LONGITUDE'], resources_dict['well_data']['LATITUDE'])]
+            resources_dict['well_data'] = gpd.GeoDataFrame(resources_dict['well_data'], geometry=geometry, crs='EPSG:4269')
+            
+        else:
+            sacrs = 'EPSG:4269'
+            df = pd.read_csv(resources_dict['well_data'])
+            df['geometry'] = df['geometry'].apply(wkt.loads)
+            resources_dict['well_data'] = gpd.GeoDataFrame(df, geometry='geometry')
 
-        resources_dict['study_area'] = gpd.read_file(resources_dict['study_area'], geometry='geometry', crs='EPSG:4269')
+
+        resources_dict['study_area'] = gpd.read_file(resources_dict['study_area'], geometry='geometry', crs=sacrs)
 
         resources_dict['model_grid'] = rxr.open_rasterio(resources_dict['model_grid'])
         resources_dict['surf_elev'] = rxr.open_rasterio(resources_dict['surf_elev'])
