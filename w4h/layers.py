@@ -173,7 +173,7 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
     layerList = range(1,layers+1)
     res_list = []
     resdf_list = []
-    print(df.columns)
+
     #Generate Column names based on (looped) integers
     for layer in layerList:
         zStr = 'ELEV'
