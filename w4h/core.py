@@ -294,8 +294,10 @@ def run(well_data,
     
     well_data_xyz = w4h.sample_raster_points(raster=bedrockGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col='BEDROCK_ELEV', verbose=verbose, log=log)
     well_data_xyz = w4h.sample_raster_points(raster=surfaceGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col='SURFACE_ELEV', verbose=verbose, log=log)
-    well_data_xyz = w4h.sample_raster_points(raster=driftThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col='BEDROCK_DEPTH', verbose=verbose, log=log)
-    well_data_xyz = w4h.sample_raster_points(raster=layerThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col='LAYER_THICK', verbose=verbose, log=log)
+    well_data_xyz['BEDROCK_DEPTH'] = well_data_xyz['SURFACE_ELEV'] - well_data_xyz['BEDROCK_ELEV']
+    well_data_xyz['LAYER_THICK'] = well_data_xyz['BEDROCK_DEPTH'] / layers
+    #well_data_xyz = w4h.sample_raster_points(raster=driftThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col='BEDROCK_DEPTH', verbose=verbose, log=log)
+    #well_data_xyz = w4h.sample_raster_points(raster=layerThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col='LAYER_THICK', verbose=verbose, log=log)
     well_data_xyz = w4h.get_layer_depths(df_with_depths=well_data_xyz, layers=layers, log=log)
     #print('Layer Depths:', well_data_xyz['geometry'].head(25))
 
@@ -444,8 +446,8 @@ def get_resources(resource_type='filepaths', scope='local', verbose=False):
     resources_dict['LithInterps_Gravel'] = w4h.get_most_recent(dir=lith_interp_dir, glob_pattern='*Gravel*', verbose=verbose)    
 
     #Get other resource filepaths
-    resources_dict['well_data_dtypes'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='downholeDataTypes.txt', verbose=verbose)
-    resources_dict['metadata_dtypes'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='headerDataTypes.txt', verbose=verbose)
+    resources_dict['well_data_dtypes'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='*downholeDataTypes*', verbose=verbose)
+    resources_dict['metadata_dtypes'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='*headerDataTypes*', verbose=verbose)
     resources_dict['ISWS_CRS'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='isws_crs.json', verbose=verbose)
     resources_dict['xyz_dtypes'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='xyzDataTypes.json', verbose=verbose)
 
@@ -456,16 +458,17 @@ def get_resources(resource_type='filepaths', scope='local', verbose=False):
     if scope.lower() in statewideList:
         resources_dict['well_data'] = statewideSampleDir.joinpath("IL_Statewide_WellData_XYz_2023-07-20_cleaned.zip")
 
-        resources_dict['surf_elev'] = w4h.get_most_recent(dir=statewideSampleDir, glob_pattern='sample_studyArea.zip', verbose=verbose)
-        resources_dict['bedrock_elev'] = w4h.get_most_recent(dir=statewideSampleDir, glob_pattern='sample_studyArea.zip', verbose=verbose)
-        resources_dict['study_area'] = w4h.get_most_recent(dir=statewideSampleDir, glob_pattern='sample_studyArea.zip', verbose=verbose)
+        resources_dict['surf_elev'] = w4h.get_most_recent(dir=statewideSampleDir, glob_pattern='*IL_Statewide_Surface_Elev_ft*', verbose=verbose)
+        resources_dict['bedrock_elev'] = w4h.get_most_recent(dir=statewideSampleDir, glob_pattern='*IL_Statewide_Bedrock_Elev_2023_ft*', verbose=verbose)
+        resources_dict['study_area'] = w4h.get_most_recent(dir=statewideSampleDir, glob_pattern='*IL_Statewide_boundary*', verbose=verbose)
     else:
-        resources_dict['study_area'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_studyArea.zip', verbose=verbose)
-        resources_dict['surf_elev'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_surface_bedrock_lidarresampled100ft.tif', verbose=verbose)
-        resources_dict['bedrock_elev'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_bedrock_elev_grimleyphillips_ESTL.tif', verbose=verbose)
+        resources_dict['study_area'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='*sample_studyArea*', verbose=verbose)
+        resources_dict['surf_elev'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='*sample_surface_bedrock_lidarresampled100ft*', verbose=verbose)
+        resources_dict['bedrock_elev'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='*sample_bedrock_elev_grimleyphillips_ESTL*', verbose=verbose)
 
-        resources_dict['well_data'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_well_data.csv', verbose=verbose)
+        resources_dict['well_data'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_well_data*', verbose=verbose)
 
+    # Get data objects if specified
     dataObjList = ['data', 'objects', 'do', 'data objects', 'dataobjects']
     if resource_type.lower() in dataObjList:
         resources_dict['LithologyDict_Exact'] = pd.read_csv(resources_dict['LithologyDict_Exact'], 
@@ -482,9 +485,12 @@ def get_resources(resource_type='filepaths', scope='local', verbose=False):
         resources_dict['LithInterps_Sand'] = pd.read_csv(resources_dict['LithInterps_Sand'])
         resources_dict['LithInterps_Gravel'] = pd.read_csv(resources_dict['LithInterps_Gravel'])
 
-        resources_dict['well_data_dtypes'] = pd.read_csv(resources_dict['well_data_dtypes'])
-        resources_dict['metadata_dtypes'] = pd.read_csv(resources_dict['metadata_dtypes'])
+        
+        with open(resources_dict['well_data_dtypes'], 'r', encoding='utf-8') as f:
+            resources_dict['well_data_dtypes'] = json.load(f)
 
+        with open(resources_dict['metadata_dtypes'], 'r', encoding='utf-8') as f:
+            resources_dict['metadata_dtypes'] = json.load(f)            
 
         with open(resources_dict['ISWS_CRS'], 'r', encoding='utf-8') as f:
             resources_dict['ISWS_CRS'] = json.load(f)
@@ -516,7 +522,9 @@ def get_resources(resource_type='filepaths', scope='local', verbose=False):
 
         resources_dict['model_grid'] = rxr.open_rasterio(resources_dict['model_grid'])
         resources_dict['surf_elev'] = rxr.open_rasterio(resources_dict['surf_elev'])
+        #resources_dict['surf_elev'] = resources_dict['surf_elev'].sel(band=1)
         resources_dict['bedrock_elev'] = rxr.open_rasterio(resources_dict['bedrock_elev'])
+        #resources_dict['bedrock_elev'] = resources_dict['bedrock_elev'].sel(band=1)
 
     return resources_dict
 
