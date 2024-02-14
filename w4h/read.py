@@ -293,6 +293,11 @@ def read_dict(file, keytype='np'):
         Dictionary translated from text file.
     """
 
+    if pathlib.Path(file).suffix == '.json':
+        with open(file, 'r') as f:
+            jsDict = json.load(f)
+        return jsDict
+
     with open(file, 'r') as f:
         data= f.read()
 

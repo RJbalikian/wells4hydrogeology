@@ -729,8 +729,8 @@ def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service
             if grid_crs is None:
                 try:
                     grid_crs=gridIN.spatial_ref.crs_wkt
-                except:
-                    iswsCRS = w4h.read_dict(r'../resources/isws_crs')
+                except Exception:
+                    iswsCRS = w4h.read_dict(r'../resources/sample_data/isws_crs.json')
                     gridIN.rio.write_crs(iswsCRS)
             elif grid_crs.lower()=='isws':
                 iswsCRS = w4h.read_dict(r'../resources/isws_crs')
