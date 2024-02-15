@@ -50,7 +50,7 @@ from w4h import logger_function, verbose_print
 lidarURL = r&#39;https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&amp;service=WCS&#39;
 
 #Read study area shapefile (or other file) into geopandas
-def read_study_area(study_area_path, study_area_crs=&#39;EPSG:4269&#39;, log=False, verbose=False):
+def read_study_area(study_area_path, study_area_crs=&#39;EPSG:4269&#39;, buffer=None, log=False, verbose=False):
     &#34;&#34;&#34;Read study area geospatial file into geopandas
 
     Parameters
@@ -58,10 +58,14 @@ def read_study_area(study_area_path, study_area_crs=&#39;EPSG:4269&#39;, log=Fal
     study_area_path : str or pathlib.Path
         Filepath to any geospatial file readable by geopandas. 
         Polygon is best, but may work with other types if extent is correct.
-    crs : str, tuple, dict, optional
+    study_area_crs : str, tuple, dict, optional
         CRS designation readable by geopandas/pyproj
+    buffer : None or numeric, default=None
+        If None, no buffer created. If a numeric value is given (float or int, for example), a buffer will be created at that distance in the unit of the study_area_crs.
     log : bool, default = False
         Whether to log results to log file, by default False
+    verbose : bool, default=False
+        Whether to print status and results to terminal
 
     Returns
     -------
@@ -73,6 +77,13 @@ def read_study_area(study_area_path, study_area_crs=&#39;EPSG:4269&#39;, log=Fal
         verbose_print(read_study_area, locals())
     studyAreaIN = gpd.read_file(study_area_path)
     studyAreaIN.to_crs(study_area_crs, inplace=True)
+
+    if buffer is not None:
+        studyAreaIN = studyAreaIN.buffer(distance=buffer)
+        if verbose:
+            print(&#39;\tBuffer applied.&#39;)
+    if verbose:
+        print(&#34;\tStudy area read.&#34;)
 
     return studyAreaIN
 
@@ -155,7 +166,7 @@ def clip_gdf2study_area(study_area, gdf, log=False, verbose=False):
     return gdfClip
 
 #Function to sample raster points to points specified in geodataframe
-def sample_raster_points(raster, points_df, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, new_col=&#39;SAMPLED&#39;, verbose=True, log=False):  
+def sample_raster_points(raster, points_df, well_id_col=&#39;API_NUMBER&#39;, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, new_col=&#39;SAMPLED&#39;, verbose=True, log=False):  
     &#34;&#34;&#34;Sample raster values to points from geopandas geodataframe.
 
     Parameters
@@ -164,6 +175,8 @@ def sample_raster_points(raster, points_df, xcol=&#39;LONGITUDE&#39;, ycol=&#39;
         Raster containing values to be sampled.
     points_df : geopandas.geodataframe
         Geopandas dataframe with geometry column containing point values to sample.
+    well_id_col : str, default=&#34;API_NUMBER&#34;
+        Column that uniquely identifies each well so multiple sampling points are not taken per well
     xcol : str, default=&#39;LONGITUDE&#39;
         Column containing name for x-column, by default &#39;LONGITUDE.&#39;
         This is used to output (potentially) reprojected point coordinates so as not to overwrite the original.
@@ -186,12 +199,20 @@ def sample_raster_points(raster, points_df, xcol=&#39;LONGITUDE&#39;, ycol=&#39;
 
     if verbose:
         verbose_print(sample_raster_points, locals(), exclude_params=[&#39;raster&#39;, &#39;points_df&#39;])
-        print(&#34;Sampling grid for {}.&#34;.format(new_col))
+        print(&#34;\tSampling {} grid for at all well locations.&#34;.format(new_col))
 
     #Project points to raster CRS
     rastercrsWKT=raster.spatial_ref.crs_wkt
-    points_df = points_df.to_crs(rastercrsWKT)
-    #if xcol==&#39;LONGITUDE&#39; and ycol==&#39;LATITUDE&#39;:
+    if rastercrsWKT != points_df.crs:
+        if verbose:
+            print(&#34;\tTemporarily reprojecting raster data to point data&#39;s CRS.&#34;)
+        pointCRS = points_df.crs.to_epsg()
+        if pointCRS is None:
+            pointCRS = points_df.crs.to_wkt()
+
+        raster = raster.rio.reproject(pointCRS)
+        #points_df = points_df.to_crs(rastercrsWKT)
+
     xCOLOUT = xcol+&#39;_PROJ&#39;
     yCOLOUT = ycol+&#39;_PROJ&#39;
     points_df[xCOLOUT] = points_df[&#39;geometry&#39;].x
@@ -199,14 +220,27 @@ def sample_raster_points(raster, points_df, xcol=&#39;LONGITUDE&#39;, ycol=&#39;
     xData = np.array(points_df[xCOLOUT].values)
     yData = np.array(points_df[yCOLOUT].values)
     zData = []
+    zID = []
+    zInd = []
+
+    # Get unique well values to reduce sampling time
+    uniqueWells = points_df.drop_duplicates(subset=[well_id_col])
+    if verbose:
+        print(f&#34;\t{uniqueWells.shape[0]} unique wells idenfied using {well_id_col} column&#34;)
+    
     # Loop over DataFrame rows
-    for i, row in points_df.iterrows():
+    for i, row in uniqueWells.iterrows():
         # Select data from DataArray at current coordinates and append to list
-        zData.append(raster.sel(x=row[xCOLOUT], y=row[yCOLOUT], method=&#39;nearest&#39;).item())
-    #sampleArr=raster.sel(x=xData, y=yData, method=&#39;nearest&#39;).values
-    #sampleArr = np.diag(sampleArr)
-    #sampleDF = pd.DataFrame(sampleArr, columns=[new_col])
-    points_df[new_col] = zData#sampleDF[new_col]
+        zInd.append(i)
+        zData.append([row[well_id_col], raster.sel(x=row[xCOLOUT], y=row[yCOLOUT], method=&#39;nearest&#39;).item()])
+    
+    inputtype = points_df.dtypes[well_id_col]
+    wellZDF = pd.DataFrame(zData, columns=[well_id_col, new_col], index=pd.Index(zInd))
+
+    # Merge each unique well&#39;s data with all well intervals
+    wellZDF[well_id_col].astype(inputtype, copy=False)
+    points_df = points_df.merge(wellZDF, how=&#39;left&#39;, on=well_id_col)
+    #points_df[new_col] = zData#sampleDF[new_col]
     return points_df
 
 #Merge xyz dataframe into a metadata dataframe
@@ -723,8 +757,8 @@ def read_grid(grid_path=None, grid_type=&#39;model&#39;, no_data_val_grid=0, use
             if grid_crs is None:
                 try:
                     grid_crs=gridIN.spatial_ref.crs_wkt
-                except:
-                    iswsCRS = w4h.read_dict(r&#39;../resources/isws_crs&#39;)
+                except Exception:
+                    iswsCRS = w4h.read_dict(r&#39;../resources/sample_data/isws_crs.json&#39;)
                     gridIN.rio.write_crs(iswsCRS)
             elif grid_crs.lower()==&#39;isws&#39;:
                 iswsCRS = w4h.read_dict(r&#39;../resources/isws_crs&#39;)
@@ -1311,8 +1345,8 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, verbose=False, log=F
             if grid_crs is None:
                 try:
                     grid_crs=gridIN.spatial_ref.crs_wkt
-                except:
-                    iswsCRS = w4h.read_dict(r&#39;../resources/isws_crs&#39;)
+                except Exception:
+                    iswsCRS = w4h.read_dict(r&#39;../resources/sample_data/isws_crs.json&#39;)
                     gridIN.rio.write_crs(iswsCRS)
             elif grid_crs.lower()==&#39;isws&#39;:
                 iswsCRS = w4h.read_dict(r&#39;../resources/isws_crs&#39;)
@@ -1498,7 +1532,7 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, verbose=False, log=F
 </details>
 </dd>
 <dt id="w4h.mapping.read_study_area"><code class="name flex">
-<span>def <span class="ident">read_study_area</span></span>(<span>study_area_path, study_area_crs='EPSG:4269', log=False, verbose=False)</span>
+<span>def <span class="ident">read_study_area</span></span>(<span>study_area_path, study_area_crs='EPSG:4269', buffer=None, log=False, verbose=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Read study area geospatial file into geopandas</p>
@@ -1507,10 +1541,14 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, verbose=False, log=F
 <dt><strong><code>study_area_path</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path</code></dt>
 <dd>Filepath to any geospatial file readable by geopandas.
 Polygon is best, but may work with other types if extent is correct.</dd>
-<dt><strong><code>crs</code></strong> :&ensp;<code>str, tuple, dict</code>, optional</dt>
+<dt><strong><code>study_area_crs</code></strong> :&ensp;<code>str, tuple, dict</code>, optional</dt>
 <dd>CRS designation readable by geopandas/pyproj</dd>
+<dt><strong><code>buffer</code></strong> :&ensp;<code>None</code> or <code>numeric</code>, default=<code>None</code></dt>
+<dd>If None, no buffer created. If a numeric value is given (float or int, for example), a buffer will be created at that distance in the unit of the study_area_crs.</dd>
 <dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
 <dd>Whether to log results to log file, by default False</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, default=<code>False</code></dt>
+<dd>Whether to print status and results to terminal</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -1521,7 +1559,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_study_area(study_area_path, study_area_crs=&#39;EPSG:4269&#39;, log=False, verbose=False):
+<pre><code class="python">def read_study_area(study_area_path, study_area_crs=&#39;EPSG:4269&#39;, buffer=None, log=False, verbose=False):
     &#34;&#34;&#34;Read study area geospatial file into geopandas
 
     Parameters
@@ -1529,10 +1567,14 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     study_area_path : str or pathlib.Path
         Filepath to any geospatial file readable by geopandas. 
         Polygon is best, but may work with other types if extent is correct.
-    crs : str, tuple, dict, optional
+    study_area_crs : str, tuple, dict, optional
         CRS designation readable by geopandas/pyproj
+    buffer : None or numeric, default=None
+        If None, no buffer created. If a numeric value is given (float or int, for example), a buffer will be created at that distance in the unit of the study_area_crs.
     log : bool, default = False
         Whether to log results to log file, by default False
+    verbose : bool, default=False
+        Whether to print status and results to terminal
 
     Returns
     -------
@@ -1544,6 +1586,13 @@ Polygon is best, but may work with other types if extent is correct.</dd>
         verbose_print(read_study_area, locals())
     studyAreaIN = gpd.read_file(study_area_path)
     studyAreaIN.to_crs(study_area_crs, inplace=True)
+
+    if buffer is not None:
+        studyAreaIN = studyAreaIN.buffer(distance=buffer)
+        if verbose:
+            print(&#39;\tBuffer applied.&#39;)
+    if verbose:
+        print(&#34;\tStudy area read.&#34;)
 
     return studyAreaIN</code></pre>
 </details>
@@ -1860,7 +1909,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 </details>
 </dd>
 <dt id="w4h.mapping.sample_raster_points"><code class="name flex">
-<span>def <span class="ident">sample_raster_points</span></span>(<span>raster, points_df, xcol='LONGITUDE', ycol='LATITUDE', new_col='SAMPLED', verbose=True, log=False)</span>
+<span>def <span class="ident">sample_raster_points</span></span>(<span>raster, points_df, well_id_col='API_NUMBER', xcol='LONGITUDE', ycol='LATITUDE', new_col='SAMPLED', verbose=True, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Sample raster values to points from geopandas geodataframe.</p>
@@ -1870,6 +1919,8 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 <dd>Raster containing values to be sampled.</dd>
 <dt><strong><code>points_df</code></strong> :&ensp;<code>geopandas.geodataframe</code></dt>
 <dd>Geopandas dataframe with geometry column containing point values to sample.</dd>
+<dt><strong><code>well_id_col</code></strong> :&ensp;<code>str</code>, default=<code>"API_NUMBER"</code></dt>
+<dd>Column that uniquely identifies each well so multiple sampling points are not taken per well</dd>
 <dt><strong><code>xcol</code></strong> :&ensp;<code>str</code>, default=<code>'LONGITUDE'</code></dt>
 <dd>Column containing name for x-column, by default 'LONGITUDE.'
 This is used to output (potentially) reprojected point coordinates so as not to overwrite the original.</dd>
@@ -1893,7 +1944,7 @@ new_col : str, optional</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def sample_raster_points(raster, points_df, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, new_col=&#39;SAMPLED&#39;, verbose=True, log=False):  
+<pre><code class="python">def sample_raster_points(raster, points_df, well_id_col=&#39;API_NUMBER&#39;, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, new_col=&#39;SAMPLED&#39;, verbose=True, log=False):  
     &#34;&#34;&#34;Sample raster values to points from geopandas geodataframe.
 
     Parameters
@@ -1902,6 +1953,8 @@ new_col : str, optional</dd>
         Raster containing values to be sampled.
     points_df : geopandas.geodataframe
         Geopandas dataframe with geometry column containing point values to sample.
+    well_id_col : str, default=&#34;API_NUMBER&#34;
+        Column that uniquely identifies each well so multiple sampling points are not taken per well
     xcol : str, default=&#39;LONGITUDE&#39;
         Column containing name for x-column, by default &#39;LONGITUDE.&#39;
         This is used to output (potentially) reprojected point coordinates so as not to overwrite the original.
@@ -1924,12 +1977,20 @@ new_col : str, optional</dd>
 
     if verbose:
         verbose_print(sample_raster_points, locals(), exclude_params=[&#39;raster&#39;, &#39;points_df&#39;])
-        print(&#34;Sampling grid for {}.&#34;.format(new_col))
+        print(&#34;\tSampling {} grid for at all well locations.&#34;.format(new_col))
 
     #Project points to raster CRS
     rastercrsWKT=raster.spatial_ref.crs_wkt
-    points_df = points_df.to_crs(rastercrsWKT)
-    #if xcol==&#39;LONGITUDE&#39; and ycol==&#39;LATITUDE&#39;:
+    if rastercrsWKT != points_df.crs:
+        if verbose:
+            print(&#34;\tTemporarily reprojecting raster data to point data&#39;s CRS.&#34;)
+        pointCRS = points_df.crs.to_epsg()
+        if pointCRS is None:
+            pointCRS = points_df.crs.to_wkt()
+
+        raster = raster.rio.reproject(pointCRS)
+        #points_df = points_df.to_crs(rastercrsWKT)
+
     xCOLOUT = xcol+&#39;_PROJ&#39;
     yCOLOUT = ycol+&#39;_PROJ&#39;
     points_df[xCOLOUT] = points_df[&#39;geometry&#39;].x
@@ -1937,14 +1998,27 @@ new_col : str, optional</dd>
     xData = np.array(points_df[xCOLOUT].values)
     yData = np.array(points_df[yCOLOUT].values)
     zData = []
+    zID = []
+    zInd = []
+
+    # Get unique well values to reduce sampling time
+    uniqueWells = points_df.drop_duplicates(subset=[well_id_col])
+    if verbose:
+        print(f&#34;\t{uniqueWells.shape[0]} unique wells idenfied using {well_id_col} column&#34;)
+    
     # Loop over DataFrame rows
-    for i, row in points_df.iterrows():
+    for i, row in uniqueWells.iterrows():
         # Select data from DataArray at current coordinates and append to list
-        zData.append(raster.sel(x=row[xCOLOUT], y=row[yCOLOUT], method=&#39;nearest&#39;).item())
-    #sampleArr=raster.sel(x=xData, y=yData, method=&#39;nearest&#39;).values
-    #sampleArr = np.diag(sampleArr)
-    #sampleDF = pd.DataFrame(sampleArr, columns=[new_col])
-    points_df[new_col] = zData#sampleDF[new_col]
+        zInd.append(i)
+        zData.append([row[well_id_col], raster.sel(x=row[xCOLOUT], y=row[yCOLOUT], method=&#39;nearest&#39;).item()])
+    
+    inputtype = points_df.dtypes[well_id_col]
+    wellZDF = pd.DataFrame(zData, columns=[well_id_col, new_col], index=pd.Index(zInd))
+
+    # Merge each unique well&#39;s data with all well intervals
+    wellZDF[well_id_col].astype(inputtype, copy=False)
+    points_df = points_df.merge(wellZDF, how=&#39;left&#39;, on=well_id_col)
+    #points_df[new_col] = zData#sampleDF[new_col]
     return points_df</code></pre>
 </details>
 </dd>

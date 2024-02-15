@@ -58,7 +58,7 @@ from w4h.export import (export_dataframe,
                         export_grids)
 
 from w4h.layers import (get_layer_depths,
-                        merge_tables, 
+                        merge_metadata, 
                         layer_target_thick, 
                         layer_interp,
                         combine_dataset)
@@ -109,7 +109,7 @@ __all__=(&#39;logger_function&#39;,&#39;verbose_print&#39;, &#39;run&#39;, &#39;
         &#39;export_dataframe&#39;,
         &#39;export_grids&#39;,
          &#39;get_layer_depths&#39;,
-         &#39;merge_tables&#39;, 
+         &#39;merge_metadata&#39;, 
          &#39;layer_target_thick&#39;, 
          &#39;layer_interp&#39;,
          &#39;combine_dataset&#39;,
@@ -1326,7 +1326,7 @@ It may also be of use to simply skip this function altogether and directly defin
 </details>
 </dd>
 <dt id="w4h.get_most_recent"><code class="name flex">
-<span>def <span class="ident">get_most_recent</span></span>(<span>dir=WindowsPath('c:/Users/riley/LocalData/Github/wells4hydrogeology/w4h/resources'), glob_pattern='*', verbose=True)</span>
+<span>def <span class="ident">get_most_recent</span></span>(<span>dir=WindowsPath('c:/Users/riley/LocalData/Code/Github/wells4hydrogeology/w4h/resources'), glob_pattern='*', verbose=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to find the most recent file with the indicated pattern, using pathlib.glob function.</p>
@@ -1395,12 +1395,16 @@ It may also be of use to simply skip this function altogether and directly defin
 </details>
 </dd>
 <dt id="w4h.get_resources"><code class="name flex">
-<span>def <span class="ident">get_resources</span></span>(<span>verbose=False)</span>
+<span>def <span class="ident">get_resources</span></span>(<span>resource_type='filepaths', scope='local', verbose=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to get filepaths for resources included with package</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
+<dt><strong><code>resource_type</code></strong> :&ensp;<code>str, {'filepaths', 'data'}</code></dt>
+<dd>If filepaths, will return dictionary with filepaths to sample data. If data, returns dictionary with data objects.</dd>
+<dt><strong><code>scope</code></strong> :&ensp;<code>str, {'local', 'statewide'}</code></dt>
+<dd>If 'local', will read in sample data for a local (around county sized) project. If 'state', will read in sample data for a statewide project (Illinois)</dd>
 <dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, optional</dt>
 <dd>Whether to print results to terminal, by default False</dd>
 </dl>
@@ -1413,11 +1417,15 @@ It may also be of use to simply skip this function altogether and directly defin
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_resources(verbose=False):
+<pre><code class="python">def get_resources(resource_type=&#39;filepaths&#39;, scope=&#39;local&#39;, verbose=False):
     &#34;&#34;&#34;Function to get filepaths for resources included with package
 
     Parameters
     ----------
+    resource_type : str, {&#39;filepaths&#39;, &#39;data&#39;}
+        If filepaths, will return dictionary with filepaths to sample data. If data, returns dictionary with data objects.
+    scope : str, {&#39;local&#39;, &#39;statewide&#39;}
+        If &#39;local&#39;, will read in sample data for a local (around county sized) project. If &#39;state&#39;, will read in sample data for a statewide project (Illinois)
     verbose : bool, optional
         Whether to print results to terminal, by default False
 
@@ -1445,23 +1453,91 @@ It may also be of use to simply skip this function altogether and directly defin
     resources_dict[&#39;LithInterps_Gravel&#39;] = w4h.get_most_recent(dir=lith_interp_dir, glob_pattern=&#39;*Gravel*&#39;, verbose=verbose)    
 
     #Get other resource filepaths
-    resources_dict[&#39;well_data_dtypes&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;downholeDataTypes.txt&#39;, verbose=verbose)
-    resources_dict[&#39;metadata_dtypes&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;headerDataTypes.txt&#39;, verbose=verbose)
-    resources_dict[&#39;ISWS_CRS&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;isws_crs.txt&#39;, verbose=verbose)
-    resources_dict[&#39;xyz_dtypes&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;xyzDataTypes.txt&#39;, verbose=verbose)
-
-    resources_dict[&#39;well_data&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;sample_well_data.csv&#39;, verbose=verbose)
-    resources_dict[&#39;study_area&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;sample_studyArea.zip&#39;, verbose=verbose)
+    resources_dict[&#39;well_data_dtypes&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;*downholeDataTypes*&#39;, verbose=verbose)
+    resources_dict[&#39;metadata_dtypes&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;*headerDataTypes*&#39;, verbose=verbose)
+    resources_dict[&#39;ISWS_CRS&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;isws_crs.json&#39;, verbose=verbose)
+    resources_dict[&#39;xyz_dtypes&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;xyzDataTypes.json&#39;, verbose=verbose)
 
     resources_dict[&#39;model_grid&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;grid_625_raster.tif&#39;, verbose=verbose)
-    resources_dict[&#39;surf_elev&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;sample_surface_elev_10m_fromlidar_estl.tif&#39;, verbose=verbose)
-    resources_dict[&#39;bedrock_elev&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;sample_bedrock_elev_grimleyphillips_ESTL.tif&#39;, verbose=verbose)
+
+    statewideSampleDir = sample_data_dir.joinpath(&#39;statewide_sample_data&#39;)
+    statewideList = [&#39;statewide&#39;, &#39;state&#39;, &#39;regional&#39;, &#39;region&#39;, &#39;s&#39;, &#39;r&#39;]
+    if scope.lower() in statewideList:
+        resources_dict[&#39;well_data&#39;] = statewideSampleDir.joinpath(&#34;IL_Statewide_WellData_XYz_2023-07-20_cleaned.zip&#34;)
+
+        resources_dict[&#39;surf_elev&#39;] = w4h.get_most_recent(dir=statewideSampleDir, glob_pattern=&#39;*IL_Statewide_Surface_Elev_ft_625ft_Lambert_GridAlign*&#39;, verbose=verbose)
+        resources_dict[&#39;bedrock_elev&#39;] = w4h.get_most_recent(dir=statewideSampleDir, glob_pattern=&#39;*IL_Statewide_Bedrock_Elev_2023_ft_625ft_Lambert_GridAlign*&#39;, verbose=verbose)
+        resources_dict[&#39;study_area&#39;] = w4h.get_most_recent(dir=statewideSampleDir, glob_pattern=&#39;*IL_Statewide_boundary*&#39;, verbose=verbose)
+    else:
+        resources_dict[&#39;study_area&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;*sample_studyArea*&#39;, verbose=verbose)
+        resources_dict[&#39;surf_elev&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;*sample_surface_bedrock_lidarresampled100ft*&#39;, verbose=verbose)
+        resources_dict[&#39;bedrock_elev&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;*sample_bedrock_elev_grimleyphillips_ESTL*&#39;, verbose=verbose)
+
+        resources_dict[&#39;well_data&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;sample_well_data*&#39;, verbose=verbose)
+
+    # Get data objects if specified
+    dataObjList = [&#39;data&#39;, &#39;objects&#39;, &#39;do&#39;, &#39;data objects&#39;, &#39;dataobjects&#39;]
+    if resource_type.lower() in dataObjList:
+        resources_dict[&#39;LithologyDict_Exact&#39;] = pd.read_csv(resources_dict[&#39;LithologyDict_Exact&#39;], 
+                                                            dtype={&#34;ID&#34;:int, &#34;DESCRIPTION&#34;:str, &#34;LITHOLOGY&#34;:str,
+                                                            &#34;COLOR&#34;:str, &#34;CONSISTENCY&#34;:str, &#34;MOD1&#34;:str, &#34;MOD2&#34;:str,
+                                                            &#34;INTERPRETED&#34;:str, &#34;COMPLETED&#34;:str, &#34;ORIGIN_INDIANA&#34;:str},
+                                                            index_col=&#39;ID&#39;)
+        resources_dict[&#39;LithologyDict_Start&#39;] = pd.read_csv(resources_dict[&#39;LithologyDict_Start&#39;])
+        resources_dict[&#39;LithologyDict_Wildcard&#39;] = pd.read_csv(resources_dict[&#39;LithologyDict_Wildcard&#39;])
+
+        resources_dict[&#39;LithInterps_FineCoarse&#39;] = pd.read_csv(resources_dict[&#39;LithInterps_FineCoarse&#39;])
+        resources_dict[&#39;LithInterps_Clay&#39;] = pd.read_csv(resources_dict[&#39;LithInterps_Clay&#39;])
+        resources_dict[&#39;LithInterps_Silt&#39;] = pd.read_csv(resources_dict[&#39;LithInterps_Silt&#39;])
+        resources_dict[&#39;LithInterps_Sand&#39;] = pd.read_csv(resources_dict[&#39;LithInterps_Sand&#39;])
+        resources_dict[&#39;LithInterps_Gravel&#39;] = pd.read_csv(resources_dict[&#39;LithInterps_Gravel&#39;])
+
+        
+        with open(resources_dict[&#39;well_data_dtypes&#39;], &#39;r&#39;, encoding=&#39;utf-8&#39;) as f:
+            resources_dict[&#39;well_data_dtypes&#39;] = json.load(f)
+
+        with open(resources_dict[&#39;metadata_dtypes&#39;], &#39;r&#39;, encoding=&#39;utf-8&#39;) as f:
+            resources_dict[&#39;metadata_dtypes&#39;] = json.load(f)            
+
+        with open(resources_dict[&#39;ISWS_CRS&#39;], &#39;r&#39;, encoding=&#39;utf-8&#39;) as f:
+            resources_dict[&#39;ISWS_CRS&#39;] = json.load(f)
+        
+        with open(resources_dict[&#39;xyz_dtypes&#39;], &#39;r&#39;, encoding=&#39;utf-8&#39;) as f:
+            resources_dict[&#39;xyz_dtypes&#39;] = json.load(f)
+
+
+        if scope.lower() in statewideList:
+            sacrs = resources_dict[&#39;ISWS_CRS&#39;]
+            with zipfile.ZipFile(resources_dict[&#39;well_data&#39;].as_posix(), &#39;r&#39;) as archive:
+                for file_name in archive.namelist():
+                    with archive.open(file_name) as file:
+                        if &#39;HEADER&#39; in file_name:
+                            metaDF = pd.read_csv(file)
+                        else:
+                            resources_dict[&#39;well_data&#39;] = pd.read_csv(file)
+            geometry = [Point(xy) for xy in zip(resources_dict[&#39;well_data&#39;][&#39;LONGITUDE&#39;], resources_dict[&#39;well_data&#39;][&#39;LATITUDE&#39;])]
+            resources_dict[&#39;well_data&#39;] = gpd.GeoDataFrame(resources_dict[&#39;well_data&#39;], geometry=geometry, crs=&#39;EPSG:4269&#39;)
+            
+        else:
+            sacrs = &#39;EPSG:4269&#39;
+            df = pd.read_csv(resources_dict[&#39;well_data&#39;])
+            df[&#39;geometry&#39;] = df[&#39;geometry&#39;].apply(wkt.loads)
+            resources_dict[&#39;well_data&#39;] = gpd.GeoDataFrame(df, geometry=&#39;geometry&#39;)
+
+
+        resources_dict[&#39;study_area&#39;] = gpd.read_file(resources_dict[&#39;study_area&#39;], geometry=&#39;geometry&#39;, crs=sacrs)
+
+        resources_dict[&#39;model_grid&#39;] = rxr.open_rasterio(resources_dict[&#39;model_grid&#39;])
+        resources_dict[&#39;surf_elev&#39;] = rxr.open_rasterio(resources_dict[&#39;surf_elev&#39;])
+        #resources_dict[&#39;surf_elev&#39;] = resources_dict[&#39;surf_elev&#39;].sel(band=1)
+        resources_dict[&#39;bedrock_elev&#39;] = rxr.open_rasterio(resources_dict[&#39;bedrock_elev&#39;])
+        #resources_dict[&#39;bedrock_elev&#39;] = resources_dict[&#39;bedrock_elev&#39;].sel(band=1)
 
     return resources_dict</code></pre>
 </details>
 </dd>
 <dt id="w4h.get_search_terms"><code class="name flex">
-<span>def <span class="ident">get_search_terms</span></span>(<span>spec_path='C:\\Users\\riley\\LocalData\\Github\\wells4hydrogeology/resources/', spec_glob_pattern='*SearchTerms-Specific*', start_path=None, start_glob_pattern='*SearchTerms-Start*', wildcard_path=None, wildcard_glob_pattern='*SearchTerms-Wildcard', verbose=False, log=False)</span>
+<span>def <span class="ident">get_search_terms</span></span>(<span>spec_path='C:\\Users\\riley\\LocalData\\Code\\Github\\wells4hydrogeology/resources/', spec_glob_pattern='*SearchTerms-Specific*', start_path=None, start_glob_pattern='*SearchTerms-Start*', wildcard_path=None, wildcard_glob_pattern='*SearchTerms-Wildcard', verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Read in dictionary files for downhole data</p>
@@ -2024,7 +2100,7 @@ If False, return list of geopandas.geodataframes with only essential information
     layerList = range(1,layers+1)
     res_list = []
     resdf_list = []
-    print(df.columns)
+
     #Generate Column names based on (looped) integers
     for layer in layerList:
         zStr = &#39;ELEV&#39;
@@ -2276,8 +2352,8 @@ Whether the input column is using boolean values as its target indicator</p>
     return df_targ</code></pre>
 </details>
 </dd>
-<dt id="w4h.merge_tables"><code class="name flex">
-<span>def <span class="ident">merge_tables</span></span>(<span>data_df, header_df, data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, verbose=False, **kwargs)</span>
+<dt id="w4h.merge_metadata"><code class="name flex">
+<span>def <span class="ident">merge_metadata</span></span>(<span>data_df, header_df, data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, verbose=False, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to merge tables, intended for merging metadata table with data table</p>
@@ -2309,7 +2385,7 @@ Whether the input column is using boolean values as its target indicator</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def merge_tables(data_df, header_df, data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, verbose=False, **kwargs):
+<pre><code class="python">def merge_metadata(data_df, header_df, data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, verbose=False, **kwargs):
     &#34;&#34;&#34;Function to merge tables, intended for merging metadata table with data table
 
     Parameters
@@ -2338,7 +2414,7 @@ Whether the input column is using boolean values as its target indicator</p>
     &#34;&#34;&#34;
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
-        verbose_print(merge_tables, locals(), exclude_params=[&#39;data_df&#39;, &#39;header_df&#39;])
+        verbose_print(merge_metadata, locals(), exclude_params=[&#39;data_df&#39;, &#39;header_df&#39;])
     if header_df is None:
         #Figure out which columns to include
         if data_cols is None:
@@ -2430,6 +2506,11 @@ Whether the input column is using boolean values as its target indicator</p>
     dict
         Dictionary translated from text file.
     &#34;&#34;&#34;
+
+    if pathlib.Path(file).suffix == &#39;.json&#39;:
+        with open(file, &#39;r&#39;) as f:
+            jsDict = json.load(f)
+        return jsDict
 
     with open(file, &#39;r&#39;) as f:
         data= f.read()
@@ -2675,8 +2756,8 @@ Whether the input column is using boolean values as its target indicator</p>
             if grid_crs is None:
                 try:
                     grid_crs=gridIN.spatial_ref.crs_wkt
-                except:
-                    iswsCRS = w4h.read_dict(r&#39;../resources/isws_crs&#39;)
+                except Exception:
+                    iswsCRS = w4h.read_dict(r&#39;../resources/sample_data/isws_crs.json&#39;)
                     gridIN.rio.write_crs(iswsCRS)
             elif grid_crs.lower()==&#39;isws&#39;:
                 iswsCRS = w4h.read_dict(r&#39;../resources/isws_crs&#39;)
@@ -3060,7 +3141,7 @@ Tuple/list with two pandas dataframes: (well_data, metadata) metadata is None if
 </details>
 </dd>
 <dt id="w4h.read_study_area"><code class="name flex">
-<span>def <span class="ident">read_study_area</span></span>(<span>study_area_path, study_area_crs='EPSG:4269', log=False, verbose=False)</span>
+<span>def <span class="ident">read_study_area</span></span>(<span>study_area_path, study_area_crs='EPSG:4269', buffer=None, log=False, verbose=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Read study area geospatial file into geopandas</p>
@@ -3069,10 +3150,14 @@ Tuple/list with two pandas dataframes: (well_data, metadata) metadata is None if
 <dt><strong><code>study_area_path</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path</code></dt>
 <dd>Filepath to any geospatial file readable by geopandas.
 Polygon is best, but may work with other types if extent is correct.</dd>
-<dt><strong><code>crs</code></strong> :&ensp;<code>str, tuple, dict</code>, optional</dt>
+<dt><strong><code>study_area_crs</code></strong> :&ensp;<code>str, tuple, dict</code>, optional</dt>
 <dd>CRS designation readable by geopandas/pyproj</dd>
+<dt><strong><code>buffer</code></strong> :&ensp;<code>None</code> or <code>numeric</code>, default=<code>None</code></dt>
+<dd>If None, no buffer created. If a numeric value is given (float or int, for example), a buffer will be created at that distance in the unit of the study_area_crs.</dd>
 <dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
 <dd>Whether to log results to log file, by default False</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, default=<code>False</code></dt>
+<dd>Whether to print status and results to terminal</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -3083,7 +3168,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_study_area(study_area_path, study_area_crs=&#39;EPSG:4269&#39;, log=False, verbose=False):
+<pre><code class="python">def read_study_area(study_area_path, study_area_crs=&#39;EPSG:4269&#39;, buffer=None, log=False, verbose=False):
     &#34;&#34;&#34;Read study area geospatial file into geopandas
 
     Parameters
@@ -3091,10 +3176,14 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     study_area_path : str or pathlib.Path
         Filepath to any geospatial file readable by geopandas. 
         Polygon is best, but may work with other types if extent is correct.
-    crs : str, tuple, dict, optional
+    study_area_crs : str, tuple, dict, optional
         CRS designation readable by geopandas/pyproj
+    buffer : None or numeric, default=None
+        If None, no buffer created. If a numeric value is given (float or int, for example), a buffer will be created at that distance in the unit of the study_area_crs.
     log : bool, default = False
         Whether to log results to log file, by default False
+    verbose : bool, default=False
+        Whether to print status and results to terminal
 
     Returns
     -------
@@ -3106,6 +3195,13 @@ Polygon is best, but may work with other types if extent is correct.</dd>
         verbose_print(read_study_area, locals())
     studyAreaIN = gpd.read_file(study_area_path)
     studyAreaIN.to_crs(study_area_crs, inplace=True)
+
+    if buffer is not None:
+        studyAreaIN = studyAreaIN.buffer(distance=buffer)
+        if verbose:
+            print(&#39;\tBuffer applied.&#39;)
+    if verbose:
+        print(&#34;\tStudy area read.&#34;)
 
     return studyAreaIN</code></pre>
 </details>
@@ -4098,8 +4194,8 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     if metadata_DF is None:
         well_data_xyz = well_data_DF
     else:
-        merge_tables_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.merge_tables).parameters.keys()}
-        well_data_xyz = w4h.merge_tables(data_df=well_data_DF, header_df=metadata_DF, data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, **merge_tables_kwargs)
+        merge_metadata_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.merge_metadata).parameters.keys()}
+        well_data_xyz = w4h.merge_metadata(data_df=well_data_DF, header_df=metadata_DF, data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, **merge_metadata_kwargs)
 
     #Convert well_data_xyz to have geometry
     coords2geometry_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.coords2geometry).parameters.keys()}
@@ -4212,8 +4308,10 @@ Polygon is best, but may work with other types if extent is correct.</dd>
     
     well_data_xyz = w4h.sample_raster_points(raster=bedrockGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_ELEV&#39;, verbose=verbose, log=log)
     well_data_xyz = w4h.sample_raster_points(raster=surfaceGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;SURFACE_ELEV&#39;, verbose=verbose, log=log)
-    well_data_xyz = w4h.sample_raster_points(raster=driftThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_DEPTH&#39;, verbose=verbose, log=log)
-    well_data_xyz = w4h.sample_raster_points(raster=layerThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;LAYER_THICK&#39;, verbose=verbose, log=log)
+    well_data_xyz[&#39;BEDROCK_DEPTH&#39;] = well_data_xyz[&#39;SURFACE_ELEV&#39;] - well_data_xyz[&#39;BEDROCK_ELEV&#39;]
+    well_data_xyz[&#39;LAYER_THICK&#39;] = well_data_xyz[&#39;BEDROCK_DEPTH&#39;] / layers
+    #well_data_xyz = w4h.sample_raster_points(raster=driftThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_DEPTH&#39;, verbose=verbose, log=log)
+    #well_data_xyz = w4h.sample_raster_points(raster=layerThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;LAYER_THICK&#39;, verbose=verbose, log=log)
     well_data_xyz = w4h.get_layer_depths(df_with_depths=well_data_xyz, layers=layers, log=log)
     #print(&#39;Layer Depths:&#39;, well_data_xyz[&#39;geometry&#39;].head(25))
 
@@ -4238,7 +4336,7 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 </details>
 </dd>
 <dt id="w4h.sample_raster_points"><code class="name flex">
-<span>def <span class="ident">sample_raster_points</span></span>(<span>raster, points_df, xcol='LONGITUDE', ycol='LATITUDE', new_col='SAMPLED', verbose=True, log=False)</span>
+<span>def <span class="ident">sample_raster_points</span></span>(<span>raster, points_df, well_id_col='API_NUMBER', xcol='LONGITUDE', ycol='LATITUDE', new_col='SAMPLED', verbose=True, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Sample raster values to points from geopandas geodataframe.</p>
@@ -4248,6 +4346,8 @@ Polygon is best, but may work with other types if extent is correct.</dd>
 <dd>Raster containing values to be sampled.</dd>
 <dt><strong><code>points_df</code></strong> :&ensp;<code>geopandas.geodataframe</code></dt>
 <dd>Geopandas dataframe with geometry column containing point values to sample.</dd>
+<dt><strong><code>well_id_col</code></strong> :&ensp;<code>str</code>, default=<code>"API_NUMBER"</code></dt>
+<dd>Column that uniquely identifies each well so multiple sampling points are not taken per well</dd>
 <dt><strong><code>xcol</code></strong> :&ensp;<code>str</code>, default=<code>'LONGITUDE'</code></dt>
 <dd>Column containing name for x-column, by default 'LONGITUDE.'
 This is used to output (potentially) reprojected point coordinates so as not to overwrite the original.</dd>
@@ -4271,7 +4371,7 @@ new_col : str, optional</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def sample_raster_points(raster, points_df, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, new_col=&#39;SAMPLED&#39;, verbose=True, log=False):  
+<pre><code class="python">def sample_raster_points(raster, points_df, well_id_col=&#39;API_NUMBER&#39;, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, new_col=&#39;SAMPLED&#39;, verbose=True, log=False):  
     &#34;&#34;&#34;Sample raster values to points from geopandas geodataframe.
 
     Parameters
@@ -4280,6 +4380,8 @@ new_col : str, optional</dd>
         Raster containing values to be sampled.
     points_df : geopandas.geodataframe
         Geopandas dataframe with geometry column containing point values to sample.
+    well_id_col : str, default=&#34;API_NUMBER&#34;
+        Column that uniquely identifies each well so multiple sampling points are not taken per well
     xcol : str, default=&#39;LONGITUDE&#39;
         Column containing name for x-column, by default &#39;LONGITUDE.&#39;
         This is used to output (potentially) reprojected point coordinates so as not to overwrite the original.
@@ -4302,12 +4404,20 @@ new_col : str, optional</dd>
 
     if verbose:
         verbose_print(sample_raster_points, locals(), exclude_params=[&#39;raster&#39;, &#39;points_df&#39;])
-        print(&#34;Sampling grid for {}.&#34;.format(new_col))
+        print(&#34;\tSampling {} grid for at all well locations.&#34;.format(new_col))
 
     #Project points to raster CRS
     rastercrsWKT=raster.spatial_ref.crs_wkt
-    points_df = points_df.to_crs(rastercrsWKT)
-    #if xcol==&#39;LONGITUDE&#39; and ycol==&#39;LATITUDE&#39;:
+    if rastercrsWKT != points_df.crs:
+        if verbose:
+            print(&#34;\tTemporarily reprojecting raster data to point data&#39;s CRS.&#34;)
+        pointCRS = points_df.crs.to_epsg()
+        if pointCRS is None:
+            pointCRS = points_df.crs.to_wkt()
+
+        raster = raster.rio.reproject(pointCRS)
+        #points_df = points_df.to_crs(rastercrsWKT)
+
     xCOLOUT = xcol+&#39;_PROJ&#39;
     yCOLOUT = ycol+&#39;_PROJ&#39;
     points_df[xCOLOUT] = points_df[&#39;geometry&#39;].x
@@ -4315,14 +4425,27 @@ new_col : str, optional</dd>
     xData = np.array(points_df[xCOLOUT].values)
     yData = np.array(points_df[yCOLOUT].values)
     zData = []
+    zID = []
+    zInd = []
+
+    # Get unique well values to reduce sampling time
+    uniqueWells = points_df.drop_duplicates(subset=[well_id_col])
+    if verbose:
+        print(f&#34;\t{uniqueWells.shape[0]} unique wells idenfied using {well_id_col} column&#34;)
+    
     # Loop over DataFrame rows
-    for i, row in points_df.iterrows():
+    for i, row in uniqueWells.iterrows():
         # Select data from DataArray at current coordinates and append to list
-        zData.append(raster.sel(x=row[xCOLOUT], y=row[yCOLOUT], method=&#39;nearest&#39;).item())
-    #sampleArr=raster.sel(x=xData, y=yData, method=&#39;nearest&#39;).values
-    #sampleArr = np.diag(sampleArr)
-    #sampleDF = pd.DataFrame(sampleArr, columns=[new_col])
-    points_df[new_col] = zData#sampleDF[new_col]
+        zInd.append(i)
+        zData.append([row[well_id_col], raster.sel(x=row[xCOLOUT], y=row[yCOLOUT], method=&#39;nearest&#39;).item()])
+    
+    inputtype = points_df.dtypes[well_id_col]
+    wellZDF = pd.DataFrame(zData, columns=[well_id_col, new_col], index=pd.Index(zInd))
+
+    # Merge each unique well&#39;s data with all well intervals
+    wellZDF[well_id_col].astype(inputtype, copy=False)
+    points_df = points_df.merge(wellZDF, how=&#39;left&#39;, on=well_id_col)
+    #points_df[new_col] = zData#sampleDF[new_col]
     return points_df</code></pre>
 </details>
 </dd>
@@ -4795,7 +4918,7 @@ new_col : str, optional</dd>
 <li><code><a title="w4h.layer_target_thick" href="#w4h.layer_target_thick">layer_target_thick</a></code></li>
 <li><code><a title="w4h.logger_function" href="#w4h.logger_function">logger_function</a></code></li>
 <li><code><a title="w4h.merge_lithologies" href="#w4h.merge_lithologies">merge_lithologies</a></code></li>
-<li><code><a title="w4h.merge_tables" href="#w4h.merge_tables">merge_tables</a></code></li>
+<li><code><a title="w4h.merge_metadata" href="#w4h.merge_metadata">merge_metadata</a></code></li>
 <li><code><a title="w4h.read_dict" href="#w4h.read_dict">read_dict</a></code></li>
 <li><code><a title="w4h.read_dictionary_terms" href="#w4h.read_dictionary_terms">read_dictionary_terms</a></code></li>
 <li><code><a title="w4h.read_grid" href="#w4h.read_grid">read_grid</a></code></li>
