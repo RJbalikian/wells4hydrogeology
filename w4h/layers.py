@@ -15,7 +15,7 @@ import w4h
 from w4h import logger_function, verbose_print
 
 #Function to Merge tables
-def merge_tables(data_df, header_df, data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, verbose=False, **kwargs):
+def merge_metadata(data_df, header_df, data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, verbose=False, **kwargs):
     """Function to merge tables, intended for merging metadata table with data table
 
     Parameters
@@ -44,7 +44,7 @@ def merge_tables(data_df, header_df, data_cols=None, header_cols=None, auto_pick
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
-        verbose_print(merge_tables, locals(), exclude_params=['data_df', 'header_df'])
+        verbose_print(merge_metadata, locals(), exclude_params=['data_df', 'header_df'])
     if header_df is None:
         #Figure out which columns to include
         if data_cols is None:
@@ -173,7 +173,7 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
     layerList = range(1,layers+1)
     res_list = []
     resdf_list = []
-    print(df.columns)
+
     #Generate Column names based on (looped) integers
     for layer in layerList:
         zStr = 'ELEV'

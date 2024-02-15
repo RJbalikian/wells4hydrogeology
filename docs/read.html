@@ -321,6 +321,11 @@ def read_dict(file, keytype=&#39;np&#39;):
         Dictionary translated from text file.
     &#34;&#34;&#34;
 
+    if pathlib.Path(file).suffix == &#39;.json&#39;:
+        with open(file, &#39;r&#39;) as f:
+            jsDict = json.load(f)
+        return jsDict
+
     with open(file, &#39;r&#39;) as f:
         data= f.read()
 
@@ -1040,7 +1045,7 @@ It may also be of use to simply skip this function altogether and directly defin
 </details>
 </dd>
 <dt id="w4h.read.get_most_recent"><code class="name flex">
-<span>def <span class="ident">get_most_recent</span></span>(<span>dir=WindowsPath('c:/Users/riley/LocalData/Github/wells4hydrogeology/w4h/resources'), glob_pattern='*', verbose=True)</span>
+<span>def <span class="ident">get_most_recent</span></span>(<span>dir=WindowsPath('c:/Users/riley/LocalData/Code/Github/wells4hydrogeology/w4h/resources'), glob_pattern='*', verbose=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to find the most recent file with the indicated pattern, using pathlib.glob function.</p>
@@ -1109,7 +1114,7 @@ It may also be of use to simply skip this function altogether and directly defin
 </details>
 </dd>
 <dt id="w4h.read.get_search_terms"><code class="name flex">
-<span>def <span class="ident">get_search_terms</span></span>(<span>spec_path='C:\\Users\\riley\\LocalData\\Github\\wells4hydrogeology/resources/', spec_glob_pattern='*SearchTerms-Specific*', start_path=None, start_glob_pattern='*SearchTerms-Start*', wildcard_path=None, wildcard_glob_pattern='*SearchTerms-Wildcard', verbose=False, log=False)</span>
+<span>def <span class="ident">get_search_terms</span></span>(<span>spec_path='C:\\Users\\riley\\LocalData\\Code\\Github\\wells4hydrogeology/resources/', spec_glob_pattern='*SearchTerms-Specific*', start_path=None, start_glob_pattern='*SearchTerms-Start*', wildcard_path=None, wildcard_glob_pattern='*SearchTerms-Wildcard', verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Read in dictionary files for downhole data</p>
@@ -1244,6 +1249,11 @@ with start search terms, and with wildcard search terms</p></div>
     dict
         Dictionary translated from text file.
     &#34;&#34;&#34;
+
+    if pathlib.Path(file).suffix == &#39;.json&#39;:
+        with open(file, &#39;r&#39;) as f:
+            jsDict = json.load(f)
+        return jsDict
 
     with open(file, &#39;r&#39;) as f:
         data= f.read()
