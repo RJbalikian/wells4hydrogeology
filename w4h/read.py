@@ -591,7 +591,8 @@ def read_lithologies(lith_file=None, interp_col='LITHOLOGY', target_col='CODE', 
 
     return lithoDF
 
-def add_control_points(df_without_control, df_control=None,  xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', controlpoints_crs='EPSG:4269',  description_col='FORMATION', interp_col='INTERPRETATION', target_col='TARGET', verbose=False, log=False, **kwargs):
+# Read and concatenate control points into main database/dataframe
+def add_control_points(df_without_control, df_control=None,  xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', controlpoints_crs='EPSG:4269', output_crs='EPSG:4269', description_col='FORMATION', interp_col='INTERPRETATION', target_col='TARGET', verbose=False, log=False, **kwargs):
     """Function to add control points, primarily to aid in interpolation. This may be useful when conditions are known but do not exist in input well database
 
     Parameters
@@ -610,6 +611,8 @@ def add_control_points(df_without_control, df_control=None,  xcol='LONGITUDE', y
         The column in df_control containing the z coordinates for each control point, by default 'ELEV_FT'
     controlpoints_crs : str, optional
         The column in df_control containing the crs of points, by default 'EPSG:4269'
+    output_crs : str, optional
+        The output coordinate system, by default 'EPSG:4269'
     description_col : str, optional
         The column in df_control with the description (if this is used), by default 'FORMATION'
     interp_col : str, optional
@@ -652,7 +655,7 @@ def add_control_points(df_without_control, df_control=None,  xcol='LONGITUDE', y
     #If our main df is already a geodataframe, make df_control one too
     if isinstance(df_without_control, gpd.GeoDataFrame):
         from w4h import coords2geometry
-        df_control = coords2geometry(df_no_geometry=df_control, xcol=xcol, ycol=ycol, zcol=zcol, input_coords_crs=controlpoints_crs, log=log)
+        gdf_control = coords2geometry(df_no_geometry=df_control, xcol=xcol, ycol=ycol, zcol=zcol, input_coords_crs=controlpoints_crs, log=log)
 
     #Get kwargs passed to pd.concat, and set defaults for ignore_index and join
     concat_kwargs = {k: v for k, v in locals()['kwargs'].items() if k in inspect.signature(pd.concat).parameters.keys()}
@@ -661,6 +664,9 @@ def add_control_points(df_without_control, df_control=None,  xcol='LONGITUDE', y
     if 'join' not in concat_kwargs.keys():
         concat_kwargs['join'] = 'outer'
         
-    df = pd.concat([df_without_control, df_control], **concat_kwargs)
+    gdf = pd.concat([df_without_control, gdf_control], **concat_kwargs)
     
-    return df
+    if controlpoints_crs != output_crs:
+        gdf = gdf.to_crs(output_crs)
+    
+    return gdf

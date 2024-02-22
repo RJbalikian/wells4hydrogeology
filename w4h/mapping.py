@@ -3,12 +3,14 @@ import inspect
 import json
 import pathlib
 import os
+import warnings
 
 import rioxarray as rxr
 import xarray as xr
 import geopandas as gpd
 import pandas as pd
 import numpy as np
+import pyproj
 import shapely
 from owslib.wcs import WebCoverageService
 from shapely.geometry import Point
@@ -22,7 +24,7 @@ from w4h import logger_function, verbose_print
 lidarURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
 
 #Read study area shapefile (or other file) into geopandas
-def read_study_area(study_area_path, study_area_crs='EPSG:4269', buffer=None, log=False, verbose=False):
+def read_study_area(study_area_path, study_area_crs='EPSG:4269', buffer=None, return_original=False, log=False, verbose=False):
     """Read study area geospatial file into geopandas
 
     Parameters
@@ -34,6 +36,8 @@ def read_study_area(study_area_path, study_area_crs='EPSG:4269', buffer=None, lo
         CRS designation readable by geopandas/pyproj
     buffer : None or numeric, default=None
         If None, no buffer created. If a numeric value is given (float or int, for example), a buffer will be created at that distance in the unit of the study_area_crs.
+    return_original : bool, default=False
+        Whether to return the (reprojected) study area as well as the (reprojected) buffered study area. Study area is only used for clipping data, so usually return_original=False is sufficient.
     log : bool, default = False
         Whether to log results to log file, by default False
     verbose : bool, default=False
@@ -50,17 +54,24 @@ def read_study_area(study_area_path, study_area_crs='EPSG:4269', buffer=None, lo
     studyAreaIN = gpd.read_file(study_area_path)
     studyAreaIN.to_crs(study_area_crs, inplace=True)
 
+    # Create a buffered study area for clipping
     if buffer is not None:
+        if return_original:
+            studyAreaNoBuffer = studyAreaIN
         studyAreaIN = studyAreaIN.buffer(distance=buffer)
+        
         if verbose:
             print('\tBuffer applied.')
+    
     if verbose:
         print("\tStudy area read.")
 
+    if return_original:
+        return studyAreaIN, studyAreaNoBuffer
     return studyAreaIN
 
 #Convert coords in columns to geometry in geopandas dataframe
-def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', input_coords_crs='EPSG:4269', use_z=False, verbose=False, log=False):
+def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', input_coords_crs='EPSG:4269', use_z=False, wkt_col='WKT', geometry_source='coords', verbose=False, log=False):
     """Adds geometry to points with xy coordinates in the specified coordinate reference system.
 
     Parameters
@@ -77,6 +88,7 @@ def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELE
         Name of crs used for geometry
     use_z : bool, default=False
         Whether to use z column in calculation
+    geometry_source : str {'coords', 'wkt', 'geometry'}
     log : bool, default = False
         Whether to log results to log file, by default False
 
@@ -91,17 +103,34 @@ def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELE
     if verbose:
         verbose_print(coords2geometry, locals(), exclude_params=['df_no_geometry'])
 
-    x = df_no_geometry[xcol].to_numpy()
-    y = df_no_geometry[ycol].to_numpy()
-
-    #coords = pd.concat([y, x], axis=1)
-    if use_z:
-        z = df_no_geometry[zcol].to_numpy()
-        df_no_geometry["geometry"] = gpd.points_from_xy(x, y, z=z, crs=input_coords_crs)
+    if isinstance(df_no_geometry, gpd.GeoDataFrame):
+        gdf = df_no_geometry
     else:
-        df_no_geometry["geometry"] = gpd.points_from_xy(x, y, crs=input_coords_crs)
-        
-    gdf = gpd.GeoDataFrame(df_no_geometry, crs=input_coords_crs)
+        wktList = ['wkt', 'well known text', 'wellknowntext', 'well_known_text', 'w']
+        coords_list = ['coords', 'coordinates', 'xycoords', 'xy', 'xyz', 'xyzcoords', 'xycoordinates', 'xyzcoordinates', 'c']
+        geometryList = ['geometry', 'geom', 'geo', 'g']
+        if geometry_source.lower() in wktList:
+            from shapely import wkt
+            df_no_geometry['geometry'] = df_no_geometry[wkt_col].apply(wkt.loads)
+            df_no_geometry.drop(wkt_col, axis=1, inplace=True) #Drop WKT column
+
+        elif geometry_source.lower() in coords_list:#coords = pd.concat([y, x], axis=1)
+            x = df_no_geometry[xcol].to_numpy()
+            y = df_no_geometry[ycol].to_numpy()
+            if use_z:
+                z = df_no_geometry[zcol].to_numpy()
+                df_no_geometry["geometry"] = gpd.points_from_xy(x, y, z=z, crs=input_coords_crs)
+            else:
+                df_no_geometry["geometry"] = gpd.points_from_xy(x, y, crs=input_coords_crs)
+        elif geometry_source.lower() in geometryList:
+            pass
+        else:
+            warnings.warn(message=f"""The parameter geometry_source={geometry_source} is not recognized.
+                        Should be one of 'coords' (if x, y (and/or z) columns with coordintes used), 
+                        'wkt' (if column with wkt string used), or 
+                        'geometry' (if column with shapely geometry objects used, as with a GeoDataFrame)""")
+            
+        gdf = gpd.GeoDataFrame(df_no_geometry, geometry='geometry', crs=input_coords_crs)
     return gdf
 
 #Clip a geodataframe to a study area
@@ -487,7 +516,7 @@ def read_wms(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:None', wms_url=l
     return wmsData_rxr
 
 #Clip a grid to a study area
-def grid2study_area(study_area, grid, study_area_crs='', grid_crs='', verbose=False, log=False):
+def grid2study_area(study_area, grid, output_crs='EPSG:4269',verbose=False, log=False):
     """Clips grid to study area.
 
     Parameters
@@ -496,10 +525,8 @@ def grid2study_area(study_area, grid, study_area_crs='', grid_crs='', verbose=Fa
         inputs study area polygon
     grid : xarray.DataArray
         inputs grid array
-    study_area_crs : str, default=''
+    output_crs : str, default='EPSG:4269'
         inputs the coordinate reference system for the study area
-    grid_crs : str, default=''
-        inputs the coordinate reference system for the grid
     log : bool, default = False
         Whether to log results to log file, by default False
 
@@ -512,22 +539,23 @@ def grid2study_area(study_area, grid, study_area_crs='', grid_crs='', verbose=Fa
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
         verbose_print(grid2study_area, locals(), exclude_params=['study_area', 'grid'])
-    if study_area_crs=='':
-        study_area_crs=study_area.crs
-
-    if grid_crs=='':
-        #Get EPSG of model grid
-        subtext = grid.spatial_ref.crs_wkt[-20:]
-        starInd = subtext.find('EPSG')
-        grid_crs = subtext[starInd:-2].replace('"','').replace(',',':')   
-        #print(grid_crs)
     
-    if study_area_crs != grid_crs:
-        studyAreaUnproject = study_area.copy()
-        study_area = study_area.to_crs(grid_crs)   
-    else:
-        study_area = study_area
+    if output_crs=='':
+        output_crs=study_area.crs
 
+    #Get input CRS's
+    grid_crs = pyproj.CRS.from_wkt(grid.rio.crs.to_wkt())
+    study_area_crs = study_area.crs
+    
+    # Reproject if needed
+    if output_crs != grid_crs:
+        grid = grid.rio.reproject(output_crs)
+    grid_crs = pyproj.CRS.from_wkt(grid.rio.crs.to_wkt())
+
+    if grid_crs != study_area_crs:
+        study_area = study_area.to_crs(grid_crs)   
+
+    # We'll just clip to outer bounds of study area
     saExtent = study_area.total_bounds
 
     if grid['y'][-1].values - grid['y'][0].values > 0:
@@ -543,12 +571,14 @@ def grid2study_area(study_area, grid, study_area_crs='', grid_crs='', verbose=Fa
     else:
         minx=saExtent[2]
         maxx=saExtent[0]
+    
+    # "Clip" it
     grid = grid.sel(x=slice(minx, maxx), y=slice(miny, maxy)).sel(band=1)     
 
     return grid
 
 #Read the model grid into (rio)xarray
-def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_grid=True, node_byspace=True, study_area_crs=None, grid_crs=None, verbose=False, log=False):
+def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_grid=True, node_byspace=True, grid_crs=None, output_crs='EPSG:4269', verbose=False, log=False):
     """Reads in model grid to xarray data array
 
     Parameters
@@ -563,7 +593,7 @@ def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_g
         Whether function to either read grid or create grid
     node_byspace : bool, default=False
         Denotes how to create grid
-    study_area_crs : str, default=None
+    output_crs : str, default='EPSG:4269'
         Inputs study area crs
     grid_crs : str, default=None
         Inputs grid crs
@@ -578,13 +608,14 @@ def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_g
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
         verbose_print(read_model_grid, locals(), exclude_params='study_area')
+    
     if read_grid and model_grid_path is not None:
         modelGridIN = rxr.open_rasterio(model_grid_path)
 
         if grid_crs is None:
             try:
                 grid_crs=modelGridIN.spatial_ref.crs_wkt
-            except:
+            except Exception:
                 iswsCRSPath = w4h.get_resources()['ISWS_CRS']
                 iswsCRS = w4h.read_dict(iswsCRSPath, keytype=None)
                 grid_crs = iswsCRS              
@@ -598,13 +629,14 @@ def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_g
             iswsCRSPath = w4h.get_resources()['ISWS_CRS']
             grid_crs = w4h.read_dict(iswsCRSPath, keytype=None)            
             modelGridIN.rio.write_crs(grid_crs)
-            
+        else:
+            warnings.warn(f'CRS Specification for grid is {grid_crs}, but this cannot be written to the grid')
+        
+        modelGridIN = modelGridIN.rio.reproject(output_crs) 
+           
         if study_area is not None:                
-            if study_area_crs is None:
-                study_area_crs=study_area.crs
-            study_area = study_area.to_crs(grid_crs)
-            study_area_crs=study_area.crs            
-            modelGrid = grid2study_area(study_area=study_area, grid=modelGridIN, study_area_crs=study_area_crs, grid_crs=grid_crs)
+            study_area = study_area.to_crs(output_crs)
+            modelGrid = grid2study_area(study_area=study_area, grid=modelGridIN, output_crs=output_crs)
         else:
             modelGrid = modelGridIN
 
@@ -615,31 +647,13 @@ def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_g
 
         modelGrid = modelGrid.where(modelGrid != noDataVal, other=np.nan)   #Replace no data values with NaNs
         modelGrid = modelGrid.where(modelGrid == np.nan, other=1) #Replace all other values with 1
-        modelGrid.rio.reproject(grid_crs, inplace=True)
-        
+        modelGrid.rio.reproject(grid_crs, inplace=True)     
     elif model_grid_path is None and study_area is None:
         if verbose:
             print("ERROR: Either model_grid_path or study_area must be defined.")
     else:
-        spatRefDict = {'crs_wkt': 'PROJCS["Clarke_1866_Lambert_Conformal_Conic",GEOGCS["NAD27",DATUM["North_American_Datum_1927",SPHEROID["Clarke 1866",6378206.4,294.978698199999,AUTHORITY["EPSG","7008"]],AUTHORITY["EPSG","6267"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4267"]],PROJECTION["Lambert_Conformal_Conic_2SP"],PARAMETER["latitude_of_origin",33],PARAMETER["central_meridian",-89.5],PARAMETER["standard_parallel_1",33],PARAMETER["standard_parallel_2",45],PARAMETER["false_easting",2999994],PARAMETER["false_northing",0],UNIT["US survey foot",0.304800609601219,AUTHORITY["EPSG","9003"]],AXIS["Easting",EAST],AXIS["Northing",NORTH]]',
-            'semi_major_axis': 6378206.4,
-            'semi_minor_axis': 6356583.799998981,
-            'inverse_flattening': 294.978698199999,
-            'reference_ellipsoid_name': 'Clarke 1866',
-            'longitude_of_prime_meridian': 0.0,
-            'prime_meridian_name': 'Greenwich',
-            'geographic_crs_name': 'NAD27',
-            'horizontal_datum_name': 'North American Datum 1927',
-            'projected_crs_name': 'Clarke_1866_Lambert_Conformal_Conic',
-            'grid_mapping_name': 'lambert_conformal_conic',
-            'standard_parallel': (33.0, 45.0),
-            'latitude_of_projection_origin': 33.0,
-            'longitude_of_central_meridian': -89.5,
-            'false_easting': 2999994.0,
-            'false_northing': 0.0,
-            'spatial_ref': 'PROJCS["Clarke_1866_Lambert_Conformal_Conic",GEOGCS["NAD27",DATUM["North_American_Datum_1927",SPHEROID["Clarke 1866",6378206.4,294.978698199999,AUTHORITY["EPSG","7008"]],AUTHORITY["EPSG","6267"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4267"]],PROJECTION["Lambert_Conformal_Conic_2SP"],PARAMETER["latitude_of_origin",33],PARAMETER["central_meridian",-89.5],PARAMETER["standard_parallel_1",33],PARAMETER["standard_parallel_2",45],PARAMETER["false_easting",2999994],PARAMETER["false_northing",0],UNIT["US survey foot",0.304800609601219,AUTHORITY["EPSG","9003"]],AXIS["Easting",EAST],AXIS["Northing",NORTH]]',
-            'GeoTransform': '2440250.0 625.0 0.0 3459750.0 0.0 -625.0'}
-        
+        spatRefDict = w4h.read_dict(iswsCRSPath, keytype=None)            
+
         saExtent = study_area.total_bounds
 
         startX = saExtent[0] #Starting X Coordinate
@@ -677,7 +691,7 @@ def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_g
     return modelGrid
 
 #Read a grid from a file in using rioxarray
-def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service=False, study_area=None, study_area_crs=None, grid_crs=None, verbose=False, log=False, **kwargs):
+def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service=False, study_area=None,  grid_crs=None, output_crs='EPSG:4269', verbose=False, log=False, **kwargs):
     """Reads in grid
 
     Parameters
@@ -692,8 +706,6 @@ def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service
         Sets which service the function uses
     study_area : geopandas.GeoDataFrame, default=None
         Dataframe containing study area polygon
-    study_area_crs : str, default=None
-        Sets specific crs if current crs is not wanted
     grid_crs : str, default=None
         Sets crs to use if clipping to study area
     log : bool, default = False
@@ -708,12 +720,15 @@ def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
         verbose_print(read_grid, locals(), exclude_params=['study_area'])
+    
+    study_area_crs = study_area.crs
+    
     if grid_type=='model':
         if 'read_grid' in list(kwargs.keys()):
             rgrid = kwargs['read_grid']
         else:
             rgrid=True
-        gridIN = read_model_grid(model_grid_path=grid_path, study_area=study_area,  no_data_val_grid=0, read_grid=rgrid, study_area_crs=study_area_crs, grid_crs=grid_crs, verbose=verbose)
+        gridIN = read_model_grid(model_grid_path=grid_path, study_area=study_area,  no_data_val_grid=0, read_grid=rgrid, grid_crs=grid_crs, output_crs=output_crs, verbose=verbose)
     else:
         if use_service==False:
             gridIN = rxr.open_rasterio(grid_path)
@@ -728,7 +743,7 @@ def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service
         if study_area is not None:
             if grid_crs is None:
                 try:
-                    grid_crs=gridIN.spatial_ref.crs_wkt
+                    grid_crs = pyproj.CRS.from_wkt(gridIN.rio.crs.to_wkt())
                 except Exception:
                     iswsCRS = w4h.read_dict(r'../resources/sample_data/isws_crs.json')
                     gridIN.rio.write_crs(iswsCRS)
@@ -738,10 +753,12 @@ def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service
                 
             if study_area_crs is None:
                 study_area_crs=study_area.crs
-            study_area = study_area.to_crs(grid_crs)
+            study_area = study_area.to_crs(output_crs)
             study_area_crs=study_area.crs
             
-            gridIN = grid2study_area(study_area=study_area, grid=gridIN, study_area_crs=study_area_crs, grid_crs=grid_crs)
+            gridIN = gridIN.rio.reproject(output_crs)
+            
+            gridIN = grid2study_area(study_area=study_area, grid=gridIN, output_crs=output_crs,)
 
         try:
             no_data_val_grid = gridIN.attrs['_FillValue'] #Extract from dataset itself
