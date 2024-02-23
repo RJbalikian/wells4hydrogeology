@@ -160,13 +160,12 @@ def run(well_data,
                     export_dir = well_dataPath.parent.joinpath(outDir)
             else:
                 raise IOError('export_dir should be explicitly defined if well_data is not a filepath')
-                pass
 
             if not export_dir.exists():
                 try:
                     export_dir.mkdir()
-                except:
-                    pass
+                except Exception:
+                    print('Export Directory not created')
 
     #Get pandas dataframes from input
     read_raw_txt_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.read_raw_csv).parameters.keys()}
@@ -193,7 +192,7 @@ def run(well_data,
         studyAreaIN = None
         use_study_area = False
     else:
-        studyAreaIN = w4h.read_study_area(study_area_path=study_area, log=log, **read_study_area_kwargs)
+        studyAreaIN = w4h.read_study_area(study_area_path=study_area, log=log, output_crs=output_crs, **read_study_area_kwargs)
         use_study_area = True
 
     clip_gdf2study_area_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.clip_gdf2study_area).parameters.keys()}

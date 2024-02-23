@@ -22,7 +22,7 @@ from w4h import logger_function, verbose_print
 lidarURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
 
 #Read study area shapefile (or other file) into geopandas
-def read_study_area(study_area_path, study_area_crs='EPSG:4269', buffer=None, log=False, verbose=False):
+def read_study_area(study_area_path, output_crs='EPSG:4269', buffer=None, log=False, verbose=False, **read_file_kwargs):
     """Read study area geospatial file into geopandas
 
     Parameters
@@ -47,8 +47,8 @@ def read_study_area(study_area_path, study_area_crs='EPSG:4269', buffer=None, lo
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
         verbose_print(read_study_area, locals())
-    studyAreaIN = gpd.read_file(study_area_path)
-    studyAreaIN.to_crs(study_area_crs, inplace=True)
+    studyAreaIN = gpd.read_file(study_area_path, **read_file_kwargs)
+    studyAreaIN.to_crs(output_crs, inplace=True)
 
     if buffer is not None:
         studyAreaIN = studyAreaIN.buffer(distance=buffer)
