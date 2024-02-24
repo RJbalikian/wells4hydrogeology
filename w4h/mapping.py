@@ -24,7 +24,7 @@ from w4h import logger_function, verbose_print
 lidarURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
 
 #Read study area shapefile (or other file) into geopandas
-def read_study_area(study_area_path, output_crs='EPSG:4269', buffer=None, log=False, verbose=False, **read_file_kwargs):
+def read_study_area(study_area_path, output_crs='EPSG:4269', buffer=None, return_original=False, log=False, verbose=False, **read_file_kwargs):
     """Read study area geospatial file into geopandas
 
     Parameters
@@ -200,7 +200,7 @@ def sample_raster_points(raster, points_df, well_id_col='API_NUMBER', xcol='LONG
 
     if verbose:
         verbose_print(sample_raster_points, locals(), exclude_params=['raster', 'points_df'])
-        print("\tSampling {} grid for at all well locations.".format(new_col))
+        print(f"\tSampling {new_col} grid for at all well locations.")
 
     #Project points to raster CRS
     rastercrsWKT=raster.spatial_ref.crs_wkt
@@ -573,7 +573,9 @@ def grid2study_area(study_area, grid, output_crs='EPSG:4269',verbose=False, log=
         maxx=saExtent[0]
     
     # "Clip" it
-    grid = grid.sel(x=slice(minx, maxx), y=slice(miny, maxy)).sel(band=1)     
+    grid = grid.sel(x=slice(minx, maxx), y=slice(miny, maxy))
+    if 'band' in grid.dims:
+        grid = grid.sel(band=1)
 
     return grid
 
@@ -720,9 +722,7 @@ def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
         verbose_print(read_grid, locals(), exclude_params=['study_area'])
-    
-    study_area_crs = study_area.crs
-    
+        
     if grid_type=='model':
         if 'read_grid' in list(kwargs.keys()):
             rgrid = kwargs['read_grid']
@@ -739,26 +739,30 @@ def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service
         elif use_service:
             #Deafults to wms
             gridIN = read_wms(study_area, wcs_url=lidarURL, **kwargs)
-
+        
         if study_area is not None:
+            study_area_crs = study_area.crs
             if grid_crs is None:
                 try:
                     grid_crs = pyproj.CRS.from_wkt(gridIN.rio.crs.to_wkt())
                 except Exception:
-                    iswsCRS = w4h.read_dict(r'../resources/sample_data/isws_crs.json')
+                    iswsCRS = pyproj.CRS.from_json_dict(w4h.read_dict(w4h.get_resources()['ISWS_CRS']))
                     gridIN.rio.write_crs(iswsCRS)
             elif grid_crs.lower()=='isws':
-                iswsCRS = w4h.read_dict(r'../resources/isws_crs')
+                iswsCRS = pyproj.CRS.from_json_dict(w4h.read_dict(w4h.get_resources()['ISWS_CRS']))
                 gridIN.rio.write_crs(iswsCRS)
-                
+                        
             if study_area_crs is None:
                 study_area_crs=study_area.crs
             study_area = study_area.to_crs(output_crs)
             study_area_crs=study_area.crs
             
             gridIN = gridIN.rio.reproject(output_crs)
-            
             gridIN = grid2study_area(study_area=study_area, grid=gridIN, output_crs=output_crs,)
+        else:
+            gridIN = gridIN.rio.reproject(output_crs)
+            if 'band' in gridIN.dims:
+                gridIN = gridIN.sel(band=1)
 
         try:
             no_data_val_grid = gridIN.attrs['_FillValue'] #Extract from dataset itself
