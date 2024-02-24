@@ -184,7 +184,7 @@ def run(well_data,
 
     #Convert well_data_xyz to have geometry
     coords2geometry_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.coords2geometry).parameters.keys()}
-    well_data_xyz = w4h.coords2geometry(df_no_geometry=well_data_xyz, xcol=xcol, ycol=ycol, zcol=zcol, log=log, **coords2geometry_kwargs)
+    well_data_xyz = w4h.coords2geometry(df_no_geometry=well_data_xyz, xcol=xcol, ycol=ycol, zcol=zcol, verbose=verbose, log=log, **coords2geometry_kwargs)
 
     #Get Study area
     read_study_area_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.read_study_area).parameters.keys()}
@@ -196,7 +196,7 @@ def run(well_data,
         use_study_area = True
 
     clip_gdf2study_area_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.clip_gdf2study_area).parameters.keys()}
-    well_data_xyz = w4h.clip_gdf2study_area(study_area=studyAreaIN, gdf=well_data_xyz, log=log, **clip_gdf2study_area_kwargs)
+    well_data_xyz = w4h.clip_gdf2study_area(study_area=studyAreaIN, gdf=well_data_xyz,  verbose=verbose, log=log,**clip_gdf2study_area_kwargs)
     #Get surfaces and grid(s)
     read_grid_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.read_grid).parameters.keys()}
 
@@ -463,7 +463,7 @@ def get_resources(resource_type='filepaths', scope='local', verbose=False):
     else:
         resources_dict['study_area'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='*sample_studyArea*', verbose=verbose)
         resources_dict['surf_elev'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='*sample_surface_bedrock_lidarresampled100ft*', verbose=verbose)
-        resources_dict['bedrock_elev'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='*sample_bedrock_elev_grimleyphillips_ESTL*', verbose=verbose)
+        resources_dict['bedrock_elev'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='*LocalSample_Bedrock_elev_EStLGrimleyPhillips*', verbose=verbose)
 
         resources_dict['well_data'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_well_data*', verbose=verbose)
 
