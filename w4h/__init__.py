@@ -110,6 +110,7 @@ __all__=('logger_function','verbose_print', 'run', 'get_resources',
          'add_control_points'
          )
 
+# Update the w4h.run() help() return to actually be helpful
 run.__doc__ = core._run_docstring()
 
 __author__='Riley Balikian, Joe Franke, Allan Jones, Mike Krasowski'

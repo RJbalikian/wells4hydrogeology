@@ -19,7 +19,7 @@ from shapely.geometry import Point
 
 import w4h
 
-def run(well_data, 
+def run(well_data,
         surf_elev_grid,
         bedrock_elev_grid,
         model_grid=None,
@@ -329,12 +329,23 @@ def _run_docstring():
     funcStrList = []
     funcParams = []
     funcDefaults = []
-    output = []
+    prevOutputList = ['df', 'filepath', 'study_area']
+    requiredList = []
     for func in functionList:
         parameters = inspect.signature(func).parameters
         defaults = [param.default for param in list(zip(*parameters.items()))[1]]
-        defaults = ['<positional, no default>' if d is inspect._empty else d for d in defaults]
         parameters = list(zip(*parameters.items()))[0]
+
+        for i, d in enumerate(defaults):
+            if 'kwargs' in parameters[i]:
+                defaults[i] = {}
+            elif d is inspect._empty:
+                if func.__name__ == 'read_study_area' and parameters[i] == 'study_area':
+                    defaults[i] = "None <but defaults to w4h.resources()['study_area']>"
+                elif any(o in parameters[i] for o in prevOutputList):
+                    defaults[i] = '<output of previous function>'
+                else:
+                    defaults[i] = '<no default>'
 
         firstLine = f"\n{func.__name__}"
         followingLines = ''
