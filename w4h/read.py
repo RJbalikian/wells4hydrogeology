@@ -9,7 +9,7 @@ import geopandas as gpd
 import pandas as pd
 import numpy as np
 
-from w4h import logger_function, verbose_print
+from w4h import logger_function, verbose_print, get_resources
 
 repoDir = pathlib.Path(os.getcwd())
 
@@ -437,7 +437,7 @@ def get_search_terms(spec_path=str(repoDir)+'/resources/', spec_glob_pattern='*S
     return specTermsPath, startTermsPath, wilcardTermsPath
 
 #Read files into pandas dataframes
-def read_dictionary_terms(dict_file, id_col='ID', search_col='DESCRIPTION', definition_col='LITHOLOGY', class_flag_col='CLASS_FLAG', dictionary_type=None, class_flag=6, rem_extra_cols=True, verbose=False, log=False):
+def read_dictionary_terms(dict_file=None, id_col='ID', search_col='DESCRIPTION', definition_col='LITHOLOGY', class_flag_col='CLASS_FLAG', dictionary_type=None, class_flag=6, rem_extra_cols=True, verbose=False, log=False):
     """Function to read dictionary terms from file into pandas dataframe
 
     Parameters
@@ -471,11 +471,12 @@ def read_dictionary_terms(dict_file, id_col='ID', search_col='DESCRIPTION', defi
         verbose_print(read_dictionary_terms, locals())    
     #Read files into pandas dataframes
     dict_terms = []
-    if dict_file is None:
-        df = pd.DataFrame(columns=['ID', 'DESCRIPTION', 'LITHOLOGY', 'CLASS_FLAGS'])
-        dict_terms.append(df)
-        dict_file = ['']
-    elif type(dict_file) is list:
+    #if dict_file is None:
+    #    dict_file = get_resources()['LithologyDict_Exact']
+    #    df = pd.DataFrame(columns=['ID', 'DESCRIPTION', 'LITHOLOGY', 'CLASS_FLAGS'])
+    #    dict_terms.append(df)
+    #    dict_file = ['']
+    if isinstance(dict_file, (tuple, list)):
         for i, f in enumerate(dict_file):
             if not f.exists():
                 df = pd.DataFrame(columns=['ID', 'DESCRIPTION', 'LITHOLOGY', 'CLASS_FLAGS'])
@@ -486,6 +487,9 @@ def read_dictionary_terms(dict_file, id_col='ID', search_col='DESCRIPTION', defi
             if id_col in dict_terms[i].columns:
                 dict_terms[i].set_index(id_col, drop=True, inplace=True)
     else:
+        if dict_file is None:
+            dict_file = get_resources()['LithologyDict_Exact']
+
         dict_file = pathlib.Path(dict_file)
         if dict_file.exists() and dict_file.is_file():
             dict_terms.append(pd.read_csv(dict_file, low_memory=False))
