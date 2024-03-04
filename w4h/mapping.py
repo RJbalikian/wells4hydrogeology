@@ -24,12 +24,12 @@ from w4h import logger_function, verbose_print
 lidarURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
 
 #Read study area shapefile (or other file) into geopandas
-def read_study_area(study_area_path, output_crs='EPSG:4269', buffer=None, return_original=False, log=False, verbose=False, **read_file_kwargs):
+def read_study_area(study_area, output_crs='EPSG:4269', buffer=None, return_original=False, log=False, verbose=False, **read_file_kwargs):
     """Read study area geospatial file into geopandas
 
     Parameters
     ----------
-    study_area_path : str or pathlib.Path
+    study_area : str, pathlib.Path, geopandas.GeoDataFrame, or shapely.Geometry
         Filepath to any geospatial file readable by geopandas. 
         Polygon is best, but may work with other types if extent is correct.
     study_area_crs : str, tuple, dict, optional
@@ -51,7 +51,19 @@ def read_study_area(study_area_path, output_crs='EPSG:4269', buffer=None, return
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
         verbose_print(read_study_area, locals())
-    studyAreaIN = gpd.read_file(study_area_path, **read_file_kwargs)
+    
+    if isinstance(study_area, (gpd.GeoDataFrame, gpd.GeoSeries)):
+        studyAreaIN = study_area
+    elif isinstance(study_area, shapely.Geometry):
+        if 'crs' in read_file_kwargs:
+            crs = read_file_kwargs['crs']
+        else:
+            warnings.warn('A shapely Geometry object was read in as the study area, but no crs specified. Using CRS specified in output_crs: {output_crs}.\
+                          You can specify the crs as a keyword argument in the read_study_area() function')
+            crs = output_crs
+        studyAreaIN = gpd.GeoDataFrame(index=[0], crs=crs, geometry=[study_area])
+    else:
+        studyAreaIN = gpd.read_file(study_area, **read_file_kwargs)
     studyAreaIN.to_crs(output_crs, inplace=True)
 
     # Create a buffered study area for clipping
