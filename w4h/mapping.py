@@ -19,7 +19,7 @@ from rasterio import MemoryFile
 
 import w4h
 
-from w4h import logger_function, verbose_print
+from w4h import logger_function, verbose_print, get_resources
 
 lidarURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
 
@@ -179,7 +179,7 @@ def clip_gdf2study_area(study_area, gdf, log=False, verbose=False):
     return gdfClip
 
 #Function to sample raster points to points specified in geodataframe
-def sample_raster_points(raster, points_df, well_id_col='API_NUMBER', xcol='LONGITUDE', ycol='LATITUDE', new_col='SAMPLED', verbose=True, log=False):  
+def sample_raster_points(raster=get_resources()['surf_elev'], points_df=get_resources()['well_data'], well_id_col='API_NUMBER', xcol='LONGITUDE', ycol='LATITUDE', new_col='SAMPLED', verbose=True, log=False):  
     """Sample raster values to points from geopandas geodataframe.
 
     Parameters
@@ -786,7 +786,8 @@ def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service
     return gridIN
 
 #Align and coregister rasters
-def align_rasters(grids_unaligned, modelgrid, no_data_val_grid=0, verbose=False, log=False):
+def align_rasters(grids_unaligned=[get_resources()['surf_elev'], get_resources()['bedrock_elev']], modelgrid=get_resources()['model_grid'], 
+                  no_data_val_grid=0, verbose=False, log=False):
     """Reprojects two rasters and aligns their pixels
 
     Parameters
@@ -808,8 +809,8 @@ def align_rasters(grids_unaligned, modelgrid, no_data_val_grid=0, verbose=False,
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
         verbose_print(align_rasters, locals(), exclude_params=['grids_unaligned', 'modelgrid'])
-    if type(grids_unaligned) is list:
-        alignedGrids=[]
+    if isinstance(grids_unaligned, (tuple, list)):
+        alignedGrids = []
         for g in grids_unaligned:
             alignedGrid = g.rio.reproject_match(modelgrid)
 
@@ -817,9 +818,7 @@ def align_rasters(grids_unaligned, modelgrid, no_data_val_grid=0, verbose=False,
                 no_data_val_grid = alignedGrid.attrs['_FillValue'] #Extract from dataset itself
             except:
                 pass
-            
             alignedGrid = alignedGrid.where(alignedGrid != no_data_val_grid)  #Replace no data values with NaNs
-            
             alignedGrids.append(alignedGrid)
     else:
         alignedGrid = grids_unaligned.rio.reproject_match(modelgrid)
@@ -834,14 +833,14 @@ def align_rasters(grids_unaligned, modelgrid, no_data_val_grid=0, verbose=False,
     return alignedGrids
 
 #Get drift and layer thickness, given a surface and bedrock grid
-def get_drift_thick(surface, bedrock, layers=9, plot=False, verbose=False, log=False):
-    """Finds the distance from surface to bedrock and then divides by number of layers to get layer thickness.
+def get_drift_thick(surface_elev=get_resources()['surf_elev'], bedrock_elev=get_resources()['bedrock_elev'], layers=9, plot=False, verbose=False, log=False):
+    """Finds the distance from surface_elev to bedrock_elev and then divides by number of layers to get layer thickness.
 
     Parameters
     ----------
-    surface : rioxarray.DataArray
+    surface_elev : rioxarray.DataArray
         array holding surface elevation
-    bedrock : rioxarray.DataArray
+    bedrock_elev : rioxarray.DataArray
         array holding bedrock elevation
     layers : int, default=9
         number of layers needed to calculate thickness for
@@ -858,10 +857,10 @@ def get_drift_thick(surface, bedrock, layers=9, plot=False, verbose=False, log=F
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
-        verbose_print(get_drift_thick, locals(), exclude_params=['surface', 'bedrock'])
+        verbose_print(get_drift_thick, locals(), exclude_params=['surface_elev', 'bedrock_elev'])
     xr.set_options(keep_attrs=True)
 
-    driftThick = surface - bedrock
+    driftThick = surface_elev - bedrock_elev
     driftThick = driftThick.clip(0,max=5000,keep_attrs=True)
     if plot:
         import matplotlib.pyplot as plt

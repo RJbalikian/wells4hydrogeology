@@ -437,7 +437,7 @@ def get_search_terms(spec_path=str(repoDir)+'/resources/', spec_glob_pattern='*S
     return specTermsPath, startTermsPath, wilcardTermsPath
 
 #Read files into pandas dataframes
-def read_dictionary_terms(dict_file=None, id_col='ID', search_col='DESCRIPTION', definition_col='LITHOLOGY', class_flag_col='CLASS_FLAG', dictionary_type=None, class_flag=6, rem_extra_cols=True, verbose=False, log=False):
+def read_dictionary_terms(dict_file=get_resources()['LithologyDict_Exact'], id_col='ID', search_col='DESCRIPTION', definition_col='LITHOLOGY', class_flag_col='CLASS_FLAG', dictionary_type=None, class_flag=6, rem_extra_cols=True, verbose=False, log=False):
     """Function to read dictionary terms from file into pandas dataframe
 
     Parameters
@@ -489,7 +489,7 @@ def read_dictionary_terms(dict_file=None, id_col='ID', search_col='DESCRIPTION',
     else:
         if dict_file is None:
             dict_file = get_resources()['LithologyDict_Exact']
-
+        
         dict_file = pathlib.Path(dict_file)
         if dict_file.exists() and dict_file.is_file():
             dict_terms.append(pd.read_csv(dict_file, low_memory=False))
@@ -497,7 +497,7 @@ def read_dictionary_terms(dict_file=None, id_col='ID', search_col='DESCRIPTION',
                 dict_terms[-1].set_index(id_col, drop=True, inplace=True)
             dict_file = [dict_file]
         else:
-            print('ERROR: dict_file ({}) does not exist.'.format(dict_file))
+            print(f'ERROR: dict_file ({dict_file}) does not exist.')
             #Create empty dataframe to return
             dict_terms = pd.DataFrame(columns=['ID', 'DESCRIPTION', 'LITHOLOGY', "CLASS_FLAGS"])
             return dict_terms
