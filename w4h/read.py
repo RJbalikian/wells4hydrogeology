@@ -9,7 +9,8 @@ import geopandas as gpd
 import pandas as pd
 import numpy as np
 
-from w4h import logger_function, verbose_print, get_resources
+from w4h import logger_function, verbose_print
+import w4h
 
 repoDir = pathlib.Path(os.getcwd())
 
@@ -437,7 +438,7 @@ def get_search_terms(spec_path=str(repoDir)+'/resources/', spec_glob_pattern='*S
     return specTermsPath, startTermsPath, wilcardTermsPath
 
 #Read files into pandas dataframes
-def read_dictionary_terms(dict_file=get_resources()['LithologyDict_Exact'], id_col='ID', search_col='DESCRIPTION', definition_col='LITHOLOGY', class_flag_col='CLASS_FLAG', dictionary_type=None, class_flag=6, rem_extra_cols=True, verbose=False, log=False):
+def read_dictionary_terms(dict_file=None, id_col='ID', search_col='DESCRIPTION', definition_col='LITHOLOGY', class_flag_col='CLASS_FLAG', dictionary_type=None, class_flag=6, rem_extra_cols=True, verbose=False, log=False):
     """Function to read dictionary terms from file into pandas dataframe
 
     Parameters
@@ -466,6 +467,10 @@ def read_dictionary_terms(dict_file=get_resources()['LithologyDict_Exact'], id_c
     dict_terms : pandas.DataFrame
         Pandas dataframe with formatting ready to be used in the classification steps of this package
     """
+    
+    if dict_file is None:
+        dict_file=w4h.get_resources()['LithologyDict_Exact']
+    
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
         verbose_print(read_dictionary_terms, locals())    
@@ -488,7 +493,7 @@ def read_dictionary_terms(dict_file=get_resources()['LithologyDict_Exact'], id_c
                 dict_terms[i].set_index(id_col, drop=True, inplace=True)
     else:
         if dict_file is None:
-            dict_file = get_resources()['LithologyDict_Exact']
+            dict_file = w4h.get_resources()['LithologyDict_Exact']
         
         dict_file = pathlib.Path(dict_file)
         if dict_file.exists() and dict_file.is_file():
