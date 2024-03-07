@@ -23,6 +23,8 @@ on:
       - 'v*-alpha'
       - 'v*-beta'
       - 'v*-rc'
+      - 'v*-pre'
+      - 'v*-dev'
 
 permissions:
   contents: read
