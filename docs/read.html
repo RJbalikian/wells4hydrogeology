@@ -38,6 +38,7 @@ import pandas as pd
 import numpy as np
 
 from w4h import logger_function, verbose_print
+import w4h
 
 repoDir = pathlib.Path(os.getcwd())
 
@@ -465,7 +466,7 @@ def get_search_terms(spec_path=str(repoDir)+&#39;/resources/&#39;, spec_glob_pat
     return specTermsPath, startTermsPath, wilcardTermsPath
 
 #Read files into pandas dataframes
-def read_dictionary_terms(dict_file, id_col=&#39;ID&#39;, search_col=&#39;DESCRIPTION&#39;, definition_col=&#39;LITHOLOGY&#39;, class_flag_col=&#39;CLASS_FLAG&#39;, dictionary_type=None, class_flag=6, rem_extra_cols=True, verbose=False, log=False):
+def read_dictionary_terms(dict_file=None, id_col=&#39;ID&#39;, search_col=&#39;DESCRIPTION&#39;, definition_col=&#39;LITHOLOGY&#39;, class_flag_col=&#39;CLASS_FLAG&#39;, dictionary_type=None, class_flag=6, rem_extra_cols=True, verbose=False, log=False):
     &#34;&#34;&#34;Function to read dictionary terms from file into pandas dataframe
 
     Parameters
@@ -494,16 +495,21 @@ def read_dictionary_terms(dict_file, id_col=&#39;ID&#39;, search_col=&#39;DESCRI
     dict_terms : pandas.DataFrame
         Pandas dataframe with formatting ready to be used in the classification steps of this package
     &#34;&#34;&#34;
+    
+    if dict_file is None:
+        dict_file=w4h.get_resources()[&#39;LithologyDict_Exact&#39;]
+    
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
         verbose_print(read_dictionary_terms, locals())    
     #Read files into pandas dataframes
     dict_terms = []
-    if dict_file is None:
-        df = pd.DataFrame(columns=[&#39;ID&#39;, &#39;DESCRIPTION&#39;, &#39;LITHOLOGY&#39;, &#39;CLASS_FLAGS&#39;])
-        dict_terms.append(df)
-        dict_file = [&#39;&#39;]
-    elif type(dict_file) is list:
+    #if dict_file is None:
+    #    dict_file = get_resources()[&#39;LithologyDict_Exact&#39;]
+    #    df = pd.DataFrame(columns=[&#39;ID&#39;, &#39;DESCRIPTION&#39;, &#39;LITHOLOGY&#39;, &#39;CLASS_FLAGS&#39;])
+    #    dict_terms.append(df)
+    #    dict_file = [&#39;&#39;]
+    if isinstance(dict_file, (tuple, list)):
         for i, f in enumerate(dict_file):
             if not f.exists():
                 df = pd.DataFrame(columns=[&#39;ID&#39;, &#39;DESCRIPTION&#39;, &#39;LITHOLOGY&#39;, &#39;CLASS_FLAGS&#39;])
@@ -514,6 +520,9 @@ def read_dictionary_terms(dict_file, id_col=&#39;ID&#39;, search_col=&#39;DESCRI
             if id_col in dict_terms[i].columns:
                 dict_terms[i].set_index(id_col, drop=True, inplace=True)
     else:
+        if dict_file is None:
+            dict_file = w4h.get_resources()[&#39;LithologyDict_Exact&#39;]
+        
         dict_file = pathlib.Path(dict_file)
         if dict_file.exists() and dict_file.is_file():
             dict_terms.append(pd.read_csv(dict_file, low_memory=False))
@@ -521,7 +530,7 @@ def read_dictionary_terms(dict_file, id_col=&#39;ID&#39;, search_col=&#39;DESCRI
                 dict_terms[-1].set_index(id_col, drop=True, inplace=True)
             dict_file = [dict_file]
         else:
-            print(&#39;ERROR: dict_file ({}) does not exist.&#39;.format(dict_file))
+            print(f&#39;ERROR: dict_file ({dict_file}) does not exist.&#39;)
             #Create empty dataframe to return
             dict_terms = pd.DataFrame(columns=[&#39;ID&#39;, &#39;DESCRIPTION&#39;, &#39;LITHOLOGY&#39;, &#34;CLASS_FLAGS&#34;])
             return dict_terms
@@ -619,7 +628,8 @@ def read_lithologies(lith_file=None, interp_col=&#39;LITHOLOGY&#39;, target_col=
 
     return lithoDF
 
-def add_control_points(df_without_control, df_control=None,  xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEV_FT&#39;, controlpoints_crs=&#39;EPSG:4269&#39;,  description_col=&#39;FORMATION&#39;, interp_col=&#39;INTERPRETATION&#39;, target_col=&#39;TARGET&#39;, verbose=False, log=False, **kwargs):
+# Read and concatenate control points into main database/dataframe
+def add_control_points(df_without_control, df_control=None,  xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEV_FT&#39;, controlpoints_crs=&#39;EPSG:4269&#39;, output_crs=&#39;EPSG:4269&#39;, description_col=&#39;FORMATION&#39;, interp_col=&#39;INTERPRETATION&#39;, target_col=&#39;TARGET&#39;, verbose=False, log=False, **kwargs):
     &#34;&#34;&#34;Function to add control points, primarily to aid in interpolation. This may be useful when conditions are known but do not exist in input well database
 
     Parameters
@@ -638,6 +648,8 @@ def add_control_points(df_without_control, df_control=None,  xcol=&#39;LONGITUDE
         The column in df_control containing the z coordinates for each control point, by default &#39;ELEV_FT&#39;
     controlpoints_crs : str, optional
         The column in df_control containing the crs of points, by default &#39;EPSG:4269&#39;
+    output_crs : str, optional
+        The output coordinate system, by default &#39;EPSG:4269&#39;
     description_col : str, optional
         The column in df_control with the description (if this is used), by default &#39;FORMATION&#39;
     interp_col : str, optional
@@ -680,7 +692,7 @@ def add_control_points(df_without_control, df_control=None,  xcol=&#39;LONGITUDE
     #If our main df is already a geodataframe, make df_control one too
     if isinstance(df_without_control, gpd.GeoDataFrame):
         from w4h import coords2geometry
-        df_control = coords2geometry(df_no_geometry=df_control, xcol=xcol, ycol=ycol, zcol=zcol, input_coords_crs=controlpoints_crs, log=log)
+        gdf_control = coords2geometry(df_no_geometry=df_control, xcol=xcol, ycol=ycol, zcol=zcol, input_coords_crs=controlpoints_crs, log=log)
 
     #Get kwargs passed to pd.concat, and set defaults for ignore_index and join
     concat_kwargs = {k: v for k, v in locals()[&#39;kwargs&#39;].items() if k in inspect.signature(pd.concat).parameters.keys()}
@@ -689,9 +701,12 @@ def add_control_points(df_without_control, df_control=None,  xcol=&#39;LONGITUDE
     if &#39;join&#39; not in concat_kwargs.keys():
         concat_kwargs[&#39;join&#39;] = &#39;outer&#39;
         
-    df = pd.concat([df_without_control, df_control], **concat_kwargs)
+    gdf = pd.concat([df_without_control, gdf_control], **concat_kwargs)
     
-    return df</code></pre>
+    if controlpoints_crs != output_crs:
+        gdf = gdf.to_crs(output_crs)
+    
+    return gdf</code></pre>
 </details>
 </section>
 <section>
@@ -702,7 +717,7 @@ def add_control_points(df_without_control, df_control=None,  xcol=&#39;LONGITUDE
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="w4h.read.add_control_points"><code class="name flex">
-<span>def <span class="ident">add_control_points</span></span>(<span>df_without_control, df_control=None, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', controlpoints_crs='EPSG:4269', description_col='FORMATION', interp_col='INTERPRETATION', target_col='TARGET', verbose=False, log=False, **kwargs)</span>
+<span>def <span class="ident">add_control_points</span></span>(<span>df_without_control, df_control=None, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', controlpoints_crs='EPSG:4269', output_crs='EPSG:4269', description_col='FORMATION', interp_col='INTERPRETATION', target_col='TARGET', verbose=False, log=False, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to add control points, primarily to aid in interpolation. This may be useful when conditions are known but do not exist in input well database</p>
@@ -722,6 +737,8 @@ def add_control_points(df_without_control, df_control=None,  xcol=&#39;LONGITUDE
 <dd>The column in df_control containing the z coordinates for each control point, by default 'ELEV_FT'</dd>
 <dt><strong><code>controlpoints_crs</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>The column in df_control containing the crs of points, by default 'EPSG:4269'</dd>
+<dt><strong><code>output_crs</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>The output coordinate system, by default 'EPSG:4269'</dd>
 <dt><strong><code>description_col</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>The column in df_control with the description (if this is used), by default 'FORMATION'</dd>
 <dt><strong><code>interp_col</code></strong> :&ensp;<code>str</code>, optional</dt>
@@ -744,7 +761,7 @@ def add_control_points(df_without_control, df_control=None,  xcol=&#39;LONGITUDE
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def add_control_points(df_without_control, df_control=None,  xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEV_FT&#39;, controlpoints_crs=&#39;EPSG:4269&#39;,  description_col=&#39;FORMATION&#39;, interp_col=&#39;INTERPRETATION&#39;, target_col=&#39;TARGET&#39;, verbose=False, log=False, **kwargs):
+<pre><code class="python">def add_control_points(df_without_control, df_control=None,  xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, zcol=&#39;ELEV_FT&#39;, controlpoints_crs=&#39;EPSG:4269&#39;, output_crs=&#39;EPSG:4269&#39;, description_col=&#39;FORMATION&#39;, interp_col=&#39;INTERPRETATION&#39;, target_col=&#39;TARGET&#39;, verbose=False, log=False, **kwargs):
     &#34;&#34;&#34;Function to add control points, primarily to aid in interpolation. This may be useful when conditions are known but do not exist in input well database
 
     Parameters
@@ -763,6 +780,8 @@ def add_control_points(df_without_control, df_control=None,  xcol=&#39;LONGITUDE
         The column in df_control containing the z coordinates for each control point, by default &#39;ELEV_FT&#39;
     controlpoints_crs : str, optional
         The column in df_control containing the crs of points, by default &#39;EPSG:4269&#39;
+    output_crs : str, optional
+        The output coordinate system, by default &#39;EPSG:4269&#39;
     description_col : str, optional
         The column in df_control with the description (if this is used), by default &#39;FORMATION&#39;
     interp_col : str, optional
@@ -805,7 +824,7 @@ def add_control_points(df_without_control, df_control=None,  xcol=&#39;LONGITUDE
     #If our main df is already a geodataframe, make df_control one too
     if isinstance(df_without_control, gpd.GeoDataFrame):
         from w4h import coords2geometry
-        df_control = coords2geometry(df_no_geometry=df_control, xcol=xcol, ycol=ycol, zcol=zcol, input_coords_crs=controlpoints_crs, log=log)
+        gdf_control = coords2geometry(df_no_geometry=df_control, xcol=xcol, ycol=ycol, zcol=zcol, input_coords_crs=controlpoints_crs, log=log)
 
     #Get kwargs passed to pd.concat, and set defaults for ignore_index and join
     concat_kwargs = {k: v for k, v in locals()[&#39;kwargs&#39;].items() if k in inspect.signature(pd.concat).parameters.keys()}
@@ -814,9 +833,12 @@ def add_control_points(df_without_control, df_control=None,  xcol=&#39;LONGITUDE
     if &#39;join&#39; not in concat_kwargs.keys():
         concat_kwargs[&#39;join&#39;] = &#39;outer&#39;
         
-    df = pd.concat([df_without_control, df_control], **concat_kwargs)
+    gdf = pd.concat([df_without_control, gdf_control], **concat_kwargs)
     
-    return df</code></pre>
+    if controlpoints_crs != output_crs:
+        gdf = gdf.to_crs(output_crs)
+    
+    return gdf</code></pre>
 </details>
 </dd>
 <dt id="w4h.read.define_dtypes"><code class="name flex">
@@ -1045,7 +1067,7 @@ It may also be of use to simply skip this function altogether and directly defin
 </details>
 </dd>
 <dt id="w4h.read.get_most_recent"><code class="name flex">
-<span>def <span class="ident">get_most_recent</span></span>(<span>dir=WindowsPath('c:/Users/riley/LocalData/Code/Github/wells4hydrogeology/w4h/resources'), glob_pattern='*', verbose=True)</span>
+<span>def <span class="ident">get_most_recent</span></span>(<span>dir=WindowsPath('c:/Users/riley/LocalData/Github/wells4hydrogeology/w4h/resources'), glob_pattern='*', verbose=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to find the most recent file with the indicated pattern, using pathlib.glob function.</p>
@@ -1114,7 +1136,7 @@ It may also be of use to simply skip this function altogether and directly defin
 </details>
 </dd>
 <dt id="w4h.read.get_search_terms"><code class="name flex">
-<span>def <span class="ident">get_search_terms</span></span>(<span>spec_path='C:\\Users\\riley\\LocalData\\Code\\Github\\wells4hydrogeology/resources/', spec_glob_pattern='*SearchTerms-Specific*', start_path=None, start_glob_pattern='*SearchTerms-Start*', wildcard_path=None, wildcard_glob_pattern='*SearchTerms-Wildcard', verbose=False, log=False)</span>
+<span>def <span class="ident">get_search_terms</span></span>(<span>spec_path='C:\\Users\\riley\\LocalData\\virtual_envs/resources/', spec_glob_pattern='*SearchTerms-Specific*', start_path=None, start_glob_pattern='*SearchTerms-Start*', wildcard_path=None, wildcard_glob_pattern='*SearchTerms-Wildcard', verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Read in dictionary files for downhole data</p>
@@ -1267,7 +1289,7 @@ with start search terms, and with wildcard search terms</p></div>
 </details>
 </dd>
 <dt id="w4h.read.read_dictionary_terms"><code class="name flex">
-<span>def <span class="ident">read_dictionary_terms</span></span>(<span>dict_file, id_col='ID', search_col='DESCRIPTION', definition_col='LITHOLOGY', class_flag_col='CLASS_FLAG', dictionary_type=None, class_flag=6, rem_extra_cols=True, verbose=False, log=False)</span>
+<span>def <span class="ident">read_dictionary_terms</span></span>(<span>dict_file=None, id_col='ID', search_col='DESCRIPTION', definition_col='LITHOLOGY', class_flag_col='CLASS_FLAG', dictionary_type=None, class_flag=6, rem_extra_cols=True, verbose=False, log=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function to read dictionary terms from file into pandas dataframe</p>
@@ -1301,7 +1323,7 @@ with start search terms, and with wildcard search terms</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_dictionary_terms(dict_file, id_col=&#39;ID&#39;, search_col=&#39;DESCRIPTION&#39;, definition_col=&#39;LITHOLOGY&#39;, class_flag_col=&#39;CLASS_FLAG&#39;, dictionary_type=None, class_flag=6, rem_extra_cols=True, verbose=False, log=False):
+<pre><code class="python">def read_dictionary_terms(dict_file=None, id_col=&#39;ID&#39;, search_col=&#39;DESCRIPTION&#39;, definition_col=&#39;LITHOLOGY&#39;, class_flag_col=&#39;CLASS_FLAG&#39;, dictionary_type=None, class_flag=6, rem_extra_cols=True, verbose=False, log=False):
     &#34;&#34;&#34;Function to read dictionary terms from file into pandas dataframe
 
     Parameters
@@ -1330,16 +1352,21 @@ with start search terms, and with wildcard search terms</p></div>
     dict_terms : pandas.DataFrame
         Pandas dataframe with formatting ready to be used in the classification steps of this package
     &#34;&#34;&#34;
+    
+    if dict_file is None:
+        dict_file=w4h.get_resources()[&#39;LithologyDict_Exact&#39;]
+    
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
         verbose_print(read_dictionary_terms, locals())    
     #Read files into pandas dataframes
     dict_terms = []
-    if dict_file is None:
-        df = pd.DataFrame(columns=[&#39;ID&#39;, &#39;DESCRIPTION&#39;, &#39;LITHOLOGY&#39;, &#39;CLASS_FLAGS&#39;])
-        dict_terms.append(df)
-        dict_file = [&#39;&#39;]
-    elif type(dict_file) is list:
+    #if dict_file is None:
+    #    dict_file = get_resources()[&#39;LithologyDict_Exact&#39;]
+    #    df = pd.DataFrame(columns=[&#39;ID&#39;, &#39;DESCRIPTION&#39;, &#39;LITHOLOGY&#39;, &#39;CLASS_FLAGS&#39;])
+    #    dict_terms.append(df)
+    #    dict_file = [&#39;&#39;]
+    if isinstance(dict_file, (tuple, list)):
         for i, f in enumerate(dict_file):
             if not f.exists():
                 df = pd.DataFrame(columns=[&#39;ID&#39;, &#39;DESCRIPTION&#39;, &#39;LITHOLOGY&#39;, &#39;CLASS_FLAGS&#39;])
@@ -1350,6 +1377,9 @@ with start search terms, and with wildcard search terms</p></div>
             if id_col in dict_terms[i].columns:
                 dict_terms[i].set_index(id_col, drop=True, inplace=True)
     else:
+        if dict_file is None:
+            dict_file = w4h.get_resources()[&#39;LithologyDict_Exact&#39;]
+        
         dict_file = pathlib.Path(dict_file)
         if dict_file.exists() and dict_file.is_file():
             dict_terms.append(pd.read_csv(dict_file, low_memory=False))
@@ -1357,7 +1387,7 @@ with start search terms, and with wildcard search terms</p></div>
                 dict_terms[-1].set_index(id_col, drop=True, inplace=True)
             dict_file = [dict_file]
         else:
-            print(&#39;ERROR: dict_file ({}) does not exist.&#39;.format(dict_file))
+            print(f&#39;ERROR: dict_file ({dict_file}) does not exist.&#39;)
             #Create empty dataframe to return
             dict_terms = pd.DataFrame(columns=[&#39;ID&#39;, &#39;DESCRIPTION&#39;, &#39;LITHOLOGY&#39;, &#34;CLASS_FLAGS&#34;])
             return dict_terms
