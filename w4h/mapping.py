@@ -19,12 +19,12 @@ from rasterio import MemoryFile
 
 import w4h
 
-from w4h import logger_function, verbose_print, get_resources
+from w4h import logger_function, verbose_print
 
 lidarURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
 
 #Read study area shapefile (or other file) into geopandas
-def read_study_area(study_area, output_crs='EPSG:4269', buffer=None, return_original=False, log=False, verbose=False, **read_file_kwargs):
+def read_study_area(study_area=None, output_crs='EPSG:4269', buffer=None, return_original=False, log=False, verbose=False, **read_file_kwargs):
     """Read study area geospatial file into geopandas
 
     Parameters
@@ -48,6 +48,10 @@ def read_study_area(study_area, output_crs='EPSG:4269', buffer=None, return_orig
     studyAreaIN : geopandas dataframe
         Geopandas dataframe with polygon geometry.
     """
+    
+    if study_area is None:
+        study_area = w4h.get_resources()['study_area']
+
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
         verbose_print(read_study_area, locals())
@@ -179,7 +183,7 @@ def clip_gdf2study_area(study_area, gdf, log=False, verbose=False):
     return gdfClip
 
 #Function to sample raster points to points specified in geodataframe
-def sample_raster_points(raster=get_resources()['surf_elev'], points_df=get_resources()['well_data'], well_id_col='API_NUMBER', xcol='LONGITUDE', ycol='LATITUDE', new_col='SAMPLED', verbose=True, log=False):  
+def sample_raster_points(raster=None, points_df=None, well_id_col='API_NUMBER', xcol='LONGITUDE', ycol='LATITUDE', new_col='SAMPLED', verbose=True, log=False):  
     """Sample raster values to points from geopandas geodataframe.
 
     Parameters
@@ -209,6 +213,11 @@ def sample_raster_points(raster=get_resources()['surf_elev'], points_df=get_reso
         Same as points_df, but with sampled values and potentially with reprojected coordinates.
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
+    if raster is None:
+        raster = w4h.get_resources()['surf_elev']
+    if points_df is None:
+        points_df = w4h.get_resources()['well_data']
 
     if verbose:
         verbose_print(sample_raster_points, locals(), exclude_params=['raster', 'points_df'])
@@ -786,7 +795,7 @@ def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service
     return gridIN
 
 #Align and coregister rasters
-def align_rasters(grids_unaligned=[get_resources()['surf_elev'], get_resources()['bedrock_elev']], modelgrid=get_resources()['model_grid'], 
+def align_rasters(grids_unaligned=None, model_grid=None,
                   no_data_val_grid=0, verbose=False, log=False):
     """Reprojects two rasters and aligns their pixels
 
@@ -794,7 +803,7 @@ def align_rasters(grids_unaligned=[get_resources()['surf_elev'], get_resources()
     ----------
     grids_unaligned : list or xarray.DataArray
         Contains a list of grids or one unaligned grid
-    modelgrid : xarray.DataArray
+    model_grid : xarray.DataArray
         Contains model grid
     no_data_val_grid : int, default=0
         Sets value of no data pixels
@@ -806,13 +815,19 @@ def align_rasters(grids_unaligned=[get_resources()['surf_elev'], get_resources()
     alignedGrids : list or xarray.DataArray
         Contains aligned grids
     """
+    
+    if grids_unaligned is None:
+        grids_unaligned = [w4h.get_resources()['surf_elev'], w4h.get_resources()['bedrock_elev']]
+    if model_grid is None:
+        model_grid = w4h.get_resources()['model_grid']
+
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
-        verbose_print(align_rasters, locals(), exclude_params=['grids_unaligned', 'modelgrid'])
+        verbose_print(align_rasters, locals(), exclude_params=['grids_unaligned', 'model_grid'])
     if isinstance(grids_unaligned, (tuple, list)):
         alignedGrids = []
         for g in grids_unaligned:
-            alignedGrid = g.rio.reproject_match(modelgrid)
+            alignedGrid = g.rio.reproject_match(model_grid)
 
             try:
                 no_data_val_grid = alignedGrid.attrs['_FillValue'] #Extract from dataset itself
@@ -821,7 +836,7 @@ def align_rasters(grids_unaligned=[get_resources()['surf_elev'], get_resources()
             alignedGrid = alignedGrid.where(alignedGrid != no_data_val_grid)  #Replace no data values with NaNs
             alignedGrids.append(alignedGrid)
     else:
-        alignedGrid = grids_unaligned.rio.reproject_match(modelgrid)
+        alignedGrid = grids_unaligned.rio.reproject_match(model_grid)
 
         try:
             noDataVal = alignedGrid.attrs['_FillValue'] #Extract from dataset itself
@@ -833,7 +848,7 @@ def align_rasters(grids_unaligned=[get_resources()['surf_elev'], get_resources()
     return alignedGrids
 
 #Get drift and layer thickness, given a surface and bedrock grid
-def get_drift_thick(surface_elev=get_resources()['surf_elev'], bedrock_elev=get_resources()['bedrock_elev'], layers=9, plot=False, verbose=False, log=False):
+def get_drift_thick(surface_elev=None, bedrock_elev=None, layers=9, plot=False, verbose=False, log=False):
     """Finds the distance from surface_elev to bedrock_elev and then divides by number of layers to get layer thickness.
 
     Parameters
@@ -855,6 +870,12 @@ def get_drift_thick(surface_elev=get_resources()['surf_elev'], bedrock_elev=get_
         Contains data array with layer thickness at each point
 
     """
+    
+    if surface_elev is None:
+        surface_elev = w4h.get_resources()['surf_elev']
+    if bedrock_elev is None:
+        bedrock_elev = w4h.get_resources()['bedrock_elev']
+    
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
         verbose_print(get_drift_thick, locals(), exclude_params=['surface_elev', 'bedrock_elev'])
