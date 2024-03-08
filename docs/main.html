@@ -4747,14 +4747,16 @@ log
     well_data_xyz = w4h.specific_define(well_data_xyz, terms_df=specTerms, description_col=description_col, verbose=verbose, log=log)
     
     #.startswith classifications
-    classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
-    searchDF = w4h.start_define(df=searchDF, terms_df=startTerms, description_col=description_col, verbose=verbose, log=log)
-    well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
+    if lith_dict_start is not None:
+        classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
+        searchDF = w4h.start_define(df=searchDF, terms_df=startTerms, description_col=description_col, verbose=verbose, log=log)
+        well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
 
-    #wildcard/any substring match classifications    
-    classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
-    searchDF = w4h.wildcard_define(df=searchDF, terms_df=wildcardTerms, description_col=description_col, verbose=verbose, log=log)
-    well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
+    #wildcard/any substring match classifications
+    if lith_dict_wildcard is not None:
+        classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
+        searchDF = w4h.wildcard_define(df=searchDF, terms_df=wildcardTerms, description_col=description_col, verbose=verbose, log=log)
+        well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
 
     #Depth classification
     classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
@@ -4777,8 +4779,8 @@ log
     well_data_xyz = well_data_xyz[pd.notna(well_data_xyz[&#34;LITHOLOGY&#34;])]
 
     #Analyze Surface(s) and grid(s)
-    bedrockGrid, surfaceGrid = w4h.align_rasters(grids_unaligned=[bedrockElevGridIN, surfaceElevGridIN], modelgrid=modelGrid, no_data_val_grid=0, log=log)
-    driftThickGrid, layerThickGrid = w4h.get_drift_thick(surface=surfaceGrid, bedrock=bedrockGrid, layers=layers, plot=verbose, log=log)
+    bedrockGrid, surfaceGrid = w4h.align_rasters(grids_unaligned=[bedrockElevGridIN, surfaceElevGridIN], model_grid=modelGrid, no_data_val_grid=0, log=log)
+    driftThickGrid, layerThickGrid = w4h.get_drift_thick(surface_elev=surfaceGrid, bedrock_elev=bedrockGrid, layers=layers, plot=verbose, log=log)
     
     well_data_xyz = w4h.sample_raster_points(raster=bedrockGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_ELEV&#39;, verbose=verbose, log=log)
     well_data_xyz = w4h.sample_raster_points(raster=surfaceGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;SURFACE_ELEV&#39;, verbose=verbose, log=log)
