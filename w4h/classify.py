@@ -1,3 +1,6 @@
+"""The Classify module contains functions for defining geological intervals into a preset subset of interpretations.
+"""
+
 import datetime
 import inspect
 
@@ -15,7 +18,6 @@ from w4h import logger_function, verbose_print
 #- Top of well?
 
 #Define records with full search term
-
 def specific_define(df, terms_df, description_col='FORMATION', terms_col='DESCRIPTION', verbose=False, log=False):
     """Function to classify terms that have been specifically defined in the terms_df.
 
@@ -216,7 +218,6 @@ def remerge_data(classifieddf, searchdf):
     return remergeDF
 
 #Define well intervals by depth
-
 def depth_define(df, top_col='TOP', thresh=550.0, verbose=False, log=False):
     """Function to define all intervals lower than thresh as bedrock
 

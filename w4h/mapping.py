@@ -1,3 +1,7 @@
+"""The Mapping module contains the functions used for geospatial analysis throughout the package.
+This includes some input/output as well as functions to make manipulatin of geospatial data more simple
+"""
+
 import datetime
 import inspect
 import json

@@ -1,3 +1,7 @@
+"""The Read module contains funtions primarily for the input of data through the reading of data files,
+as well as support functions to carry out this task
+"""
+
 import datetime
 import inspect
 import json

@@ -1,5 +1,6 @@
-"""This module contains core functions of the package, 
-including the main run() function that allows rapid data analysis."""
+"""The Core module contains core functions of the package, 
+including the main run() function that allows rapid data analysis, a function to retrieve sample data,
+and functions that are used throughout the package for logging and printing verbose outputs."""
 
 import datetime
 import inspect
