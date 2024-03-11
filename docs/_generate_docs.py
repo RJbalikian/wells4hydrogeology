@@ -14,6 +14,7 @@ RELEASE_VERSION = "0.0.21"
 
 #Whether to CONVERT_MD using markdown library (True), or let github do it (False)
 RTD_DOCS = True
+GITHUB_PAGES = True
 
 CONVERT_MD=True
 RTD_THEME=False #Not currently working
@@ -102,29 +103,28 @@ if RTD_DOCS:
     buildDir = docsDir.joinpath('_build')
     htmlDir = buildDir.joinpath('html')
 
-    for f in htmlDir.iterdir():
-        if f.suffix == '.html':
-            with open(f.as_posix(), mode='r', encoding='utf-8') as htmlF:
-                htmlFileText = htmlF.read()
+    #for f in htmlDir.iterdir():
+    #    if f.suffix == '.html':
+    #        with open(f.as_posix(), mode='r', encoding='utf-8') as htmlF:
+    #            htmlFileText = htmlF.read()
 
-            prevtext = 'href="_static/'
-            newPath = htmlDir.joinpath('_static')
-            newText = 'href="'
-            htmlFileText = htmlFileText.replace(prevtext, newText)
-            htmlFileText = htmlFileText.replace('href="css/', 'href="')
-            with open(f.as_posix(), mode='w', encoding='utf-8') as htmlF:
-                htmlF.write(htmlFileText)
+    #        prevtext = 'href="_static/'
+    #        newPath = htmlDir.joinpath('_static')
+    #        newText = 'href="'
+    #        htmlFileText = htmlFileText.replace(prevtext, newText)
+    #        htmlFileText = htmlFileText.replace('href="css/', 'href="')
+    #        with open(f.as_posix(), mode='w', encoding='utf-8') as htmlF:
+    #            htmlF.write(htmlFileText)
 
-        if f.name[0] != '_':
-            shutil.copy(f, docsDir.joinpath(f.name))
+    #    if f.name[0] != '_':
+    #        shutil.copy(f, docsDir.joinpath(f.name))
 
     #        if f.stem == 'resources':
     #            os.remove(f)
     #    else:
     #        os.remove(f)
 
-
-else:
+if GITHUB_PAGES:
     # Run the pdoc command
     if RTD_THEME:
         themePath = venvPath.as_posix()+'/lib/site-packages/sphinx_RTD_THEME/'
@@ -152,7 +152,7 @@ else:
     print('Placing html files in', trg_path.absolute())
 
     # Move items back into main docs folder
-    keepList = ['_generate_docs', 'conf']
+    keepList = ['_generate_docs', 'conf', 'make', 'Makefile', 'index']
 
     for f in trg_path.iterdir():
         if f.stem in keepList or f.is_dir():

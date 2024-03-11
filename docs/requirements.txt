@@ -1,8 +1,0 @@
-rioxarray
-geopandas
-owslib
-matplotlib
-scipy
-pandas
-numpy
-sphinx_rtd_theme
