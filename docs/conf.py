@@ -1,5 +1,6 @@
 import sphinx_rtd_theme
 import numpydoc
+import w4h
 
 import sys
 import os
