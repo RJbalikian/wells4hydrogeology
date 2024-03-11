@@ -103,7 +103,7 @@ if RTD_DOCS:
 
             prevtext = 'href="_static'
             newPath = htmlDir.joinpath('_static')
-            newText = f'href="{newPath.as_posix()}'
+            newText = 'href="_build/_static'
 
             htmlFileText = htmlFileText.replace(prevtext, newText)
             with open(f.as_posix(), mode='w', encoding='utf-8') as htmlF:
