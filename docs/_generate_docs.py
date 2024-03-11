@@ -98,6 +98,18 @@ if RTD_DOCS:
 
     for f in htmlDir.iterdir():
         if f.suffix == '.html':
+            with open(f.as_posix(), mode='r', encoding='utf-8') as htmlF:
+                htmlFileText = htmlF.read()
+
+            prevtext = 'href="_static'
+            newPath = htmlDir.joinpath('_static')
+            newText = f'href="{newPath.as_posix()}'
+
+            htmlFileText = htmlFileText.replace(prevtext, newText)
+            with open(f.as_posix(), mode='w', encoding='utf-8') as htmlF:
+                htmlF.write(htmlFileText)
+
+        if f.name[0] != '_':
             shutil.copy(f, docsDir.joinpath(f.name))
 
     #        if f.stem == 'resources':
