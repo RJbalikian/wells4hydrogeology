@@ -81,15 +81,21 @@ os.environ['PYTHONPATH'] = '..' + os.pathsep + os.environ.get('PYTHONPATH', '')
 if RTD_DOCS:
     keepList = ['_generate_docs', 'conf']
 
-    # It seems apidoc rewrites conf.py file (don't want that), so save it first and rewrite after
+    # It seems apidoc rewrites conf.py and index.rst file (don't want that), so save it first and rewrite after
     confFilePath = docsDir.joinpath('conf.py')
+    indFilePath = docsDir.joinpath('index.rst')
+
     with open(confFilePath.as_posix(), mode='r', encoding='utf-8') as f:
         confFileText = f.read()
-    
+    with open(indFilePath.as_posix(), mode='r', encoding='utf-8') as f:
+        indFileText = f.read()
+
     # Run apidoc to update api documentation from docstrings
     subprocess.run(['sphinx-apidoc', '-F', '-M', '-e', '-f', '-o', docsDir.as_posix(), w4hDir.as_posix()])
     with open(confFilePath.as_posix(), mode='w', encoding='utf-8') as f:
         f.write(cFileText)
+    with open(indFilePath.as_posix(), mode='w', encoding='utf-8') as f:
+        f.write(indFileText)
 
     subprocess.run([docsDir.joinpath('make.bat').as_posix(), 'html'])
 
