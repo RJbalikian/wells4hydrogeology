@@ -1,0 +1,8 @@
+geopandas
+rioxarray
+owslib
+scipy
+matplotlib
+pandas
+numpy
+sphinx_rtd_theme

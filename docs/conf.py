@@ -1,5 +1,10 @@
 import sphinx_rtd_theme
 
+import os
+import sys
+#Location of Sphinx files
+sys.path.insert(0, os.path.abspath('../w4h'))
+
 html_theme = "sphinx_rtd_theme"
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # Configuration file for the Sphinx documentation builder.

@@ -80,7 +80,7 @@ venvPath = pathlib.Path(sys.executable).parent.parent
 os.environ['PYTHONPATH'] = '..' + os.pathsep + os.environ.get('PYTHONPATH', '')
 
 if RTD_DOCS:
-    keepList = ['_generate_docs', 'conf']
+    keepList = ['_generate_docs', 'conf', 'requirements']
 
     # It seems apidoc rewrites conf.py and index.rst file (don't want that), so save it first and rewrite after
     confFilePath = docsDir.joinpath('conf.py')
@@ -103,7 +103,7 @@ if RTD_DOCS:
     buildDir = docsDir.joinpath('_build')
     htmlDir = buildDir.joinpath('html')
 
-    copyList = ['documentation_options', 'doctools','sphinx_highlight', 'theme']
+    copyList = ['documentation_options', 'doctools','sphinx_highlight', 'theme', 'pygments']
 
     for f in htmlDir.iterdir():
         if f.name[0] != '_':
@@ -111,11 +111,13 @@ if RTD_DOCS:
         else:
             if f.name == '_static':
                 for f2 in f.iterdir():
-                    print('f2', f2)
                     if f2.stem in copyList:
                         shutil.copy(f2, docsDir.joinpath(f.name))
                     elif f2.stem == 'js':
                         shutil.copy(f2.joinpath('theme.js'), docsDir.joinpath('theme.js'))
+                    elif f2.stem == 'css':
+                        shutil.copy(f2.joinpath('theme.css'), docsDir.joinpath('theme.css'))
+
 
     for file in docsDir.iterdir():
         if file.suffix == '.html':
@@ -123,6 +125,9 @@ if RTD_DOCS:
                 htmlFileText = f.read()
             htmlFileText = htmlFileText.replace('src="_static/', 'src="')
             htmlFileText = htmlFileText.replace('src="js/', 'src="')
+
+            htmlFileText = htmlFileText.replace('href="_static/', 'href="')
+            htmlFileText = htmlFileText.replace('href="css/', 'href="')            
             with open(file.as_posix(), mode='w', encoding='utf-8') as f:
                 f.write(htmlFileText)
 
