@@ -10,13 +10,14 @@ Welcome to w4h's documentation!
    :maxdepth: 4
    :caption: Contents:
 
-   classify
-   clean
-   core
-   export
-   layers
-   mapping
-   read
+   w4h
+   w4h.classify
+   w4h.clean
+   w4h.core
+   w4h.export
+   w4h.layers
+   w4h.mapping
+   w4h.read
 
 
 Indices and tables
