@@ -111,6 +111,7 @@ if RTD_DOCS:
         else:
             if f.name == '_static':
                 for f2 in f.iterdir():
+                    print('f2', f2)
                     if f2.stem in copyList:
                         shutil.copy(f2, docsDir.joinpath(f.name))
                     elif f2.stem == 'js':
@@ -122,6 +123,9 @@ if RTD_DOCS:
                 htmlFileText = f.read()
             htmlFileText = htmlFileText.replace('src="_static/', 'src="')
             htmlFileText = htmlFileText.replace('src="js/', 'src="')
+            with open(file.as_posix(), mode='w', encoding='utf-8') as f:
+                f.write(htmlFileText)
+
     #        if f.stem == 'resources':
     #            os.remove(f)
     #    else:
