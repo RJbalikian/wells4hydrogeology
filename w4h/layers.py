@@ -1,3 +1,7 @@
+"""The Layers module contains functions for splitting data into a layered model
+and for interpolating data within the layers
+"""
+
 import datetime
 import inspect
 import os

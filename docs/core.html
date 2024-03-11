@@ -48,10 +48,9 @@ import xarray as xarray
 
 from shapely.geometry import Point
 
-
 import w4h
 
-def run(well_data, 
+def run(well_data,
         surf_elev_grid,
         bedrock_elev_grid,
         model_grid=None,
@@ -191,13 +190,12 @@ def run(well_data,
                     export_dir = well_dataPath.parent.joinpath(outDir)
             else:
                 raise IOError(&#39;export_dir should be explicitly defined if well_data is not a filepath&#39;)
-                pass
 
             if not export_dir.exists():
                 try:
                     export_dir.mkdir()
-                except:
-                    pass
+                except Exception:
+                    print(&#39;Export Directory not created&#39;)
 
     #Get pandas dataframes from input
     read_raw_txt_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.read_raw_csv).parameters.keys()}
@@ -216,7 +214,7 @@ def run(well_data,
 
     #Convert well_data_xyz to have geometry
     coords2geometry_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.coords2geometry).parameters.keys()}
-    well_data_xyz = w4h.coords2geometry(df_no_geometry=well_data_xyz, xcol=xcol, ycol=ycol, zcol=zcol, log=log, **coords2geometry_kwargs)
+    well_data_xyz = w4h.coords2geometry(df_no_geometry=well_data_xyz, xcol=xcol, ycol=ycol, zcol=zcol, verbose=verbose, log=log, **coords2geometry_kwargs)
 
     #Get Study area
     read_study_area_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.read_study_area).parameters.keys()}
@@ -224,11 +222,11 @@ def run(well_data,
         studyAreaIN = None
         use_study_area = False
     else:
-        studyAreaIN = w4h.read_study_area(study_area_path=study_area, log=log, **read_study_area_kwargs)
+        studyAreaIN = w4h.read_study_area(study_area_path=study_area, log=log, output_crs=output_crs, **read_study_area_kwargs)
         use_study_area = True
 
     clip_gdf2study_area_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.clip_gdf2study_area).parameters.keys()}
-    well_data_xyz = w4h.clip_gdf2study_area(study_area=studyAreaIN, gdf=well_data_xyz, log=log, **clip_gdf2study_area_kwargs)
+    well_data_xyz = w4h.clip_gdf2study_area(study_area=studyAreaIN, gdf=well_data_xyz,  verbose=verbose, log=log,**clip_gdf2study_area_kwargs)
     #Get surfaces and grid(s)
     read_grid_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.read_grid).parameters.keys()}
 
@@ -290,14 +288,16 @@ def run(well_data,
     well_data_xyz = w4h.specific_define(well_data_xyz, terms_df=specTerms, description_col=description_col, verbose=verbose, log=log)
     
     #.startswith classifications
-    classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
-    searchDF = w4h.start_define(df=searchDF, terms_df=startTerms, description_col=description_col, verbose=verbose, log=log)
-    well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
+    if lith_dict_start is not None:
+        classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
+        searchDF = w4h.start_define(df=searchDF, terms_df=startTerms, description_col=description_col, verbose=verbose, log=log)
+        well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
 
-    #wildcard/any substring match classifications    
-    classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
-    searchDF = w4h.wildcard_define(df=searchDF, terms_df=wildcardTerms, description_col=description_col, verbose=verbose, log=log)
-    well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
+    #wildcard/any substring match classifications
+    if lith_dict_wildcard is not None:
+        classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
+        searchDF = w4h.wildcard_define(df=searchDF, terms_df=wildcardTerms, description_col=description_col, verbose=verbose, log=log)
+        well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
 
     #Depth classification
     classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
@@ -320,24 +320,21 @@ def run(well_data,
     well_data_xyz = well_data_xyz[pd.notna(well_data_xyz[&#34;LITHOLOGY&#34;])]
 
     #Analyze Surface(s) and grid(s)
-    bedrockGrid, surfaceGrid = w4h.align_rasters(grids_unaligned=[bedrockElevGridIN, surfaceElevGridIN], modelgrid=modelGrid, no_data_val_grid=0, log=log)
-    driftThickGrid, layerThickGrid = w4h.get_drift_thick(surface=surfaceGrid, bedrock=bedrockGrid, layers=layers, plot=verbose, log=log)
+    bedrockGrid, surfaceGrid = w4h.align_rasters(grids_unaligned=[bedrockElevGridIN, surfaceElevGridIN], model_grid=modelGrid, no_data_val_grid=0, log=log)
+    driftThickGrid, layerThickGrid = w4h.get_drift_thick(surface_elev=surfaceGrid, bedrock_elev=bedrockGrid, layers=layers, plot=verbose, log=log)
     
     well_data_xyz = w4h.sample_raster_points(raster=bedrockGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_ELEV&#39;, verbose=verbose, log=log)
     well_data_xyz = w4h.sample_raster_points(raster=surfaceGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;SURFACE_ELEV&#39;, verbose=verbose, log=log)
     well_data_xyz[&#39;BEDROCK_DEPTH&#39;] = well_data_xyz[&#39;SURFACE_ELEV&#39;] - well_data_xyz[&#39;BEDROCK_ELEV&#39;]
     well_data_xyz[&#39;LAYER_THICK&#39;] = well_data_xyz[&#39;BEDROCK_DEPTH&#39;] / layers
-    #well_data_xyz = w4h.sample_raster_points(raster=driftThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_DEPTH&#39;, verbose=verbose, log=log)
-    #well_data_xyz = w4h.sample_raster_points(raster=layerThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;LAYER_THICK&#39;, verbose=verbose, log=log)
+    
     well_data_xyz = w4h.get_layer_depths(df_with_depths=well_data_xyz, layers=layers, log=log)
-    #print(&#39;Layer Depths:&#39;, well_data_xyz[&#39;geometry&#39;].head(25))
 
     layer_target_thick_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.layer_target_thick).parameters.keys()}
     if &#39;return_all&#39; in layer_target_thick_kwargs.keys():
         del layer_target_thick_kwargs[&#39;return_all&#39;] #This needs to be set to False, so we don&#39;t want it reading in twice
 
     resdf = w4h.layer_target_thick(df=well_data_xyz, layers=layers, return_all=False, export_dir=export_dir, depth_top_col=top_col, depth_bot_col=bottom_col, log=log, **layer_target_thick_kwargs)
-    #print(&#39;TargetThick:&#39;, resdf[0].head(25))
     
     layer_interp_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.layer_interp).parameters.keys()}
     layers_data = w4h.layer_interp(points=resdf, grid=modelGrid, layers=9, verbose=verbose, log=log, **layer_interp_kwargs)
@@ -350,6 +347,66 @@ def run(well_data,
     w4h.export_grids(grid_data=layers_data, out_path=export_dir, file_id=target_name,filetype=&#39;tif&#39;, variable_sep=True, date_stamp=True, verbose=verbose, log=log)
 
     return resdf, layers_data
+
+def _run_docstring():
+    nl = &#39;\n\t&#39;
+    functionList = [w4h.file_setup, w4h.read_raw_csv, w4h.define_dtypes, w4h.merge_metadata, w4h.coords2geometry,
+                    w4h.read_study_area, w4h.clip_gdf2study_area, w4h.read_grid, w4h.add_control_points,
+                    w4h.remove_nonlocated, w4h.remove_no_topo, w4h.remove_no_depth, w4h.remove_bad_depth, w4h.remove_no_description,
+                    w4h.get_search_terms, w4h.read_dictionary_terms, w4h.specific_define, 
+                    w4h.split_defined, w4h.start_define, w4h.wildcard_define, w4h.remerge_data, w4h.fill_unclassified,
+                    w4h.read_lithologies, w4h.merge_lithologies, 
+                    w4h.align_rasters, w4h.get_drift_thick, w4h.sample_raster_points, w4h.get_layer_depths, w4h.layer_target_thick,
+                    w4h.layer_interp, w4h.export_grids]
+
+    funcStrList = []
+    funcParams = []
+    funcDefaults = []
+    prevOutputList = [&#39;df&#39;, &#39;filepath&#39;, &#39;study_area&#39;]
+    requiredList = []
+    for func in functionList:
+        parameters = inspect.signature(func).parameters
+        defaults = [param.default for param in list(zip(*parameters.items()))[1]]
+        parameters = list(zip(*parameters.items()))[0]
+
+        for i, d in enumerate(defaults):
+            if &#39;kwargs&#39; in parameters[i]:
+                defaults[i] = {}
+            elif d is inspect._empty:
+                if func.__name__ == &#39;read_study_area&#39; and parameters[i] == &#39;study_area&#39;:
+                    defaults[i] = &#34;None &lt;but defaults to w4h.resources()[&#39;study_area&#39;]&gt;&#34;
+                elif any(o in parameters[i] for o in prevOutputList):
+                    defaults[i] = &#39;&lt;output of previous function&gt;&#39;
+                else:
+                    defaults[i] = &#39;&lt;no default&gt;&#39;
+
+        firstLine = f&#34;\n{func.__name__}&#34;
+        followingLines = &#39;&#39;
+        for i, param in enumerate(parameters):
+            followingLines += f&#34;\n\t{param}&#34;.ljust(25)
+            if isinstance(defaults[i], str) and defaults[i]!=&#39;&lt;positional, no default&gt;&#39;:
+                followingLines += f&#34;| default = &#39;{defaults[i]}&#39;&#34;
+            else:
+                followingLines += f&#34;| default = {defaults[i]}&#34;
+
+        #funcDefaults.append([&#39;&lt;positional, no default&gt;&#39; if d is inspect._empty else d for d in defaults])
+        #funcParams.append(list(zip(*parameters.items()))[0])
+
+        funcString = firstLine + followingLines
+        funcStrList.append(funcString)
+
+    run_docstring = f&#34;&#34;&#34;
+    w4h.run() is a function that runs the intended workflow of the wells4hydrogeology (w4h) package.
+    This means that it runs several constituent functions. The workflow that this follows is provided in the package wiki.
+    It accepts the parameters of the constituent functions. To see a list of these functions and parameters, use `help(w4h.run)`.
+
+    The following functions used in w4h.run() are listed below, along with their parameters and default values for those parameters. 
+    See the documentation for the each of the individual functions for more information on a specific parameter:
+
+    {nl.join(funcStrList)}&#34;
+
+    &#34;&#34;&#34;
+    return run_docstring
 
 log_filename=None #Set up so exists but is None
 def logger_function(logtocommence, parameters, func_name):
@@ -495,7 +552,7 @@ def get_resources(resource_type=&#39;filepaths&#39;, scope=&#39;local&#39;, verb
     else:
         resources_dict[&#39;study_area&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;*sample_studyArea*&#39;, verbose=verbose)
         resources_dict[&#39;surf_elev&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;*sample_surface_bedrock_lidarresampled100ft*&#39;, verbose=verbose)
-        resources_dict[&#39;bedrock_elev&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;*sample_bedrock_elev_grimleyphillips_ESTL*&#39;, verbose=verbose)
+        resources_dict[&#39;bedrock_elev&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;*LocalSample_Bedrock_elev_EStLGrimleyPhillips*&#39;, verbose=verbose)
 
         resources_dict[&#39;well_data&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;sample_well_data*&#39;, verbose=verbose)
 
@@ -699,7 +756,7 @@ def __check_parameter_names(verbose=True):
     else:
         resources_dict[&#39;study_area&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;*sample_studyArea*&#39;, verbose=verbose)
         resources_dict[&#39;surf_elev&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;*sample_surface_bedrock_lidarresampled100ft*&#39;, verbose=verbose)
-        resources_dict[&#39;bedrock_elev&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;*sample_bedrock_elev_grimleyphillips_ESTL*&#39;, verbose=verbose)
+        resources_dict[&#39;bedrock_elev&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;*LocalSample_Bedrock_elev_EStLGrimleyPhillips*&#39;, verbose=verbose)
 
         resources_dict[&#39;well_data&#39;] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern=&#39;sample_well_data*&#39;, verbose=verbose)
 
@@ -853,68 +910,474 @@ def __check_parameter_names(verbose=True):
 <span>def <span class="ident">run</span></span>(<span>well_data, surf_elev_grid, bedrock_elev_grid, model_grid=None, metadata=None, layers=9, well_data_cols=None, well_metadata_cols=None, description_col='FORMATION', top_col='TOP', bottom_col='BOTTOM', depth_type='depth', study_area=None, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEVATION', well_id_col='API_NUMBER', output_crs='EPSG:4269', lith_dict=None, lith_dict_start=None, lith_dict_wildcard=None, target_dict=None, target_name='', export_dir=None, verbose=False, log=False, **kw_params)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Function to run entire process with one line of code. </p>
-<p>NOTE: verbose and log are boolean parameters used for most of the functions. verbose=True prints information to terminal, log=True logs to a file in the log_dir, which defaults to the export_dir</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>well_data</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path obj</code></dt>
-<dd>Filepath to file or directory containing well data.</dd>
-<dt><strong><code>surf_elev_grid</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code></dt>
-<dd><em>description</em></dd>
-<dt><strong><code>bedrock_elev_grid</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code></dt>
-<dd><em>description</em></dd>
-<dt><strong><code>model_grid</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object,</code> or <code>model grid parameters (see model_grid function)</code></dt>
-<dd><em>description</em></dd>
-<dt><strong><code>metadata</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object,</code> or <code>None</code>, default=<code>None</code></dt>
-<dd>Filepath to file or directory containing well metadata, such as location and elevation. If None, will check if well_data is a directory, and if so, will use metadata_filename to search in same directory.</dd>
-<dt><strong><code>well_data_cols</code></strong> :&ensp;<code>List</code> or <code>list-like</code></dt>
-<dd>Columns to</dd>
-<dt><strong><code>well_metadata_cols</code></strong> :&ensp;<code>List</code> or <code>list-like</code></dt>
-<dd><em>description</em></dd>
-<dt><strong><code>layers</code></strong> :&ensp;<code>int</code>, default <code>= 9</code></dt>
-<dd>The number of layers in the model grid</dd>
-<dt><strong><code>description_col</code></strong> :&ensp;<code>str</code>, default <code>= 'FORMATION'</code></dt>
-<dd>Name of column containing geologic descriptions of the well interval. This column should be in well_data.</dd>
-<dt><strong><code>top_col</code></strong> :&ensp;<code>str</code>, default <code>= 'TOP'</code></dt>
-<dd>Name of column containing depth/elevation at top of well interval. This column should be in well_data.</dd>
-<dt><strong><code>bottom_col</code></strong> :&ensp;<code>str</code>, default <code>= 'BOTTOM'</code></dt>
-<dd>Name of column containing depth/elevation at bottom of well interval. This column should be in well_data.</dd>
-<dt><strong><code>depth_type</code></strong> :&ensp;<code>str</code>, default <code>= 'depth'</code></dt>
-<dd>Whether values top_col or bottom_col refer to depth or elevation.</dd>
-<dt><strong><code>study_area</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object,</code> or <code>geopandas.GeoDataFrame</code></dt>
-<dd><em>description</em></dd>
-<dt><strong><code>xcol</code></strong> :&ensp;<code>str</code>, default <code>= 'LONGITUDE'</code></dt>
-<dd>Name of column containing x coordinates. This column should be in metadata unless metadata is not read, then it should be in well_data.</dd>
-<dt><strong><code>ycol</code></strong> :&ensp;<code>str</code>, default <code>= 'LATITUDE'</code></dt>
-<dd>Name of column containing y coordinates. This column should be in metadata unless metadata is not read, then it should be in well_data.</dd>
-<dt><strong><code>zcol</code></strong> :&ensp;<code>str</code>, default <code>= 'ELEVATION'</code></dt>
-<dd>Name of column containing z coordinates. This column should be in metadata unless metadata is not read, then it should be in well_data.</dd>
-<dt><strong><code>output_crs</code></strong> :&ensp;<code>crs definition accepted by pyproj</code>, default <code>= 'EPSG:4269'</code></dt>
-<dd>CRS to output all of the data into</dd>
-<dt><strong><code>lith_dict</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object,</code> or <code>pandas.DataFrame</code></dt>
-<dd><em>description</em></dd>
-<dt><strong><code>lith_dict_start</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object,</code> or <code>pandas.DataFrame</code></dt>
-<dd><em>description</em></dd>
-<dt><strong><code>lith_dict_wildcard</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object,</code> or <code>pandas.DataFrame</code></dt>
-<dd><em>description</em></dd>
-<dt><strong><code>target_dict</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object,</code> or <code>pandas.DataFrame</code></dt>
-<dd><em>description</em></dd>
-<dt><strong><code>target_name</code></strong> :&ensp;<code>str</code>, default <code>= 'CoarseFine'</code></dt>
-<dd>Name of target of interest, to be used on exported files</dd>
-<dt><strong><code>export_dir</code></strong> :&ensp;<code>str</code> or <code>pathlib.Path object</code>, default <code>= None</code></dt>
-<dd>Directory to export output files</dd>
-<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
-<dd>Whether to print updates/results</dd>
-<dt><strong><code>log</code></strong> :&ensp;<code>bool</code>, default <code>= False</code></dt>
-<dd>Whether to send parameters and outputs to log file, to be saved in export_dir, or the same directory as well_data if export_dir not defined.</dd>
-<dt><strong><code>**kw_params</code></strong></dt>
-<dd>Keyword parameters used by any of the functions throughout the process. See list of functions above, and the API documentation for their possible parameters</dd>
-</dl></div>
+<div class="desc"><p>w4h.run() is a function that runs the intended workflow of the wells4hydrogeology (w4h) package.
+This means that it runs several constituent functions. The workflow that this follows is provided in the package wiki.
+It accepts the parameters of the constituent functions. To see a list of these functions and parameters, use <code>help(<a title="w4h.run" href="index.html#w4h.run">run()</a>)</code>.</p>
+<pre><code>The following functions used in w4h.run() are listed below, along with their parameters and default values for those parameters. 
+See the documentation for the each of the individual functions for more information on a specific parameter:
+</code></pre>
+<p>file_setup
+well_data
+| default = '<no default>'
+metadata
+| default = None
+data_filename
+| default = '<em>ISGS_DOWNHOLE_DATA</em>.txt'
+metadata_filename
+| default = '<em>ISGS_HEADER</em>.txt'
+log_dir
+| default = None
+verbose
+| default = False
+log
+| default = False</p>
+<p>read_raw_csv
+data_filepath
+| default = '<output of previous function>'
+metadata_filepath
+| default = '<output of previous function>'
+data_cols
+| default = None
+metadata_cols
+| default = None
+xcol
+| default = 'LONGITUDE'
+ycol
+| default = 'LATITUDE'
+well_key
+| default = 'API_NUMBER'
+encoding
+| default = 'latin-1'
+verbose
+| default = False
+log
+| default = False
+read_csv_kwargs
+| default = {}</p>
+<p>define_dtypes
+undefined_df
+| default = '<output of previous function>'
+datatypes
+| default = None
+verbose
+| default = False
+log
+| default = False</p>
+<p>merge_metadata
+data_df
+| default = '<output of previous function>'
+header_df
+| default = '<output of previous function>'
+data_cols
+| default = None
+header_cols
+| default = None
+auto_pick_cols
+| default = False
+drop_duplicate_cols
+| default = True
+log
+| default = False
+verbose
+| default = False
+kwargs
+| default = {}</p>
+<p>coords2geometry
+df_no_geometry
+| default = '<output of previous function>'
+xcol
+| default = 'LONGITUDE'
+ycol
+| default = 'LATITUDE'
+zcol
+| default = 'ELEV_FT'
+input_coords_crs
+| default = 'EPSG:4269'
+use_z
+| default = False
+wkt_col
+| default = 'WKT'
+geometry_source
+| default = 'coords'
+verbose
+| default = False
+log
+| default = False</p>
+<p>read_study_area
+study_area
+| default = None
+output_crs
+| default = 'EPSG:4269'
+buffer
+| default = None
+return_original
+| default = False
+log
+| default = False
+verbose
+| default = False
+read_file_kwargs
+| default = {}</p>
+<p>clip_gdf2study_area
+study_area
+| default = '<output of previous function>'
+gdf
+| default = '<output of previous function>'
+log
+| default = False
+verbose
+| default = False</p>
+<p>read_grid
+grid_path
+| default = None
+grid_type
+| default = 'model'
+no_data_val_grid
+| default = 0
+use_service
+| default = False
+study_area
+| default = None
+grid_crs
+| default = None
+output_crs
+| default = 'EPSG:4269'
+verbose
+| default = False
+log
+| default = False
+kwargs
+| default = {}</p>
+<p>add_control_points
+df_without_control
+| default = '<output of previous function>'
+df_control
+| default = None
+xcol
+| default = 'LONGITUDE'
+ycol
+| default = 'LATITUDE'
+zcol
+| default = 'ELEV_FT'
+controlpoints_crs
+| default = 'EPSG:4269'
+output_crs
+| default = 'EPSG:4269'
+description_col
+| default = 'FORMATION'
+interp_col
+| default = 'INTERPRETATION'
+target_col
+| default = 'TARGET'
+verbose
+| default = False
+log
+| default = False
+kwargs
+| default = {}</p>
+<p>remove_nonlocated
+df_with_locations
+| default = '<output of previous function>'
+xcol
+| default = 'LONGITUDE'
+ycol
+| default = 'LATITUDE'
+no_data_val_table
+| default = ''
+verbose
+| default = False
+log
+| default = False</p>
+<p>remove_no_topo
+df_with_topo
+| default = '<output of previous function>'
+zcol
+| default = 'ELEVATION'
+no_data_val_table
+| default = ''
+verbose
+| default = False
+log
+| default = False</p>
+<p>remove_no_depth
+df_with_depth
+| default = '<output of previous function>'
+top_col
+| default = 'TOP'
+bottom_col
+| default = 'BOTTOM'
+no_data_val_table
+| default = ''
+verbose
+| default = False
+log
+| default = False</p>
+<p>remove_bad_depth
+df_with_depth
+| default = '<output of previous function>'
+top_col
+| default = 'TOP'
+bottom_col
+| default = 'BOTTOM'
+depth_type
+| default = 'depth'
+verbose
+| default = False
+log
+| default = False</p>
+<p>remove_no_description
+df_with_descriptions
+| default = '<output of previous function>'
+description_col
+| default = 'FORMATION'
+no_data_val_table
+| default = ''
+verbose
+| default = False
+log
+| default = False</p>
+<p>get_search_terms
+spec_path
+| default = 'C:\Users\riley\LocalData\virtual_envs/resources/'
+spec_glob_pattern
+| default = '<em>SearchTerms-Specific</em>'
+start_path
+| default = None
+start_glob_pattern
+| default = '<em>SearchTerms-Start</em>'
+wildcard_path
+| default = None
+wildcard_glob_pattern
+| default = '*SearchTerms-Wildcard'
+verbose
+| default = False
+log
+| default = False</p>
+<p>read_dictionary_terms
+dict_file
+| default = None
+id_col
+| default = 'ID'
+search_col
+| default = 'DESCRIPTION'
+definition_col
+| default = 'LITHOLOGY'
+class_flag_col
+| default = 'CLASS_FLAG'
+dictionary_type
+| default = None
+class_flag
+| default = 6
+rem_extra_cols
+| default = True
+verbose
+| default = False
+log
+| default = False</p>
+<p>specific_define
+df
+| default = '<output of previous function>'
+terms_df
+| default = '<output of previous function>'
+description_col
+| default = 'FORMATION'
+terms_col
+| default = 'DESCRIPTION'
+verbose
+| default = False
+log
+| default = False</p>
+<p>split_defined
+df
+| default = '<output of previous function>'
+classification_col
+| default = 'CLASS_FLAG'
+verbose
+| default = False
+log
+| default = False</p>
+<p>start_define
+df
+| default = '<output of previous function>'
+terms_df
+| default = '<output of previous function>'
+description_col
+| default = 'FORMATION'
+terms_col
+| default = 'DESCRIPTION'
+verbose
+| default = False
+log
+| default = False</p>
+<p>wildcard_define
+df
+| default = '<output of previous function>'
+terms_df
+| default = '<output of previous function>'
+description_col
+| default = 'FORMATION'
+terms_col
+| default = 'DESCRIPTION'
+verbose
+| default = False
+log
+| default = False</p>
+<p>remerge_data
+classifieddf
+| default = '<output of previous function>'
+searchdf
+| default = '<output of previous function>'</p>
+<p>fill_unclassified
+df
+| default = '<output of previous function>'
+classification_col
+| default = 'CLASS_FLAG'</p>
+<p>read_lithologies
+lith_file
+| default = None
+interp_col
+| default = 'LITHOLOGY'
+target_col
+| default = 'CODE'
+use_cols
+| default = None
+verbose
+| default = False
+log
+| default = False</p>
+<p>merge_lithologies
+well_data_df
+| default = '<output of previous function>'
+targinterps_df
+| default = '<output of previous function>'
+interp_col
+| default = 'INTERPRETATION'
+target_col
+| default = 'TARGET'
+target_class
+| default = 'bool'</p>
+<p>align_rasters
+grids_unaligned
+| default = None
+model_grid
+| default = None
+no_data_val_grid
+| default = 0
+verbose
+| default = False
+log
+| default = False</p>
+<p>get_drift_thick
+surface_elev
+| default = None
+bedrock_elev
+| default = None
+layers
+| default = 9
+plot
+| default = False
+verbose
+| default = False
+log
+| default = False</p>
+<p>sample_raster_points
+raster
+| default = None
+points_df
+| default = None
+well_id_col
+| default = 'API_NUMBER'
+xcol
+| default = 'LONGITUDE'
+ycol
+| default = 'LATITUDE'
+new_col
+| default = 'SAMPLED'
+verbose
+| default = True
+log
+| default = False</p>
+<p>get_layer_depths
+df_with_depths
+| default = '<output of previous function>'
+surface_elev_col
+| default = 'SURFACE_ELEV'
+layer_thick_col
+| default = 'LAYER_THICK'
+layers
+| default = 9
+log
+| default = False</p>
+<p>layer_target_thick
+df
+| default = '<output of previous function>'
+layers
+| default = 9
+return_all
+| default = False
+export_dir
+| default = None
+outfile_prefix
+| default = None
+depth_top_col
+| default = 'TOP'
+depth_bot_col
+| default = 'BOTTOM'
+log
+| default = False</p>
+<p>layer_interp
+points
+| default = '<no default>'
+grid
+| default = '<no default>'
+layers
+| default = None
+interp_kind
+| default = 'nearest'
+return_type
+| default = 'dataarray'
+export_dir
+| default = None
+target_col
+| default = 'TARG_THICK_PER'
+layer_col
+| default = 'LAYER'
+xcol
+| default = None
+ycol
+| default = None
+xcoord
+| default = 'x'
+ycoord
+| default = 'y'
+log
+| default = False
+verbose
+| default = False
+kwargs
+| default = {}</p>
+<p>export_grids
+grid_data
+| default = '<no default>'
+out_path
+| default = '<no default>'
+file_id
+| default = ''
+filetype
+| default = 'tif'
+variable_sep
+| default = True
+date_stamp
+| default = True
+verbose
+| default = False
+log
+| default = False"</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def run(well_data, 
+<pre><code class="python">def run(well_data,
         surf_elev_grid,
         bedrock_elev_grid,
         model_grid=None,
@@ -1054,13 +1517,12 @@ def __check_parameter_names(verbose=True):
                     export_dir = well_dataPath.parent.joinpath(outDir)
             else:
                 raise IOError(&#39;export_dir should be explicitly defined if well_data is not a filepath&#39;)
-                pass
 
             if not export_dir.exists():
                 try:
                     export_dir.mkdir()
-                except:
-                    pass
+                except Exception:
+                    print(&#39;Export Directory not created&#39;)
 
     #Get pandas dataframes from input
     read_raw_txt_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.read_raw_csv).parameters.keys()}
@@ -1079,7 +1541,7 @@ def __check_parameter_names(verbose=True):
 
     #Convert well_data_xyz to have geometry
     coords2geometry_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.coords2geometry).parameters.keys()}
-    well_data_xyz = w4h.coords2geometry(df_no_geometry=well_data_xyz, xcol=xcol, ycol=ycol, zcol=zcol, log=log, **coords2geometry_kwargs)
+    well_data_xyz = w4h.coords2geometry(df_no_geometry=well_data_xyz, xcol=xcol, ycol=ycol, zcol=zcol, verbose=verbose, log=log, **coords2geometry_kwargs)
 
     #Get Study area
     read_study_area_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.read_study_area).parameters.keys()}
@@ -1087,11 +1549,11 @@ def __check_parameter_names(verbose=True):
         studyAreaIN = None
         use_study_area = False
     else:
-        studyAreaIN = w4h.read_study_area(study_area_path=study_area, log=log, **read_study_area_kwargs)
+        studyAreaIN = w4h.read_study_area(study_area_path=study_area, log=log, output_crs=output_crs, **read_study_area_kwargs)
         use_study_area = True
 
     clip_gdf2study_area_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.clip_gdf2study_area).parameters.keys()}
-    well_data_xyz = w4h.clip_gdf2study_area(study_area=studyAreaIN, gdf=well_data_xyz, log=log, **clip_gdf2study_area_kwargs)
+    well_data_xyz = w4h.clip_gdf2study_area(study_area=studyAreaIN, gdf=well_data_xyz,  verbose=verbose, log=log,**clip_gdf2study_area_kwargs)
     #Get surfaces and grid(s)
     read_grid_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.read_grid).parameters.keys()}
 
@@ -1153,14 +1615,16 @@ def __check_parameter_names(verbose=True):
     well_data_xyz = w4h.specific_define(well_data_xyz, terms_df=specTerms, description_col=description_col, verbose=verbose, log=log)
     
     #.startswith classifications
-    classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
-    searchDF = w4h.start_define(df=searchDF, terms_df=startTerms, description_col=description_col, verbose=verbose, log=log)
-    well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
+    if lith_dict_start is not None:
+        classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
+        searchDF = w4h.start_define(df=searchDF, terms_df=startTerms, description_col=description_col, verbose=verbose, log=log)
+        well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
 
-    #wildcard/any substring match classifications    
-    classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
-    searchDF = w4h.wildcard_define(df=searchDF, terms_df=wildcardTerms, description_col=description_col, verbose=verbose, log=log)
-    well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
+    #wildcard/any substring match classifications
+    if lith_dict_wildcard is not None:
+        classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
+        searchDF = w4h.wildcard_define(df=searchDF, terms_df=wildcardTerms, description_col=description_col, verbose=verbose, log=log)
+        well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
 
     #Depth classification
     classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
@@ -1183,24 +1647,21 @@ def __check_parameter_names(verbose=True):
     well_data_xyz = well_data_xyz[pd.notna(well_data_xyz[&#34;LITHOLOGY&#34;])]
 
     #Analyze Surface(s) and grid(s)
-    bedrockGrid, surfaceGrid = w4h.align_rasters(grids_unaligned=[bedrockElevGridIN, surfaceElevGridIN], modelgrid=modelGrid, no_data_val_grid=0, log=log)
-    driftThickGrid, layerThickGrid = w4h.get_drift_thick(surface=surfaceGrid, bedrock=bedrockGrid, layers=layers, plot=verbose, log=log)
+    bedrockGrid, surfaceGrid = w4h.align_rasters(grids_unaligned=[bedrockElevGridIN, surfaceElevGridIN], model_grid=modelGrid, no_data_val_grid=0, log=log)
+    driftThickGrid, layerThickGrid = w4h.get_drift_thick(surface_elev=surfaceGrid, bedrock_elev=bedrockGrid, layers=layers, plot=verbose, log=log)
     
     well_data_xyz = w4h.sample_raster_points(raster=bedrockGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_ELEV&#39;, verbose=verbose, log=log)
     well_data_xyz = w4h.sample_raster_points(raster=surfaceGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;SURFACE_ELEV&#39;, verbose=verbose, log=log)
     well_data_xyz[&#39;BEDROCK_DEPTH&#39;] = well_data_xyz[&#39;SURFACE_ELEV&#39;] - well_data_xyz[&#39;BEDROCK_ELEV&#39;]
     well_data_xyz[&#39;LAYER_THICK&#39;] = well_data_xyz[&#39;BEDROCK_DEPTH&#39;] / layers
-    #well_data_xyz = w4h.sample_raster_points(raster=driftThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;BEDROCK_DEPTH&#39;, verbose=verbose, log=log)
-    #well_data_xyz = w4h.sample_raster_points(raster=layerThickGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col=&#39;LAYER_THICK&#39;, verbose=verbose, log=log)
+    
     well_data_xyz = w4h.get_layer_depths(df_with_depths=well_data_xyz, layers=layers, log=log)
-    #print(&#39;Layer Depths:&#39;, well_data_xyz[&#39;geometry&#39;].head(25))
 
     layer_target_thick_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.layer_target_thick).parameters.keys()}
     if &#39;return_all&#39; in layer_target_thick_kwargs.keys():
         del layer_target_thick_kwargs[&#39;return_all&#39;] #This needs to be set to False, so we don&#39;t want it reading in twice
 
     resdf = w4h.layer_target_thick(df=well_data_xyz, layers=layers, return_all=False, export_dir=export_dir, depth_top_col=top_col, depth_bot_col=bottom_col, log=log, **layer_target_thick_kwargs)
-    #print(&#39;TargetThick:&#39;, resdf[0].head(25))
     
     layer_interp_kwargs = {k: v for k, v in locals()[&#39;kw_params&#39;].items() if k in inspect.signature(w4h.layer_interp).parameters.keys()}
     layers_data = w4h.layer_interp(points=resdf, grid=modelGrid, layers=9, verbose=verbose, log=log, **layer_interp_kwargs)

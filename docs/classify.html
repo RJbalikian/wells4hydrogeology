@@ -98,7 +98,6 @@ def specific_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col
 
     return df_Interps
 
-
 def split_defined(df, classification_col=&#39;CLASS_FLAG&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to split dataframe with well descriptions into two dataframes based on whether a row has been classified.
 
@@ -384,7 +383,6 @@ def merge_lithologies(well_data_df, targinterps_df, interp_col=&#39;INTERPRETATI
     return df_targ
 
 #Function to get unique wells
-
 def get_unique_wells(df, wellid_col=&#39;API_NUMBER&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Gets unique wells as a dataframe based on a given column name.
 

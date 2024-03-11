@@ -8,7 +8,7 @@ setup(
     name="wells4hydrogeology",
     author= "Riley Balikian",
     author_email = "balikian@illinois.edu",
-    version="0.0.19",
+    version="0.0.21-dev",
     package_data={'w4h': ['resources/*', 'resources/sample_data/*', 'resources/sample_data/statewide_sample_data/*',
                           'resources/sample_data/DictionaryTerms/*','resources/sample_data/LithologyInterpretations/*']},
     install_requires=["geopandas", "rioxarray", "owslib", "scipy", "matplotlib", "pandas", "numpy"],

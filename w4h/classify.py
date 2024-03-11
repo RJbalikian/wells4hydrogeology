@@ -1,3 +1,6 @@
+"""The Classify module contains functions for defining geological intervals into a preset subset of interpretations.
+"""
+
 import datetime
 import inspect
 
@@ -15,7 +18,6 @@ from w4h import logger_function, verbose_print
 #- Top of well?
 
 #Define records with full search term
-
 def specific_define(df, terms_df, description_col='FORMATION', terms_col='DESCRIPTION', verbose=False, log=False):
     """Function to classify terms that have been specifically defined in the terms_df.
 
@@ -69,7 +71,6 @@ def specific_define(df, terms_df, description_col='FORMATION', terms_col='DESCRI
         print('\t{} records remain unclassified ({}% of unclassified data).'.format(recsRemainig, 1-percRecsClass))
 
     return df_Interps
-
 
 def split_defined(df, classification_col='CLASS_FLAG', verbose=False, log=False):
     """Function to split dataframe with well descriptions into two dataframes based on whether a row has been classified.
@@ -217,7 +218,6 @@ def remerge_data(classifieddf, searchdf):
     return remergeDF
 
 #Define well intervals by depth
-
 def depth_define(df, top_col='TOP', thresh=550.0, verbose=False, log=False):
     """Function to define all intervals lower than thresh as bedrock
 
@@ -356,7 +356,6 @@ def merge_lithologies(well_data_df, targinterps_df, interp_col='INTERPRETATION',
     return df_targ
 
 #Function to get unique wells
-
 def get_unique_wells(df, wellid_col='API_NUMBER', verbose=False, log=False):
     """Gets unique wells as a dataframe based on a given column name.
 

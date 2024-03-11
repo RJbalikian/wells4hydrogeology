@@ -1,3 +1,6 @@
+"""The Export module contains functions for exporting processed data.
+"""
+
 import datetime
 import inspect
 import pathlib
@@ -54,7 +57,6 @@ def export_dataframe(df, out_dir, filename, date_stamp=True, log=False):
             print('Exported '+fname+nowTimeStr+'.csv')
 
 #Export (rio)xarray dataarrays and datasets
-
 def export_grids(grid_data, out_path, file_id='',filetype='tif', variable_sep=True, date_stamp=True, verbose=False, log=False):
     """Function to export grids to files.
 

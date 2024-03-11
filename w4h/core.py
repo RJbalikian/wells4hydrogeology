@@ -1,5 +1,6 @@
-"""This module contains core functions of the package, 
-including the main run() function that allows rapid data analysis."""
+"""The Core module contains core functions of the package, 
+including the main run() function that allows rapid data analysis, a function to retrieve sample data,
+and functions that are used throughout the package for logging and printing verbose outputs."""
 
 import datetime
 import inspect
@@ -17,10 +18,9 @@ import xarray as xarray
 
 from shapely.geometry import Point
 
-
 import w4h
 
-def run(well_data, 
+def run(well_data,
         surf_elev_grid,
         bedrock_elev_grid,
         model_grid=None,
@@ -258,14 +258,16 @@ def run(well_data,
     well_data_xyz = w4h.specific_define(well_data_xyz, terms_df=specTerms, description_col=description_col, verbose=verbose, log=log)
     
     #.startswith classifications
-    classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
-    searchDF = w4h.start_define(df=searchDF, terms_df=startTerms, description_col=description_col, verbose=verbose, log=log)
-    well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
+    if lith_dict_start is not None:
+        classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
+        searchDF = w4h.start_define(df=searchDF, terms_df=startTerms, description_col=description_col, verbose=verbose, log=log)
+        well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
 
-    #wildcard/any substring match classifications    
-    classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
-    searchDF = w4h.wildcard_define(df=searchDF, terms_df=wildcardTerms, description_col=description_col, verbose=verbose, log=log)
-    well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
+    #wildcard/any substring match classifications
+    if lith_dict_wildcard is not None:
+        classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
+        searchDF = w4h.wildcard_define(df=searchDF, terms_df=wildcardTerms, description_col=description_col, verbose=verbose, log=log)
+        well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
 
     #Depth classification
     classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
@@ -288,8 +290,8 @@ def run(well_data,
     well_data_xyz = well_data_xyz[pd.notna(well_data_xyz["LITHOLOGY"])]
 
     #Analyze Surface(s) and grid(s)
-    bedrockGrid, surfaceGrid = w4h.align_rasters(grids_unaligned=[bedrockElevGridIN, surfaceElevGridIN], modelgrid=modelGrid, no_data_val_grid=0, log=log)
-    driftThickGrid, layerThickGrid = w4h.get_drift_thick(surface=surfaceGrid, bedrock=bedrockGrid, layers=layers, plot=verbose, log=log)
+    bedrockGrid, surfaceGrid = w4h.align_rasters(grids_unaligned=[bedrockElevGridIN, surfaceElevGridIN], model_grid=modelGrid, no_data_val_grid=0, log=log)
+    driftThickGrid, layerThickGrid = w4h.get_drift_thick(surface_elev=surfaceGrid, bedrock_elev=bedrockGrid, layers=layers, plot=verbose, log=log)
     
     well_data_xyz = w4h.sample_raster_points(raster=bedrockGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col='BEDROCK_ELEV', verbose=verbose, log=log)
     well_data_xyz = w4h.sample_raster_points(raster=surfaceGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col='SURFACE_ELEV', verbose=verbose, log=log)
@@ -315,6 +317,66 @@ def run(well_data,
     w4h.export_grids(grid_data=layers_data, out_path=export_dir, file_id=target_name,filetype='tif', variable_sep=True, date_stamp=True, verbose=verbose, log=log)
 
     return resdf, layers_data
+
+def _run_docstring():
+    nl = '\n\t'
+    functionList = [w4h.file_setup, w4h.read_raw_csv, w4h.define_dtypes, w4h.merge_metadata, w4h.coords2geometry,
+                    w4h.read_study_area, w4h.clip_gdf2study_area, w4h.read_grid, w4h.add_control_points,
+                    w4h.remove_nonlocated, w4h.remove_no_topo, w4h.remove_no_depth, w4h.remove_bad_depth, w4h.remove_no_description,
+                    w4h.get_search_terms, w4h.read_dictionary_terms, w4h.specific_define, 
+                    w4h.split_defined, w4h.start_define, w4h.wildcard_define, w4h.remerge_data, w4h.fill_unclassified,
+                    w4h.read_lithologies, w4h.merge_lithologies, 
+                    w4h.align_rasters, w4h.get_drift_thick, w4h.sample_raster_points, w4h.get_layer_depths, w4h.layer_target_thick,
+                    w4h.layer_interp, w4h.export_grids]
+
+    funcStrList = []
+    funcParams = []
+    funcDefaults = []
+    prevOutputList = ['df', 'filepath', 'study_area']
+    requiredList = []
+    for func in functionList:
+        parameters = inspect.signature(func).parameters
+        defaults = [param.default for param in list(zip(*parameters.items()))[1]]
+        parameters = list(zip(*parameters.items()))[0]
+
+        for i, d in enumerate(defaults):
+            if 'kwargs' in parameters[i]:
+                defaults[i] = {}
+            elif d is inspect._empty:
+                if func.__name__ == 'read_study_area' and parameters[i] == 'study_area':
+                    defaults[i] = "None <but defaults to w4h.resources()['study_area']>"
+                elif any(o in parameters[i] for o in prevOutputList):
+                    defaults[i] = '<output of previous function>'
+                else:
+                    defaults[i] = '<no default>'
+
+        firstLine = f"\n{func.__name__}"
+        followingLines = ''
+        for i, param in enumerate(parameters):
+            followingLines += f"\n\t{param}".ljust(25)
+            if isinstance(defaults[i], str) and defaults[i]!='<positional, no default>':
+                followingLines += f"| default = '{defaults[i]}'"
+            else:
+                followingLines += f"| default = {defaults[i]}"
+
+        #funcDefaults.append(['<positional, no default>' if d is inspect._empty else d for d in defaults])
+        #funcParams.append(list(zip(*parameters.items()))[0])
+
+        funcString = firstLine + followingLines
+        funcStrList.append(funcString)
+
+    run_docstring = f"""
+    w4h.run() is a function that runs the intended workflow of the wells4hydrogeology (w4h) package.
+    This means that it runs several constituent functions. The workflow that this follows is provided in the package wiki.
+    It accepts the parameters of the constituent functions. To see a list of these functions and parameters, use `help(w4h.run)`.
+
+    The following functions used in w4h.run() are listed below, along with their parameters and default values for those parameters. 
+    See the documentation for the each of the individual functions for more information on a specific parameter:
+
+    {nl.join(funcStrList)}"
+
+    """
+    return run_docstring
 
 log_filename=None #Set up so exists but is None
 def logger_function(logtocommence, parameters, func_name):
