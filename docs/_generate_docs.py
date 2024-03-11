@@ -14,7 +14,7 @@ RELEASE_VERSION = "0.0.21"
 
 #Whether to CONVERT_MD using markdown library (True), or let github do it (False)
 RTD_DOCS = True
-GITHUB_PAGES = True
+GITHUB_PAGES = False
 
 CONVERT_MD=True
 RTD_THEME=False #Not currently working
@@ -103,22 +103,25 @@ if RTD_DOCS:
     buildDir = docsDir.joinpath('_build')
     htmlDir = buildDir.joinpath('html')
 
-    #for f in htmlDir.iterdir():
-    #    if f.suffix == '.html':
-    #        with open(f.as_posix(), mode='r', encoding='utf-8') as htmlF:
-    #            htmlFileText = htmlF.read()
+    copyList = ['documentation_options', 'doctools','sphinx_highlight', 'theme']
 
-    #        prevtext = 'href="_static/'
-    #        newPath = htmlDir.joinpath('_static')
-    #        newText = 'href="'
-    #        htmlFileText = htmlFileText.replace(prevtext, newText)
-    #        htmlFileText = htmlFileText.replace('href="css/', 'href="')
-    #        with open(f.as_posix(), mode='w', encoding='utf-8') as htmlF:
-    #            htmlF.write(htmlFileText)
+    for f in htmlDir.iterdir():
+        if f.name[0] != '_':
+            shutil.copy(f, docsDir.joinpath(f.name))
+        else:
+            if f.name == '_static':
+                for f2 in f.iterdir():
+                    if f2.stem in copyList:
+                        shutil.copy(f2, docsDir.joinpath(f.name))
+                    elif f2.stem == 'js':
+                        shutil.copy(f2.joinpath('theme.js'), docsDir.joinpath('theme.js'))
 
-    #    if f.name[0] != '_':
-    #        shutil.copy(f, docsDir.joinpath(f.name))
-
+    for file in docsDir.iterdir():
+        if file.suffix == '.html':
+            with open(file.as_posix(), mode='r', encoding='utf-8') as f:
+                htmlFileText = f.read()
+            htmlFileText = htmlFileText.replace('src="_static/', 'src="')
+            htmlFileText = htmlFileText.replace('src="js/', 'src="')
     #        if f.stem == 'resources':
     #            os.remove(f)
     #    else:
