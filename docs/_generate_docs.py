@@ -101,11 +101,11 @@ if RTD_DOCS:
             with open(f.as_posix(), mode='r', encoding='utf-8') as htmlF:
                 htmlFileText = htmlF.read()
 
-            prevtext = 'href="_static'
+            prevtext = 'href="_static/'
             newPath = htmlDir.joinpath('_static')
-            newText = 'href="_build/_static'
-
+            newText = 'href="'
             htmlFileText = htmlFileText.replace(prevtext, newText)
+            htmlFileText = htmlFileText.replace('href="css/', 'href="')
             with open(f.as_posix(), mode='w', encoding='utf-8') as htmlF:
                 htmlF.write(htmlFileText)
 
