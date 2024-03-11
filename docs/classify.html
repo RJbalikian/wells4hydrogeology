@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>w4h.classify API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="The Classify module contains functions for defining geological intervals into a preset subset of interpretations." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,11 +22,15 @@
 <h1 class="title">Module <code>w4h.classify</code></h1>
 </header>
 <section id="section-intro">
+<p>The Classify module contains functions for defining geological intervals into a preset subset of interpretations.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import datetime
+<pre><code class="python">&#34;&#34;&#34;The Classify module contains functions for defining geological intervals into a preset subset of interpretations.
+&#34;&#34;&#34;
+
+import datetime
 import inspect
 
 import pandas as pd
@@ -43,7 +47,6 @@ from w4h import logger_function, verbose_print
 #- Top of well?
 
 #Define records with full search term
-
 def specific_define(df, terms_df, description_col=&#39;FORMATION&#39;, terms_col=&#39;DESCRIPTION&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to classify terms that have been specifically defined in the terms_df.
 
@@ -244,7 +247,6 @@ def remerge_data(classifieddf, searchdf):
     return remergeDF
 
 #Define well intervals by depth
-
 def depth_define(df, top_col=&#39;TOP&#39;, thresh=550.0, verbose=False, log=False):
     &#34;&#34;&#34;Function to define all intervals lower than thresh as bedrock
 

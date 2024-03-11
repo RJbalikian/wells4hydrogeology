@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>w4h.clean API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="The Clean module contains functions for cleaning the data (i.e., removing data not to be used in further analysis)" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,18 +22,22 @@
 <h1 class="title">Module <code>w4h.clean</code></h1>
 </header>
 <section id="section-intro">
+<p>The Clean module contains functions for cleaning the data (i.e., removing data not to be used in further analysis)</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import inspect
+<pre><code class="python">&#34;&#34;&#34;The Clean module contains functions for cleaning the data (i.e., removing data not to be used in further analysis)
+&#34;&#34;&#34;
+
+import inspect
 
 import numpy as np
 import pandas as pd
 
 from w4h import logger_function, verbose_print
 
-#This function removes all data from the downholeData table where there is no location information (in the headerData table). This includes elevation info too
+# This function removes all data from the downholeData table where there is no location information (in the headerData table). This includes elevation info too
 def remove_nonlocated(df_with_locations, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LATITUDE&#39;, no_data_val_table=&#39;&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to remove wells and well intervals where there is no location information
 
@@ -72,8 +76,8 @@ def remove_nonlocated(df_with_locations, xcol=&#39;LONGITUDE&#39;, ycol=&#39;LAT
 
     return df_with_locations
 
-#Function to remove data (intended for headerData) without surface topography information
-##THIS ASSUMES AND SHOULD ONLY BE RUN AFTER ALL DESIRED SURFACE TOPO DATASETS HAVE BEEN MERGED/ADDED
+# Function to remove data (intended for headerData) without surface topography information
+# THIS ASSUMES AND SHOULD ONLY BE RUN AFTER ALL DESIRED SURFACE TOPO DATASETS HAVE BEEN MERGED/ADDED
 def remove_no_topo(df_with_topo, zcol=&#39;ELEVATION&#39;, no_data_val_table=&#39;&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to remove wells that do not have topography data (needed for layer selection later).
 
@@ -116,7 +120,7 @@ def remove_no_topo(df_with_topo, zcol=&#39;ELEVATION&#39;, no_data_val_table=&#3
     
     return df_with_topo
 
-#This function drops all records in the downholedata with no depth information (either top or bottom depth of well interval)
+# This function drops all records in the downholedata with no depth information (either top or bottom depth of well interval)
 def remove_no_depth(df_with_depth, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, no_data_val_table=&#39;&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to remove well intervals with no depth information
 
@@ -166,7 +170,7 @@ def remove_no_depth(df_with_depth, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM
     
     return df_with_depth
 
-#This function drops all records in downholeData with bad depth information (where the bottom of a record is nearer to the surface than the top)
+# This function drops all records in downholeData with bad depth information (where the bottom of a record is nearer to the surface than the top)
 def remove_bad_depth(df_with_depth, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTOM&#39;, depth_type=&#39;depth&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function to remove all records in the dataframe with well interpretations where the depth information is bad (i.e., where the bottom of the record is neerer to the surface than the top)
 
@@ -211,7 +215,7 @@ def remove_bad_depth(df_with_depth, top_col=&#39;TOP&#39;, bottom_col=&#39;BOTTO
 
     return df_with_depth
 
-#This function drops all records in downholeData with no formation in formation in the description fiel
+# This function drops all records in downholeData with no formation in formation in the description fiel
 def remove_no_description(df_with_descriptions, description_col=&#39;FORMATION&#39;, no_data_val_table=&#39;&#39;, verbose=False, log=False):
     &#34;&#34;&#34;Function that removes all records in the dataframe containing the well descriptions where no description is given.
 
