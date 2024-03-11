@@ -162,88 +162,88 @@
 <dt class="sig sig-object py" id="w4h.clean.remove_bad_depth">
 <span class="sig-prename descclassname"><span class="pre">w4h.clean.</span></span><span class="sig-name descname"><span class="pre">remove_bad_depth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df_with_depth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TOP'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bottom_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BOTTOM'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'depth'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/clean.html#remove_bad_depth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.clean.remove_bad_depth" title="Link to this definition">¶</a></dt>
 <dd><p>Function to remove all records in the dataframe with well interpretations where the depth information is bad (i.e., where the bottom of the record is neerer to the surface than the top)</p>
-<section id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<dl class="simple">
-<dt>df_with_depth<span class="classifier">pandas.DataFrame</span></dt><dd><p>Pandas dataframe containing the well records and descriptions for each interval</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>df_with_depth</strong><span class="classifier">pandas.DataFrame</span></dt><dd><p>Pandas dataframe containing the well records and descriptions for each interval</p>
 </dd>
-<dt>top_col<span class="classifier">str, default=’TOP’</span></dt><dd><p>The name of the column containing the depth or elevation for the top of the interval, by default ‘TOP’</p>
+<dt><strong>top_col</strong><span class="classifier">str, default=’TOP’</span></dt><dd><p>The name of the column containing the depth or elevation for the top of the interval, by default ‘TOP’</p>
 </dd>
-<dt>bottom_col<span class="classifier">str, default=’BOTTOM’</span></dt><dd><p>The name of the column containing the depth or elevation for the bottom of each interval, by default ‘BOTTOM’</p>
+<dt><strong>bottom_col</strong><span class="classifier">str, default=’BOTTOM’</span></dt><dd><p>The name of the column containing the depth or elevation for the bottom of each interval, by default ‘BOTTOM’</p>
 </dd>
-<dt>depth_type<span class="classifier">str, {‘depth’, ‘elevation’}</span></dt><dd><p>Whether the table is organized by depth or elevation. If depth, the top column will have smaller values than the bottom column. If elevation, the top column will have higher values than the bottom column, by default ‘depth’</p>
+<dt><strong>depth_type</strong><span class="classifier">str, {‘depth’, ‘elevation’}</span></dt><dd><p>Whether the table is organized by depth or elevation. If depth, the top column will have smaller values than the bottom column. If elevation, the top column will have higher values than the bottom column, by default ‘depth’</p>
 </dd>
-<dt>verbose<span class="classifier">bool, default = False</span></dt><dd><p>Whether to print results to the terminal, by default False</p>
+<dt><strong>verbose</strong><span class="classifier">bool, default = False</span></dt><dd><p>Whether to print results to the terminal, by default False</p>
 </dd>
-<dt>log<span class="classifier">bool, default = False</span></dt><dd><p>Whether to log results to log file, by default False</p>
+<dt><strong>log</strong><span class="classifier">bool, default = False</span></dt><dd><p>Whether to log results to log file, by default False</p>
 </dd>
 </dl>
-</section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<dl class="simple">
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
 <dt>pandas.Dataframe</dt><dd><p>Pandas dataframe with the records remvoed where the top is indicatd to be below the bottom.</p>
 </dd>
 </dl>
-</section>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="w4h.clean.remove_no_depth">
 <span class="sig-prename descclassname"><span class="pre">w4h.clean.</span></span><span class="sig-name descname"><span class="pre">remove_no_depth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df_with_depth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TOP'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bottom_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BOTTOM'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_data_val_table</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/clean.html#remove_no_depth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.clean.remove_no_depth" title="Link to this definition">¶</a></dt>
 <dd><p>Function to remove well intervals with no depth information</p>
-<section id="id1">
-<h2>Parameters<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
-<dl class="simple">
-<dt>df_with_depth<span class="classifier">pandas.DataFrame</span></dt><dd><p>Dataframe containing well descriptions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>df_with_depth</strong><span class="classifier">pandas.DataFrame</span></dt><dd><p>Dataframe containing well descriptions</p>
 </dd>
-<dt>top_col<span class="classifier">str, optional</span></dt><dd><p>Name of column containing information on the top of the well intervals, by default ‘TOP’</p>
+<dt><strong>top_col</strong><span class="classifier">str, optional</span></dt><dd><p>Name of column containing information on the top of the well intervals, by default ‘TOP’</p>
 </dd>
-<dt>bottom_col<span class="classifier">str, optional</span></dt><dd><p>Name of column containing information on the bottom of the well intervals, by default ‘BOTTOM’</p>
+<dt><strong>bottom_col</strong><span class="classifier">str, optional</span></dt><dd><p>Name of column containing information on the bottom of the well intervals, by default ‘BOTTOM’</p>
 </dd>
-<dt>no_data_val_table<span class="classifier">any, optional</span></dt><dd><p>No data value in the input data, used by this function to indicate that depth data is not there, to be replaced by np.nan, by default ‘’</p>
+<dt><strong>no_data_val_table</strong><span class="classifier">any, optional</span></dt><dd><p>No data value in the input data, used by this function to indicate that depth data is not there, to be replaced by np.nan, by default ‘’</p>
 </dd>
-<dt>verbose<span class="classifier">bool, optional</span></dt><dd><p>Whether to print results to console, by default False</p>
+<dt><strong>verbose</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to print results to console, by default False</p>
 </dd>
-<dt>log<span class="classifier">bool, default = False</span></dt><dd><p>Whether to log results to log file, by default False</p>
-</dd>
-</dl>
-</section>
-<section id="id2">
-<h2>Returns<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h2>
-<dl class="simple">
-<dt>df_with_depth<span class="classifier">pandas.DataFrame</span></dt><dd><p>Dataframe with depths dropped</p>
+<dt><strong>log</strong><span class="classifier">bool, default = False</span></dt><dd><p>Whether to log results to log file, by default False</p>
 </dd>
 </dl>
-</section>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>df_with_depth</strong><span class="classifier">pandas.DataFrame</span></dt><dd><p>Dataframe with depths dropped</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="w4h.clean.remove_no_description">
 <span class="sig-prename descclassname"><span class="pre">w4h.clean.</span></span><span class="sig-name descname"><span class="pre">remove_no_description</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df_with_descriptions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'FORMATION'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_data_val_table</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/clean.html#remove_no_description"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.clean.remove_no_description" title="Link to this definition">¶</a></dt>
 <dd><p>Function that removes all records in the dataframe containing the well descriptions where no description is given.</p>
-<section id="id3">
-<h2>Parameters<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h2>
-<dl class="simple">
-<dt>df_with_descriptions<span class="classifier">pandas.DataFrame</span></dt><dd><p>Pandas dataframe containing the well records with their individual descriptions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>df_with_descriptions</strong><span class="classifier">pandas.DataFrame</span></dt><dd><p>Pandas dataframe containing the well records with their individual descriptions</p>
 </dd>
-<dt>description_col<span class="classifier">str, optional</span></dt><dd><p>Name of the column containing the geologic description of each interval, by default ‘FORMATION’</p>
+<dt><strong>description_col</strong><span class="classifier">str, optional</span></dt><dd><p>Name of the column containing the geologic description of each interval, by default ‘FORMATION’</p>
 </dd>
-<dt>no_data_val_table<span class="classifier">str, optional</span></dt><dd><p>The value expected if the column is empty or there is no data. These will be replaced by np.nan before being removed, by default ‘’</p>
+<dt><strong>no_data_val_table</strong><span class="classifier">str, optional</span></dt><dd><p>The value expected if the column is empty or there is no data. These will be replaced by np.nan before being removed, by default ‘’</p>
 </dd>
-<dt>verbose<span class="classifier">bool, optional</span></dt><dd><p>Whether to print the results of this step to the terminal, by default False</p>
+<dt><strong>verbose</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to print the results of this step to the terminal, by default False</p>
 </dd>
-<dt>log<span class="classifier">bool, default = False</span></dt><dd><p>Whether to log results to log file, by default False</p>
+<dt><strong>log</strong><span class="classifier">bool, default = False</span></dt><dd><p>Whether to log results to log file, by default False</p>
 </dd>
 </dl>
-</section>
-<section id="id4">
-<h2>Returns<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h2>
-<dl class="simple">
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
 <dt>pandas.DataFrame</dt><dd><p>Pandas dataframe with records with no description removed.</p>
 </dd>
 </dl>
-</section>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -251,52 +251,52 @@
 <span class="sig-prename descclassname"><span class="pre">w4h.clean.</span></span><span class="sig-name descname"><span class="pre">remove_no_topo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df_with_topo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zcol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ELEVATION'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_data_val_table</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/clean.html#remove_no_topo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.clean.remove_no_topo" title="Link to this definition">¶</a></dt>
 <dd><p>Function to remove wells that do not have topography data (needed for layer selection later).</p>
 <p>This function is intended to be run on the metadata table after elevations have attempted to been added.</p>
-<section id="id5">
-<h2>Parameters<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h2>
-<dl class="simple">
-<dt>df_with_topo<span class="classifier">pandas.DataFrame</span></dt><dd><p>Pandas dataframe containing elevation information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>df_with_topo</strong><span class="classifier">pandas.DataFrame</span></dt><dd><p>Pandas dataframe containing elevation information.</p>
 </dd>
-<dt>zcol<span class="classifier">str</span></dt><dd><p>Name of elevation column</p>
+<dt><strong>zcol</strong><span class="classifier">str</span></dt><dd><p>Name of elevation column</p>
 </dd>
-<dt>no_data_val_table<span class="classifier">any</span></dt><dd><p>Value in dataset that indicates no data is present (replaced with np.nan)</p>
+<dt><strong>no_data_val_table</strong><span class="classifier">any</span></dt><dd><p>Value in dataset that indicates no data is present (replaced with np.nan)</p>
 </dd>
-<dt>verbose<span class="classifier">bool, optional</span></dt><dd><p>Whether to print outputs, by default True</p>
+<dt><strong>verbose</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to print outputs, by default True</p>
 </dd>
-<dt>log<span class="classifier">bool, default = False</span></dt><dd><p>Whether to log results to log file, by default False</p>
+<dt><strong>log</strong><span class="classifier">bool, default = False</span></dt><dd><p>Whether to log results to log file, by default False</p>
 </dd>
 </dl>
-</section>
-<section id="id6">
-<h2>Returns<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h2>
-<dl class="simple">
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
 <dt>pandas.DataFrame</dt><dd><p>Pandas dataframe with intervals with no topography removed.</p>
 </dd>
 </dl>
-</section>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="w4h.clean.remove_nonlocated">
 <span class="sig-prename descclassname"><span class="pre">w4h.clean.</span></span><span class="sig-name descname"><span class="pre">remove_nonlocated</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df_with_locations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xcol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'LONGITUDE'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ycol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'LATITUDE'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_data_val_table</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/clean.html#remove_nonlocated"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.clean.remove_nonlocated" title="Link to this definition">¶</a></dt>
 <dd><p>Function to remove wells and well intervals where there is no location information</p>
-<section id="id7">
-<h2>Parameters<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h2>
-<dl class="simple">
-<dt>df_with_locations<span class="classifier">pandas.DataFrame</span></dt><dd><p>Pandas dataframe containing well descriptions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>df_with_locations</strong><span class="classifier">pandas.DataFrame</span></dt><dd><p>Pandas dataframe containing well descriptions</p>
 </dd>
-<dt>metadata_DF<span class="classifier">pandas.DataFrame</span></dt><dd><p>Pandas dataframe containing metadata, including well locations (e.g., Latitude/Longitude)</p>
+<dt><strong>metadata_DF</strong><span class="classifier">pandas.DataFrame</span></dt><dd><p>Pandas dataframe containing metadata, including well locations (e.g., Latitude/Longitude)</p>
 </dd>
-<dt>log<span class="classifier">bool, default = False</span></dt><dd><p>Whether to log results to log file, by default False</p>
-</dd>
-</dl>
-</section>
-<section id="id8">
-<h2>Returns<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h2>
-<dl class="simple">
-<dt>df_with_locations<span class="classifier">pandas.DataFrame</span></dt><dd><p>Pandas dataframe containing only data with location information</p>
+<dt><strong>log</strong><span class="classifier">bool, default = False</span></dt><dd><p>Whether to log results to log file, by default False</p>
 </dd>
 </dl>
-</section>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>df_with_locations</strong><span class="classifier">pandas.DataFrame</span></dt><dd><p>Pandas dataframe containing only data with location information</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </section>

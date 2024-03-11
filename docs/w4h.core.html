@@ -162,41 +162,42 @@ and functions that are used throughout the package for logging and printing verb
 <dt class="sig sig-object py" id="w4h.core.get_resources">
 <span class="sig-prename descclassname"><span class="pre">w4h.core.</span></span><span class="sig-name descname"><span class="pre">get_resources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resource_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'filepaths'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'local'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/core.html#get_resources"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.core.get_resources" title="Link to this definition">¶</a></dt>
 <dd><p>Function to get filepaths for resources included with package</p>
-<section id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<dl class="simple">
-<dt>resource_type<span class="classifier">str, {‘filepaths’, ‘data’}</span></dt><dd><p>If filepaths, will return dictionary with filepaths to sample data. If data, returns dictionary with data objects.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>resource_type</strong><span class="classifier">str, {‘filepaths’, ‘data’}</span></dt><dd><p>If filepaths, will return dictionary with filepaths to sample data. If data, returns dictionary with data objects.</p>
 </dd>
-<dt>scope<span class="classifier">str, {‘local’, ‘statewide’}</span></dt><dd><p>If ‘local’, will read in sample data for a local (around county sized) project. If ‘state’, will read in sample data for a statewide project (Illinois)</p>
+<dt><strong>scope</strong><span class="classifier">str, {‘local’, ‘statewide’}</span></dt><dd><p>If ‘local’, will read in sample data for a local (around county sized) project. If ‘state’, will read in sample data for a statewide project (Illinois)</p>
 </dd>
-<dt>verbose<span class="classifier">bool, optional</span></dt><dd><p>Whether to print results to terminal, by default False</p>
-</dd>
-</dl>
-</section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<dl class="simple">
-<dt>resources_dict<span class="classifier">dict</span></dt><dd><p>Dictionary containing key, value pairs with filepaths to resources that may be of interest.</p>
+<dt><strong>verbose</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to print results to terminal, by default False</p>
 </dd>
 </dl>
-</section>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>resources_dict</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing key, value pairs with filepaths to resources that may be of interest.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="w4h.core.logger_function">
 <span class="sig-prename descclassname"><span class="pre">w4h.core.</span></span><span class="sig-name descname"><span class="pre">logger_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logtocommence</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/core.html#logger_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.core.logger_function" title="Link to this definition">¶</a></dt>
 <dd><p>Function to log other functions, to be called from within other functions</p>
-<section id="id1">
-<h2>Parameters<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
-<dl class="simple">
-<dt>logtocommence<span class="classifier">bool</span></dt><dd><p>Whether to perform logging steps</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>logtocommence</strong><span class="classifier">bool</span></dt><dd><p>Whether to perform logging steps</p>
 </dd>
-<dt>parameters<span class="classifier">dict</span></dt><dd><p>Dictionary containing parameters and their values, from function</p>
+<dt><strong>parameters</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing parameters and their values, from function</p>
 </dd>
-<dt>func_name<span class="classifier">str</span></dt><dd><p>Name of function within which this is called</p>
+<dt><strong>func_name</strong><span class="classifier">str</span></dt><dd><p>Name of function within which this is called</p>
 </dd>
 </dl>
-</section>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -361,7 +362,7 @@ See the documentation for the each of the individual functions for more informat
 <p>start_path            | default = None</p>
 <p>start_glob_pattern    | default = ‘<em>SearchTerms-Start</em>’</p>
 <p>wildcard_path         | default = None</p>
-<p>wildcard_glob_pattern | default = ‘<a href="#id2"><span class="problematic" id="id3">*</span></a>SearchTerms-Wildcard’</p>
+<p>wildcard_glob_pattern | default = ‘<a href="#id1"><span class="problematic" id="id2">*</span></a>SearchTerms-Wildcard’</p>
 <p>verbose               | default = False</p>
 <p>log                   | default = False</p>
 </div></blockquote>

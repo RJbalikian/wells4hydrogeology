@@ -1,4 +1,5 @@
 import sphinx_rtd_theme
+import numpydoc
 
 import sys
 import os
@@ -33,6 +34,8 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
     'sphinx.ext.todo',
+    'numpydoc'
+
 ]
 
 templates_path = ['_templates']
