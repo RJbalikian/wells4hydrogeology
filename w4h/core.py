@@ -1,5 +1,5 @@
-"""The Core module contains core functions of the package, 
-including the main run() function that allows rapid data analysis, a function to retrieve sample data,
+"""The Core module contains core functions of the package used in other modules or as primary functions in the package. 
+This includes the main run() function that allows rapid data analysis, a function to retrieve sample data,
 and functions that are used throughout the package for logging and printing verbose outputs."""
 
 import datetime
@@ -350,10 +350,10 @@ def _run_docstring():
                 else:
                     defaults[i] = '<no default>'
 
-        firstLine = f"\n{func.__name__}"
+        firstLine = f"\n\n**{func.__name__}**"
         followingLines = ''
         for i, param in enumerate(parameters):
-            followingLines += f"\n\t{param}".ljust(25)
+            followingLines += f"\n\n\t{param}".ljust(25)
             if isinstance(defaults[i], str) and defaults[i]!='<positional, no default>':
                 followingLines += f"| default = '{defaults[i]}'"
             else:

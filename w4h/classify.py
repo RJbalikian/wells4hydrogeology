@@ -1,4 +1,4 @@
-"""The Classify module contains functions for defining geological intervals into a preset subset of interpretations.
+"""The Classify module contains functions for defining geological intervals into a preset subset of geologic interpretations.
 """
 
 import datetime

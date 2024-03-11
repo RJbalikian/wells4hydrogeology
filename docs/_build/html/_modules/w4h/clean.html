@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>w4h.clean &mdash; wells4hydrogeology 0.0.20 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=056c92e6"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            wells4hydrogeology
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">wells4hydrogeology</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">w4h.clean</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for w4h.clean</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">inspect</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">w4h</span> <span class="kn">import</span> <span class="n">logger_function</span><span class="p">,</span> <span class="n">verbose_print</span>
+
+<span class="c1">#This function removes all data from the downholeData table where there is no location information (in the headerData table). This includes elevation info too</span>
+<div class="viewcode-block" id="remove_nonlocated">
+<a class="viewcode-back" href="../../w4h.html#w4h.clean.remove_nonlocated">[docs]</a>
+<span class="k">def</span> <span class="nf">remove_nonlocated</span><span class="p">(</span><span class="n">df_with_locations</span><span class="p">,</span> <span class="n">xcol</span><span class="o">=</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="n">no_data_val_table</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to remove wells and well intervals where there is no location information</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    df_with_locations : pandas.DataFrame</span>
+<span class="sd">        Pandas dataframe containing well descriptions</span>
+<span class="sd">    metadata_DF : pandas.DataFrame</span>
+<span class="sd">        Pandas dataframe containing metadata, including well locations (e.g., Latitude/Longitude)</span>
+<span class="sd">    log : bool, default = False</span>
+<span class="sd">        Whether to log results to log file, by default False</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    df_with_locations : pandas.DataFrame</span>
+<span class="sd">        Pandas dataframe containing only data with location information</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="n">verbose_print</span><span class="p">(</span><span class="n">remove_nonlocated</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;df_with_locations&#39;</span><span class="p">])</span>
+
+    <span class="n">before</span> <span class="o">=</span> <span class="n">df_with_locations</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1">#Extract length of data before this process</span>
+
+    <span class="n">df_with_locations</span><span class="p">[</span><span class="n">xcol</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">no_data_val_table</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">df_with_locations</span><span class="p">[</span><span class="n">ycol</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">no_data_val_table</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="n">df_with_locations</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="n">xcol</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">df_with_locations</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="n">ycol</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="n">after</span> <span class="o">=</span> <span class="n">df_with_locations</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Removed well records with no location information. &#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Number of records before removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">before</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Number of records after removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">after</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="si">{}</span><span class="s2"> wells records removed without location information&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">before</span><span class="o">-</span><span class="n">after</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">df_with_locations</span></div>
+
+
+<span class="c1">#Function to remove data (intended for headerData) without surface topography information</span>
+<span class="c1">##THIS ASSUMES AND SHOULD ONLY BE RUN AFTER ALL DESIRED SURFACE TOPO DATASETS HAVE BEEN MERGED/ADDED</span>
+<div class="viewcode-block" id="remove_no_topo">
+<a class="viewcode-back" href="../../w4h.html#w4h.clean.remove_no_topo">[docs]</a>
+<span class="k">def</span> <span class="nf">remove_no_topo</span><span class="p">(</span><span class="n">df_with_topo</span><span class="p">,</span> <span class="n">zcol</span><span class="o">=</span><span class="s1">&#39;ELEVATION&#39;</span><span class="p">,</span> <span class="n">no_data_val_table</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to remove wells that do not have topography data (needed for layer selection later).</span>
+
+<span class="sd">    This function is intended to be run on the metadata table after elevations have attempted to been added.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    df_with_topo : pandas.DataFrame</span>
+<span class="sd">        Pandas dataframe containing elevation information.</span>
+<span class="sd">    zcol : str</span>
+<span class="sd">        Name of elevation column</span>
+<span class="sd">    no_data_val_table : any</span>
+<span class="sd">        Value in dataset that indicates no data is present (replaced with np.nan)</span>
+<span class="sd">    verbose : bool, optional</span>
+<span class="sd">        Whether to print outputs, by default True</span>
+<span class="sd">    log : bool, default = False</span>
+<span class="sd">        Whether to log results to log file, by default False</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pandas.DataFrame</span>
+<span class="sd">        Pandas dataframe with intervals with no topography removed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="n">verbose_print</span><span class="p">(</span><span class="n">remove_no_topo</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;df_with_topo&#39;</span><span class="p">])</span>
+
+    <span class="n">before</span> <span class="o">=</span> <span class="n">df_with_topo</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="n">df_with_topo</span><span class="p">[</span><span class="n">zcol</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">no_data_val_table</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">df_with_topo</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="n">zcol</span><span class="p">],</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="n">after</span> <span class="o">=</span> <span class="n">df_with_topo</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Removed well records with no surface elevation information. &#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Number of records before removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">before</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Number of records after removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">after</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="si">{}</span><span class="s2"> wells records removed without surface elevation information&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">before</span><span class="o">-</span><span class="n">after</span><span class="p">))</span>
+    
+    <span class="k">return</span> <span class="n">df_with_topo</span></div>
+
+
+<span class="c1">#This function drops all records in the downholedata with no depth information (either top or bottom depth of well interval)</span>
+<div class="viewcode-block" id="remove_no_depth">
+<a class="viewcode-back" href="../../w4h.html#w4h.clean.remove_no_depth">[docs]</a>
+<span class="k">def</span> <span class="nf">remove_no_depth</span><span class="p">(</span><span class="n">df_with_depth</span><span class="p">,</span> <span class="n">top_col</span><span class="o">=</span><span class="s1">&#39;TOP&#39;</span><span class="p">,</span> <span class="n">bottom_col</span><span class="o">=</span><span class="s1">&#39;BOTTOM&#39;</span><span class="p">,</span> <span class="n">no_data_val_table</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to remove well intervals with no depth information</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    df_with_depth : pandas.DataFrame</span>
+<span class="sd">        Dataframe containing well descriptions</span>
+<span class="sd">    top_col : str, optional</span>
+<span class="sd">        Name of column containing information on the top of the well intervals, by default &#39;TOP&#39;</span>
+<span class="sd">    bottom_col : str, optional</span>
+<span class="sd">        Name of column containing information on the bottom of the well intervals, by default &#39;BOTTOM&#39;</span>
+<span class="sd">    no_data_val_table : any, optional</span>
+<span class="sd">        No data value in the input data, used by this function to indicate that depth data is not there, to be replaced by np.nan, by default &#39;&#39;</span>
+<span class="sd">    verbose : bool, optional</span>
+<span class="sd">        Whether to print results to console, by default False</span>
+<span class="sd">    log : bool, default = False</span>
+<span class="sd">        Whether to log results to log file, by default False</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    df_with_depth : pandas.DataFrame</span>
+<span class="sd">        Dataframe with depths dropped</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="n">verbose_print</span><span class="p">(</span><span class="n">remove_no_depth</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;df_with_depth&#39;</span><span class="p">])</span>
+        
+    <span class="c1">#Replace empty cells in top and bottom columns with nan</span>
+    <span class="n">df_with_depth</span><span class="p">[</span><span class="n">top_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_with_depth</span><span class="p">[</span><span class="n">top_col</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">no_data_val_table</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="n">df_with_depth</span><span class="p">[</span><span class="n">bottom_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_with_depth</span><span class="p">[</span><span class="n">bottom_col</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">no_data_val_table</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    
+    <span class="c1">#Calculate number of rows before dropping</span>
+    <span class="n">before</span> <span class="o">=</span> <span class="n">df_with_depth</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1">#Drop records without depth information</span>
+    <span class="n">df_with_depth</span> <span class="o">=</span> <span class="n">df_with_depth</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="n">top_col</span><span class="p">])</span>
+    <span class="n">df_with_depth</span> <span class="o">=</span> <span class="n">df_with_depth</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="n">bottom_col</span><span class="p">])</span>
+    <span class="n">df_with_depth</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1">#Reset index</span>
+  
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="n">after</span> <span class="o">=</span> <span class="n">df_with_depth</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Removed well records with no depth information. &#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Number of records before removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">before</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Number of records after removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">after</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="si">{}</span><span class="s2"> well records removed without depth information&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">before</span><span class="o">-</span><span class="n">after</span><span class="p">))</span>
+    
+    <span class="k">return</span> <span class="n">df_with_depth</span></div>
+
+
+<span class="c1">#This function drops all records in downholeData with bad depth information (where the bottom of a record is nearer to the surface than the top)</span>
+<div class="viewcode-block" id="remove_bad_depth">
+<a class="viewcode-back" href="../../w4h.html#w4h.clean.remove_bad_depth">[docs]</a>
+<span class="k">def</span> <span class="nf">remove_bad_depth</span><span class="p">(</span><span class="n">df_with_depth</span><span class="p">,</span> <span class="n">top_col</span><span class="o">=</span><span class="s1">&#39;TOP&#39;</span><span class="p">,</span> <span class="n">bottom_col</span><span class="o">=</span><span class="s1">&#39;BOTTOM&#39;</span><span class="p">,</span> <span class="n">depth_type</span><span class="o">=</span><span class="s1">&#39;depth&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to remove all records in the dataframe with well interpretations where the depth information is bad (i.e., where the bottom of the record is neerer to the surface than the top)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    df_with_depth : pandas.DataFrame</span>
+<span class="sd">        Pandas dataframe containing the well records and descriptions for each interval</span>
+<span class="sd">    top_col : str, default=&#39;TOP&#39;</span>
+<span class="sd">        The name of the column containing the depth or elevation for the top of the interval, by default &#39;TOP&#39;</span>
+<span class="sd">    bottom_col : str, default=&#39;BOTTOM&#39;</span>
+<span class="sd">        The name of the column containing the depth or elevation for the bottom of each interval, by default &#39;BOTTOM&#39;</span>
+<span class="sd">    depth_type : str, {&#39;depth&#39;, &#39;elevation&#39;}</span>
+<span class="sd">        Whether the table is organized by depth or elevation. If depth, the top column will have smaller values than the bottom column. If elevation, the top column will have higher values than the bottom column, by default &#39;depth&#39;</span>
+<span class="sd">    verbose : bool, default = False</span>
+<span class="sd">        Whether to print results to the terminal, by default False</span>
+<span class="sd">    log : bool, default = False</span>
+<span class="sd">        Whether to log results to log file, by default False</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pandas.Dataframe</span>
+<span class="sd">        Pandas dataframe with the records remvoed where the top is indicatd to be below the bottom.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="n">verbose_print</span><span class="p">(</span><span class="n">remove_bad_depth</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;df_with_depth&#39;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">depth_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span><span class="s1">&#39;depth&#39;</span><span class="p">:</span>
+        <span class="n">df_with_depth</span><span class="p">[</span><span class="s1">&#39;THICKNESS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_with_depth</span><span class="p">[</span><span class="n">bottom_col</span><span class="p">]</span> <span class="o">-</span> <span class="n">df_with_depth</span><span class="p">[</span><span class="n">top_col</span><span class="p">]</span> <span class="c1">#Calculate interval thickness</span>
+    <span class="k">elif</span> <span class="n">depth_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span><span class="s1">&#39;elevation&#39;</span> <span class="ow">or</span> <span class="n">depth_type</span><span class="o">==</span><span class="s1">&#39;elev&#39;</span><span class="p">:</span>
+        <span class="n">df_with_depth</span><span class="p">[</span><span class="s1">&#39;THICKNESS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_with_depth</span><span class="p">[</span><span class="n">top_col</span><span class="p">]</span> <span class="o">-</span> <span class="n">df_with_depth</span><span class="p">[</span><span class="n">bottom_col</span><span class="p">]</span> <span class="c1">#Calculate interval thickness</span>
+    <span class="n">before</span> <span class="o">=</span> <span class="n">df_with_depth</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1">#Calculate number of rows before dropping</span>
+    <span class="n">df_with_depth</span> <span class="o">=</span> <span class="n">df_with_depth</span><span class="p">[(</span><span class="n">df_with_depth</span><span class="p">[</span><span class="s1">&#39;THICKNESS&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)]</span> <span class="c1">#Only include rows where interval thickness is positive (bottom is deeper than top)</span>
+    <span class="n">df_with_depth</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1">#Reset index</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="n">after</span> <span class="o">=</span> <span class="n">df_with_depth</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Removed well records with obviously bad depth information. &#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Number of records before removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">before</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Number of records after removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">after</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="si">{}</span><span class="s2"> well records removed without depth information&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">before</span><span class="o">-</span><span class="n">after</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">df_with_depth</span></div>
+
+
+<span class="c1">#This function drops all records in downholeData with no formation in formation in the description fiel</span>
+<div class="viewcode-block" id="remove_no_description">
+<a class="viewcode-back" href="../../w4h.html#w4h.clean.remove_no_description">[docs]</a>
+<span class="k">def</span> <span class="nf">remove_no_description</span><span class="p">(</span><span class="n">df_with_descriptions</span><span class="p">,</span> <span class="n">description_col</span><span class="o">=</span><span class="s1">&#39;FORMATION&#39;</span><span class="p">,</span> <span class="n">no_data_val_table</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function that removes all records in the dataframe containing the well descriptions where no description is given.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    df_with_descriptions : pandas.DataFrame</span>
+<span class="sd">        Pandas dataframe containing the well records with their individual descriptions</span>
+<span class="sd">    description_col : str, optional</span>
+<span class="sd">        Name of the column containing the geologic description of each interval, by default &#39;FORMATION&#39;</span>
+<span class="sd">    no_data_val_table : str, optional</span>
+<span class="sd">        The value expected if the column is empty or there is no data. These will be replaced by np.nan before being removed, by default &#39;&#39;</span>
+<span class="sd">    verbose : bool, optional</span>
+<span class="sd">        Whether to print the results of this step to the terminal, by default False</span>
+<span class="sd">    log : bool, default = False</span>
+<span class="sd">        Whether to log results to log file, by default False</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pandas.DataFrame</span>
+<span class="sd">        Pandas dataframe with records with no description removed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="n">verbose_print</span><span class="p">(</span><span class="n">remove_no_description</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;df_with_descriptions&#39;</span><span class="p">])</span>
+    <span class="c1">#Replace empty cells in formation column with nans</span>
+    <span class="n">df_with_descriptions</span><span class="p">[</span><span class="n">description_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_with_descriptions</span><span class="p">[</span><span class="n">description_col</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">no_data_val_table</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span> 
+    <span class="n">before</span> <span class="o">=</span> <span class="n">df_with_descriptions</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1">#Calculate number of rows before dropping</span>
+
+    <span class="c1">#Drop records without FORMATION information</span>
+    <span class="n">df_with_descriptions</span> <span class="o">=</span> <span class="n">df_with_descriptions</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="n">description_col</span><span class="p">])</span>
+    <span class="n">df_with_descriptions</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1">#Reset index</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="n">after</span> <span class="o">=</span> <span class="n">df_with_descriptions</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Removed well records without geologic descriptions. &#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Number of records before removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">before</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Number of records after removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">after</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="si">{}</span><span class="s2"> well records removed without geologic descriptions&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">before</span><span class="o">-</span><span class="n">after</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">df_with_descriptions</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Riley Balikian.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
