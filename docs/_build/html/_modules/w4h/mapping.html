@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>w4h.mapping &mdash; wells4hydrogeology 0.0.20 documentation</title>
+  <title>w4h.mapping &mdash; w4h 0.0.21 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=92fd9be5" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -12,9 +12,7 @@
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=056c92e6"></script>
+        <script src="../../_static/documentation_options.js?v=a11416ff"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -31,7 +29,7 @@
           
           
           <a href="../../index.html" class="icon icon-home">
-            wells4hydrogeology
+            w4h
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -41,15 +39,25 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <!-- Local TOC -->
-              <div class="local-toc"></div>
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.html">w4h package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.classify.html">w4h.classify module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.clean.html">w4h.clean module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.core.html">w4h.core module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.export.html">w4h.export module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.layers.html">w4h.layers module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.mapping.html">w4h.mapping module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.read.html">w4h.read module</a></li>
+</ul>
+
         </div>
       </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../index.html">wells4hydrogeology</a>
+          <a href="../../index.html">w4h</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -68,17 +76,23 @@
            <div itemprop="articleBody">
              
   <h1>Source code for w4h.mapping</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">datetime</span>
+<span></span><span class="sd">&quot;&quot;&quot;The Mapping module contains the functions used for geospatial analysis throughout the package.</span>
+<span class="sd">This includes some input/output as well as functions to make manipulatin of geospatial data more simple</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">datetime</span>
 <span class="kn">import</span> <span class="nn">inspect</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">pathlib</span>
 <span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 
 <span class="kn">import</span> <span class="nn">rioxarray</span> <span class="k">as</span> <span class="nn">rxr</span>
 <span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
 <span class="kn">import</span> <span class="nn">geopandas</span> <span class="k">as</span> <span class="nn">gpd</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pyproj</span>
 <span class="kn">import</span> <span class="nn">shapely</span>
 <span class="kn">from</span> <span class="nn">owslib.wcs</span> <span class="kn">import</span> <span class="n">WebCoverageService</span>
 <span class="kn">from</span> <span class="nn">shapely.geometry</span> <span class="kn">import</span> <span class="n">Point</span>
@@ -93,19 +107,21 @@
 
 <span class="c1">#Read study area shapefile (or other file) into geopandas</span>
 <div class="viewcode-block" id="read_study_area">
-<a class="viewcode-back" href="../../w4h.html#w4h.mapping.read_study_area">[docs]</a>
-<span class="k">def</span> <span class="nf">read_study_area</span><span class="p">(</span><span class="n">study_area_path</span><span class="p">,</span> <span class="n">study_area_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:4269&#39;</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<a class="viewcode-back" href="../../w4h.mapping.html#w4h.read_study_area">[docs]</a>
+<span class="k">def</span> <span class="nf">read_study_area</span><span class="p">(</span><span class="n">study_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:4269&#39;</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_original</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">read_file_kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Read study area geospatial file into geopandas</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    study_area_path : str or pathlib.Path</span>
+<span class="sd">    study_area : str, pathlib.Path, geopandas.GeoDataFrame, or shapely.Geometry</span>
 <span class="sd">        Filepath to any geospatial file readable by geopandas. </span>
 <span class="sd">        Polygon is best, but may work with other types if extent is correct.</span>
 <span class="sd">    study_area_crs : str, tuple, dict, optional</span>
 <span class="sd">        CRS designation readable by geopandas/pyproj</span>
 <span class="sd">    buffer : None or numeric, default=None</span>
 <span class="sd">        If None, no buffer created. If a numeric value is given (float or int, for example), a buffer will be created at that distance in the unit of the study_area_crs.</span>
+<span class="sd">    return_original : bool, default=False</span>
+<span class="sd">        Whether to return the (reprojected) study area as well as the (reprojected) buffered study area. Study area is only used for clipping data, so usually return_original=False is sufficient.</span>
 <span class="sd">    log : bool, default = False</span>
 <span class="sd">        Whether to log results to log file, by default False</span>
 <span class="sd">    verbose : bool, default=False</span>
@@ -116,26 +132,49 @@
 <span class="sd">    studyAreaIN : geopandas dataframe</span>
 <span class="sd">        Geopandas dataframe with polygon geometry.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="n">study_area</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">study_area</span> <span class="o">=</span> <span class="n">w4h</span><span class="o">.</span><span class="n">get_resources</span><span class="p">()[</span><span class="s1">&#39;study_area&#39;</span><span class="p">]</span>
+
     <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="n">verbose_print</span><span class="p">(</span><span class="n">read_study_area</span><span class="p">,</span> <span class="nb">locals</span><span class="p">())</span>
-    <span class="n">studyAreaIN</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">study_area_path</span><span class="p">)</span>
-    <span class="n">studyAreaIN</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">study_area_crs</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">study_area</span><span class="p">,</span> <span class="p">(</span><span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">,</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoSeries</span><span class="p">)):</span>
+        <span class="n">studyAreaIN</span> <span class="o">=</span> <span class="n">study_area</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">study_area</span><span class="p">,</span> <span class="n">shapely</span><span class="o">.</span><span class="n">Geometry</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s1">&#39;crs&#39;</span> <span class="ow">in</span> <span class="n">read_file_kwargs</span><span class="p">:</span>
+            <span class="n">crs</span> <span class="o">=</span> <span class="n">read_file_kwargs</span><span class="p">[</span><span class="s1">&#39;crs&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;A shapely Geometry object was read in as the study area, but no crs specified. Using CRS specified in output_crs: </span><span class="si">{output_crs}</span><span class="s1">.</span><span class="se">\</span>
+<span class="s1">                          You can specify the crs as a keyword argument in the read_study_area() function&#39;</span><span class="p">)</span>
+            <span class="n">crs</span> <span class="o">=</span> <span class="n">output_crs</span>
+        <span class="n">studyAreaIN</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">crs</span><span class="o">=</span><span class="n">crs</span><span class="p">,</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="n">study_area</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">studyAreaIN</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">study_area</span><span class="p">,</span> <span class="o">**</span><span class="n">read_file_kwargs</span><span class="p">)</span>
+    <span class="n">studyAreaIN</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">output_crs</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
+    <span class="c1"># Create a buffered study area for clipping</span>
     <span class="k">if</span> <span class="n">buffer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">return_original</span><span class="p">:</span>
+            <span class="n">studyAreaNoBuffer</span> <span class="o">=</span> <span class="n">studyAreaIN</span>
         <span class="n">studyAreaIN</span> <span class="o">=</span> <span class="n">studyAreaIN</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span><span class="n">distance</span><span class="o">=</span><span class="n">buffer</span><span class="p">)</span>
+        
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">Buffer applied.&#39;</span><span class="p">)</span>
+    
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Study area read.&quot;</span><span class="p">)</span>
 
+    <span class="k">if</span> <span class="n">return_original</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">studyAreaIN</span><span class="p">,</span> <span class="n">studyAreaNoBuffer</span>
     <span class="k">return</span> <span class="n">studyAreaIN</span></div>
 
 
 <span class="c1">#Convert coords in columns to geometry in geopandas dataframe</span>
 <div class="viewcode-block" id="coords2geometry">
-<a class="viewcode-back" href="../../w4h.html#w4h.mapping.coords2geometry">[docs]</a>
-<span class="k">def</span> <span class="nf">coords2geometry</span><span class="p">(</span><span class="n">df_no_geometry</span><span class="p">,</span> <span class="n">xcol</span><span class="o">=</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="n">zcol</span><span class="o">=</span><span class="s1">&#39;ELEV_FT&#39;</span><span class="p">,</span> <span class="n">input_coords_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:4269&#39;</span><span class="p">,</span> <span class="n">use_z</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<a class="viewcode-back" href="../../w4h.mapping.html#w4h.coords2geometry">[docs]</a>
+<span class="k">def</span> <span class="nf">coords2geometry</span><span class="p">(</span><span class="n">df_no_geometry</span><span class="p">,</span> <span class="n">xcol</span><span class="o">=</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="n">zcol</span><span class="o">=</span><span class="s1">&#39;ELEV_FT&#39;</span><span class="p">,</span> <span class="n">input_coords_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:4269&#39;</span><span class="p">,</span> <span class="n">use_z</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">wkt_col</span><span class="o">=</span><span class="s1">&#39;WKT&#39;</span><span class="p">,</span> <span class="n">geometry_source</span><span class="o">=</span><span class="s1">&#39;coords&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Adds geometry to points with xy coordinates in the specified coordinate reference system.</span>
 
 <span class="sd">    Parameters</span>
@@ -152,6 +191,7 @@
 <span class="sd">        Name of crs used for geometry</span>
 <span class="sd">    use_z : bool, default=False</span>
 <span class="sd">        Whether to use z column in calculation</span>
+<span class="sd">    geometry_source : str {&#39;coords&#39;, &#39;wkt&#39;, &#39;geometry&#39;}</span>
 <span class="sd">    log : bool, default = False</span>
 <span class="sd">        Whether to log results to log file, by default False</span>
 
@@ -166,23 +206,40 @@
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="n">verbose_print</span><span class="p">(</span><span class="n">coords2geometry</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;df_no_geometry&#39;</span><span class="p">])</span>
 
-    <span class="n">x</span> <span class="o">=</span> <span class="n">df_no_geometry</span><span class="p">[</span><span class="n">xcol</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
-    <span class="n">y</span> <span class="o">=</span> <span class="n">df_no_geometry</span><span class="p">[</span><span class="n">ycol</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
-
-    <span class="c1">#coords = pd.concat([y, x], axis=1)</span>
-    <span class="k">if</span> <span class="n">use_z</span><span class="p">:</span>
-        <span class="n">z</span> <span class="o">=</span> <span class="n">df_no_geometry</span><span class="p">[</span><span class="n">zcol</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
-        <span class="n">df_no_geometry</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">points_from_xy</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="n">z</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="n">input_coords_crs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">df_no_geometry</span><span class="p">,</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">):</span>
+        <span class="n">gdf</span> <span class="o">=</span> <span class="n">df_no_geometry</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">df_no_geometry</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">points_from_xy</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="n">input_coords_crs</span><span class="p">)</span>
-        
-    <span class="n">gdf</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="n">df_no_geometry</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="n">input_coords_crs</span><span class="p">)</span>
+        <span class="n">wktList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;wkt&#39;</span><span class="p">,</span> <span class="s1">&#39;well known text&#39;</span><span class="p">,</span> <span class="s1">&#39;wellknowntext&#39;</span><span class="p">,</span> <span class="s1">&#39;well_known_text&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">]</span>
+        <span class="n">coords_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;coords&#39;</span><span class="p">,</span> <span class="s1">&#39;coordinates&#39;</span><span class="p">,</span> <span class="s1">&#39;xycoords&#39;</span><span class="p">,</span> <span class="s1">&#39;xy&#39;</span><span class="p">,</span> <span class="s1">&#39;xyz&#39;</span><span class="p">,</span> <span class="s1">&#39;xyzcoords&#39;</span><span class="p">,</span> <span class="s1">&#39;xycoordinates&#39;</span><span class="p">,</span> <span class="s1">&#39;xyzcoordinates&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">]</span>
+        <span class="n">geometryList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;geometry&#39;</span><span class="p">,</span> <span class="s1">&#39;geom&#39;</span><span class="p">,</span> <span class="s1">&#39;geo&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">geometry_source</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">wktList</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">shapely</span> <span class="kn">import</span> <span class="n">wkt</span>
+            <span class="n">df_no_geometry</span><span class="p">[</span><span class="s1">&#39;geometry&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_no_geometry</span><span class="p">[</span><span class="n">wkt_col</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">wkt</span><span class="o">.</span><span class="n">loads</span><span class="p">)</span>
+            <span class="n">df_no_geometry</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">wkt_col</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1">#Drop WKT column</span>
+
+        <span class="k">elif</span> <span class="n">geometry_source</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">coords_list</span><span class="p">:</span><span class="c1">#coords = pd.concat([y, x], axis=1)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">df_no_geometry</span><span class="p">[</span><span class="n">xcol</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">df_no_geometry</span><span class="p">[</span><span class="n">ycol</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">use_z</span><span class="p">:</span>
+                <span class="n">z</span> <span class="o">=</span> <span class="n">df_no_geometry</span><span class="p">[</span><span class="n">zcol</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+                <span class="n">df_no_geometry</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">points_from_xy</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="n">z</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="n">input_coords_crs</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">df_no_geometry</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">points_from_xy</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="n">input_coords_crs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">geometry_source</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">geometryList</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;The parameter geometry_source=</span><span class="si">{</span><span class="n">geometry_source</span><span class="si">}</span><span class="s2"> is not recognized.</span>
+<span class="s2">                        Should be one of &#39;coords&#39; (if x, y (and/or z) columns with coordintes used), </span>
+<span class="s2">                        &#39;wkt&#39; (if column with wkt string used), or </span>
+<span class="s2">                        &#39;geometry&#39; (if column with shapely geometry objects used, as with a GeoDataFrame)&quot;&quot;&quot;</span><span class="p">)</span>
+            
+        <span class="n">gdf</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="n">df_no_geometry</span><span class="p">,</span> <span class="n">geometry</span><span class="o">=</span><span class="s1">&#39;geometry&#39;</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="n">input_coords_crs</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">gdf</span></div>
 
 
 <span class="c1">#Clip a geodataframe to a study area</span>
 <div class="viewcode-block" id="clip_gdf2study_area">
-<a class="viewcode-back" href="../../w4h.html#w4h.mapping.clip_gdf2study_area">[docs]</a>
+<a class="viewcode-back" href="../../w4h.mapping.html#w4h.clip_gdf2study_area">[docs]</a>
 <span class="k">def</span> <span class="nf">clip_gdf2study_area</span><span class="p">(</span><span class="n">study_area</span><span class="p">,</span> <span class="n">gdf</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Clips dataframe to only include things within study area.</span>
 
@@ -218,8 +275,8 @@
 
 <span class="c1">#Function to sample raster points to points specified in geodataframe</span>
 <div class="viewcode-block" id="sample_raster_points">
-<a class="viewcode-back" href="../../w4h.html#w4h.mapping.sample_raster_points">[docs]</a>
-<span class="k">def</span> <span class="nf">sample_raster_points</span><span class="p">(</span><span class="n">raster</span><span class="p">,</span> <span class="n">points_df</span><span class="p">,</span> <span class="n">well_id_col</span><span class="o">=</span><span class="s1">&#39;API_NUMBER&#39;</span><span class="p">,</span> <span class="n">xcol</span><span class="o">=</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="n">new_col</span><span class="o">=</span><span class="s1">&#39;SAMPLED&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>  
+<a class="viewcode-back" href="../../w4h.mapping.html#w4h.sample_raster_points">[docs]</a>
+<span class="k">def</span> <span class="nf">sample_raster_points</span><span class="p">(</span><span class="n">raster</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">points_df</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">well_id_col</span><span class="o">=</span><span class="s1">&#39;API_NUMBER&#39;</span><span class="p">,</span> <span class="n">xcol</span><span class="o">=</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="n">new_col</span><span class="o">=</span><span class="s1">&#39;SAMPLED&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>  
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Sample raster values to points from geopandas geodataframe.</span>
 
 <span class="sd">    Parameters</span>
@@ -250,9 +307,14 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
 
+    <span class="k">if</span> <span class="n">raster</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">raster</span> <span class="o">=</span> <span class="n">w4h</span><span class="o">.</span><span class="n">get_resources</span><span class="p">()[</span><span class="s1">&#39;surf_elev&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">points_df</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">points_df</span> <span class="o">=</span> <span class="n">w4h</span><span class="o">.</span><span class="n">get_resources</span><span class="p">()[</span><span class="s1">&#39;well_data&#39;</span><span class="p">]</span>
+
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="n">verbose_print</span><span class="p">(</span><span class="n">sample_raster_points</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;raster&#39;</span><span class="p">,</span> <span class="s1">&#39;points_df&#39;</span><span class="p">])</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Sampling </span><span class="si">{}</span><span class="s2"> grid for at all well locations.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">new_col</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Sampling </span><span class="si">{</span><span class="n">new_col</span><span class="si">}</span><span class="s2"> grid for at all well locations.&quot;</span><span class="p">)</span>
 
     <span class="c1">#Project points to raster CRS</span>
     <span class="n">rastercrsWKT</span><span class="o">=</span><span class="n">raster</span><span class="o">.</span><span class="n">spatial_ref</span><span class="o">.</span><span class="n">crs_wkt</span>
@@ -299,7 +361,7 @@
 
 <span class="c1">#Merge xyz dataframe into a metadata dataframe</span>
 <div class="viewcode-block" id="xyz_metadata_merge">
-<a class="viewcode-back" href="../../w4h.html#w4h.mapping.xyz_metadata_merge">[docs]</a>
+<a class="viewcode-back" href="../../w4h.mapping.html#w4h.xyz_metadata_merge">[docs]</a>
 <span class="k">def</span> <span class="nf">xyz_metadata_merge</span><span class="p">(</span><span class="n">xyz</span><span class="p">,</span> <span class="n">metadata</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Add elevation to header data file.</span>
 
@@ -329,7 +391,7 @@
 
 <span class="c1">#Read wcsservice into rioxarray</span>
 <div class="viewcode-block" id="read_wcs">
-<a class="viewcode-back" href="../../w4h.html#w4h.mapping.read_wcs">[docs]</a>
+<a class="viewcode-back" href="../../w4h.mapping.html#w4h.read_wcs">[docs]</a>
 <span class="k">def</span> <span class="nf">read_wcs</span><span class="p">(</span><span class="n">study_area</span><span class="p">,</span> <span class="n">wcs_url</span><span class="o">=</span><span class="n">lidarURL</span><span class="p">,</span> <span class="n">res_x</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">res_y</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Reads a WebCoverageService from a url and returns a rioxarray dataset containing it.</span>
 
@@ -455,7 +517,7 @@
 
 <span class="c1">#Read wms service into rioxarray</span>
 <div class="viewcode-block" id="read_wms">
-<a class="viewcode-back" href="../../w4h.html#w4h.mapping.read_wms">[docs]</a>
+<a class="viewcode-back" href="../../w4h.mapping.html#w4h.read_wms">[docs]</a>
 <span class="k">def</span> <span class="nf">read_wms</span><span class="p">(</span><span class="n">study_area</span><span class="p">,</span> <span class="n">layer_name</span><span class="o">=</span><span class="s1">&#39;IL_Statewide_Lidar_DEM_WGS:None&#39;</span><span class="p">,</span> <span class="n">wms_url</span><span class="o">=</span><span class="n">lidarURL</span><span class="p">,</span> <span class="n">srs</span><span class="o">=</span><span class="s1">&#39;EPSG:3857&#39;</span><span class="p">,</span> 
              <span class="n">clip_to_studyarea</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bbox</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mf">9889002.615500</span><span class="p">,</span><span class="mf">5134541.069716</span><span class="p">,</span><span class="o">-</span><span class="mf">9737541.607038</span><span class="p">,</span><span class="mf">5239029.627400</span><span class="p">],</span>
              <span class="n">res_x</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">res_y</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">size_x</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">size_y</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> 
@@ -579,8 +641,8 @@
 
 <span class="c1">#Clip a grid to a study area</span>
 <div class="viewcode-block" id="grid2study_area">
-<a class="viewcode-back" href="../../w4h.html#w4h.mapping.grid2study_area">[docs]</a>
-<span class="k">def</span> <span class="nf">grid2study_area</span><span class="p">(</span><span class="n">study_area</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">study_area_crs</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">grid_crs</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<a class="viewcode-back" href="../../w4h.mapping.html#w4h.grid2study_area">[docs]</a>
+<span class="k">def</span> <span class="nf">grid2study_area</span><span class="p">(</span><span class="n">study_area</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:4269&#39;</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Clips grid to study area.</span>
 
 <span class="sd">    Parameters</span>
@@ -589,10 +651,8 @@
 <span class="sd">        inputs study area polygon</span>
 <span class="sd">    grid : xarray.DataArray</span>
 <span class="sd">        inputs grid array</span>
-<span class="sd">    study_area_crs : str, default=&#39;&#39;</span>
+<span class="sd">    output_crs : str, default=&#39;EPSG:4269&#39;</span>
 <span class="sd">        inputs the coordinate reference system for the study area</span>
-<span class="sd">    grid_crs : str, default=&#39;&#39;</span>
-<span class="sd">        inputs the coordinate reference system for the grid</span>
 <span class="sd">    log : bool, default = False</span>
 <span class="sd">        Whether to log results to log file, by default False</span>
 
@@ -605,22 +665,23 @@
     <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="n">verbose_print</span><span class="p">(</span><span class="n">grid2study_area</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;study_area&#39;</span><span class="p">,</span> <span class="s1">&#39;grid&#39;</span><span class="p">])</span>
-    <span class="k">if</span> <span class="n">study_area_crs</span><span class="o">==</span><span class="s1">&#39;&#39;</span><span class="p">:</span>
-        <span class="n">study_area_crs</span><span class="o">=</span><span class="n">study_area</span><span class="o">.</span><span class="n">crs</span>
-
-    <span class="k">if</span> <span class="n">grid_crs</span><span class="o">==</span><span class="s1">&#39;&#39;</span><span class="p">:</span>
-        <span class="c1">#Get EPSG of model grid</span>
-        <span class="n">subtext</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">spatial_ref</span><span class="o">.</span><span class="n">crs_wkt</span><span class="p">[</span><span class="o">-</span><span class="mi">20</span><span class="p">:]</span>
-        <span class="n">starInd</span> <span class="o">=</span> <span class="n">subtext</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;EPSG&#39;</span><span class="p">)</span>
-        <span class="n">grid_crs</span> <span class="o">=</span> <span class="n">subtext</span><span class="p">[</span><span class="n">starInd</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">,</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>   
-        <span class="c1">#print(grid_crs)</span>
     
-    <span class="k">if</span> <span class="n">study_area_crs</span> <span class="o">!=</span> <span class="n">grid_crs</span><span class="p">:</span>
-        <span class="n">studyAreaUnproject</span> <span class="o">=</span> <span class="n">study_area</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">study_area</span> <span class="o">=</span> <span class="n">study_area</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">grid_crs</span><span class="p">)</span>   
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">study_area</span> <span class="o">=</span> <span class="n">study_area</span>
+    <span class="k">if</span> <span class="n">output_crs</span><span class="o">==</span><span class="s1">&#39;&#39;</span><span class="p">:</span>
+        <span class="n">output_crs</span><span class="o">=</span><span class="n">study_area</span><span class="o">.</span><span class="n">crs</span>
 
+    <span class="c1">#Get input CRS&#39;s</span>
+    <span class="n">grid_crs</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_wkt</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">crs</span><span class="o">.</span><span class="n">to_wkt</span><span class="p">())</span>
+    <span class="n">study_area_crs</span> <span class="o">=</span> <span class="n">study_area</span><span class="o">.</span><span class="n">crs</span>
+    
+    <span class="c1"># Reproject if needed</span>
+    <span class="k">if</span> <span class="n">output_crs</span> <span class="o">!=</span> <span class="n">grid_crs</span><span class="p">:</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">reproject</span><span class="p">(</span><span class="n">output_crs</span><span class="p">)</span>
+    <span class="n">grid_crs</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_wkt</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">crs</span><span class="o">.</span><span class="n">to_wkt</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="n">grid_crs</span> <span class="o">!=</span> <span class="n">study_area_crs</span><span class="p">:</span>
+        <span class="n">study_area</span> <span class="o">=</span> <span class="n">study_area</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">grid_crs</span><span class="p">)</span>   
+
+    <span class="c1"># We&#39;ll just clip to outer bounds of study area</span>
     <span class="n">saExtent</span> <span class="o">=</span> <span class="n">study_area</span><span class="o">.</span><span class="n">total_bounds</span>
 
     <span class="k">if</span> <span class="n">grid</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">grid</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">values</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -636,15 +697,19 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">minx</span><span class="o">=</span><span class="n">saExtent</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
         <span class="n">maxx</span><span class="o">=</span><span class="n">saExtent</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">grid</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="n">minx</span><span class="p">,</span> <span class="n">maxx</span><span class="p">),</span> <span class="n">y</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="n">miny</span><span class="p">,</span> <span class="n">maxy</span><span class="p">))</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">band</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>     
+    
+    <span class="c1"># &quot;Clip&quot; it</span>
+    <span class="n">grid</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="n">minx</span><span class="p">,</span> <span class="n">maxx</span><span class="p">),</span> <span class="n">y</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="n">miny</span><span class="p">,</span> <span class="n">maxy</span><span class="p">))</span>
+    <span class="k">if</span> <span class="s1">&#39;band&#39;</span> <span class="ow">in</span> <span class="n">grid</span><span class="o">.</span><span class="n">dims</span><span class="p">:</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">band</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">grid</span></div>
 
 
 <span class="c1">#Read the model grid into (rio)xarray</span>
 <div class="viewcode-block" id="read_model_grid">
-<a class="viewcode-back" href="../../w4h.html#w4h.mapping.read_model_grid">[docs]</a>
-<span class="k">def</span> <span class="nf">read_model_grid</span><span class="p">(</span><span class="n">model_grid_path</span><span class="p">,</span> <span class="n">study_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">no_data_val_grid</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">read_grid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">node_byspace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">study_area_crs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">grid_crs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<a class="viewcode-back" href="../../w4h.mapping.html#w4h.read_model_grid">[docs]</a>
+<span class="k">def</span> <span class="nf">read_model_grid</span><span class="p">(</span><span class="n">model_grid_path</span><span class="p">,</span> <span class="n">study_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">no_data_val_grid</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">read_grid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">node_byspace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">grid_crs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:4269&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Reads in model grid to xarray data array</span>
 
 <span class="sd">    Parameters</span>
@@ -659,7 +724,7 @@
 <span class="sd">        Whether function to either read grid or create grid</span>
 <span class="sd">    node_byspace : bool, default=False</span>
 <span class="sd">        Denotes how to create grid</span>
-<span class="sd">    study_area_crs : str, default=None</span>
+<span class="sd">    output_crs : str, default=&#39;EPSG:4269&#39;</span>
 <span class="sd">        Inputs study area crs</span>
 <span class="sd">    grid_crs : str, default=None</span>
 <span class="sd">        Inputs grid crs</span>
@@ -674,13 +739,14 @@
     <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="n">verbose_print</span><span class="p">(</span><span class="n">read_model_grid</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="s1">&#39;study_area&#39;</span><span class="p">)</span>
+    
     <span class="k">if</span> <span class="n">read_grid</span> <span class="ow">and</span> <span class="n">model_grid_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">modelGridIN</span> <span class="o">=</span> <span class="n">rxr</span><span class="o">.</span><span class="n">open_rasterio</span><span class="p">(</span><span class="n">model_grid_path</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">grid_crs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">grid_crs</span><span class="o">=</span><span class="n">modelGridIN</span><span class="o">.</span><span class="n">spatial_ref</span><span class="o">.</span><span class="n">crs_wkt</span>
-            <span class="k">except</span><span class="p">:</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
                 <span class="n">iswsCRSPath</span> <span class="o">=</span> <span class="n">w4h</span><span class="o">.</span><span class="n">get_resources</span><span class="p">()[</span><span class="s1">&#39;ISWS_CRS&#39;</span><span class="p">]</span>
                 <span class="n">iswsCRS</span> <span class="o">=</span> <span class="n">w4h</span><span class="o">.</span><span class="n">read_dict</span><span class="p">(</span><span class="n">iswsCRSPath</span><span class="p">,</span> <span class="n">keytype</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
                 <span class="n">grid_crs</span> <span class="o">=</span> <span class="n">iswsCRS</span>              
@@ -694,13 +760,14 @@
             <span class="n">iswsCRSPath</span> <span class="o">=</span> <span class="n">w4h</span><span class="o">.</span><span class="n">get_resources</span><span class="p">()[</span><span class="s1">&#39;ISWS_CRS&#39;</span><span class="p">]</span>
             <span class="n">grid_crs</span> <span class="o">=</span> <span class="n">w4h</span><span class="o">.</span><span class="n">read_dict</span><span class="p">(</span><span class="n">iswsCRSPath</span><span class="p">,</span> <span class="n">keytype</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>            
             <span class="n">modelGridIN</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_crs</span><span class="p">(</span><span class="n">grid_crs</span><span class="p">)</span>
-            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;CRS Specification for grid is </span><span class="si">{</span><span class="n">grid_crs</span><span class="si">}</span><span class="s1">, but this cannot be written to the grid&#39;</span><span class="p">)</span>
+        
+        <span class="n">modelGridIN</span> <span class="o">=</span> <span class="n">modelGridIN</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">reproject</span><span class="p">(</span><span class="n">output_crs</span><span class="p">)</span> 
+           
         <span class="k">if</span> <span class="n">study_area</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>                
-            <span class="k">if</span> <span class="n">study_area_crs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">study_area_crs</span><span class="o">=</span><span class="n">study_area</span><span class="o">.</span><span class="n">crs</span>
-            <span class="n">study_area</span> <span class="o">=</span> <span class="n">study_area</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">grid_crs</span><span class="p">)</span>
-            <span class="n">study_area_crs</span><span class="o">=</span><span class="n">study_area</span><span class="o">.</span><span class="n">crs</span>            
-            <span class="n">modelGrid</span> <span class="o">=</span> <span class="n">grid2study_area</span><span class="p">(</span><span class="n">study_area</span><span class="o">=</span><span class="n">study_area</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">modelGridIN</span><span class="p">,</span> <span class="n">study_area_crs</span><span class="o">=</span><span class="n">study_area_crs</span><span class="p">,</span> <span class="n">grid_crs</span><span class="o">=</span><span class="n">grid_crs</span><span class="p">)</span>
+            <span class="n">study_area</span> <span class="o">=</span> <span class="n">study_area</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">output_crs</span><span class="p">)</span>
+            <span class="n">modelGrid</span> <span class="o">=</span> <span class="n">grid2study_area</span><span class="p">(</span><span class="n">study_area</span><span class="o">=</span><span class="n">study_area</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">modelGridIN</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="n">output_crs</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">modelGrid</span> <span class="o">=</span> <span class="n">modelGridIN</span>
 
@@ -711,31 +778,13 @@
 
         <span class="n">modelGrid</span> <span class="o">=</span> <span class="n">modelGrid</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">modelGrid</span> <span class="o">!=</span> <span class="n">noDataVal</span><span class="p">,</span> <span class="n">other</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>   <span class="c1">#Replace no data values with NaNs</span>
         <span class="n">modelGrid</span> <span class="o">=</span> <span class="n">modelGrid</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">modelGrid</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">other</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="c1">#Replace all other values with 1</span>
-        <span class="n">modelGrid</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">reproject</span><span class="p">(</span><span class="n">grid_crs</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        
+        <span class="n">modelGrid</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">reproject</span><span class="p">(</span><span class="n">grid_crs</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>     
     <span class="k">elif</span> <span class="n">model_grid_path</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">study_area</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR: Either model_grid_path or study_area must be defined.&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">spatRefDict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;crs_wkt&#39;</span><span class="p">:</span> <span class="s1">&#39;PROJCS[&quot;Clarke_1866_Lambert_Conformal_Conic&quot;,GEOGCS[&quot;NAD27&quot;,DATUM[&quot;North_American_Datum_1927&quot;,SPHEROID[&quot;Clarke 1866&quot;,6378206.4,294.978698199999,AUTHORITY[&quot;EPSG&quot;,&quot;7008&quot;]],AUTHORITY[&quot;EPSG&quot;,&quot;6267&quot;]],PRIMEM[&quot;Greenwich&quot;,0],UNIT[&quot;degree&quot;,0.0174532925199433,AUTHORITY[&quot;EPSG&quot;,&quot;9122&quot;]],AUTHORITY[&quot;EPSG&quot;,&quot;4267&quot;]],PROJECTION[&quot;Lambert_Conformal_Conic_2SP&quot;],PARAMETER[&quot;latitude_of_origin&quot;,33],PARAMETER[&quot;central_meridian&quot;,-89.5],PARAMETER[&quot;standard_parallel_1&quot;,33],PARAMETER[&quot;standard_parallel_2&quot;,45],PARAMETER[&quot;false_easting&quot;,2999994],PARAMETER[&quot;false_northing&quot;,0],UNIT[&quot;US survey foot&quot;,0.304800609601219,AUTHORITY[&quot;EPSG&quot;,&quot;9003&quot;]],AXIS[&quot;Easting&quot;,EAST],AXIS[&quot;Northing&quot;,NORTH]]&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;semi_major_axis&#39;</span><span class="p">:</span> <span class="mf">6378206.4</span><span class="p">,</span>
-            <span class="s1">&#39;semi_minor_axis&#39;</span><span class="p">:</span> <span class="mf">6356583.799998981</span><span class="p">,</span>
-            <span class="s1">&#39;inverse_flattening&#39;</span><span class="p">:</span> <span class="mf">294.978698199999</span><span class="p">,</span>
-            <span class="s1">&#39;reference_ellipsoid_name&#39;</span><span class="p">:</span> <span class="s1">&#39;Clarke 1866&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;longitude_of_prime_meridian&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
-            <span class="s1">&#39;prime_meridian_name&#39;</span><span class="p">:</span> <span class="s1">&#39;Greenwich&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;geographic_crs_name&#39;</span><span class="p">:</span> <span class="s1">&#39;NAD27&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;horizontal_datum_name&#39;</span><span class="p">:</span> <span class="s1">&#39;North American Datum 1927&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;projected_crs_name&#39;</span><span class="p">:</span> <span class="s1">&#39;Clarke_1866_Lambert_Conformal_Conic&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;grid_mapping_name&#39;</span><span class="p">:</span> <span class="s1">&#39;lambert_conformal_conic&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;standard_parallel&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mf">33.0</span><span class="p">,</span> <span class="mf">45.0</span><span class="p">),</span>
-            <span class="s1">&#39;latitude_of_projection_origin&#39;</span><span class="p">:</span> <span class="mf">33.0</span><span class="p">,</span>
-            <span class="s1">&#39;longitude_of_central_meridian&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mf">89.5</span><span class="p">,</span>
-            <span class="s1">&#39;false_easting&#39;</span><span class="p">:</span> <span class="mf">2999994.0</span><span class="p">,</span>
-            <span class="s1">&#39;false_northing&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
-            <span class="s1">&#39;spatial_ref&#39;</span><span class="p">:</span> <span class="s1">&#39;PROJCS[&quot;Clarke_1866_Lambert_Conformal_Conic&quot;,GEOGCS[&quot;NAD27&quot;,DATUM[&quot;North_American_Datum_1927&quot;,SPHEROID[&quot;Clarke 1866&quot;,6378206.4,294.978698199999,AUTHORITY[&quot;EPSG&quot;,&quot;7008&quot;]],AUTHORITY[&quot;EPSG&quot;,&quot;6267&quot;]],PRIMEM[&quot;Greenwich&quot;,0],UNIT[&quot;degree&quot;,0.0174532925199433,AUTHORITY[&quot;EPSG&quot;,&quot;9122&quot;]],AUTHORITY[&quot;EPSG&quot;,&quot;4267&quot;]],PROJECTION[&quot;Lambert_Conformal_Conic_2SP&quot;],PARAMETER[&quot;latitude_of_origin&quot;,33],PARAMETER[&quot;central_meridian&quot;,-89.5],PARAMETER[&quot;standard_parallel_1&quot;,33],PARAMETER[&quot;standard_parallel_2&quot;,45],PARAMETER[&quot;false_easting&quot;,2999994],PARAMETER[&quot;false_northing&quot;,0],UNIT[&quot;US survey foot&quot;,0.304800609601219,AUTHORITY[&quot;EPSG&quot;,&quot;9003&quot;]],AXIS[&quot;Easting&quot;,EAST],AXIS[&quot;Northing&quot;,NORTH]]&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;GeoTransform&#39;</span><span class="p">:</span> <span class="s1">&#39;2440250.0 625.0 0.0 3459750.0 0.0 -625.0&#39;</span><span class="p">}</span>
-        
+        <span class="n">spatRefDict</span> <span class="o">=</span> <span class="n">w4h</span><span class="o">.</span><span class="n">read_dict</span><span class="p">(</span><span class="n">iswsCRSPath</span><span class="p">,</span> <span class="n">keytype</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>            
+
         <span class="n">saExtent</span> <span class="o">=</span> <span class="n">study_area</span><span class="o">.</span><span class="n">total_bounds</span>
 
         <span class="n">startX</span> <span class="o">=</span> <span class="n">saExtent</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1">#Starting X Coordinate</span>
@@ -775,8 +824,8 @@
 
 <span class="c1">#Read a grid from a file in using rioxarray</span>
 <div class="viewcode-block" id="read_grid">
-<a class="viewcode-back" href="../../w4h.html#w4h.mapping.read_grid">[docs]</a>
-<span class="k">def</span> <span class="nf">read_grid</span><span class="p">(</span><span class="n">grid_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">grid_type</span><span class="o">=</span><span class="s1">&#39;model&#39;</span><span class="p">,</span> <span class="n">no_data_val_grid</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">use_service</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">study_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">study_area_crs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">grid_crs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<a class="viewcode-back" href="../../w4h.mapping.html#w4h.read_grid">[docs]</a>
+<span class="k">def</span> <span class="nf">read_grid</span><span class="p">(</span><span class="n">grid_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">grid_type</span><span class="o">=</span><span class="s1">&#39;model&#39;</span><span class="p">,</span> <span class="n">no_data_val_grid</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">use_service</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">study_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="n">grid_crs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:4269&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Reads in grid</span>
 
 <span class="sd">    Parameters</span>
@@ -791,8 +840,6 @@
 <span class="sd">        Sets which service the function uses</span>
 <span class="sd">    study_area : geopandas.GeoDataFrame, default=None</span>
 <span class="sd">        Dataframe containing study area polygon</span>
-<span class="sd">    study_area_crs : str, default=None</span>
-<span class="sd">        Sets specific crs if current crs is not wanted</span>
 <span class="sd">    grid_crs : str, default=None</span>
 <span class="sd">        Sets crs to use if clipping to study area</span>
 <span class="sd">    log : bool, default = False</span>
@@ -807,12 +854,13 @@
     <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="n">verbose_print</span><span class="p">(</span><span class="n">read_grid</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;study_area&#39;</span><span class="p">])</span>
+        
     <span class="k">if</span> <span class="n">grid_type</span><span class="o">==</span><span class="s1">&#39;model&#39;</span><span class="p">:</span>
         <span class="k">if</span> <span class="s1">&#39;read_grid&#39;</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
             <span class="n">rgrid</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;read_grid&#39;</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">rgrid</span><span class="o">=</span><span class="kc">True</span>
-        <span class="n">gridIN</span> <span class="o">=</span> <span class="n">read_model_grid</span><span class="p">(</span><span class="n">model_grid_path</span><span class="o">=</span><span class="n">grid_path</span><span class="p">,</span> <span class="n">study_area</span><span class="o">=</span><span class="n">study_area</span><span class="p">,</span>  <span class="n">no_data_val_grid</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">read_grid</span><span class="o">=</span><span class="n">rgrid</span><span class="p">,</span> <span class="n">study_area_crs</span><span class="o">=</span><span class="n">study_area_crs</span><span class="p">,</span> <span class="n">grid_crs</span><span class="o">=</span><span class="n">grid_crs</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="n">gridIN</span> <span class="o">=</span> <span class="n">read_model_grid</span><span class="p">(</span><span class="n">model_grid_path</span><span class="o">=</span><span class="n">grid_path</span><span class="p">,</span> <span class="n">study_area</span><span class="o">=</span><span class="n">study_area</span><span class="p">,</span>  <span class="n">no_data_val_grid</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">read_grid</span><span class="o">=</span><span class="n">rgrid</span><span class="p">,</span> <span class="n">grid_crs</span><span class="o">=</span><span class="n">grid_crs</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="n">output_crs</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">use_service</span><span class="o">==</span><span class="kc">False</span><span class="p">:</span>
             <span class="n">gridIN</span> <span class="o">=</span> <span class="n">rxr</span><span class="o">.</span><span class="n">open_rasterio</span><span class="p">(</span><span class="n">grid_path</span><span class="p">)</span>
@@ -823,24 +871,30 @@
         <span class="k">elif</span> <span class="n">use_service</span><span class="p">:</span>
             <span class="c1">#Deafults to wms</span>
             <span class="n">gridIN</span> <span class="o">=</span> <span class="n">read_wms</span><span class="p">(</span><span class="n">study_area</span><span class="p">,</span> <span class="n">wcs_url</span><span class="o">=</span><span class="n">lidarURL</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
+        
         <span class="k">if</span> <span class="n">study_area</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">study_area_crs</span> <span class="o">=</span> <span class="n">study_area</span><span class="o">.</span><span class="n">crs</span>
             <span class="k">if</span> <span class="n">grid_crs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
-                    <span class="n">grid_crs</span><span class="o">=</span><span class="n">gridIN</span><span class="o">.</span><span class="n">spatial_ref</span><span class="o">.</span><span class="n">crs_wkt</span>
+                    <span class="n">grid_crs</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_wkt</span><span class="p">(</span><span class="n">gridIN</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">crs</span><span class="o">.</span><span class="n">to_wkt</span><span class="p">())</span>
                 <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-                    <span class="n">iswsCRS</span> <span class="o">=</span> <span class="n">w4h</span><span class="o">.</span><span class="n">read_dict</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;../resources/sample_data/isws_crs.json&#39;</span><span class="p">)</span>
+                    <span class="n">iswsCRS</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_json_dict</span><span class="p">(</span><span class="n">w4h</span><span class="o">.</span><span class="n">read_dict</span><span class="p">(</span><span class="n">w4h</span><span class="o">.</span><span class="n">get_resources</span><span class="p">()[</span><span class="s1">&#39;ISWS_CRS&#39;</span><span class="p">]))</span>
                     <span class="n">gridIN</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_crs</span><span class="p">(</span><span class="n">iswsCRS</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">grid_crs</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">==</span><span class="s1">&#39;isws&#39;</span><span class="p">:</span>
-                <span class="n">iswsCRS</span> <span class="o">=</span> <span class="n">w4h</span><span class="o">.</span><span class="n">read_dict</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;../resources/isws_crs&#39;</span><span class="p">)</span>
+                <span class="n">iswsCRS</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_json_dict</span><span class="p">(</span><span class="n">w4h</span><span class="o">.</span><span class="n">read_dict</span><span class="p">(</span><span class="n">w4h</span><span class="o">.</span><span class="n">get_resources</span><span class="p">()[</span><span class="s1">&#39;ISWS_CRS&#39;</span><span class="p">]))</span>
                 <span class="n">gridIN</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_crs</span><span class="p">(</span><span class="n">iswsCRS</span><span class="p">)</span>
-                
+                        
             <span class="k">if</span> <span class="n">study_area_crs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">study_area_crs</span><span class="o">=</span><span class="n">study_area</span><span class="o">.</span><span class="n">crs</span>
-            <span class="n">study_area</span> <span class="o">=</span> <span class="n">study_area</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">grid_crs</span><span class="p">)</span>
+            <span class="n">study_area</span> <span class="o">=</span> <span class="n">study_area</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">output_crs</span><span class="p">)</span>
             <span class="n">study_area_crs</span><span class="o">=</span><span class="n">study_area</span><span class="o">.</span><span class="n">crs</span>
             
-            <span class="n">gridIN</span> <span class="o">=</span> <span class="n">grid2study_area</span><span class="p">(</span><span class="n">study_area</span><span class="o">=</span><span class="n">study_area</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">gridIN</span><span class="p">,</span> <span class="n">study_area_crs</span><span class="o">=</span><span class="n">study_area_crs</span><span class="p">,</span> <span class="n">grid_crs</span><span class="o">=</span><span class="n">grid_crs</span><span class="p">)</span>
+            <span class="n">gridIN</span> <span class="o">=</span> <span class="n">gridIN</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">reproject</span><span class="p">(</span><span class="n">output_crs</span><span class="p">)</span>
+            <span class="n">gridIN</span> <span class="o">=</span> <span class="n">grid2study_area</span><span class="p">(</span><span class="n">study_area</span><span class="o">=</span><span class="n">study_area</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">gridIN</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="n">output_crs</span><span class="p">,)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">gridIN</span> <span class="o">=</span> <span class="n">gridIN</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">reproject</span><span class="p">(</span><span class="n">output_crs</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;band&#39;</span> <span class="ow">in</span> <span class="n">gridIN</span><span class="o">.</span><span class="n">dims</span><span class="p">:</span>
+                <span class="n">gridIN</span> <span class="o">=</span> <span class="n">gridIN</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">band</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">no_data_val_grid</span> <span class="o">=</span> <span class="n">gridIN</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;_FillValue&#39;</span><span class="p">]</span> <span class="c1">#Extract from dataset itself</span>
@@ -854,15 +908,16 @@
 
 <span class="c1">#Align and coregister rasters</span>
 <div class="viewcode-block" id="align_rasters">
-<a class="viewcode-back" href="../../w4h.html#w4h.mapping.align_rasters">[docs]</a>
-<span class="k">def</span> <span class="nf">align_rasters</span><span class="p">(</span><span class="n">grids_unaligned</span><span class="p">,</span> <span class="n">modelgrid</span><span class="p">,</span> <span class="n">no_data_val_grid</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<a class="viewcode-back" href="../../w4h.mapping.html#w4h.align_rasters">[docs]</a>
+<span class="k">def</span> <span class="nf">align_rasters</span><span class="p">(</span><span class="n">grids_unaligned</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model_grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">no_data_val_grid</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Reprojects two rasters and aligns their pixels</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    grids_unaligned : list or xarray.DataArray</span>
 <span class="sd">        Contains a list of grids or one unaligned grid</span>
-<span class="sd">    modelgrid : xarray.DataArray</span>
+<span class="sd">    model_grid : xarray.DataArray</span>
 <span class="sd">        Contains model grid</span>
 <span class="sd">    no_data_val_grid : int, default=0</span>
 <span class="sd">        Sets value of no data pixels</span>
@@ -874,24 +929,28 @@
 <span class="sd">    alignedGrids : list or xarray.DataArray</span>
 <span class="sd">        Contains aligned grids</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="n">grids_unaligned</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">grids_unaligned</span> <span class="o">=</span> <span class="p">[</span><span class="n">w4h</span><span class="o">.</span><span class="n">get_resources</span><span class="p">()[</span><span class="s1">&#39;surf_elev&#39;</span><span class="p">],</span> <span class="n">w4h</span><span class="o">.</span><span class="n">get_resources</span><span class="p">()[</span><span class="s1">&#39;bedrock_elev&#39;</span><span class="p">]]</span>
+    <span class="k">if</span> <span class="n">model_grid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">model_grid</span> <span class="o">=</span> <span class="n">w4h</span><span class="o">.</span><span class="n">get_resources</span><span class="p">()[</span><span class="s1">&#39;model_grid&#39;</span><span class="p">]</span>
+
     <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="n">verbose_print</span><span class="p">(</span><span class="n">align_rasters</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;grids_unaligned&#39;</span><span class="p">,</span> <span class="s1">&#39;modelgrid&#39;</span><span class="p">])</span>
-    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">grids_unaligned</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
-        <span class="n">alignedGrids</span><span class="o">=</span><span class="p">[]</span>
+        <span class="n">verbose_print</span><span class="p">(</span><span class="n">align_rasters</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;grids_unaligned&#39;</span><span class="p">,</span> <span class="s1">&#39;model_grid&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">grids_unaligned</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+        <span class="n">alignedGrids</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">grids_unaligned</span><span class="p">:</span>
-            <span class="n">alignedGrid</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">reproject_match</span><span class="p">(</span><span class="n">modelgrid</span><span class="p">)</span>
+            <span class="n">alignedGrid</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">reproject_match</span><span class="p">(</span><span class="n">model_grid</span><span class="p">)</span>
 
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">no_data_val_grid</span> <span class="o">=</span> <span class="n">alignedGrid</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;_FillValue&#39;</span><span class="p">]</span> <span class="c1">#Extract from dataset itself</span>
             <span class="k">except</span><span class="p">:</span>
                 <span class="k">pass</span>
-            
             <span class="n">alignedGrid</span> <span class="o">=</span> <span class="n">alignedGrid</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">alignedGrid</span> <span class="o">!=</span> <span class="n">no_data_val_grid</span><span class="p">)</span>  <span class="c1">#Replace no data values with NaNs</span>
-            
             <span class="n">alignedGrids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">alignedGrid</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">alignedGrid</span> <span class="o">=</span> <span class="n">grids_unaligned</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">reproject_match</span><span class="p">(</span><span class="n">modelgrid</span><span class="p">)</span>
+        <span class="n">alignedGrid</span> <span class="o">=</span> <span class="n">grids_unaligned</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">reproject_match</span><span class="p">(</span><span class="n">model_grid</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">noDataVal</span> <span class="o">=</span> <span class="n">alignedGrid</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;_FillValue&#39;</span><span class="p">]</span> <span class="c1">#Extract from dataset itself</span>
@@ -905,15 +964,15 @@
 
 <span class="c1">#Get drift and layer thickness, given a surface and bedrock grid</span>
 <div class="viewcode-block" id="get_drift_thick">
-<a class="viewcode-back" href="../../w4h.html#w4h.mapping.get_drift_thick">[docs]</a>
-<span class="k">def</span> <span class="nf">get_drift_thick</span><span class="p">(</span><span class="n">surface</span><span class="p">,</span> <span class="n">bedrock</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Finds the distance from surface to bedrock and then divides by number of layers to get layer thickness.</span>
+<a class="viewcode-back" href="../../w4h.mapping.html#w4h.get_drift_thick">[docs]</a>
+<span class="k">def</span> <span class="nf">get_drift_thick</span><span class="p">(</span><span class="n">surface_elev</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bedrock_elev</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Finds the distance from surface_elev to bedrock_elev and then divides by number of layers to get layer thickness.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    surface : rioxarray.DataArray</span>
+<span class="sd">    surface_elev : rioxarray.DataArray</span>
 <span class="sd">        array holding surface elevation</span>
-<span class="sd">    bedrock : rioxarray.DataArray</span>
+<span class="sd">    bedrock_elev : rioxarray.DataArray</span>
 <span class="sd">        array holding bedrock elevation</span>
 <span class="sd">    layers : int, default=9</span>
 <span class="sd">        number of layers needed to calculate thickness for</span>
@@ -928,12 +987,18 @@
 <span class="sd">        Contains data array with layer thickness at each point</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="n">surface_elev</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">surface_elev</span> <span class="o">=</span> <span class="n">w4h</span><span class="o">.</span><span class="n">get_resources</span><span class="p">()[</span><span class="s1">&#39;surf_elev&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">bedrock_elev</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">bedrock_elev</span> <span class="o">=</span> <span class="n">w4h</span><span class="o">.</span><span class="n">get_resources</span><span class="p">()[</span><span class="s1">&#39;bedrock_elev&#39;</span><span class="p">]</span>
+    
     <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="n">verbose_print</span><span class="p">(</span><span class="n">get_drift_thick</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;surface&#39;</span><span class="p">,</span> <span class="s1">&#39;bedrock&#39;</span><span class="p">])</span>
+        <span class="n">verbose_print</span><span class="p">(</span><span class="n">get_drift_thick</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;surface_elev&#39;</span><span class="p">,</span> <span class="s1">&#39;bedrock_elev&#39;</span><span class="p">])</span>
     <span class="n">xr</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">keep_attrs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="n">driftThick</span> <span class="o">=</span> <span class="n">surface</span> <span class="o">-</span> <span class="n">bedrock</span>
+    <span class="n">driftThick</span> <span class="o">=</span> <span class="n">surface_elev</span> <span class="o">-</span> <span class="n">bedrock_elev</span>
     <span class="n">driftThick</span> <span class="o">=</span> <span class="n">driftThick</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">max</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span><span class="n">keep_attrs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">plot</span><span class="p">:</span>
         <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
@@ -966,7 +1031,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Riley Balikian.</p>
+    <p>&#169; Copyright 2024, Author.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

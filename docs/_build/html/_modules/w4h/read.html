@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>w4h.read &mdash; wells4hydrogeology 0.0.20 documentation</title>
+  <title>w4h.read &mdash; w4h 0.0.21 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=92fd9be5" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -12,9 +12,7 @@
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=056c92e6"></script>
+        <script src="../../_static/documentation_options.js?v=a11416ff"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -31,7 +29,7 @@
           
           
           <a href="../../index.html" class="icon icon-home">
-            wells4hydrogeology
+            w4h
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -41,15 +39,25 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <!-- Local TOC -->
-              <div class="local-toc"></div>
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.html">w4h package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.classify.html">w4h.classify module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.clean.html">w4h.clean module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.core.html">w4h.core module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.export.html">w4h.export module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.layers.html">w4h.layers module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.mapping.html">w4h.mapping module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.read.html">w4h.read module</a></li>
+</ul>
+
         </div>
       </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../index.html">wells4hydrogeology</a>
+          <a href="../../index.html">w4h</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -68,7 +76,11 @@
            <div itemprop="articleBody">
              
   <h1>Source code for w4h.read</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">datetime</span>
+<span></span><span class="sd">&quot;&quot;&quot;The Read module contains funtions primarily for the input of data through the reading of data files,</span>
+<span class="sd">as well as support functions to carry out this task</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">datetime</span>
 <span class="kn">import</span> <span class="nn">inspect</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -80,6 +92,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">w4h</span> <span class="kn">import</span> <span class="n">logger_function</span><span class="p">,</span> <span class="n">verbose_print</span>
+<span class="kn">import</span> <span class="nn">w4h</span>
 
 <span class="n">repoDir</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">())</span>
 
@@ -87,7 +100,7 @@
 
 <span class="c1"># Gets the current date for use with in code</span>
 <div class="viewcode-block" id="get_current_date">
-<a class="viewcode-back" href="../../w4h.html#w4h.read.get_current_date">[docs]</a>
+<a class="viewcode-back" href="../../w4h.read.html#w4h.get_current_date">[docs]</a>
 <span class="k">def</span> <span class="nf">get_current_date</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Gets the current date to help with finding the most recent file</span>
 <span class="sd">        ---------------------</span>
@@ -107,7 +120,7 @@
 
 <span class="c1">#Function to get most recent file </span>
 <div class="viewcode-block" id="get_most_recent">
-<a class="viewcode-back" href="../../w4h.html#w4h.read.get_most_recent">[docs]</a>
+<a class="viewcode-back" href="../../w4h.read.html#w4h.get_most_recent">[docs]</a>
 <span class="k">def</span> <span class="nf">get_most_recent</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="n">resource_dir</span><span class="p">,</span> <span class="n">glob_pattern</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to find the most recent file with the indicated pattern, using pathlib.glob function.</span>
 
@@ -158,7 +171,7 @@
 
 <span class="c1">#Function to setup files of interest</span>
 <div class="viewcode-block" id="file_setup">
-<a class="viewcode-back" href="../../w4h.html#w4h.read.file_setup">[docs]</a>
+<a class="viewcode-back" href="../../w4h.read.html#w4h.file_setup">[docs]</a>
 <span class="k">def</span> <span class="nf">file_setup</span><span class="p">(</span><span class="n">well_data</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_filename</span><span class="o">=</span><span class="s1">&#39;*ISGS_DOWNHOLE_DATA*.txt&#39;</span><span class="p">,</span> <span class="n">metadata_filename</span><span class="o">=</span><span class="s1">&#39;*ISGS_HEADER*.txt&#39;</span><span class="p">,</span> <span class="n">log_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to setup files, assuming data, metadata, and elevation/location are in separate files (there should be one &quot;key&quot;/identifying column consistent across all files to join/merge them later)</span>
 
@@ -233,7 +246,7 @@
     
 <span class="c1">#Read raw data by text</span>
 <div class="viewcode-block" id="read_raw_csv">
-<a class="viewcode-back" href="../../w4h.html#w4h.read.read_raw_csv">[docs]</a>
+<a class="viewcode-back" href="../../w4h.read.html#w4h.read_raw_csv">[docs]</a>
 <span class="k">def</span> <span class="nf">read_raw_csv</span><span class="p">(</span><span class="n">data_filepath</span><span class="p">,</span> <span class="n">metadata_filepath</span><span class="p">,</span> <span class="n">data_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metadata_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xcol</span><span class="o">=</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="n">well_key</span><span class="o">=</span><span class="s1">&#39;API_NUMBER&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;latin-1&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">read_csv_kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Easy function to read raw .txt files output from (for example), an Access database</span>
 
@@ -328,7 +341,7 @@
 
 <span class="c1">#Read file with xyz data</span>
 <div class="viewcode-block" id="read_xyz">
-<a class="viewcode-back" href="../../w4h.html#w4h.read.read_xyz">[docs]</a>
+<a class="viewcode-back" href="../../w4h.read.html#w4h.read_xyz">[docs]</a>
 <span class="k">def</span> <span class="nf">read_xyz</span><span class="p">(</span><span class="n">xyzpath</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to read file containing xyz data (elevation/location)</span>
 
@@ -363,7 +376,7 @@
 
 <span class="c1">#Read dictionary file into dictionary variable</span>
 <div class="viewcode-block" id="read_dict">
-<a class="viewcode-back" href="../../w4h.html#w4h.read.read_dict">[docs]</a>
+<a class="viewcode-back" href="../../w4h.read.html#w4h.read_dict">[docs]</a>
 <span class="k">def</span> <span class="nf">read_dict</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">keytype</span><span class="o">=</span><span class="s1">&#39;np&#39;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to read a text file with a dictionary in it into a python dictionary</span>
 
@@ -398,7 +411,7 @@
 
 <span class="c1">#Define the datatypes for a dataframe</span>
 <div class="viewcode-block" id="define_dtypes">
-<a class="viewcode-back" href="../../w4h.html#w4h.read.define_dtypes">[docs]</a>
+<a class="viewcode-back" href="../../w4h.read.html#w4h.define_dtypes">[docs]</a>
 <span class="k">def</span> <span class="nf">define_dtypes</span><span class="p">(</span><span class="n">undefined_df</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to define datatypes of a dataframe, especially with file-indicated dyptes</span>
 
@@ -459,7 +472,7 @@
 
 <span class="c1">#Define the search term filepaths</span>
 <div class="viewcode-block" id="get_search_terms">
-<a class="viewcode-back" href="../../w4h.html#w4h.read.get_search_terms">[docs]</a>
+<a class="viewcode-back" href="../../w4h.read.html#w4h.get_search_terms">[docs]</a>
 <span class="k">def</span> <span class="nf">get_search_terms</span><span class="p">(</span><span class="n">spec_path</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">repoDir</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;/resources/&#39;</span><span class="p">,</span> <span class="n">spec_glob_pattern</span><span class="o">=</span><span class="s1">&#39;*SearchTerms-Specific*&#39;</span><span class="p">,</span> 
                      <span class="n">start_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">start_glob_pattern</span> <span class="o">=</span> <span class="s1">&#39;*SearchTerms-Start*&#39;</span><span class="p">,</span> 
                      <span class="n">wildcard_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wildcard_glob_pattern</span><span class="o">=</span><span class="s1">&#39;*SearchTerms-Wildcard&#39;</span><span class="p">,</span>
@@ -532,8 +545,8 @@
 
 <span class="c1">#Read files into pandas dataframes</span>
 <div class="viewcode-block" id="read_dictionary_terms">
-<a class="viewcode-back" href="../../w4h.html#w4h.read.read_dictionary_terms">[docs]</a>
-<span class="k">def</span> <span class="nf">read_dictionary_terms</span><span class="p">(</span><span class="n">dict_file</span><span class="p">,</span> <span class="n">id_col</span><span class="o">=</span><span class="s1">&#39;ID&#39;</span><span class="p">,</span> <span class="n">search_col</span><span class="o">=</span><span class="s1">&#39;DESCRIPTION&#39;</span><span class="p">,</span> <span class="n">definition_col</span><span class="o">=</span><span class="s1">&#39;LITHOLOGY&#39;</span><span class="p">,</span> <span class="n">class_flag_col</span><span class="o">=</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">,</span> <span class="n">dictionary_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">class_flag</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">rem_extra_cols</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<a class="viewcode-back" href="../../w4h.read.html#w4h.read_dictionary_terms">[docs]</a>
+<span class="k">def</span> <span class="nf">read_dictionary_terms</span><span class="p">(</span><span class="n">dict_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">id_col</span><span class="o">=</span><span class="s1">&#39;ID&#39;</span><span class="p">,</span> <span class="n">search_col</span><span class="o">=</span><span class="s1">&#39;DESCRIPTION&#39;</span><span class="p">,</span> <span class="n">definition_col</span><span class="o">=</span><span class="s1">&#39;LITHOLOGY&#39;</span><span class="p">,</span> <span class="n">class_flag_col</span><span class="o">=</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">,</span> <span class="n">dictionary_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">class_flag</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">rem_extra_cols</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to read dictionary terms from file into pandas dataframe</span>
 
 <span class="sd">    Parameters</span>
@@ -562,16 +575,21 @@
 <span class="sd">    dict_terms : pandas.DataFrame</span>
 <span class="sd">        Pandas dataframe with formatting ready to be used in the classification steps of this package</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="n">dict_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">dict_file</span><span class="o">=</span><span class="n">w4h</span><span class="o">.</span><span class="n">get_resources</span><span class="p">()[</span><span class="s1">&#39;LithologyDict_Exact&#39;</span><span class="p">]</span>
+    
     <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="n">verbose_print</span><span class="p">(</span><span class="n">read_dictionary_terms</span><span class="p">,</span> <span class="nb">locals</span><span class="p">())</span>    
     <span class="c1">#Read files into pandas dataframes</span>
     <span class="n">dict_terms</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">if</span> <span class="n">dict_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;ID&#39;</span><span class="p">,</span> <span class="s1">&#39;DESCRIPTION&#39;</span><span class="p">,</span> <span class="s1">&#39;LITHOLOGY&#39;</span><span class="p">,</span> <span class="s1">&#39;CLASS_FLAGS&#39;</span><span class="p">])</span>
-        <span class="n">dict_terms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
-        <span class="n">dict_file</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">]</span>
-    <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">dict_file</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+    <span class="c1">#if dict_file is None:</span>
+    <span class="c1">#    dict_file = get_resources()[&#39;LithologyDict_Exact&#39;]</span>
+    <span class="c1">#    df = pd.DataFrame(columns=[&#39;ID&#39;, &#39;DESCRIPTION&#39;, &#39;LITHOLOGY&#39;, &#39;CLASS_FLAGS&#39;])</span>
+    <span class="c1">#    dict_terms.append(df)</span>
+    <span class="c1">#    dict_file = [&#39;&#39;]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dict_file</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dict_file</span><span class="p">):</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
                 <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;ID&#39;</span><span class="p">,</span> <span class="s1">&#39;DESCRIPTION&#39;</span><span class="p">,</span> <span class="s1">&#39;LITHOLOGY&#39;</span><span class="p">,</span> <span class="s1">&#39;CLASS_FLAGS&#39;</span><span class="p">])</span>
@@ -582,6 +600,9 @@
             <span class="k">if</span> <span class="n">id_col</span> <span class="ow">in</span> <span class="n">dict_terms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
                 <span class="n">dict_terms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">id_col</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">dict_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">dict_file</span> <span class="o">=</span> <span class="n">w4h</span><span class="o">.</span><span class="n">get_resources</span><span class="p">()[</span><span class="s1">&#39;LithologyDict_Exact&#39;</span><span class="p">]</span>
+        
         <span class="n">dict_file</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">dict_file</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">dict_file</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="n">dict_file</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
             <span class="n">dict_terms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">dict_file</span><span class="p">,</span> <span class="n">low_memory</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
@@ -589,7 +610,7 @@
                 <span class="n">dict_terms</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">id_col</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="n">dict_file</span> <span class="o">=</span> <span class="p">[</span><span class="n">dict_file</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;ERROR: dict_file (</span><span class="si">{}</span><span class="s1">) does not exist.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dict_file</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;ERROR: dict_file (</span><span class="si">{</span><span class="n">dict_file</span><span class="si">}</span><span class="s1">) does not exist.&#39;</span><span class="p">)</span>
             <span class="c1">#Create empty dataframe to return</span>
             <span class="n">dict_terms</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;ID&#39;</span><span class="p">,</span> <span class="s1">&#39;DESCRIPTION&#39;</span><span class="p">,</span> <span class="s1">&#39;LITHOLOGY&#39;</span><span class="p">,</span> <span class="s2">&quot;CLASS_FLAGS&quot;</span><span class="p">])</span>
             <span class="k">return</span> <span class="n">dict_terms</span>
@@ -648,7 +669,7 @@
 
 <span class="c1">#Function to read lithology file into pandas dataframe</span>
 <div class="viewcode-block" id="read_lithologies">
-<a class="viewcode-back" href="../../w4h.html#w4h.read.read_lithologies">[docs]</a>
+<a class="viewcode-back" href="../../w4h.read.html#w4h.read_lithologies">[docs]</a>
 <span class="k">def</span> <span class="nf">read_lithologies</span><span class="p">(</span><span class="n">lith_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interp_col</span><span class="o">=</span><span class="s1">&#39;LITHOLOGY&#39;</span><span class="p">,</span> <span class="n">target_col</span><span class="o">=</span><span class="s1">&#39;CODE&#39;</span><span class="p">,</span> <span class="n">use_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to read lithology file into pandas dataframe</span>
 
@@ -691,9 +712,10 @@
     <span class="k">return</span> <span class="n">lithoDF</span></div>
 
 
+<span class="c1"># Read and concatenate control points into main database/dataframe</span>
 <div class="viewcode-block" id="add_control_points">
-<a class="viewcode-back" href="../../w4h.html#w4h.read.add_control_points">[docs]</a>
-<span class="k">def</span> <span class="nf">add_control_points</span><span class="p">(</span><span class="n">df_without_control</span><span class="p">,</span> <span class="n">df_control</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="n">xcol</span><span class="o">=</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="n">zcol</span><span class="o">=</span><span class="s1">&#39;ELEV_FT&#39;</span><span class="p">,</span> <span class="n">controlpoints_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:4269&#39;</span><span class="p">,</span>  <span class="n">description_col</span><span class="o">=</span><span class="s1">&#39;FORMATION&#39;</span><span class="p">,</span> <span class="n">interp_col</span><span class="o">=</span><span class="s1">&#39;INTERPRETATION&#39;</span><span class="p">,</span> <span class="n">target_col</span><span class="o">=</span><span class="s1">&#39;TARGET&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<a class="viewcode-back" href="../../w4h.read.html#w4h.add_control_points">[docs]</a>
+<span class="k">def</span> <span class="nf">add_control_points</span><span class="p">(</span><span class="n">df_without_control</span><span class="p">,</span> <span class="n">df_control</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="n">xcol</span><span class="o">=</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="n">zcol</span><span class="o">=</span><span class="s1">&#39;ELEV_FT&#39;</span><span class="p">,</span> <span class="n">controlpoints_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:4269&#39;</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:4269&#39;</span><span class="p">,</span> <span class="n">description_col</span><span class="o">=</span><span class="s1">&#39;FORMATION&#39;</span><span class="p">,</span> <span class="n">interp_col</span><span class="o">=</span><span class="s1">&#39;INTERPRETATION&#39;</span><span class="p">,</span> <span class="n">target_col</span><span class="o">=</span><span class="s1">&#39;TARGET&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to add control points, primarily to aid in interpolation. This may be useful when conditions are known but do not exist in input well database</span>
 
 <span class="sd">    Parameters</span>
@@ -712,6 +734,8 @@
 <span class="sd">        The column in df_control containing the z coordinates for each control point, by default &#39;ELEV_FT&#39;</span>
 <span class="sd">    controlpoints_crs : str, optional</span>
 <span class="sd">        The column in df_control containing the crs of points, by default &#39;EPSG:4269&#39;</span>
+<span class="sd">    output_crs : str, optional</span>
+<span class="sd">        The output coordinate system, by default &#39;EPSG:4269&#39;</span>
 <span class="sd">    description_col : str, optional</span>
 <span class="sd">        The column in df_control with the description (if this is used), by default &#39;FORMATION&#39;</span>
 <span class="sd">    interp_col : str, optional</span>
@@ -754,7 +778,7 @@
     <span class="c1">#If our main df is already a geodataframe, make df_control one too</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">df_without_control</span><span class="p">,</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">w4h</span> <span class="kn">import</span> <span class="n">coords2geometry</span>
-        <span class="n">df_control</span> <span class="o">=</span> <span class="n">coords2geometry</span><span class="p">(</span><span class="n">df_no_geometry</span><span class="o">=</span><span class="n">df_control</span><span class="p">,</span> <span class="n">xcol</span><span class="o">=</span><span class="n">xcol</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="n">ycol</span><span class="p">,</span> <span class="n">zcol</span><span class="o">=</span><span class="n">zcol</span><span class="p">,</span> <span class="n">input_coords_crs</span><span class="o">=</span><span class="n">controlpoints_crs</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
+        <span class="n">gdf_control</span> <span class="o">=</span> <span class="n">coords2geometry</span><span class="p">(</span><span class="n">df_no_geometry</span><span class="o">=</span><span class="n">df_control</span><span class="p">,</span> <span class="n">xcol</span><span class="o">=</span><span class="n">xcol</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="n">ycol</span><span class="p">,</span> <span class="n">zcol</span><span class="o">=</span><span class="n">zcol</span><span class="p">,</span> <span class="n">input_coords_crs</span><span class="o">=</span><span class="n">controlpoints_crs</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
 
     <span class="c1">#Get kwargs passed to pd.concat, and set defaults for ignore_index and join</span>
     <span class="n">concat_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">locals</span><span class="p">()[</span><span class="s1">&#39;kwargs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
@@ -763,9 +787,12 @@
     <span class="k">if</span> <span class="s1">&#39;join&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">concat_kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
         <span class="n">concat_kwargs</span><span class="p">[</span><span class="s1">&#39;join&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;outer&#39;</span>
         
-    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df_without_control</span><span class="p">,</span> <span class="n">df_control</span><span class="p">],</span> <span class="o">**</span><span class="n">concat_kwargs</span><span class="p">)</span>
+    <span class="n">gdf</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df_without_control</span><span class="p">,</span> <span class="n">gdf_control</span><span class="p">],</span> <span class="o">**</span><span class="n">concat_kwargs</span><span class="p">)</span>
     
-    <span class="k">return</span> <span class="n">df</span></div>
+    <span class="k">if</span> <span class="n">controlpoints_crs</span> <span class="o">!=</span> <span class="n">output_crs</span><span class="p">:</span>
+        <span class="n">gdf</span> <span class="o">=</span> <span class="n">gdf</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">output_crs</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">gdf</span></div>
 
 </pre></div>
 
@@ -776,7 +803,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Riley Balikian.</p>
+    <p>&#169; Copyright 2024, Author.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

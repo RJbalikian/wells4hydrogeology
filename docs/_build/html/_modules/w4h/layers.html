@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>w4h.layers &mdash; wells4hydrogeology 0.0.20 documentation</title>
+  <title>w4h.layers &mdash; w4h 0.0.21 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=92fd9be5" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -12,9 +12,7 @@
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=056c92e6"></script>
+        <script src="../../_static/documentation_options.js?v=a11416ff"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -31,7 +29,7 @@
           
           
           <a href="../../index.html" class="icon icon-home">
-            wells4hydrogeology
+            w4h
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -41,15 +39,25 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <!-- Local TOC -->
-              <div class="local-toc"></div>
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.html">w4h package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.classify.html">w4h.classify module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.clean.html">w4h.clean module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.core.html">w4h.core module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.export.html">w4h.export module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.layers.html">w4h.layers module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.mapping.html">w4h.mapping module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.read.html">w4h.read module</a></li>
+</ul>
+
         </div>
       </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../index.html">wells4hydrogeology</a>
+          <a href="../../index.html">w4h</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -68,7 +76,11 @@
            <div itemprop="articleBody">
              
   <h1>Source code for w4h.layers</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">datetime</span>
+<span></span><span class="sd">&quot;&quot;&quot;The Layers module contains functions for splitting data into a layered model</span>
+<span class="sd">and for interpolating data within the layers</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">datetime</span>
 <span class="kn">import</span> <span class="nn">inspect</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">pathlib</span>
@@ -86,7 +98,7 @@
 
 <span class="c1">#Function to Merge tables</span>
 <div class="viewcode-block" id="merge_metadata">
-<a class="viewcode-back" href="../../w4h.html#w4h.layers.merge_metadata">[docs]</a>
+<a class="viewcode-back" href="../../w4h.layers.html#w4h.merge_metadata">[docs]</a>
 <span class="k">def</span> <span class="nf">merge_metadata</span><span class="p">(</span><span class="n">data_df</span><span class="p">,</span> <span class="n">header_df</span><span class="p">,</span> <span class="n">data_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">header_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">auto_pick_cols</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">drop_duplicate_cols</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to merge tables, intended for merging metadata table with data table</span>
 
@@ -174,7 +186,7 @@
 
 <span class="c1">#Get layer depths of each layer, based on precalculated layer thickness</span>
 <div class="viewcode-block" id="get_layer_depths">
-<a class="viewcode-back" href="../../w4h.html#w4h.layers.get_layer_depths">[docs]</a>
+<a class="viewcode-back" href="../../w4h.layers.html#w4h.get_layer_depths">[docs]</a>
 <span class="k">def</span> <span class="nf">get_layer_depths</span><span class="p">(</span><span class="n">df_with_depths</span><span class="p">,</span> <span class="n">surface_elev_col</span><span class="o">=</span><span class="s1">&#39;SURFACE_ELEV&#39;</span><span class="p">,</span> <span class="n">layer_thick_col</span><span class="o">=</span><span class="s1">&#39;LAYER_THICK&#39;</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to calculate depths and elevations of each model layer at each well based on surface elevation, bedrock elevation, and number of layers/layer thickness</span>
 
@@ -215,7 +227,7 @@
 
 <span class="c1">#Function to export the result of thickness of target sediments in each layer</span>
 <div class="viewcode-block" id="layer_target_thick">
-<a class="viewcode-back" href="../../w4h.html#w4h.layers.layer_target_thick">[docs]</a>
+<a class="viewcode-back" href="../../w4h.layers.html#w4h.layer_target_thick">[docs]</a>
 <span class="k">def</span> <span class="nf">layer_target_thick</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">return_all</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">export_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">outfile_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">depth_top_col</span><span class="o">=</span><span class="s1">&#39;TOP&#39;</span><span class="p">,</span> <span class="n">depth_bot_col</span><span class="o">=</span><span class="s1">&#39;BOTTOM&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to calculate thickness of target material in each layer at each well point</span>
 
@@ -360,7 +372,7 @@
 
 <span class="c1">#Interpolate layers to model grid</span>
 <div class="viewcode-block" id="layer_interp">
-<a class="viewcode-back" href="../../w4h.html#w4h.layers.layer_interp">[docs]</a>
+<a class="viewcode-back" href="../../w4h.layers.html#w4h.layer_interp">[docs]</a>
 <span class="k">def</span> <span class="nf">layer_interp</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interp_kind</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">,</span> <span class="n">return_type</span><span class="o">=</span><span class="s1">&#39;dataarray&#39;</span><span class="p">,</span> <span class="n">export_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">target_col</span><span class="o">=</span><span class="s1">&#39;TARG_THICK_PER&#39;</span><span class="p">,</span> <span class="n">layer_col</span><span class="o">=</span><span class="s1">&#39;LAYER&#39;</span><span class="p">,</span> <span class="n">xcol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xcoord</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">ycoord</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to interpolate results, going from points to grid data. Uses scipy.interpolate module.</span>
 
@@ -572,7 +584,7 @@
 
 <span class="c1">#Optional, combine dataset</span>
 <div class="viewcode-block" id="combine_dataset">
-<a class="viewcode-back" href="../../w4h.html#w4h.layers.combine_dataset">[docs]</a>
+<a class="viewcode-back" href="../../w4h.layers.html#w4h.combine_dataset">[docs]</a>
 <span class="k">def</span> <span class="nf">combine_dataset</span><span class="p">(</span><span class="n">layer_dataset</span><span class="p">,</span> <span class="n">surface_elev</span><span class="p">,</span> <span class="n">bedrock_elev</span><span class="p">,</span> <span class="n">layer_thick</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to combine xarray datasets or datarrays into a single xr.Dataset. Useful to add surface, bedrock, layer thick, and layer datasets all into one variable, for pickling, for example.</span>
 
@@ -615,7 +627,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Riley Balikian.</p>
+    <p>&#169; Copyright 2024, Author.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

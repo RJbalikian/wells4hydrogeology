@@ -93,12 +93,13 @@ if RTD_DOCS:
 
     # Run apidoc to update api documentation from docstrings
     subprocess.run(['sphinx-apidoc', '-F', '-M', '-e', '-f', '-o', docsDir.as_posix(), w4hDir.as_posix()])
-    
+
     with open(confFilePath.as_posix(), mode='w', encoding='utf-8') as f:
         f.write(cFileText)
     with open(indFilePath.as_posix(), mode='w', encoding='utf-8') as f:
         f.write(indFileText)
 
+    subprocess.run([docsDir.joinpath('make.bat').as_posix(), 'clean'])
     subprocess.run([docsDir.joinpath('make.bat').as_posix(), 'html'])
 
     buildDir = docsDir.joinpath('_build')
