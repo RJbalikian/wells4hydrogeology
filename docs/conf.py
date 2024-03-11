@@ -1,6 +1,7 @@
 import sphinx_rtd_theme
 
 import sys
+import os
 import pathlib
 confPath = pathlib.Path(__file__)
 docsDir = confPath.parent
@@ -8,7 +9,7 @@ repoDir = docsDir.parent
 w4hDir = repoDir.joinpath('w4h')
 
 #Location of Sphinx files
-sys.path.insert(0, w4hDir.as_posix())
+sys.path.insert(0, os.path.abspath(w4hDir.as_posix()))
 
 html_theme = "sphinx_rtd_theme"
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
