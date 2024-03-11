@@ -14,7 +14,7 @@ RELEASE_VERSION = "0.0.21"
 
 #Whether to CONVERT_MD using markdown library (True), or let github do it (False)
 RTD_DOCS = True
-GITHUB_PAGES = False
+GITHUB_PAGES = False # I don't think I actually need this anymore, and it still works
 
 CONVERT_MD=True
 RTD_THEME=False #Not currently working
