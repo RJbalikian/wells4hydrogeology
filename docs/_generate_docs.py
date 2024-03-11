@@ -79,14 +79,7 @@ venvPath = pathlib.Path(sys.executable).parent.parent
 os.environ['PYTHONPATH'] = '..' + os.pathsep + os.environ.get('PYTHONPATH', '')
 
 if RTD_DOCS:
-    #keepList = ['_generate_docs', 'conf']
-
-    #for f in docsDir.iterdir():
-    #    if f.stem in keepList or f.is_dir():
-    #        if f.stem == 'resources':
-    #            os.remove(f)
-    #    else:
-    #        os.remove(f)
+    keepList = ['_generate_docs', 'conf']
 
     # It seems apidoc rewrites conf.py file (don't want that), so save it first and rewrite after
     confFilePath = docsDir.joinpath('conf.py')
@@ -99,6 +92,20 @@ if RTD_DOCS:
         f.write(cFileText)
 
     subprocess.run([docsDir.joinpath('make.bat').as_posix(), 'html'])
+
+    buildDir = docsDir.joinpath('_build')
+    htmlDir = buildDir.joinpath('html')
+
+    for f in htmlDir.iterdir():
+        if f.suffix == '.html':
+            shutil.copy(f, docsDir.joinpath(f.name))
+
+    #        if f.stem == 'resources':
+    #            os.remove(f)
+    #    else:
+    #        os.remove(f)
+
+
 else:
     # Run the pdoc command
     if RTD_THEME:
