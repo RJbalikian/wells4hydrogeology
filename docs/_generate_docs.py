@@ -166,7 +166,7 @@ if GITHUB_PAGES:
     print('Placing html files in', trg_path.absolute())
 
     # Move items back into main docs folder
-    keepList = ['_generate_docs', 'conf', 'make', 'Makefile', 'index']
+    keepList = ['_generate_docs', 'conf', 'make', 'Makefile', 'index', '.readthedocs']
 
     for f in trg_path.iterdir():
         if f.stem in keepList or f.is_dir():
