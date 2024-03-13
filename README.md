@@ -12,7 +12,7 @@ The w4h module is designed to be flexible and customizable, allowing various kin
 Using well descriptions from these database tables, the code contained here extracts, manipulates, and organizes the data to be used for hydrogeologic modeling. The scripts here can be used for specific regions of interests/study areas within the state, or for the state as a whole.
 
 # API Documentation
-API Documentation <a href="https://rjbalikian.github.io/wells4hydrogeology/main.html">here</a>
+API Documentation <a href="https://rjbalikian.github.io/wells4hydrogeology/index.html">here</a>
 
 # Dependencies
 ## The w4h module has the following dependencies:

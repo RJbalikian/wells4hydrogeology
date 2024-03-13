@@ -14,6 +14,7 @@ RELEASE_VERSION = "0.0.21"
 
 #Whether to CONVERT_MD using markdown library (True), or let github do it (False)
 RTD_DOCS = True
+GITHUB_PAGES = False # I don't think I actually need this anymore, and it still works
 
 CONVERT_MD=True
 RTD_THEME=False #Not currently working
@@ -79,27 +80,65 @@ venvPath = pathlib.Path(sys.executable).parent.parent
 os.environ['PYTHONPATH'] = '..' + os.pathsep + os.environ.get('PYTHONPATH', '')
 
 if RTD_DOCS:
-    #keepList = ['_generate_docs', 'conf']
+    keepList = ['_generate_docs', 'conf', 'requirements']
 
-    #for f in docsDir.iterdir():
-    #    if f.stem in keepList or f.is_dir():
+    # It seems apidoc rewrites conf.py and index.rst file (don't want that), so save it first and rewrite after
+    confFilePath = docsDir.joinpath('conf.py')
+    indFilePath = docsDir.joinpath('index.rst')
+
+    with open(confFilePath.as_posix(), mode='r', encoding='utf-8') as f:
+        confFileText = f.read()
+    with open(indFilePath.as_posix(), mode='r', encoding='utf-8') as f:
+        indFileText = f.read()
+
+    # Run apidoc to update api documentation from docstrings
+    subprocess.run(['sphinx-apidoc', '-F', '-M', '-e', '-f', '-o', docsDir.as_posix(), w4hDir.as_posix()])
+
+    with open(confFilePath.as_posix(), mode='w', encoding='utf-8') as f:
+        f.write(cFileText)
+    with open(indFilePath.as_posix(), mode='w', encoding='utf-8') as f:
+        f.write(indFileText)
+
+    subprocess.run([docsDir.joinpath('make.bat').as_posix(), 'clean'])
+    subprocess.run([docsDir.joinpath('make.bat').as_posix(), 'html'])
+
+    buildDir = docsDir.joinpath('_build')
+    htmlDir = buildDir.joinpath('html')
+
+    copyList = ['documentation_options', 'doctools','sphinx_highlight', 'theme', 'pygments']
+
+    for f in htmlDir.iterdir():
+        if f.name[0] != '_':
+            shutil.copy(f, docsDir.joinpath(f.name))
+        else:
+            if f.name == '_static':
+                for f2 in f.iterdir():
+                    if f2.stem in copyList:
+                        shutil.copy(f2, docsDir.joinpath(f.name))
+                    elif f2.stem == 'js':
+                        shutil.copy(f2.joinpath('theme.js'), docsDir.joinpath('theme.js'))
+                    elif f2.stem == 'css':
+                        shutil.copy(f2.joinpath('theme.css'), docsDir.joinpath('theme.css'))
+
+
+    for file in docsDir.iterdir():
+        if file.suffix == '.html':
+            with open(file.as_posix(), mode='r', encoding='utf-8') as f:
+                htmlFileText = f.read()
+            htmlFileText = htmlFileText.replace('src="_static/', 'src="')
+            htmlFileText = htmlFileText.replace('src="js/', 'src="')
+
+            htmlFileText = htmlFileText.replace('href="_static/', 'href="')
+            htmlFileText = htmlFileText.replace('href="css/', 'href="')            
+            with open(file.as_posix(), mode='w', encoding='utf-8') as f:
+                f.write(htmlFileText)
+
     #        if f.stem == 'resources':
     #            os.remove(f)
     #    else:
     #        os.remove(f)
 
-    # It seems apidoc rewrites conf.py file (don't want that), so save it first and rewrite after
-    confFilePath = docsDir.joinpath('conf.py')
-    with open(confFilePath.as_posix(), mode='r', encoding='utf-8') as f:
-        confFileText = f.read()
-    
-    # Run apidoc to update api documentation from docstrings
-    subprocess.run(['sphinx-apidoc', '-F', '-M', '-e', '-f', '-o', docsDir.as_posix(), w4hDir.as_posix()])
-    with open(confFilePath.as_posix(), mode='w', encoding='utf-8') as f:
-        f.write(cFileText)
-
-    subprocess.run([docsDir.joinpath('make.bat').as_posix(), 'html'])
-else:
+if GITHUB_PAGES:
     # Run the pdoc command
     if RTD_THEME:
         themePath = venvPath.as_posix()+'/lib/site-packages/sphinx_RTD_THEME/'
@@ -127,7 +166,7 @@ else:
     print('Placing html files in', trg_path.absolute())
 
     # Move items back into main docs folder
-    keepList = ['_generate_docs', 'conf']
+    keepList = ['_generate_docs', 'conf', 'make', 'Makefile', 'index', '.readthedocs']
 
     for f in trg_path.iterdir():
         if f.stem in keepList or f.is_dir():

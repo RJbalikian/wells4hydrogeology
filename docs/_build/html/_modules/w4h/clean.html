@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>w4h.clean &mdash; wells4hydrogeology 0.0.20 documentation</title>
+  <title>w4h.clean &mdash; w4h 0.0.21 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=92fd9be5" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -12,9 +12,7 @@
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=056c92e6"></script>
+        <script src="../../_static/documentation_options.js?v=a11416ff"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -31,7 +29,7 @@
           
           
           <a href="../../index.html" class="icon icon-home">
-            wells4hydrogeology
+            w4h
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -41,15 +39,25 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <!-- Local TOC -->
-              <div class="local-toc"></div>
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.html">w4h package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.classify.html">w4h.classify module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.clean.html">w4h.clean module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.core.html">w4h.core module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.export.html">w4h.export module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.layers.html">w4h.layers module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.mapping.html">w4h.mapping module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.read.html">w4h.read module</a></li>
+</ul>
+
         </div>
       </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../index.html">wells4hydrogeology</a>
+          <a href="../../index.html">w4h</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -68,16 +76,19 @@
            <div itemprop="articleBody">
              
   <h1>Source code for w4h.clean</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">inspect</span>
+<span></span><span class="sd">&quot;&quot;&quot;The Clean module contains functions for cleaning the data (i.e., removing data not to be used in further analysis)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">inspect</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
 <span class="kn">from</span> <span class="nn">w4h</span> <span class="kn">import</span> <span class="n">logger_function</span><span class="p">,</span> <span class="n">verbose_print</span>
 
-<span class="c1">#This function removes all data from the downholeData table where there is no location information (in the headerData table). This includes elevation info too</span>
+<span class="c1"># This function removes all data from the downholeData table where there is no location information (in the headerData table). This includes elevation info too</span>
 <div class="viewcode-block" id="remove_nonlocated">
-<a class="viewcode-back" href="../../w4h.html#w4h.clean.remove_nonlocated">[docs]</a>
+<a class="viewcode-back" href="../../w4h.clean.html#w4h.remove_nonlocated">[docs]</a>
 <span class="k">def</span> <span class="nf">remove_nonlocated</span><span class="p">(</span><span class="n">df_with_locations</span><span class="p">,</span> <span class="n">xcol</span><span class="o">=</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="n">no_data_val_table</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to remove wells and well intervals where there is no location information</span>
 
@@ -117,10 +128,10 @@
     <span class="k">return</span> <span class="n">df_with_locations</span></div>
 
 
-<span class="c1">#Function to remove data (intended for headerData) without surface topography information</span>
-<span class="c1">##THIS ASSUMES AND SHOULD ONLY BE RUN AFTER ALL DESIRED SURFACE TOPO DATASETS HAVE BEEN MERGED/ADDED</span>
+<span class="c1"># Function to remove data (intended for headerData) without surface topography information</span>
+<span class="c1"># THIS ASSUMES AND SHOULD ONLY BE RUN AFTER ALL DESIRED SURFACE TOPO DATASETS HAVE BEEN MERGED/ADDED</span>
 <div class="viewcode-block" id="remove_no_topo">
-<a class="viewcode-back" href="../../w4h.html#w4h.clean.remove_no_topo">[docs]</a>
+<a class="viewcode-back" href="../../w4h.clean.html#w4h.remove_no_topo">[docs]</a>
 <span class="k">def</span> <span class="nf">remove_no_topo</span><span class="p">(</span><span class="n">df_with_topo</span><span class="p">,</span> <span class="n">zcol</span><span class="o">=</span><span class="s1">&#39;ELEVATION&#39;</span><span class="p">,</span> <span class="n">no_data_val_table</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to remove wells that do not have topography data (needed for layer selection later).</span>
 
@@ -164,9 +175,9 @@
     <span class="k">return</span> <span class="n">df_with_topo</span></div>
 
 
-<span class="c1">#This function drops all records in the downholedata with no depth information (either top or bottom depth of well interval)</span>
+<span class="c1"># This function drops all records in the downholedata with no depth information (either top or bottom depth of well interval)</span>
 <div class="viewcode-block" id="remove_no_depth">
-<a class="viewcode-back" href="../../w4h.html#w4h.clean.remove_no_depth">[docs]</a>
+<a class="viewcode-back" href="../../w4h.clean.html#w4h.remove_no_depth">[docs]</a>
 <span class="k">def</span> <span class="nf">remove_no_depth</span><span class="p">(</span><span class="n">df_with_depth</span><span class="p">,</span> <span class="n">top_col</span><span class="o">=</span><span class="s1">&#39;TOP&#39;</span><span class="p">,</span> <span class="n">bottom_col</span><span class="o">=</span><span class="s1">&#39;BOTTOM&#39;</span><span class="p">,</span> <span class="n">no_data_val_table</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to remove well intervals with no depth information</span>
 
@@ -217,9 +228,9 @@
     <span class="k">return</span> <span class="n">df_with_depth</span></div>
 
 
-<span class="c1">#This function drops all records in downholeData with bad depth information (where the bottom of a record is nearer to the surface than the top)</span>
+<span class="c1"># This function drops all records in downholeData with bad depth information (where the bottom of a record is nearer to the surface than the top)</span>
 <div class="viewcode-block" id="remove_bad_depth">
-<a class="viewcode-back" href="../../w4h.html#w4h.clean.remove_bad_depth">[docs]</a>
+<a class="viewcode-back" href="../../w4h.clean.html#w4h.remove_bad_depth">[docs]</a>
 <span class="k">def</span> <span class="nf">remove_bad_depth</span><span class="p">(</span><span class="n">df_with_depth</span><span class="p">,</span> <span class="n">top_col</span><span class="o">=</span><span class="s1">&#39;TOP&#39;</span><span class="p">,</span> <span class="n">bottom_col</span><span class="o">=</span><span class="s1">&#39;BOTTOM&#39;</span><span class="p">,</span> <span class="n">depth_type</span><span class="o">=</span><span class="s1">&#39;depth&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to remove all records in the dataframe with well interpretations where the depth information is bad (i.e., where the bottom of the record is neerer to the surface than the top)</span>
 
@@ -265,9 +276,9 @@
     <span class="k">return</span> <span class="n">df_with_depth</span></div>
 
 
-<span class="c1">#This function drops all records in downholeData with no formation in formation in the description fiel</span>
+<span class="c1"># This function drops all records in downholeData with no formation in formation in the description fiel</span>
 <div class="viewcode-block" id="remove_no_description">
-<a class="viewcode-back" href="../../w4h.html#w4h.clean.remove_no_description">[docs]</a>
+<a class="viewcode-back" href="../../w4h.clean.html#w4h.remove_no_description">[docs]</a>
 <span class="k">def</span> <span class="nf">remove_no_description</span><span class="p">(</span><span class="n">df_with_descriptions</span><span class="p">,</span> <span class="n">description_col</span><span class="o">=</span><span class="s1">&#39;FORMATION&#39;</span><span class="p">,</span> <span class="n">no_data_val_table</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function that removes all records in the dataframe containing the well descriptions where no description is given.</span>
 
@@ -318,7 +329,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Riley Balikian.</p>
+    <p>&#169; Copyright 2024, Author.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

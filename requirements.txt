@@ -1,7 +1,0 @@
-rioxarray
-geopandas
-owslib
-matplotlib
-scipy
-pandas
-numpy
