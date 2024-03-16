@@ -605,7 +605,7 @@ def read_lithologies(lith_file=None, interp_col='LITHOLOGY', target_col='CODE', 
     return lithoDF
 
 # Read and concatenate control points into main database/dataframe
-def add_control_points(df_without_control, df_control=None,  xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', controlpoints_crs='EPSG:4269', output_crs='EPSG:4269', description_col='FORMATION', interp_col='INTERPRETATION', target_col='TARGET', verbose=False, log=False, **kwargs):
+def add_control_points(df_without_control, df_control=None,  xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', controlpoints_crs='EPSG:4269', output_crs='EPSG:5070', description_col='FORMATION', interp_col='INTERPRETATION', target_col='TARGET', verbose=False, log=False, **kwargs):
     """Function to add control points, primarily to aid in interpolation. This may be useful when conditions are known but do not exist in input well database
 
     Parameters
@@ -625,7 +625,7 @@ def add_control_points(df_without_control, df_control=None,  xcol='LONGITUDE', y
     controlpoints_crs : str, optional
         The column in df_control containing the crs of points, by default 'EPSG:4269'
     output_crs : str, optional
-        The output coordinate system, by default 'EPSG:4269'
+        The output coordinate system, by default 'EPSG:5070'
     description_col : str, optional
         The column in df_control with the description (if this is used), by default 'FORMATION'
     interp_col : str, optional
