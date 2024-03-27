@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>w4h.classify &mdash; w4h 0.0.21 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
   
@@ -338,8 +338,8 @@
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="n">verbose_print</span><span class="p">(</span><span class="n">depth_define</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;df&#39;</span><span class="p">])</span>
     <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mask</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">top_col</span><span class="p">]</span><span class="o">&gt;</span><span class="n">thresh</span><span class="p">,</span> <span class="mi">3</span> <span class="p">,</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1">#Add a Classification Flag of 3 (bedrock b/c it&#39;s deepter than 550&#39;) to all records where the top of the interval is &gt;550&#39;</span>
-    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;BEDROCK_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mask</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">top_col</span><span class="p">]</span><span class="o">&gt;</span><span class="n">thresh</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mask</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">top_col</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">thresh</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>  <span class="c1"># Add a Classification Flag of 3 (bedrock b/c it&#39;s deepter than 550&#39;) to all records where the top of the interval is &gt;550&#39;</span>
+    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;BEDROCK_FLAG&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;BEDROCK_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mask</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">top_col</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">thresh</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">df</span><span class="o">.</span><span class="n">CLASS_FLAG</span><span class="o">.</span><span class="n">notnull</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -418,7 +418,7 @@
 <span class="sd">    df : pandas.DataFrame</span>
 <span class="sd">        Dataframe on which operation has been performed</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">df</span><span class="p">[</span><span class="n">classification_col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">df</span><span class="p">[</span><span class="n">classification_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">classification_col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">df</span></div>
 
 
@@ -448,11 +448,11 @@
     
     <span class="c1">#by default, use the boolean input </span>
     <span class="k">if</span> <span class="n">target_class</span><span class="o">==</span><span class="s1">&#39;bool&#39;</span><span class="p">:</span>
-        <span class="n">targinterps_df</span><span class="p">[</span><span class="n">target_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">targinterps_df</span><span class="p">[</span><span class="n">target_col</span><span class="p">]</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">targinterps_df</span><span class="p">[</span><span class="n">target_col</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="n">other</span><span class="o">=</span><span class="s1">&#39;0&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-        <span class="n">targinterps_df</span><span class="p">[</span><span class="n">target_col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">targinterps_df</span><span class="p">[</span><span class="n">target_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">targinterps_df</span><span class="p">[</span><span class="n">target_col</span><span class="p">]</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">targinterps_df</span><span class="p">[</span><span class="n">target_col</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="n">other</span><span class="o">=</span><span class="s1">&#39;0&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">targinterps_df</span><span class="p">[</span><span class="n">target_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">targinterps_df</span><span class="p">[</span><span class="n">target_col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">targinterps_df</span><span class="p">[</span><span class="n">target_col</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;DoNotUse&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">targinterps_df</span><span class="p">[</span><span class="n">target_col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">value</span><span class="o">=-</span><span class="mi">2</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">targinterps_df</span><span class="p">[</span><span class="n">target_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">targinterps_df</span><span class="p">[</span><span class="n">target_col</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;DoNotUse&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">targinterps_df</span><span class="p">[</span><span class="n">target_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">targinterps_df</span><span class="p">[</span><span class="n">target_col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">value</span><span class="o">=-</span><span class="mi">2</span><span class="p">)</span>
         <span class="n">targinterps_df</span><span class="p">[</span><span class="n">target_col</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
 
     <span class="n">df_targ</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">well_data_df</span><span class="p">,</span> <span class="n">targinterps_df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">interp_col</span><span class="p">),</span> <span class="n">right_on</span><span class="o">=</span><span class="n">interp_col</span><span class="p">,</span> <span class="n">left_on</span><span class="o">=</span><span class="s1">&#39;LITHOLOGY&#39;</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">)</span>
@@ -460,7 +460,8 @@
     <span class="k">return</span> <span class="n">df_targ</span></div>
 
 
-<span class="c1">#Function to get unique wells</span>
+
+<span class="c1"># Function to get unique wells</span>
 <div class="viewcode-block" id="get_unique_wells">
 <a class="viewcode-back" href="../../w4h.classify.html#w4h.get_unique_wells">[docs]</a>
 <span class="k">def</span> <span class="nf">get_unique_wells</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">wellid_col</span><span class="o">=</span><span class="s1">&#39;API_NUMBER&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -471,7 +472,9 @@
 <span class="sd">    df : pandas.DataFrame</span>
 <span class="sd">        Dataframe containing all wells and/or well intervals of interest</span>
 <span class="sd">    wellid_col : str, default=&quot;API_NUMBER&quot;</span>
-<span class="sd">        Name of column in df containing a unique identifier for each well, by default &#39;API_NUMBER&#39;. .unique() will be run on this column to get the unique values.</span>
+<span class="sd">        Name of column in df containing a unique identifier for each well,</span>
+<span class="sd">        by default &#39;API_NUMBER&#39;. .unique() will be run on this column</span>
+<span class="sd">        to get the unique values.</span>
 <span class="sd">    log : bool, default = False</span>
 <span class="sd">        Whether to log results to log file</span>
 
@@ -496,7 +499,7 @@
 <span class="c1">#Quickly sort dataframe</span>
 <div class="viewcode-block" id="sort_dataframe">
 <a class="viewcode-back" href="../../w4h.classify.html#w4h.sort_dataframe">[docs]</a>
-<span class="k">def</span> <span class="nf">sort_dataframe</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">sort_cols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;API_NUMBER&#39;</span><span class="p">,</span><span class="s1">&#39;TOP&#39;</span><span class="p">],</span> <span class="n">remove_nans</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">sort_dataframe</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">sort_cols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;API_NUMBER&#39;</span><span class="p">,</span> <span class="s1">&#39;TOP&#39;</span><span class="p">],</span> <span class="n">remove_nans</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to sort dataframe by one or more columns.</span>
 
 <span class="sd">    Parameters</span>

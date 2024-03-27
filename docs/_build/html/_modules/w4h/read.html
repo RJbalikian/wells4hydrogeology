@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>w4h.read &mdash; w4h 0.0.21 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
   
@@ -715,7 +715,7 @@
 <span class="c1"># Read and concatenate control points into main database/dataframe</span>
 <div class="viewcode-block" id="add_control_points">
 <a class="viewcode-back" href="../../w4h.read.html#w4h.add_control_points">[docs]</a>
-<span class="k">def</span> <span class="nf">add_control_points</span><span class="p">(</span><span class="n">df_without_control</span><span class="p">,</span> <span class="n">df_control</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="n">xcol</span><span class="o">=</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="n">zcol</span><span class="o">=</span><span class="s1">&#39;ELEV_FT&#39;</span><span class="p">,</span> <span class="n">controlpoints_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:4269&#39;</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:4269&#39;</span><span class="p">,</span> <span class="n">description_col</span><span class="o">=</span><span class="s1">&#39;FORMATION&#39;</span><span class="p">,</span> <span class="n">interp_col</span><span class="o">=</span><span class="s1">&#39;INTERPRETATION&#39;</span><span class="p">,</span> <span class="n">target_col</span><span class="o">=</span><span class="s1">&#39;TARGET&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">add_control_points</span><span class="p">(</span><span class="n">df_without_control</span><span class="p">,</span> <span class="n">df_control</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="n">xcol</span><span class="o">=</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="n">zcol</span><span class="o">=</span><span class="s1">&#39;ELEV_FT&#39;</span><span class="p">,</span> <span class="n">controlpoints_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:4269&#39;</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:5070&#39;</span><span class="p">,</span> <span class="n">description_col</span><span class="o">=</span><span class="s1">&#39;FORMATION&#39;</span><span class="p">,</span> <span class="n">interp_col</span><span class="o">=</span><span class="s1">&#39;INTERPRETATION&#39;</span><span class="p">,</span> <span class="n">target_col</span><span class="o">=</span><span class="s1">&#39;TARGET&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to add control points, primarily to aid in interpolation. This may be useful when conditions are known but do not exist in input well database</span>
 
 <span class="sd">    Parameters</span>
@@ -735,7 +735,7 @@
 <span class="sd">    controlpoints_crs : str, optional</span>
 <span class="sd">        The column in df_control containing the crs of points, by default &#39;EPSG:4269&#39;</span>
 <span class="sd">    output_crs : str, optional</span>
-<span class="sd">        The output coordinate system, by default &#39;EPSG:4269&#39;</span>
+<span class="sd">        The output coordinate system, by default &#39;EPSG:5070&#39;</span>
 <span class="sd">    description_col : str, optional</span>
 <span class="sd">        The column in df_control with the description (if this is used), by default &#39;FORMATION&#39;</span>
 <span class="sd">    interp_col : str, optional</span>
