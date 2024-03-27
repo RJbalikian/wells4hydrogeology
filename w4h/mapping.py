@@ -91,7 +91,7 @@ def read_study_area(study_area=None, output_crs='EPSG:5070', buffer=None, return
     return studyAreaIN
 
 #Convert coords in columns to geometry in geopandas dataframe
-def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', input_coords_crs='EPSG:4269', use_z=False, wkt_col='WKT', geometry_source='coords', verbose=False, log=False):
+def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', input_coords_crs='EPSG:4269', output_crs='EPSG:5070', use_z=False, wkt_col='WKT', geometry_source='coords', verbose=False, log=False):
     """Adds geometry to points with xy coordinates in the specified coordinate reference system.
 
     Parameters
@@ -104,7 +104,7 @@ def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELE
         Name of column holding y coordinate data in df_no_geometry
     zcol : str, default='ELEV_FT'
         Name of column holding z coordinate data in df_no_geometry
-    input_coords_crs : str, default='EPSG:4269
+    input_coords_crs : str, default='EPSG:4269'
         Name of crs used for geometry
     use_z : bool, default=False
         Whether to use z column in calculation
@@ -150,7 +150,7 @@ def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELE
                         'wkt' (if column with wkt string used), or 
                         'geometry' (if column with shapely geometry objects used, as with a GeoDataFrame)""")
             
-        gdf = gpd.GeoDataFrame(df_no_geometry, geometry='geometry', crs=input_coords_crs)
+        gdf = gpd.GeoDataFrame(df_no_geometry, geometry='geometry', crs=input_coords_crs).to_crs(output_crs)
     return gdf
 
 #Clip a geodataframe to a study area

@@ -243,8 +243,8 @@ def depth_define(df, top_col='TOP', thresh=550.0, verbose=False, log=False):
     if verbose:
         verbose_print(depth_define, locals(), exclude_params=['df'])
     df = df.copy()
-    df['CLASS_FLAG'].mask(df[top_col]>thresh, 3 ,inplace=True) #Add a Classification Flag of 3 (bedrock b/c it's deepter than 550') to all records where the top of the interval is >550'
-    df['BEDROCK_FLAG'].mask(df[top_col]>thresh, True, inplace=True)
+    df['CLASS_FLAG'] = df['CLASS_FLAG'].mask(df[top_col] > thresh, 3)  # Add a Classification Flag of 3 (bedrock b/c it's deepter than 550') to all records where the top of the interval is >550'
+    df['BEDROCK_FLAG'] = df['BEDROCK_FLAG'].mask(df[top_col] > thresh, True)
 
     if verbose:
         if df.CLASS_FLAG.notnull().sum() == 0:
@@ -317,7 +317,7 @@ def fill_unclassified(df, classification_col='CLASS_FLAG'):
     df : pandas.DataFrame
         Dataframe on which operation has been performed
     """
-    df[classification_col].fillna(0, inplace=True)
+    df[classification_col] = df[classification_col].fillna(0)
     return df
 
 #Merge lithologies to main df based on classifications
@@ -344,18 +344,19 @@ def merge_lithologies(well_data_df, targinterps_df, interp_col='INTERPRETATION',
     
     #by default, use the boolean input 
     if target_class=='bool':
-        targinterps_df[target_col] = targinterps_df[target_col].where(targinterps_df[target_col]=='1', other='0').astype(int)
-        targinterps_df[target_col].fillna(value=0, inplace=True)
+        targinterps_df[target_col] = targinterps_df[target_col].where(targinterps_df[target_col] == '1', other='0').astype(int)
+        targinterps_df[target_col] = targinterps_df[target_col].fillna(value=0)
     else:
-        targinterps_df[target_col].replace('DoNotUse', value=-1, inplace=True)
-        targinterps_df[target_col].fillna(value=-2, inplace=True)
+        targinterps_df[target_col] = targinterps_df[target_col].replace('DoNotUse', value=-1)
+        targinterps_df[target_col] = targinterps_df[target_col].fillna(value=-2)
         targinterps_df[target_col].astype(np.int8)
 
     df_targ = pd.merge(well_data_df, targinterps_df.set_index(interp_col), right_on=interp_col, left_on='LITHOLOGY', how='left')
     
     return df_targ
 
-#Function to get unique wells
+
+# Function to get unique wells
 def get_unique_wells(df, wellid_col='API_NUMBER', verbose=False, log=False):
     """Gets unique wells as a dataframe based on a given column name.
 
@@ -364,7 +365,9 @@ def get_unique_wells(df, wellid_col='API_NUMBER', verbose=False, log=False):
     df : pandas.DataFrame
         Dataframe containing all wells and/or well intervals of interest
     wellid_col : str, default="API_NUMBER"
-        Name of column in df containing a unique identifier for each well, by default 'API_NUMBER'. .unique() will be run on this column to get the unique values.
+        Name of column in df containing a unique identifier for each well,
+        by default 'API_NUMBER'. .unique() will be run on this column
+        to get the unique values.
     log : bool, default = False
         Whether to log results to log file
 
@@ -386,7 +389,7 @@ def get_unique_wells(df, wellid_col='API_NUMBER', verbose=False, log=False):
     return wellsDF
 
 #Quickly sort dataframe
-def sort_dataframe(df, sort_cols=['API_NUMBER','TOP'], remove_nans=True):
+def sort_dataframe(df, sort_cols=['API_NUMBER', 'TOP'], remove_nans=True):
     """Function to sort dataframe by one or more columns.
 
     Parameters
