@@ -30,10 +30,10 @@ def remove_nonlocated(df_with_locations, xcol='LONGITUDE', ycol='LATITUDE', no_d
     if verbose:
         verbose_print(remove_nonlocated, locals(), exclude_params=['df_with_locations'])
 
-    before = df_with_locations.shape[0] #Extract length of data before this process
+    before = df_with_locations.shape[0]  # Extract length of data
 
-    df_with_locations[xcol].replace(no_data_val_table, np.nan, inplace=True)
-    df_with_locations[ycol].replace(no_data_val_table, np.nan, inplace=True)
+    df_with_locations[xcol] = df_with_locations[xcol].replace(no_data_val_table, np.nan)
+    df_with_locations[ycol] = df_with_locations[ycol].replace(no_data_val_table, np.nan)
     
     df_with_locations.dropna(subset=xcol, inplace=True)
     df_with_locations.dropna(subset=ycol, inplace=True)
@@ -79,7 +79,7 @@ def remove_no_topo(df_with_topo, zcol='ELEVATION', no_data_val_table='', verbose
 
     before = df_with_topo.shape[0]
     
-    df_with_topo[zcol].replace(no_data_val_table, np.nan, inplace=True)
+    df_with_topo[zcol] = df_with_topo[zcol].replace(no_data_val_table, np.nan)
     df_with_topo.dropna(subset=[zcol], inplace=True)
     
     if verbose:

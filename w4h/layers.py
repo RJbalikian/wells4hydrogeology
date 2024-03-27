@@ -226,8 +226,8 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
             res['TARG_THICK'] = res['TARG_THICK'] * -1
         
         #Cannot have negative thicknesses
-        res['TARG_THICK'].clip(lower=0, inplace=True)
-        res['LAYER_THICK'].clip(lower=0, inplace=True)
+        res['TARG_THICK'] = res['TARG_THICK'].clip(lower=0)
+        res['LAYER_THICK'] = res['LAYER_THICK'].clip(lower=0)
         
         #Get geometrys for each unique API/well
         res.reset_index(drop=True, inplace=True)
