@@ -26,7 +26,7 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 project = 'w4h'
 copyright = '2024, Author'
 author = 'Author'
-release = '0.0.21'
+release = '0.0.22-dev'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
