@@ -1,17 +1,17 @@
-#__init__.py
+# __init__.py
 """
-   This is the wells4hydrogeology package. 
-   
-   It contains the functions needed to convert raw well descriptions into usable (hydro)geologic data.
+This is the wells4hydrogeology package.
+  
+It contains the functions needed to convert raw well descriptions into usable (hydro)geologic data.
 
 """
 __version__ = "0.0.21"
 
 
-from w4h.core import(logger_function,
-                     verbose_print,
-                     run,
-                     get_resources)
+from w4h.core import (logger_function,
+                      verbose_print,
+                      run,
+                      get_resources)
 
 from w4h.classify import (specific_define,
                           split_defined,
