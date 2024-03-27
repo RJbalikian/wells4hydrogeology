@@ -8,3 +8,6 @@ numpy
 numpydoc
 sphinx_rtd_theme
 wells4hydrogeology
+markdown
+pytest
+flake8
