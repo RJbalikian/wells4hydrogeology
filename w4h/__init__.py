@@ -5,7 +5,7 @@ This is the wells4hydrogeology package.
 It contains the functions needed to convert raw well descriptions into usable (hydro)geologic data.
 
 """
-__version__ = "0.0.22-dev"
+__version__ = "0.0.23"
 
 
 from w4h.core import (logger_function,

@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>w4h.clean &mdash; w4h 0.0.22-dev documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=92fd9be5" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
   
@@ -120,10 +120,10 @@
     
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="n">after</span> <span class="o">=</span> <span class="n">df_with_locations</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Removed well records with no location information. &#39;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Number of records before removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">before</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Number of records after removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">after</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="si">{}</span><span class="s2"> wells records removed without location information&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">before</span><span class="o">-</span><span class="n">after</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">Removed well records with no location information. &#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="s2">Number of records before removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">before</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="s2">Number of records after removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">after</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">{}</span><span class="s2"> wells records removed without location information&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">before</span><span class="o">-</span><span class="n">after</span><span class="p">))</span>
 
     <span class="k">return</span> <span class="n">df_with_locations</span></div>
 
@@ -167,10 +167,10 @@
     
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="n">after</span> <span class="o">=</span> <span class="n">df_with_topo</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Removed well records with no surface elevation information. &#39;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Number of records before removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">before</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Number of records after removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">after</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="si">{}</span><span class="s2"> wells records removed without surface elevation information&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">before</span><span class="o">-</span><span class="n">after</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">Removed well records with no surface elevation information. &#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="s2">Number of records before removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">before</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="s2">Number of records after removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">after</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">{}</span><span class="s2"> wells records removed without surface elevation information&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">before</span><span class="o">-</span><span class="n">after</span><span class="p">))</span>
     
     <span class="k">return</span> <span class="n">df_with_topo</span></div>
 
@@ -220,10 +220,10 @@
   
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="n">after</span> <span class="o">=</span> <span class="n">df_with_depth</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Removed well records with no depth information. &#39;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Number of records before removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">before</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Number of records after removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">after</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="si">{}</span><span class="s2"> well records removed without depth information&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">before</span><span class="o">-</span><span class="n">after</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">Removed well records with no depth information. &#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="s2">Number of records before removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">before</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="s2">Number of records after removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">after</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">{}</span><span class="s2"> well records removed without depth information&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">before</span><span class="o">-</span><span class="n">after</span><span class="p">))</span>
     
     <span class="k">return</span> <span class="n">df_with_depth</span></div>
 
@@ -268,10 +268,10 @@
 
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="n">after</span> <span class="o">=</span> <span class="n">df_with_depth</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Removed well records with obviously bad depth information. &#39;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Number of records before removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">before</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Number of records after removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">after</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="si">{}</span><span class="s2"> well records removed without depth information&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">before</span><span class="o">-</span><span class="n">after</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">Removed well records with obviously bad depth information. &#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="s2">Number of records before removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">before</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="s2">Number of records after removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">after</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">{}</span><span class="s2"> well records removed without depth information&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">before</span><span class="o">-</span><span class="n">after</span><span class="p">))</span>
 
     <span class="k">return</span> <span class="n">df_with_depth</span></div>
 
@@ -313,10 +313,10 @@
 
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="n">after</span> <span class="o">=</span> <span class="n">df_with_descriptions</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Removed well records without geologic descriptions. &#39;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Number of records before removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">before</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Number of records after removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">after</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="si">{}</span><span class="s2"> well records removed without geologic descriptions&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">before</span><span class="o">-</span><span class="n">after</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">Removed well records without geologic descriptions. &#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="s2">Number of records before removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">before</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="s2">Number of records after removing: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">after</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">{}</span><span class="s2"> well records removed without geologic descriptions&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">before</span><span class="o">-</span><span class="n">after</span><span class="p">))</span>
 
     <span class="k">return</span> <span class="n">df_with_descriptions</span></div>
 
