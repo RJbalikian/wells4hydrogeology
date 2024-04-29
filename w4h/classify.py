@@ -63,12 +63,14 @@ def specific_define(df, terms_df, description_col='FORMATION', terms_col='DESCRI
     df_Interps['BEDROCK_FLAG'] = df_Interps['LITHOLOGY'] == 'BEDROCK'
     
     if verbose:
-        print('Classified well records using exact matches')
+        totRecords = df_Interps.shape[0]
         numRecsClass = int(df_Interps[df_Interps['CLASS_FLAG']==1]['CLASS_FLAG'].sum())
-        recsRemainig = int(df_Interps.shape[0]-numRecsClass)
-        percRecsClass =round((df_Interps[df_Interps['CLASS_FLAG']==1]['CLASS_FLAG'].sum()/df_Interps.shape[0])*100,2)
-        print("\t{} records classified using exact matches ({}% of unclassified data)".format(numRecsClass, percRecsClass))
-        print('\t{} records remain unclassified ({}% of unclassified data).'.format(recsRemainig, 1-percRecsClass))
+        recsRemainig = df_Interps['CLASS_FLAG'].isna().sum()
+        percRecsClass= round(( numRecsClass / totRecords)*100, 2)
+        
+        print('\tClassified well records using exact matches')
+        print("\t\t{} records classified using exact matches ({}% of unclassified data)".format(numRecsClass, percRecsClass))
+        print('\t\t{} records remain unclassified ({}% of unclassified data).'.format(recsRemainig, 100-percRecsClass))
 
     return df_Interps
 
@@ -141,11 +143,11 @@ def start_define(df, terms_df, description_col='FORMATION', terms_col='DESCRIPTI
     if verbose:
         numRecsClass = int(df[df['CLASS_FLAG']==4]['CLASS_FLAG'].sum())
         percRecsClass= round((df[df['CLASS_FLAG']==4]['CLASS_FLAG'].sum()/df.shape[0])*100,2)
-        recsRemainig = int(df.shape[0]-numRecsClass)
+        recsRemainig = df['CLASS_FLAG'].isna().sum()
 
-        print('Classified well records using initial substring matches')
-        print("\t{} records classified using initial substring matches ({}% of unclassified  data)".format(numRecsClass, percRecsClass))
-        print('\t{} records remain unclassified ({}% of unclassified  data).'.format(recsRemainig, 1-percRecsClass))
+        print('\tClassified well records using initial substring matches')
+        print("\t\t{} records classified using initial substring matches ({}% of unclassified  data)".format(numRecsClass, percRecsClass))
+        print('\t\t{} records remain unclassified ({}% of unclassified  data).'.format(recsRemainig, 100-percRecsClass))
     return df
 
 #Classify downhole data by any substring
@@ -189,13 +191,14 @@ def wildcard_define(df, terms_df, description_col='FORMATION', terms_col='DESCRI
     df['BEDROCK_FLAG'].loc[df["LITHOLOGY"] == 'BEDROCK']
     
     if verbose:
+        totRecs = df.shape[0]
         numRecsClass = int(df[df['CLASS_FLAG']==5]['CLASS_FLAG'].sum())
-        percRecsClass= round((df[df['CLASS_FLAG']==5]['CLASS_FLAG'].sum()/df.shape[0])*100,2)
-        recsRemainig = int(df.shape[0]-numRecsClass)
+        percRecsClass= round((numRecsClass / totRecs)*100, 2)
+        recsRemainig = df['CLASS_FLAG'].isna().sum()
 
-        print('Classified well records using any substring (wildcard) match')
-        print("\t{} records classified using any substring match ({}% of unclassified  data)".format(numRecsClass, percRecsClass))
-        print('\t{} records remain unclassified ({}% of unclassified  data).'.format(recsRemainig, 1-percRecsClass))
+        print('\tClassified well records using any substring (wildcard) match')
+        print("\t\t{} records classified using any substring match ({}% of unclassified  data)".format(numRecsClass, percRecsClass))
+        print(f'\t\t{recsRemainig} records remain unclassified ({100-percRecsClass}% of unclassified  data).')
     return df
 
 #Merge data back together
@@ -254,12 +257,12 @@ def depth_define(df, top_col='TOP', thresh=550.0, verbose=False, log=False):
         total = df.shape[0]
 
         numRecsClass = int(df[df['CLASS_FLAG']==3]['CLASS_FLAG'].sum())
-        percRecsClass= round((df[df['CLASS_FLAG']==3]['CLASS_FLAG'].sum()/df.shape[0])*100,2)
-        recsRemainig = int(df.shape[0]-numRecsClass)
+        percRecsClass= round((df[df['CLASS_FLAG']==3]['CLASS_FLAG'].sum() / total)*100,2)
+        recsRemainig = df['CLASS_FLAG'].isna().sum()
 
-        print('Classified bedrock well records using depth threshold at depth of {}'.format(thresh))
-        print("\t{} records classified using bedrock threshold depth ({}% of unclassified  data)".format(numRecsClass, percRecsClass))
-        print('\t{} records remain unclassified ({}% of unclassified  data).'.format(recsRemainig, 1-percRecsClass))
+        print('\tClassified bedrock well records using depth threshold at depth of {}'.format(thresh))
+        print("\t\t{} records classified using bedrock threshold depth ({}% of unclassified  data)".format(numRecsClass, percRecsClass))
+        print(f'\t\t{recsRemainig} records remain unclassified ({100-percRecsClass}% of unclassified  data).')
         
     return df
 

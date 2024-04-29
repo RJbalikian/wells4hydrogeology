@@ -346,7 +346,7 @@ def layer_interp(points, grid, layers=None, interp_kind='nearest', return_type='
         print('You have specified a different number of layers than what is iterable in the points argument. This may not work properly.')
 
     if verbose:
-        print('Interpolating target lithology at each layer:')
+        print('\tInterpolating target lithology at each layer:')
     daDict = {}
     for lyr in range(1, layers+1):
         
@@ -454,7 +454,7 @@ def layer_interp(points, grid, layers=None, interp_kind='nearest', return_type='
         daDict['Layer'+str(lyr).zfill(zFillDigs)] = interp_grid
         del interp_grid
         if verbose:
-            print('\tCompleted {} interpolation for Layer {}'.format(str(interpType).lower(), str(lyr).zfill(zFillDigs)))
+            print('\t\tCompleted {} interpolation for Layer {}'.format(str(interpType).lower(), str(lyr).zfill(zFillDigs)))
 
     dataAList = ['dataarray', 'da', 'a', 'array']
     dataSList = ['dataset', 'ds', 'set']

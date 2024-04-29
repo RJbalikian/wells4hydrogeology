@@ -35,7 +35,6 @@ def run(well_data,
         verbose=False,
         log=False,
         **kw_params):
-    print(locals())
     """Function to run entire process with one line of code. 
     
     NOTE: verbose and log are boolean parameters used for most of the functions. verbose=True prints information to terminal, log=True logs to a file in the log_dir, which defaults to the export_dir
@@ -246,10 +245,10 @@ def run(well_data,
     wildcardTerms.reset_index(inplace=True, drop=True)
 
     if verbose:
-        print('Search terms to be used:')
-        print('\t {} exact match term/definition pairs')
-        print('\t {} starting match term/definition pairs')
-        print('\t {} wildcard match term/definition pairs')
+        print('\tSearch terms to be used:')
+        print('\t\t {} exact match term/definition pairs')
+        print('\t\t {} starting match term/definition pairs')
+        print('\t\t {} wildcard match term/definition pairs')
 
     #CLASSIFICATIONS
     #Exact match classifications

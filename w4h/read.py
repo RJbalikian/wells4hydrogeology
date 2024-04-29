@@ -38,7 +38,7 @@ def get_current_date():
     return todayDate, dateSuffix
 
 #Function to get most recent file 
-def get_most_recent(dir=resource_dir, glob_pattern='*', verbose=True):
+def get_most_recent(dir=resource_dir, glob_pattern='*', verbose=False):
     """Function to find the most recent file with the indicated pattern, using pathlib.glob function.
 
     Parameters
@@ -147,8 +147,8 @@ def file_setup(well_data, metadata=None, data_filename='*ISGS_DOWNHOLE_DATA*.txt
     headerDataPATH = pathlib.Path(headerDataFILE)
 
     if verbose:
-        print('Using the following file(s):')
-        print('\t', downholeDataFILE)
+        print('\tUsing the following file(s):')
+        print('\t  ', downholeDataFILE)
         if headerDataFILE != downholeDataFILE:
             print('\t', headerDataFILE)
 
@@ -243,7 +243,7 @@ def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols
     
     #Print outputs to terminal, if designated
     if verbose:
-        print('Data file has ' + str(downholeDataIN.shape[0])+' valid well records.')
+        print('\tData file has ' + str(downholeDataIN.shape[0])+' valid well records.')
         if headerDataIN is not None:
             print("Metadata file has "+str(headerDataIN.shape[0])+" unique wells with valid location information.")
     
@@ -345,7 +345,7 @@ def define_dtypes(undefined_df, datatypes=None, verbose=False, log=False):
 
             if not datatypes.exists():
                 if verbose:
-                    print("ERROR: datatypes file '{}' does not exist, using inferred datatypes.".format(datatypes),)
+                    print("\tERROR: datatypes file '{}' does not exist, using inferred datatypes.".format(datatypes),)
                 return dfout
             elif datatypes.is_dir():
                 if verbose:
