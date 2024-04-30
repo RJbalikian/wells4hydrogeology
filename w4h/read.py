@@ -229,7 +229,7 @@ def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols
     elif metadata_cols == 'auto':
         metadata_useCols = ['API_NUMBER',"TOTAL_DEPTH","SECTION","TWP","TDIR","RNG","RDIR","MERIDIAN","QUARTERS","ELEVATION","ELEVREF","COUNTY_CODE","LATITUDE","LONGITUDE","ELEVSOURCE"]
     else:
-        metadata_useCols= metadata_cols
+        metadata_useCols = metadata_cols
 
     if headerDataIN is not None:
         headerDataIN = headerDataIN[metadata_useCols]
@@ -244,13 +244,13 @@ def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols
         headerDataIN = headerDataIN.dropna(subset=[xcol])
 
         #Reset index so index goes from 0 in numerical/integer order
-        headerDataIN.reset_index(inplace=True, drop=True)
+        headerDataIN = headerDataIN.reset_index(drop=True)
     else:
         #***UPDATE: Need to make sure these columns exist in this case***
         #Drop data with no or missing location information
         downholeDataIN = downholeDataIN.dropna(subset=[ycol]) 
         downholeDataIN = downholeDataIN.dropna(subset=[xcol])        
-    downholeDataIN.reset_index(inplace=True, drop=True)
+    downholeDataIN = downholeDataIN.reset_index(drop=True)
     
     #Print outputs to terminal, if designated
     if verbose:
