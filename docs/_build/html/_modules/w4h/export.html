@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>w4h.export &mdash; w4h 0.0.21 documentation</title>
+  <title>w4h.export &mdash; w4h 0.0.22-dev documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=92fd9be5" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -12,7 +12,7 @@
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../../_static/documentation_options.js?v=a11416ff"></script>
+        <script src="../../_static/documentation_options.js?v=7d709ffc"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -225,14 +225,14 @@
     <span class="n">out_path</span> <span class="o">=</span> <span class="n">out_path</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span><span class="o">+</span><span class="s1">&#39;/&#39;</span>
     
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Export filepath(s):&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">Export filepath(s):&#39;</span><span class="p">)</span>
         
     <span class="n">outPaths</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span>
         <span class="n">currOutPath</span> <span class="o">=</span> <span class="n">out_path</span><span class="o">+</span><span class="n">f</span><span class="o">+</span><span class="n">file_id</span><span class="o">+</span><span class="n">nowTimeStr</span><span class="o">+</span><span class="n">filetype</span>
         <span class="n">outPaths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">currOutPath</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">currOutPath</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">  </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">currOutPath</span><span class="p">))</span>
         
     <span class="c1">#Do export</span>
     <span class="k">if</span> <span class="n">filetype</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">pickleList</span><span class="p">:</span>

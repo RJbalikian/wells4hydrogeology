@@ -27,7 +27,7 @@ def run(well_data,
         metadata=None,
         layers = 9,
         well_data_cols=None, well_metadata_cols=None, description_col='FORMATION', top_col='TOP', bottom_col='BOTTOM', depth_type='depth',
-        study_area=None, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEVATION', well_id_col='API_NUMBER', output_crs='EPSG:4269',
+        study_area=None, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEVATION', well_id_col='API_NUMBER',
         lith_dict=None, lith_dict_start=None, lith_dict_wildcard=None,
         target_dict=None,
         target_name='',
@@ -35,7 +35,6 @@ def run(well_data,
         verbose=False,
         log=False,
         **kw_params):
-    
     """Function to run entire process with one line of code. 
     
     NOTE: verbose and log are boolean parameters used for most of the functions. verbose=True prints information to terminal, log=True logs to a file in the log_dir, which defaults to the export_dir
@@ -74,8 +73,6 @@ def run(well_data,
         Name of column containing y coordinates. This column should be in metadata unless metadata is not read, then it should be in well_data.
     zcol : str, default = 'ELEVATION' 
         Name of column containing z coordinates. This column should be in metadata unless metadata is not read, then it should be in well_data.
-    output_crs : crs definition accepted by pyproj, default = 'EPSG:4269'
-        CRS to output all of the data into
     lith_dict : str or pathlib.Path object, or pandas.DataFrame
         _description_
     lith_dict_start : str or pathlib.Path object, or pandas.DataFrame
@@ -192,7 +189,7 @@ def run(well_data,
         studyAreaIN = None
         use_study_area = False
     else:
-        studyAreaIN = w4h.read_study_area(study_area_path=study_area, log=log, output_crs=output_crs, **read_study_area_kwargs)
+        studyAreaIN = w4h.read_study_area(study_area_path=study_area, log=log, **read_study_area_kwargs)
         use_study_area = True
 
     clip_gdf2study_area_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.clip_gdf2study_area).parameters.keys()}
@@ -248,10 +245,10 @@ def run(well_data,
     wildcardTerms.reset_index(inplace=True, drop=True)
 
     if verbose:
-        print('Search terms to be used:')
-        print('\t {} exact match term/definition pairs')
-        print('\t {} starting match term/definition pairs')
-        print('\t {} wildcard match term/definition pairs')
+        print('\tSearch terms to be used:')
+        print('\t\t {} exact match term/definition pairs')
+        print('\t\t {} starting match term/definition pairs')
+        print('\t\t {} wildcard match term/definition pairs')
 
     #CLASSIFICATIONS
     #Exact match classifications
@@ -567,10 +564,10 @@ def get_resources(resource_type='filepaths', scope='local', verbose=False):
                         else:
                             resources_dict['well_data'] = pd.read_csv(file)
             geometry = [Point(xy) for xy in zip(resources_dict['well_data']['LONGITUDE'], resources_dict['well_data']['LATITUDE'])]
-            resources_dict['well_data'] = gpd.GeoDataFrame(resources_dict['well_data'], geometry=geometry, crs='EPSG:4269')
+            resources_dict['well_data'] = gpd.GeoDataFrame(resources_dict['well_data'], geometry=geometry, crs='EPSG:5070')
             
         else:
-            sacrs = 'EPSG:4269'
+            sacrs = 'EPSG:5070'
             df = pd.read_csv(resources_dict['well_data'])
             df['geometry'] = df['geometry'].apply(wkt.loads)
             resources_dict['well_data'] = gpd.GeoDataFrame(df, geometry='geometry')

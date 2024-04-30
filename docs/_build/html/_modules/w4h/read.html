@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>w4h.read &mdash; w4h 0.0.21 documentation</title>
+  <title>w4h.read &mdash; w4h 0.0.22-dev documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=92fd9be5" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -12,7 +12,7 @@
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../../_static/documentation_options.js?v=a11416ff"></script>
+        <script src="../../_static/documentation_options.js?v=7d709ffc"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -121,7 +121,7 @@
 <span class="c1">#Function to get most recent file </span>
 <div class="viewcode-block" id="get_most_recent">
 <a class="viewcode-back" href="../../w4h.read.html#w4h.get_most_recent">[docs]</a>
-<span class="k">def</span> <span class="nf">get_most_recent</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="n">resource_dir</span><span class="p">,</span> <span class="n">glob_pattern</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">get_most_recent</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="n">resource_dir</span><span class="p">,</span> <span class="n">glob_pattern</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to find the most recent file with the indicated pattern, using pathlib.glob function.</span>
 
 <span class="sd">    Parameters</span>
@@ -233,8 +233,8 @@
     <span class="n">headerDataPATH</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">headerDataFILE</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Using the following file(s):&#39;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">downholeDataFILE</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">Using the following file(s):&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">  &#39;</span><span class="p">,</span> <span class="n">downholeDataFILE</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">headerDataFILE</span> <span class="o">!=</span> <span class="n">downholeDataFILE</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">headerDataFILE</span><span class="p">)</span>
 
@@ -332,7 +332,7 @@
     
     <span class="c1">#Print outputs to terminal, if designated</span>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Data file has &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">downholeDataIN</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">+</span><span class="s1">&#39; valid well records.&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">Data file has &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">downholeDataIN</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">+</span><span class="s1">&#39; valid well records.&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">headerDataIN</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Metadata file has &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">headerDataIN</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">+</span><span class="s2">&quot; unique wells with valid location information.&quot;</span><span class="p">)</span>
     
@@ -443,7 +443,7 @@
 
             <span class="k">if</span> <span class="ow">not</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
                 <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR: datatypes file &#39;</span><span class="si">{}</span><span class="s2">&#39; does not exist, using inferred datatypes.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">datatypes</span><span class="p">),)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">ERROR: datatypes file &#39;</span><span class="si">{}</span><span class="s2">&#39; does not exist, using inferred datatypes.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">datatypes</span><span class="p">),)</span>
                 <span class="k">return</span> <span class="n">dfout</span>
             <span class="k">elif</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
                 <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
@@ -715,7 +715,7 @@
 <span class="c1"># Read and concatenate control points into main database/dataframe</span>
 <div class="viewcode-block" id="add_control_points">
 <a class="viewcode-back" href="../../w4h.read.html#w4h.add_control_points">[docs]</a>
-<span class="k">def</span> <span class="nf">add_control_points</span><span class="p">(</span><span class="n">df_without_control</span><span class="p">,</span> <span class="n">df_control</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="n">xcol</span><span class="o">=</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="n">zcol</span><span class="o">=</span><span class="s1">&#39;ELEV_FT&#39;</span><span class="p">,</span> <span class="n">controlpoints_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:4269&#39;</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:4269&#39;</span><span class="p">,</span> <span class="n">description_col</span><span class="o">=</span><span class="s1">&#39;FORMATION&#39;</span><span class="p">,</span> <span class="n">interp_col</span><span class="o">=</span><span class="s1">&#39;INTERPRETATION&#39;</span><span class="p">,</span> <span class="n">target_col</span><span class="o">=</span><span class="s1">&#39;TARGET&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">add_control_points</span><span class="p">(</span><span class="n">df_without_control</span><span class="p">,</span> <span class="n">df_control</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="n">xcol</span><span class="o">=</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="n">zcol</span><span class="o">=</span><span class="s1">&#39;ELEV_FT&#39;</span><span class="p">,</span> <span class="n">controlpoints_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:4269&#39;</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:5070&#39;</span><span class="p">,</span> <span class="n">description_col</span><span class="o">=</span><span class="s1">&#39;FORMATION&#39;</span><span class="p">,</span> <span class="n">interp_col</span><span class="o">=</span><span class="s1">&#39;INTERPRETATION&#39;</span><span class="p">,</span> <span class="n">target_col</span><span class="o">=</span><span class="s1">&#39;TARGET&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to add control points, primarily to aid in interpolation. This may be useful when conditions are known but do not exist in input well database</span>
 
 <span class="sd">    Parameters</span>
@@ -735,7 +735,7 @@
 <span class="sd">    controlpoints_crs : str, optional</span>
 <span class="sd">        The column in df_control containing the crs of points, by default &#39;EPSG:4269&#39;</span>
 <span class="sd">    output_crs : str, optional</span>
-<span class="sd">        The output coordinate system, by default &#39;EPSG:4269&#39;</span>
+<span class="sd">        The output coordinate system, by default &#39;EPSG:5070&#39;</span>
 <span class="sd">    description_col : str, optional</span>
 <span class="sd">        The column in df_control with the description (if this is used), by default &#39;FORMATION&#39;</span>
 <span class="sd">    interp_col : str, optional</span>

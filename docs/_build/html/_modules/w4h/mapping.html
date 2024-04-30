@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>w4h.mapping &mdash; w4h 0.0.21 documentation</title>
+  <title>w4h.mapping &mdash; w4h 0.0.22-dev documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=92fd9be5" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -12,7 +12,7 @@
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../../_static/documentation_options.js?v=a11416ff"></script>
+        <script src="../../_static/documentation_options.js?v=7d709ffc"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -108,7 +108,7 @@
 <span class="c1">#Read study area shapefile (or other file) into geopandas</span>
 <div class="viewcode-block" id="read_study_area">
 <a class="viewcode-back" href="../../w4h.mapping.html#w4h.read_study_area">[docs]</a>
-<span class="k">def</span> <span class="nf">read_study_area</span><span class="p">(</span><span class="n">study_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:4269&#39;</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_original</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">read_file_kwargs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">read_study_area</span><span class="p">(</span><span class="n">study_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:5070&#39;</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_original</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">read_file_kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Read study area geospatial file into geopandas</span>
 
 <span class="sd">    Parameters</span>
@@ -174,7 +174,7 @@
 <span class="c1">#Convert coords in columns to geometry in geopandas dataframe</span>
 <div class="viewcode-block" id="coords2geometry">
 <a class="viewcode-back" href="../../w4h.mapping.html#w4h.coords2geometry">[docs]</a>
-<span class="k">def</span> <span class="nf">coords2geometry</span><span class="p">(</span><span class="n">df_no_geometry</span><span class="p">,</span> <span class="n">xcol</span><span class="o">=</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="n">zcol</span><span class="o">=</span><span class="s1">&#39;ELEV_FT&#39;</span><span class="p">,</span> <span class="n">input_coords_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:4269&#39;</span><span class="p">,</span> <span class="n">use_z</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">wkt_col</span><span class="o">=</span><span class="s1">&#39;WKT&#39;</span><span class="p">,</span> <span class="n">geometry_source</span><span class="o">=</span><span class="s1">&#39;coords&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">coords2geometry</span><span class="p">(</span><span class="n">df_no_geometry</span><span class="p">,</span> <span class="n">xcol</span><span class="o">=</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="n">zcol</span><span class="o">=</span><span class="s1">&#39;ELEV_FT&#39;</span><span class="p">,</span> <span class="n">input_coords_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:4269&#39;</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:5070&#39;</span><span class="p">,</span> <span class="n">use_z</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">wkt_col</span><span class="o">=</span><span class="s1">&#39;WKT&#39;</span><span class="p">,</span> <span class="n">geometry_source</span><span class="o">=</span><span class="s1">&#39;coords&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Adds geometry to points with xy coordinates in the specified coordinate reference system.</span>
 
 <span class="sd">    Parameters</span>
@@ -187,7 +187,7 @@
 <span class="sd">        Name of column holding y coordinate data in df_no_geometry</span>
 <span class="sd">    zcol : str, default=&#39;ELEV_FT&#39;</span>
 <span class="sd">        Name of column holding z coordinate data in df_no_geometry</span>
-<span class="sd">    input_coords_crs : str, default=&#39;EPSG:4269</span>
+<span class="sd">    input_coords_crs : str, default=&#39;EPSG:4269&#39;</span>
 <span class="sd">        Name of crs used for geometry</span>
 <span class="sd">    use_z : bool, default=False</span>
 <span class="sd">        Whether to use z column in calculation</span>
@@ -233,7 +233,7 @@
 <span class="s2">                        &#39;wkt&#39; (if column with wkt string used), or </span>
 <span class="s2">                        &#39;geometry&#39; (if column with shapely geometry objects used, as with a GeoDataFrame)&quot;&quot;&quot;</span><span class="p">)</span>
             
-        <span class="n">gdf</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="n">df_no_geometry</span><span class="p">,</span> <span class="n">geometry</span><span class="o">=</span><span class="s1">&#39;geometry&#39;</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="n">input_coords_crs</span><span class="p">)</span>
+        <span class="n">gdf</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="n">df_no_geometry</span><span class="p">,</span> <span class="n">geometry</span><span class="o">=</span><span class="s1">&#39;geometry&#39;</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="n">input_coords_crs</span><span class="p">)</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">output_crs</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">gdf</span></div>
 
 
@@ -276,7 +276,7 @@
 <span class="c1">#Function to sample raster points to points specified in geodataframe</span>
 <div class="viewcode-block" id="sample_raster_points">
 <a class="viewcode-back" href="../../w4h.mapping.html#w4h.sample_raster_points">[docs]</a>
-<span class="k">def</span> <span class="nf">sample_raster_points</span><span class="p">(</span><span class="n">raster</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">points_df</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">well_id_col</span><span class="o">=</span><span class="s1">&#39;API_NUMBER&#39;</span><span class="p">,</span> <span class="n">xcol</span><span class="o">=</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="n">new_col</span><span class="o">=</span><span class="s1">&#39;SAMPLED&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>  
+<span class="k">def</span> <span class="nf">sample_raster_points</span><span class="p">(</span><span class="n">raster</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">points_df</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">well_id_col</span><span class="o">=</span><span class="s1">&#39;API_NUMBER&#39;</span><span class="p">,</span> <span class="n">xcol</span><span class="o">=</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="n">new_col</span><span class="o">=</span><span class="s1">&#39;SAMPLED&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>  
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Sample raster values to points from geopandas geodataframe.</span>
 
 <span class="sd">    Parameters</span>
@@ -642,7 +642,7 @@
 <span class="c1">#Clip a grid to a study area</span>
 <div class="viewcode-block" id="grid2study_area">
 <a class="viewcode-back" href="../../w4h.mapping.html#w4h.grid2study_area">[docs]</a>
-<span class="k">def</span> <span class="nf">grid2study_area</span><span class="p">(</span><span class="n">study_area</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:4269&#39;</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">grid2study_area</span><span class="p">(</span><span class="n">study_area</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:5070&#39;</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Clips grid to study area.</span>
 
 <span class="sd">    Parameters</span>
@@ -651,7 +651,7 @@
 <span class="sd">        inputs study area polygon</span>
 <span class="sd">    grid : xarray.DataArray</span>
 <span class="sd">        inputs grid array</span>
-<span class="sd">    output_crs : str, default=&#39;EPSG:4269&#39;</span>
+<span class="sd">    output_crs : str, default=&#39;EPSG:5070&#39;</span>
 <span class="sd">        inputs the coordinate reference system for the study area</span>
 <span class="sd">    log : bool, default = False</span>
 <span class="sd">        Whether to log results to log file, by default False</span>
@@ -709,7 +709,7 @@
 <span class="c1">#Read the model grid into (rio)xarray</span>
 <div class="viewcode-block" id="read_model_grid">
 <a class="viewcode-back" href="../../w4h.mapping.html#w4h.read_model_grid">[docs]</a>
-<span class="k">def</span> <span class="nf">read_model_grid</span><span class="p">(</span><span class="n">model_grid_path</span><span class="p">,</span> <span class="n">study_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">no_data_val_grid</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">read_grid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">node_byspace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">grid_crs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:4269&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">read_model_grid</span><span class="p">(</span><span class="n">model_grid_path</span><span class="p">,</span> <span class="n">study_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">no_data_val_grid</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">read_grid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">node_byspace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">grid_crs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:5070&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Reads in model grid to xarray data array</span>
 
 <span class="sd">    Parameters</span>
@@ -724,7 +724,7 @@
 <span class="sd">        Whether function to either read grid or create grid</span>
 <span class="sd">    node_byspace : bool, default=False</span>
 <span class="sd">        Denotes how to create grid</span>
-<span class="sd">    output_crs : str, default=&#39;EPSG:4269&#39;</span>
+<span class="sd">    output_crs : str, default=&#39;EPSG:5070&#39;</span>
 <span class="sd">        Inputs study area crs</span>
 <span class="sd">    grid_crs : str, default=None</span>
 <span class="sd">        Inputs grid crs</span>
@@ -825,7 +825,7 @@
 <span class="c1">#Read a grid from a file in using rioxarray</span>
 <div class="viewcode-block" id="read_grid">
 <a class="viewcode-back" href="../../w4h.mapping.html#w4h.read_grid">[docs]</a>
-<span class="k">def</span> <span class="nf">read_grid</span><span class="p">(</span><span class="n">grid_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">grid_type</span><span class="o">=</span><span class="s1">&#39;model&#39;</span><span class="p">,</span> <span class="n">no_data_val_grid</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">use_service</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">study_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="n">grid_crs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:4269&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">read_grid</span><span class="p">(</span><span class="n">grid_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">grid_type</span><span class="o">=</span><span class="s1">&#39;model&#39;</span><span class="p">,</span> <span class="n">no_data_val_grid</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">use_service</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">study_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="n">grid_crs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:5070&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Reads in grid</span>
 
 <span class="sd">    Parameters</span>

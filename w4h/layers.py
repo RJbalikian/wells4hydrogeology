@@ -226,8 +226,8 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
             res['TARG_THICK'] = res['TARG_THICK'] * -1
         
         #Cannot have negative thicknesses
-        res['TARG_THICK'].clip(lower=0, inplace=True)
-        res['LAYER_THICK'].clip(lower=0, inplace=True)
+        res['TARG_THICK'] = res['TARG_THICK'].clip(lower=0)
+        res['LAYER_THICK'] = res['LAYER_THICK'].clip(lower=0)
         
         #Get geometrys for each unique API/well
         res.reset_index(drop=True, inplace=True)
@@ -346,7 +346,7 @@ def layer_interp(points, grid, layers=None, interp_kind='nearest', return_type='
         print('You have specified a different number of layers than what is iterable in the points argument. This may not work properly.')
 
     if verbose:
-        print('Interpolating target lithology at each layer:')
+        print('\tInterpolating target lithology at each layer:')
     daDict = {}
     for lyr in range(1, layers+1):
         
@@ -454,7 +454,7 @@ def layer_interp(points, grid, layers=None, interp_kind='nearest', return_type='
         daDict['Layer'+str(lyr).zfill(zFillDigs)] = interp_grid
         del interp_grid
         if verbose:
-            print('\tCompleted {} interpolation for Layer {}'.format(str(interpType).lower(), str(lyr).zfill(zFillDigs)))
+            print('\t\tCompleted {} interpolation for Layer {}'.format(str(interpType).lower(), str(lyr).zfill(zFillDigs)))
 
     dataAList = ['dataarray', 'da', 'a', 'array']
     dataSList = ['dataset', 'ds', 'set']

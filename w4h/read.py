@@ -38,7 +38,7 @@ def get_current_date():
     return todayDate, dateSuffix
 
 #Function to get most recent file 
-def get_most_recent(dir=resource_dir, glob_pattern='*', verbose=True):
+def get_most_recent(dir=resource_dir, glob_pattern='*', verbose=False):
     """Function to find the most recent file with the indicated pattern, using pathlib.glob function.
 
     Parameters
@@ -147,8 +147,8 @@ def file_setup(well_data, metadata=None, data_filename='*ISGS_DOWNHOLE_DATA*.txt
     headerDataPATH = pathlib.Path(headerDataFILE)
 
     if verbose:
-        print('Using the following file(s):')
-        print('\t', downholeDataFILE)
+        print('\tUsing the following file(s):')
+        print('\t  ', downholeDataFILE)
         if headerDataFILE != downholeDataFILE:
             print('\t', headerDataFILE)
 
@@ -243,7 +243,7 @@ def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols
     
     #Print outputs to terminal, if designated
     if verbose:
-        print('Data file has ' + str(downholeDataIN.shape[0])+' valid well records.')
+        print('\tData file has ' + str(downholeDataIN.shape[0])+' valid well records.')
         if headerDataIN is not None:
             print("Metadata file has "+str(headerDataIN.shape[0])+" unique wells with valid location information.")
     
@@ -345,7 +345,7 @@ def define_dtypes(undefined_df, datatypes=None, verbose=False, log=False):
 
             if not datatypes.exists():
                 if verbose:
-                    print("ERROR: datatypes file '{}' does not exist, using inferred datatypes.".format(datatypes),)
+                    print("\tERROR: datatypes file '{}' does not exist, using inferred datatypes.".format(datatypes),)
                 return dfout
             elif datatypes.is_dir():
                 if verbose:
@@ -605,7 +605,7 @@ def read_lithologies(lith_file=None, interp_col='LITHOLOGY', target_col='CODE', 
     return lithoDF
 
 # Read and concatenate control points into main database/dataframe
-def add_control_points(df_without_control, df_control=None,  xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', controlpoints_crs='EPSG:4269', output_crs='EPSG:4269', description_col='FORMATION', interp_col='INTERPRETATION', target_col='TARGET', verbose=False, log=False, **kwargs):
+def add_control_points(df_without_control, df_control=None,  xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', controlpoints_crs='EPSG:4269', output_crs='EPSG:5070', description_col='FORMATION', interp_col='INTERPRETATION', target_col='TARGET', verbose=False, log=False, **kwargs):
     """Function to add control points, primarily to aid in interpolation. This may be useful when conditions are known but do not exist in input well database
 
     Parameters
@@ -625,7 +625,7 @@ def add_control_points(df_without_control, df_control=None,  xcol='LONGITUDE', y
     controlpoints_crs : str, optional
         The column in df_control containing the crs of points, by default 'EPSG:4269'
     output_crs : str, optional
-        The output coordinate system, by default 'EPSG:4269'
+        The output coordinate system, by default 'EPSG:5070'
     description_col : str, optional
         The column in df_control with the description (if this is used), by default 'FORMATION'
     interp_col : str, optional

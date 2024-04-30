@@ -28,7 +28,7 @@ from w4h import logger_function, verbose_print
 lidarURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
 
 #Read study area shapefile (or other file) into geopandas
-def read_study_area(study_area=None, output_crs='EPSG:4269', buffer=None, return_original=False, log=False, verbose=False, **read_file_kwargs):
+def read_study_area(study_area=None, output_crs='EPSG:5070', buffer=None, return_original=False, log=False, verbose=False, **read_file_kwargs):
     """Read study area geospatial file into geopandas
 
     Parameters
@@ -91,7 +91,7 @@ def read_study_area(study_area=None, output_crs='EPSG:4269', buffer=None, return
     return studyAreaIN
 
 #Convert coords in columns to geometry in geopandas dataframe
-def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', input_coords_crs='EPSG:4269', use_z=False, wkt_col='WKT', geometry_source='coords', verbose=False, log=False):
+def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', input_coords_crs='EPSG:4269', output_crs='EPSG:5070', use_z=False, wkt_col='WKT', geometry_source='coords', verbose=False, log=False):
     """Adds geometry to points with xy coordinates in the specified coordinate reference system.
 
     Parameters
@@ -104,7 +104,7 @@ def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELE
         Name of column holding y coordinate data in df_no_geometry
     zcol : str, default='ELEV_FT'
         Name of column holding z coordinate data in df_no_geometry
-    input_coords_crs : str, default='EPSG:4269
+    input_coords_crs : str, default='EPSG:4269'
         Name of crs used for geometry
     use_z : bool, default=False
         Whether to use z column in calculation
@@ -150,7 +150,7 @@ def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELE
                         'wkt' (if column with wkt string used), or 
                         'geometry' (if column with shapely geometry objects used, as with a GeoDataFrame)""")
             
-        gdf = gpd.GeoDataFrame(df_no_geometry, geometry='geometry', crs=input_coords_crs)
+        gdf = gpd.GeoDataFrame(df_no_geometry, geometry='geometry', crs=input_coords_crs).to_crs(output_crs)
     return gdf
 
 #Clip a geodataframe to a study area
@@ -187,7 +187,7 @@ def clip_gdf2study_area(study_area, gdf, log=False, verbose=False):
     return gdfClip
 
 #Function to sample raster points to points specified in geodataframe
-def sample_raster_points(raster=None, points_df=None, well_id_col='API_NUMBER', xcol='LONGITUDE', ycol='LATITUDE', new_col='SAMPLED', verbose=True, log=False):  
+def sample_raster_points(raster=None, points_df=None, well_id_col='API_NUMBER', xcol='LONGITUDE', ycol='LATITUDE', new_col='SAMPLED', verbose=False, log=False):  
     """Sample raster values to points from geopandas geodataframe.
 
     Parameters
@@ -541,7 +541,7 @@ def read_wms(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:None', wms_url=l
     return wmsData_rxr
 
 #Clip a grid to a study area
-def grid2study_area(study_area, grid, output_crs='EPSG:4269',verbose=False, log=False):
+def grid2study_area(study_area, grid, output_crs='EPSG:5070',verbose=False, log=False):
     """Clips grid to study area.
 
     Parameters
@@ -550,7 +550,7 @@ def grid2study_area(study_area, grid, output_crs='EPSG:4269',verbose=False, log=
         inputs study area polygon
     grid : xarray.DataArray
         inputs grid array
-    output_crs : str, default='EPSG:4269'
+    output_crs : str, default='EPSG:5070'
         inputs the coordinate reference system for the study area
     log : bool, default = False
         Whether to log results to log file, by default False
@@ -605,7 +605,7 @@ def grid2study_area(study_area, grid, output_crs='EPSG:4269',verbose=False, log=
     return grid
 
 #Read the model grid into (rio)xarray
-def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_grid=True, node_byspace=True, grid_crs=None, output_crs='EPSG:4269', verbose=False, log=False):
+def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_grid=True, node_byspace=True, grid_crs=None, output_crs='EPSG:5070', verbose=False, log=False):
     """Reads in model grid to xarray data array
 
     Parameters
@@ -620,7 +620,7 @@ def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_g
         Whether function to either read grid or create grid
     node_byspace : bool, default=False
         Denotes how to create grid
-    output_crs : str, default='EPSG:4269'
+    output_crs : str, default='EPSG:5070'
         Inputs study area crs
     grid_crs : str, default=None
         Inputs grid crs
@@ -718,7 +718,7 @@ def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_g
     return modelGrid
 
 #Read a grid from a file in using rioxarray
-def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service=False, study_area=None,  grid_crs=None, output_crs='EPSG:4269', verbose=False, log=False, **kwargs):
+def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service=False, study_area=None,  grid_crs=None, output_crs='EPSG:5070', verbose=False, log=False, **kwargs):
     """Reads in grid
 
     Parameters

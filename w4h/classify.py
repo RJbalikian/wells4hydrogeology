@@ -63,12 +63,14 @@ def specific_define(df, terms_df, description_col='FORMATION', terms_col='DESCRI
     df_Interps['BEDROCK_FLAG'] = df_Interps['LITHOLOGY'] == 'BEDROCK'
     
     if verbose:
-        print('Classified well records using exact matches')
+        totRecords = df_Interps.shape[0]
         numRecsClass = int(df_Interps[df_Interps['CLASS_FLAG']==1]['CLASS_FLAG'].sum())
-        recsRemainig = int(df_Interps.shape[0]-numRecsClass)
-        percRecsClass =round((df_Interps[df_Interps['CLASS_FLAG']==1]['CLASS_FLAG'].sum()/df_Interps.shape[0])*100,2)
-        print("\t{} records classified using exact matches ({}% of unclassified data)".format(numRecsClass, percRecsClass))
-        print('\t{} records remain unclassified ({}% of unclassified data).'.format(recsRemainig, 1-percRecsClass))
+        recsRemainig = df_Interps['CLASS_FLAG'].isna().sum()
+        percRecsClass= round(( numRecsClass / totRecords)*100, 2)
+        
+        print('\tClassified well records using exact matches')
+        print("\t\t{} records classified using exact matches ({}% of unclassified data)".format(numRecsClass, percRecsClass))
+        print('\t\t{} records remain unclassified ({}% of unclassified data).'.format(recsRemainig, 100-percRecsClass))
 
     return df_Interps
 
@@ -141,11 +143,11 @@ def start_define(df, terms_df, description_col='FORMATION', terms_col='DESCRIPTI
     if verbose:
         numRecsClass = int(df[df['CLASS_FLAG']==4]['CLASS_FLAG'].sum())
         percRecsClass= round((df[df['CLASS_FLAG']==4]['CLASS_FLAG'].sum()/df.shape[0])*100,2)
-        recsRemainig = int(df.shape[0]-numRecsClass)
+        recsRemainig = df['CLASS_FLAG'].isna().sum()
 
-        print('Classified well records using initial substring matches')
-        print("\t{} records classified using initial substring matches ({}% of unclassified  data)".format(numRecsClass, percRecsClass))
-        print('\t{} records remain unclassified ({}% of unclassified  data).'.format(recsRemainig, 1-percRecsClass))
+        print('\tClassified well records using initial substring matches')
+        print("\t\t{} records classified using initial substring matches ({}% of unclassified  data)".format(numRecsClass, percRecsClass))
+        print('\t\t{} records remain unclassified ({}% of unclassified  data).'.format(recsRemainig, 100-percRecsClass))
     return df
 
 #Classify downhole data by any substring
@@ -189,13 +191,14 @@ def wildcard_define(df, terms_df, description_col='FORMATION', terms_col='DESCRI
     df['BEDROCK_FLAG'].loc[df["LITHOLOGY"] == 'BEDROCK']
     
     if verbose:
+        totRecs = df.shape[0]
         numRecsClass = int(df[df['CLASS_FLAG']==5]['CLASS_FLAG'].sum())
-        percRecsClass= round((df[df['CLASS_FLAG']==5]['CLASS_FLAG'].sum()/df.shape[0])*100,2)
-        recsRemainig = int(df.shape[0]-numRecsClass)
+        percRecsClass= round((numRecsClass / totRecs)*100, 2)
+        recsRemainig = df['CLASS_FLAG'].isna().sum()
 
-        print('Classified well records using any substring (wildcard) match')
-        print("\t{} records classified using any substring match ({}% of unclassified  data)".format(numRecsClass, percRecsClass))
-        print('\t{} records remain unclassified ({}% of unclassified  data).'.format(recsRemainig, 1-percRecsClass))
+        print('\tClassified well records using any substring (wildcard) match')
+        print("\t\t{} records classified using any substring match ({}% of unclassified  data)".format(numRecsClass, percRecsClass))
+        print(f'\t\t{recsRemainig} records remain unclassified ({100-percRecsClass}% of unclassified  data).')
     return df
 
 #Merge data back together
@@ -243,8 +246,8 @@ def depth_define(df, top_col='TOP', thresh=550.0, verbose=False, log=False):
     if verbose:
         verbose_print(depth_define, locals(), exclude_params=['df'])
     df = df.copy()
-    df['CLASS_FLAG'].mask(df[top_col]>thresh, 3 ,inplace=True) #Add a Classification Flag of 3 (bedrock b/c it's deepter than 550') to all records where the top of the interval is >550'
-    df['BEDROCK_FLAG'].mask(df[top_col]>thresh, True, inplace=True)
+    df['CLASS_FLAG'] = df['CLASS_FLAG'].mask(df[top_col] > thresh, 3)  # Add a Classification Flag of 3 (bedrock b/c it's deepter than 550') to all records where the top of the interval is >550'
+    df['BEDROCK_FLAG'] = df['BEDROCK_FLAG'].mask(df[top_col] > thresh, True)
 
     if verbose:
         if df.CLASS_FLAG.notnull().sum() == 0:
@@ -254,12 +257,12 @@ def depth_define(df, top_col='TOP', thresh=550.0, verbose=False, log=False):
         total = df.shape[0]
 
         numRecsClass = int(df[df['CLASS_FLAG']==3]['CLASS_FLAG'].sum())
-        percRecsClass= round((df[df['CLASS_FLAG']==3]['CLASS_FLAG'].sum()/df.shape[0])*100,2)
-        recsRemainig = int(df.shape[0]-numRecsClass)
+        percRecsClass= round((df[df['CLASS_FLAG']==3]['CLASS_FLAG'].sum() / total)*100,2)
+        recsRemainig = df['CLASS_FLAG'].isna().sum()
 
-        print('Classified bedrock well records using depth threshold at depth of {}'.format(thresh))
-        print("\t{} records classified using bedrock threshold depth ({}% of unclassified  data)".format(numRecsClass, percRecsClass))
-        print('\t{} records remain unclassified ({}% of unclassified  data).'.format(recsRemainig, 1-percRecsClass))
+        print('\tClassified bedrock well records using depth threshold at depth of {}'.format(thresh))
+        print("\t\t{} records classified using bedrock threshold depth ({}% of unclassified  data)".format(numRecsClass, percRecsClass))
+        print(f'\t\t{recsRemainig} records remain unclassified ({100-percRecsClass}% of unclassified  data).')
         
     return df
 
@@ -317,7 +320,7 @@ def fill_unclassified(df, classification_col='CLASS_FLAG'):
     df : pandas.DataFrame
         Dataframe on which operation has been performed
     """
-    df[classification_col].fillna(0, inplace=True)
+    df[classification_col] = df[classification_col].fillna(0)
     return df
 
 #Merge lithologies to main df based on classifications
@@ -344,18 +347,19 @@ def merge_lithologies(well_data_df, targinterps_df, interp_col='INTERPRETATION',
     
     #by default, use the boolean input 
     if target_class=='bool':
-        targinterps_df[target_col] = targinterps_df[target_col].where(targinterps_df[target_col]=='1', other='0').astype(int)
-        targinterps_df[target_col].fillna(value=0, inplace=True)
+        targinterps_df[target_col] = targinterps_df[target_col].where(targinterps_df[target_col] == '1', other='0').astype(int)
+        targinterps_df[target_col] = targinterps_df[target_col].fillna(value=0)
     else:
-        targinterps_df[target_col].replace('DoNotUse', value=-1, inplace=True)
-        targinterps_df[target_col].fillna(value=-2, inplace=True)
+        targinterps_df[target_col] = targinterps_df[target_col].replace('DoNotUse', value=-1)
+        targinterps_df[target_col] = targinterps_df[target_col].fillna(value=-2)
         targinterps_df[target_col].astype(np.int8)
 
     df_targ = pd.merge(well_data_df, targinterps_df.set_index(interp_col), right_on=interp_col, left_on='LITHOLOGY', how='left')
     
     return df_targ
 
-#Function to get unique wells
+
+# Function to get unique wells
 def get_unique_wells(df, wellid_col='API_NUMBER', verbose=False, log=False):
     """Gets unique wells as a dataframe based on a given column name.
 
@@ -364,7 +368,9 @@ def get_unique_wells(df, wellid_col='API_NUMBER', verbose=False, log=False):
     df : pandas.DataFrame
         Dataframe containing all wells and/or well intervals of interest
     wellid_col : str, default="API_NUMBER"
-        Name of column in df containing a unique identifier for each well, by default 'API_NUMBER'. .unique() will be run on this column to get the unique values.
+        Name of column in df containing a unique identifier for each well,
+        by default 'API_NUMBER'. .unique() will be run on this column
+        to get the unique values.
     log : bool, default = False
         Whether to log results to log file
 
@@ -386,7 +392,7 @@ def get_unique_wells(df, wellid_col='API_NUMBER', verbose=False, log=False):
     return wellsDF
 
 #Quickly sort dataframe
-def sort_dataframe(df, sort_cols=['API_NUMBER','TOP'], remove_nans=True):
+def sort_dataframe(df, sort_cols=['API_NUMBER', 'TOP'], remove_nans=True):
     """Function to sort dataframe by one or more columns.
 
     Parameters
