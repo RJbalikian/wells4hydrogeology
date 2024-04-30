@@ -10,6 +10,7 @@ import pathlib
 import pkg_resources
 import zipfile
 
+import dask
 import geopandas as gpd
 import pandas as pd
 import rioxarray as rxr
@@ -31,6 +32,7 @@ def run(well_data,
         lith_dict=None, lith_dict_start=None, lith_dict_wildcard=None,
         target_dict=None,
         target_name='',
+        parallel_processing=False,
         export_dir=None,
         verbose=False,
         log=False,
@@ -99,7 +101,7 @@ def run(well_data,
     #Get data (files or otherwise)
     file_setup_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.file_setup).parameters.keys()}
     
-    #Check how well_data and metadata were defined
+    # Check how well_data and metadata were defined
     if isinstance(well_data, pathlib.PurePath) or isinstance(well_data, str):
         #Convert well_data to pathlib.Path if not already
         if isinstance(well_data, str):
@@ -114,19 +116,18 @@ def run(well_data,
                 well_dataPath, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
                 metadataPath = None
             else:
-                #Need for well_data to exist at the very least
+                # Need for well_data to exist at the very least
                 raise IOError('well_data file does not exist:{}'.format(well_data))
-        elif isinstance(metadata, pathlib.PurePath) or isinstance(metadata, str):
-            #Metdata has specifically been specified by a filepath
+        elif isinstance(metadata, (pd.DataFrame, gpd.GeoDataFrame, dask.dataframe.core.DataFrame)):
+                # Metadata is a dataframe
+                well_dataPath, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
+                metadataPath = metadata        
+        else:  #isinstance(metadata, pathlib.PurePath) or isinstance(metadata, str):
+            # Metdata has been specified by a filepath
             if isinstance(metadata, str):
-                metadata = pathlib.Path(metadata)    
+                metadata = pathlib.Path(metadata)
             well_dataPath, metadataPath = w4h.file_setup(well_data=well_data, metadata=metadata, **file_setup_kwargs)                
-        else:
-            if isinstance(metadata, pd.DataFrame):
-                well_dataPath, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
-                metadataPath = metadata
-            elif metadata is None:
-                well_dataPath, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
+
 
     elif isinstance(well_data, pd.DataFrame):
         if isinstance(metadata, pd.DataFrame):
@@ -166,7 +167,7 @@ def run(well_data,
 
     #Get pandas dataframes from input
     read_raw_txt_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.read_raw_csv).parameters.keys()}
-    well_data_IN, metadata_IN = w4h.read_raw_csv(data_filepath=well_dataPath, metadata_filepath=metadataPath, verbose=verbose, log=log, **read_raw_txt_kwargs)
+    well_data_IN, metadata_IN = w4h.read_raw_csv(data_filepath=well_dataPath, metadata_filepath=metadataPath, verbose=verbose, parallel_processing=parallel_processing, log=log, **read_raw_txt_kwargs)
     #Functions to read data into dataframes. Also excludes extraneous columns, and drops header data with no location information
 
     #Define data types (file will need to be udpated)

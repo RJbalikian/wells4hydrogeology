@@ -2,10 +2,12 @@
 as well as support functions to carry out this task
 """
 
+import dask
 import datetime
 import inspect
 import json
 import os
+import dask.dataframe
 import pkg_resources
 import pathlib
 
@@ -86,7 +88,7 @@ def get_most_recent(dir=resource_dir, glob_pattern='*', verbose=False):
     return mostRecentFile
 
 #Function to setup files of interest
-def file_setup(well_data, metadata=None, data_filename='*ISGS_DOWNHOLE_DATA*.txt', metadata_filename='*ISGS_HEADER*.txt', log_dir=None, verbose=False, log=False):
+def file_setup(well_data, metadata=None, data_filename='*ISGS_DOWNHOLE_DATA*.txt', metadata_filename='*ISGS_HEADER*.txt', parallel_processing=True, log_dir=None, verbose=False, log=False):
     """Function to setup files, assuming data, metadata, and elevation/location are in separate files (there should be one "key"/identifying column consistent across all files to join/merge them later)
 
     This function may not be useful if files are organized differently than this structure. 
@@ -118,7 +120,7 @@ def file_setup(well_data, metadata=None, data_filename='*ISGS_DOWNHOLE_DATA*.txt
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
         verbose_print(file_setup, locals(), exclude_params=['well_data'])
-    #Define  filepath variables to be used later for reading/writing files
+    # Define  filepath variables to be used later for reading/writing files
     data_path = pathlib.Path(well_data)
     if metadata is None:
         origMetaPath = None
@@ -127,7 +129,7 @@ def file_setup(well_data, metadata=None, data_filename='*ISGS_DOWNHOLE_DATA*.txt
         origMetaPath = metadata
         metadata=pathlib.Path(metadata)
 
-    #If input path is a directory, find most recent version of the file. If file, just read the file
+    # If input path is a directory, find most recent version of the file. If file, just read the file
     if data_path.is_dir():
         downholeDataFILE = get_most_recent(data_path, data_filename, verbose=verbose)
     else:
@@ -158,8 +160,8 @@ def file_setup(well_data, metadata=None, data_filename='*ISGS_DOWNHOLE_DATA*.txt
     return downholeDataPATH, headerDataPATH
     
 #Read raw data by text
-def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, xcol='LONGITUDE', ycol='LATITUDE', well_key='API_NUMBER', encoding='latin-1', verbose=False, log=False, **read_csv_kwargs):
-    """Easy function to read raw .txt files output from (for example), an Access database
+def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, xcol='LONGITUDE', ycol='LATITUDE', well_key='API_NUMBER', encoding='latin-1', parallel_processing=False, verbose=False, log=False, **read_csv_kwargs):
+    """Easy function to read raw .txt files output from (for example) an Access database
 
     Parameters
     ----------
@@ -179,6 +181,8 @@ def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols
         Name of the column with the key/identifier that will be used to merge data later, by default 'API_NUMBER'
     encoding : str, default = 'latin-1'
         Encoding of the data in the input files, by default 'latin-1'
+    parallel_processing : bool, default = False,
+        Whether to use the dask library to set up parallel processing of data
     verbose : bool, default = False
         Whether to print the number of rows in the input columns, by default False
     log : bool, default = False
@@ -194,9 +198,13 @@ def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
         verbose_print(read_raw_csv, locals())
-    #Check if input data is already dataframe, otherwise, read it in as dataframe
-    if not isinstance(data_filepath, pd.DataFrame) or isinstance(data_filepath, gpd.GeoDataFrame):
-        downholeDataIN = pd.read_csv(data_filepath, sep=',', header='infer', encoding=encoding, **read_csv_kwargs)
+    
+    # Check if input data is already dataframe, otherwise, read it in as dataframe
+    if not isinstance(data_filepath, (pd.DataFrame, gpd.GeoDataFrame, dask.dataframe.core.DataFrame)):
+        if parallel_processing:
+            downholeDataIN = dask.dataframe.read_csv(data_filepath, sep=',', header='infer', encoding=encoding, **read_csv_kwargs)
+        else:
+            downholeDataIN = pd.read_csv(data_filepath, sep=',', header='infer', encoding=encoding, **read_csv_kwargs)
 
     if data_cols is None:
         data_useCols = downholeDataIN.columns
@@ -208,8 +216,11 @@ def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols
 
     if metadata_filepath is None:
         headerDataIN = None
-    elif not isinstance(metadata_filepath, pd.DataFrame) or isinstance(metadata_filepath, gpd.GeoDataFrame):
-        headerDataIN = pd.read_csv(metadata_filepath, sep=',', header='infer', encoding=encoding, **read_csv_kwargs)
+    elif not isinstance(metadata_filepath, (pd.DataFrame, gpd.GeoDataFrame, dask.dataframe.core.DataFrame)):
+        if parallel_processing:
+            headerDataIN = dask.dataframe.read_csv(metadata_filepath, sep=',', header='infer', encoding=encoding, **read_csv_kwargs)
+        else:
+            headerDataIN = pd.read_csv(metadata_filepath, sep=',', header='infer', encoding=encoding, **read_csv_kwargs)
     else:
         headerDataIN = None
 
