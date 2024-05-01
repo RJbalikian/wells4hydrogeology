@@ -160,7 +160,8 @@ def file_setup(well_data, metadata=None, data_filename='*ISGS_DOWNHOLE_DATA*.txt
     return downholeDataPATH, headerDataPATH
     
 #Read raw data by text
-def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, xcol='LONGITUDE', ycol='LATITUDE', well_key='API_NUMBER', encoding='latin-1', parallel_processing=False, verbose=False, log=False, **read_csv_kwargs):
+def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols=None, data_dtypes={}, metadata_dtypes={},
+                 xcol='LONGITUDE', ycol='LATITUDE', well_key='API_NUMBER', encoding='latin-1', parallel_processing=False, verbose=False, log=False, **read_csv_kwargs):
     """Easy function to read raw .txt files output from (for example) an Access database
 
     Parameters
@@ -173,6 +174,10 @@ def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols
         List with strings with names of columns from txt file to keep after reading. If None, ["API_NUMBER","TABLE_NAME","FORMATION","THICKNESS","TOP","BOTTOM"], by default None.
     metadata_cols : list, default = None
         List with strings with names of columns from txt file to keep after reading. If None, ['API_NUMBER',"TOTAL_DEPTH","SECTION","TWP","TDIR","RNG","RDIR","MERIDIAN","QUARTERS","ELEVATION","ELEVREF","COUNTY_CODE","LATITUDE","LONGITUDE","ELEVSOURCE"], by default None
+    data_dtypes : dict, default = {}
+        Datatypes in a dictionary to be used for the dtypes parameter in read_csv()
+    metadata_dtypes : dict, default = {}
+        Datatypes in a dictionary to be used for the dtypes parameter in read_csv()    
     x_col : str, default = 'LONGITUDE'
         Name of column in metadata file indicating the x-location of the well, by default 'LONGITUDE'
     ycol : str, default = 'LATITUDE'
@@ -202,9 +207,9 @@ def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols
     # Check if input data is already dataframe, otherwise, read it in as dataframe
     if not isinstance(data_filepath, (pd.DataFrame, gpd.GeoDataFrame, dask.dataframe.core.DataFrame)):
         if parallel_processing:
-            downholeDataIN = dask.dataframe.read_csv(data_filepath, sep=',', header='infer', encoding=encoding, **read_csv_kwargs)
+            downholeDataIN = dask.dataframe.read_csv(data_filepath, sep=',', header='infer', encoding=encoding, dtype=data_dtypes, **read_csv_kwargs)
         else:
-            downholeDataIN = pd.read_csv(data_filepath, sep=',', header='infer', encoding=encoding, **read_csv_kwargs)
+            downholeDataIN = pd.read_csv(data_filepath, sep=',', header='infer', encoding=encoding, dtype=data_dtypes, **read_csv_kwargs)
 
     if data_cols is None:
         data_useCols = downholeDataIN.columns
@@ -218,9 +223,9 @@ def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols
         headerDataIN = None
     elif not isinstance(metadata_filepath, (pd.DataFrame, gpd.GeoDataFrame, dask.dataframe.core.DataFrame)):
         if parallel_processing:
-            headerDataIN = dask.dataframe.read_csv(metadata_filepath, sep=',', header='infer', encoding=encoding, **read_csv_kwargs)
+            headerDataIN = dask.dataframe.read_csv(metadata_filepath, sep=',', header='infer', encoding=encoding, dtype=metadata_dtypes, **read_csv_kwargs)
         else:
-            headerDataIN = pd.read_csv(metadata_filepath, sep=',', header='infer', encoding=encoding, **read_csv_kwargs)
+            headerDataIN = pd.read_csv(metadata_filepath, sep=',', header='infer', encoding=encoding, dtype=metadata_dtypes, **read_csv_kwargs)
     else:
         headerDataIN = None
 
@@ -254,10 +259,10 @@ def read_raw_csv(data_filepath, metadata_filepath, data_cols=None, metadata_cols
     
     #Print outputs to terminal, if designated
     if verbose:
-        print('\tData file has ' + str(downholeDataIN.shape[0])+' valid well records.')
+        if not parallel_processing:
+            print('\tData file has ' + str(downholeDataIN.shape[0])+' valid well records.')
         if headerDataIN is not None:
             print("Metadata file has "+str(headerDataIN.shape[0])+" unique wells with valid location information.")
-    
     return downholeDataIN, headerDataIN
 
 #Read file with xyz data
@@ -364,7 +369,8 @@ def define_dtypes(undefined_df, datatypes=None, verbose=False, log=False):
                 return dfout
 
             datatypes = read_dict(file=datatypes)
-            dfout = dfout.astype(datatypes)
+            for key in datatypes:
+                dfout[key] = dfout[key].astype(datatypes[key])
 
         elif isinstance(datatypes, dict):
             if verbose:
@@ -375,11 +381,6 @@ def define_dtypes(undefined_df, datatypes=None, verbose=False, log=False):
                 print('ERROR: datatypes must be either dict or a filepath, not {}'.format(type(datatypes)))
             return dfout
         
-        #This is likely redundant
-        dfcols = dfout.columns
-        for i in range(0, np.shape(dfout)[1]):
-            dfout.iloc[:,i] = undefined_df.iloc[:,i].astype(datatypes[dfcols[i]])
-
     return dfout
 
 #Define the search term filepaths

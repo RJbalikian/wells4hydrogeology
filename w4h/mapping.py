@@ -9,6 +9,7 @@ import pathlib
 import os
 import warnings
 
+import dask
 import rioxarray as rxr
 import xarray as xr
 import geopandas as gpd
@@ -135,13 +136,15 @@ def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELE
             df_no_geometry.drop(wkt_col, axis=1, inplace=True) #Drop WKT column
 
         elif geometry_source.lower() in coords_list:#coords = pd.concat([y, x], axis=1)
-            x = df_no_geometry[xcol].to_numpy()
-            y = df_no_geometry[ycol].to_numpy()
+            print(xcol)
+            print(df_no_geometry.columns)
+            x = np.stack(df_no_geometry[xcol])
+            y = np.stack(df_no_geometry[ycol])
             if use_z:
-                z = df_no_geometry[zcol].to_numpy()
-                df_no_geometry["geometry"] = gpd.points_from_xy(x, y, z=z, crs=input_coords_crs)
+                z = np.stack(df_no_geometry[zcol])
+                df_no_geometry["geometry"] = dask.array.from_array(np.stack(gpd.points_from_xy(x, y, z=z, crs=input_coords_crs)))
             else:
-                df_no_geometry["geometry"] = gpd.points_from_xy(x, y, crs=input_coords_crs)
+                df_no_geometry["geometry"] = dask.array.from_array(np.stack(gpd.points_from_xy(x, y, crs=input_coords_crs)))
         elif geometry_source.lower() in geometryList:
             pass
         else:

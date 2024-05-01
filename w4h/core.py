@@ -167,12 +167,19 @@ def run(well_data,
 
     #Get pandas dataframes from input
     read_raw_txt_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.read_raw_csv).parameters.keys()}
-    well_data_IN, metadata_IN = w4h.read_raw_csv(data_filepath=well_dataPath, metadata_filepath=metadataPath, verbose=verbose, parallel_processing=parallel_processing, log=log, **read_raw_txt_kwargs)
+    if parallel_processing:
+        if 'data_dtypes' not in read_raw_txt_kwargs.keys():
+            read_raw_txt_kwargs['data_dtypes'] = w4h.read_dict(w4h.get_resources()['well_data_dtypes'])
+        if 'metadata_dtypes' not in read_raw_txt_kwargs.keys():
+            read_raw_txt_kwargs['metadata_dtypes'] = w4h.read_dict(w4h.get_resources()['metadata_dtypes'])
+        
+        well_data_IN, metadata_IN = w4h.read_raw_csv(data_filepath=well_dataPath, metadata_filepath=metadataPath, verbose=verbose, parallel_processing=parallel_processing, log=log, **read_raw_txt_kwargs)
     #Functions to read data into dataframes. Also excludes extraneous columns, and drops header data with no location information
 
     #Define data types (file will need to be udpated)
-    well_data_DF = w4h.define_dtypes(undefined_df=well_data_IN, datatypes='./resources/downholeDataTypes.txt', verbose=verbose, log=log)
-    metadata_DF = w4h.define_dtypes(undefined_df=metadata_IN, datatypes='./resources/headerDataTypes.txt', verbose=verbose, log=log)
+    if not: parallel_processing 
+    well_data_DF = w4h.define_dtypes(undefined_df=well_data_IN, datatypes=w4h.get_resources()['well_data_dtypes'], verbose=verbose, log=log)
+    metadata_DF = w4h.define_dtypes(undefined_df=metadata_IN, datatypes=w4h.get_resources()['metadata_dtypes'], verbose=verbose, log=log)
 
     if metadata_DF is None:
         well_data_xyz = well_data_DF

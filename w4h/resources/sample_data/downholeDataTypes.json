@@ -1,5 +1,5 @@
 {"ID":"uintc", 
-    "API_NUMBER":"uintc",
+    "API_NUMBER":"single",
     "TABLE_NAME":"str_",
     "WHO":"str_",
     "INTERPRET_DATE":"str_",
