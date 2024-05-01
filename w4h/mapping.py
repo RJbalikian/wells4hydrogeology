@@ -10,6 +10,7 @@ import os
 import warnings
 
 import dask
+import dask_geopandas
 import rioxarray as rxr
 import xarray as xr
 import geopandas as gpd
@@ -92,7 +93,9 @@ def read_study_area(study_area=None, output_crs='EPSG:5070', buffer=None, return
     return studyAreaIN
 
 #Convert coords in columns to geometry in geopandas dataframe
-def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', input_coords_crs='EPSG:4269', output_crs='EPSG:5070', use_z=False, wkt_col='WKT', geometry_source='coords', verbose=False, log=False):
+def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', 
+                    input_coords_crs='EPSG:4269', output_crs='EPSG:5070', use_z=False, 
+                    wkt_col='WKT', geometry_source='coords', parallel_processing=False, verbose=False, log=False):
     """Adds geometry to points with xy coordinates in the specified coordinate reference system.
 
     Parameters
@@ -142,9 +145,9 @@ def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELE
             y = np.stack(df_no_geometry[ycol])
             if use_z:
                 z = np.stack(df_no_geometry[zcol])
-                df_no_geometry["geometry"] = dask.array.from_array(np.stack(gpd.points_from_xy(x, y, z=z, crs=input_coords_crs)))
+                geometry = gpd.points_from_xy(x, y, z=z, crs=input_coords_crs)
             else:
-                df_no_geometry["geometry"] = dask.array.from_array(np.stack(gpd.points_from_xy(x, y, crs=input_coords_crs)))
+                geometry = gpd.points_from_xy(x, y, crs=input_coords_crs)
         elif geometry_source.lower() in geometryList:
             pass
         else:
@@ -152,12 +155,17 @@ def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELE
                         Should be one of 'coords' (if x, y (and/or z) columns with coordintes used), 
                         'wkt' (if column with wkt string used), or 
                         'geometry' (if column with shapely geometry objects used, as with a GeoDataFrame)""")
-            
-        gdf = gpd.GeoDataFrame(df_no_geometry, geometry='geometry', crs=input_coords_crs).to_crs(output_crs)
+        
+        if parallel_processing:
+            noPartitions = int(np.ceil(df_no_geometry.shape[0].compute() / 10000))
+            gdf = dask_geopandas.from_geopandas(gpd.GeoDataFrame(df_no_geometry, geometry=geometry, crs=input_coords_crs).to_crs(output_crs), npartitions=noPartitions)
+        else:
+            gdf = gpd.GeoDataFrame(df_no_geometry, geometry=geometry, crs=input_coords_crs).to_crs(output_crs)
+
     return gdf
 
 #Clip a geodataframe to a study area
-def clip_gdf2study_area(study_area, gdf, log=False, verbose=False):
+def clip_gdf2study_area(study_area, gdf, parallel_processing=False, log=False, verbose=False):
     """Clips dataframe to only include things within study area.
 
     Parameters
@@ -184,8 +192,14 @@ def clip_gdf2study_area(study_area, gdf, log=False, verbose=False):
         return gdf
     else:
         studyArea_proj = study_area.to_crs(gdf.crs).copy()
-        gdfClip = gpd.clip(gdf, studyArea_proj) #Easier to project just study area to ensure data fit
-        gdfClip.reset_index(inplace=True, drop=True) #Reset index
+
+        if parallel_processing:
+            gdfClip = dask_geopandas.clip(gdf, studyArea_proj)
+            gdfClip = gdfClip.reset_index(drop=True) #Reset index
+
+        else:
+            gdfClip = gpd.clip(gdf, studyArea_proj) #Easier to project just study area to ensure data fit
+            gdfClip = gdfClip.reset_index(drop=True) #Reset index
     
     return gdfClip
 
