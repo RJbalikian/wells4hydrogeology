@@ -193,6 +193,7 @@ def run(well_data,
     #Convert well_data_xyz to have geometry
     coords2geometry_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.coords2geometry).parameters.keys()}
     well_data_xyz = w4h.coords2geometry(df_no_geometry=well_data_xyz, xcol=xcol, ycol=ycol, zcol=zcol, parallel_processing=parallel_processing, verbose=verbose, log=log, **coords2geometry_kwargs)
+    print('postcoords2geometry', well_data_xyz.columns)
 
     #Get Study area
     read_study_area_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.read_study_area).parameters.keys()}
@@ -205,9 +206,9 @@ def run(well_data,
 
     clip_gdf2study_area_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.clip_gdf2study_area).parameters.keys()}
     well_data_xyz = w4h.clip_gdf2study_area(study_area=studyAreaIN, gdf=well_data_xyz, parallel_processing=parallel_processing, verbose=verbose, log=log,**clip_gdf2study_area_kwargs)
+
     #Get surfaces and grid(s)
     read_grid_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.read_grid).parameters.keys()}
-
     modelGridPath = model_grid
     surfaceElevPath = surf_elev_grid
     bedrockElevPath = bedrock_elev_grid

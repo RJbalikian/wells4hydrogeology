@@ -10,6 +10,7 @@ import os
 import warnings
 
 import dask
+import dask.dataframe
 import dask_geopandas
 import rioxarray as rxr
 import xarray as xr
@@ -139,8 +140,6 @@ def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELE
             df_no_geometry.drop(wkt_col, axis=1, inplace=True) #Drop WKT column
 
         elif geometry_source.lower() in coords_list:#coords = pd.concat([y, x], axis=1)
-            print(xcol)
-            print(df_no_geometry.columns)
             x = np.stack(df_no_geometry[xcol])
             y = np.stack(df_no_geometry[ycol])
             if use_z:
@@ -157,10 +156,15 @@ def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELE
                         'geometry' (if column with shapely geometry objects used, as with a GeoDataFrame)""")
         
         if parallel_processing:
-            noPartitions = int(np.ceil(df_no_geometry.shape[0].compute() / 10000))
-            gdf = dask_geopandas.from_geopandas(gpd.GeoDataFrame(df_no_geometry, geometry=geometry, crs=input_coords_crs).to_crs(output_crs), npartitions=noPartitions)
+            geometry = gpd.GeoDataFrame({'geometry':geometry}, geometry='geometry', crs=input_coords_crs)
+            noPartitions = df_no_geometry.npartitions
+            geometry_dd = dask.dataframe.from_pandas(geometry, npartitions=noPartitions)
+            df_no_geometry = dask.dataframe.concat([df_no_geometry, geometry_dd])
+            gdf = dask_geopandas.from_dask_dataframe(df_no_geometry, geometry=geometry['geometry']).to_crs(output_crs)
+
         else:
             gdf = gpd.GeoDataFrame(df_no_geometry, geometry=geometry, crs=input_coords_crs).to_crs(output_crs)
+        print('after', gdf.columns)
 
     return gdf
 
