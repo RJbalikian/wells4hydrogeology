@@ -193,7 +193,6 @@ def run(well_data,
     #Convert well_data_xyz to have geometry
     coords2geometry_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.coords2geometry).parameters.keys()}
     well_data_xyz = w4h.coords2geometry(df_no_geometry=well_data_xyz, xcol=xcol, ycol=ycol, zcol=zcol, parallel_processing=parallel_processing, verbose=verbose, log=log, **coords2geometry_kwargs)
-    print('postcoords2geometry', well_data_xyz.columns)
 
     #Get Study area
     read_study_area_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.read_study_area).parameters.keys()}
@@ -247,14 +246,14 @@ def run(well_data,
     wildcardTerms = w4h.read_dictionary_terms(dict_file=wildcardTermsPATH, log=log, **read_dictionary_terms_kwargs)
 
     #Clean up dictionary terms
-    specTerms.drop_duplicates(subset='DESCRIPTION', inplace=True)
-    specTerms.reset_index(inplace=True, drop=True)
+    specTerms = specTerms.drop_duplicates(subset='DESCRIPTION')
+    specTerms = specTerms.reset_index(drop=True)
 
-    startTerms.drop_duplicates(subset='DESCRIPTION', inplace=True)
-    startTerms.reset_index(inplace=True, drop=True)
+    startTerms = startTerms.drop_duplicates(subset='DESCRIPTION')
+    startTerms = startTerms.reset_index(drop=True)
 
-    wildcardTerms.drop_duplicates(subset='DESCRIPTION', inplace=True)
-    wildcardTerms.reset_index(inplace=True, drop=True)
+    wildcardTerms = wildcardTerms.drop_duplicates(subset='DESCRIPTION')
+    wildcardTerms = wildcardTerms.reset_index(drop=True)
 
     if verbose:
         print('\tSearch terms to be used:')

@@ -44,7 +44,7 @@ def specific_define(df, terms_df, description_col='FORMATION', terms_col='DESCRI
         verbose_print(specific_define, locals(), exclude_params=['df', 'terms_df'])
 
     if description_col != terms_col:
-        terms_df.rename(columns={terms_col:description_col}, inplace=True)
+        terms_df = terms_df.rename(columns={terms_col:description_col})
         terms_col = description_col
 
     df[description_col] = df[description_col].astype(str)
@@ -55,11 +55,11 @@ def specific_define(df, terms_df, description_col='FORMATION', terms_col='DESCRI
     #df['FORMATION'] = df['FORMATION'].str.strip(['.,:?\t\s'])
     #terms_df['FORMATION'] = terms_df['FORMATION'].str.strip(['.,:?\t\s'])
 
-    terms_df.drop_duplicates(subset=terms_col, keep='last', inplace=True)
-    terms_df.reset_index(drop=True, inplace=True)
+    terms_df = terms_df.drop_duplicates(subset=terms_col, keep='last')
+    terms_df = terms_df.reset_index(drop=True)
     
     df_Interps = pd.merge(left=df, right=terms_df.set_index(terms_col), on=description_col, how='left')
-    df_Interps.rename(columns={description_col:'FORMATION'}, inplace=True)
+    df_Interps = df_Interps.rename(columns={description_col:'FORMATION'})
     df_Interps['BEDROCK_FLAG'] = df_Interps['LITHOLOGY'] == 'BEDROCK'
     
     if verbose:
