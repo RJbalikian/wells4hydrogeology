@@ -263,10 +263,11 @@ def sample_raster_points(raster=None, points_df=None, well_id_col='API_NUMBER', 
     yCOLOUT = ycol+'_PROJ'
     points_df[xCOLOUT] = points_df['geometry'].x
     points_df[yCOLOUT] = points_df['geometry'].y
-    xData = np.array(points_df[xCOLOUT].values)
-    yData = np.array(points_df[yCOLOUT].values)
+    
+    #xData = np.array(points_df[xCOLOUT].values)
+    #yData = np.array(points_df[yCOLOUT].values)
     zData = []
-    zID = []
+    #zID = []
     zInd = []
 
     # Get unique well values to reduce sampling time

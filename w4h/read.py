@@ -454,7 +454,7 @@ def get_search_terms(spec_path=str(repoDir)+'/resources/', spec_glob_pattern='*S
     return specTermsPath, startTermsPath, wilcardTermsPath
 
 #Read files into pandas dataframes
-def read_dictionary_terms(dict_file=None, id_col='ID', search_col='DESCRIPTION', definition_col='LITHOLOGY', class_flag_col='CLASS_FLAG', dictionary_type=None, class_flag=6, rem_extra_cols=True, verbose=False, log=False):
+def read_dictionary_terms(dict_file=None, id_col='ID', search_col='DESCRIPTION', definition_col='LITHOLOGY', class_flag_col='CLASS_FLAG', dictionary_type=None, class_flag=6, rem_extra_cols=True, parallel_processing=False, verbose=False, log=False):
     """Function to read dictionary terms from file into pandas dataframe
 
     Parameters
@@ -485,7 +485,7 @@ def read_dictionary_terms(dict_file=None, id_col='ID', search_col='DESCRIPTION',
     """
     
     if dict_file is None:
-        dict_file=w4h.get_resources()['LithologyDict_Exact']
+        dict_file = w4h.get_resources()['LithologyDict_Exact']
     
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
@@ -500,10 +500,16 @@ def read_dictionary_terms(dict_file=None, id_col='ID', search_col='DESCRIPTION',
     if isinstance(dict_file, (tuple, list)):
         for i, f in enumerate(dict_file):
             if not f.exists():
-                df = pd.DataFrame(columns=['ID', 'DESCRIPTION', 'LITHOLOGY', 'CLASS_FLAGS'])
+                if parallel_processing:
+                    df = dask.dataframe.from_dict({"ID":[], "DESCRIPTION":[], "LITHOLOGY":[], "CLASS_FLAGS":[]}, npartitions=0)
+                else:
+                    df = pd.DataFrame(columns=['ID', 'DESCRIPTION', 'LITHOLOGY', 'CLASS_FLAGS'])
                 dict_terms.append(df)
             else:
-                dict_terms.append(pd.read_csv(f))
+                if parallel_processing:
+                    dict_terms.append(dask.dataframe.read_csv(f))
+                else:
+                    dict_terms.append(pd.read_csv(f))
 
             if id_col in dict_terms[i].columns:
                 dict_terms[i].set_index(id_col, drop=True, inplace=True)
@@ -513,9 +519,13 @@ def read_dictionary_terms(dict_file=None, id_col='ID', search_col='DESCRIPTION',
         
         dict_file = pathlib.Path(dict_file)
         if dict_file.exists() and dict_file.is_file():
-            dict_terms.append(pd.read_csv(dict_file, low_memory=False))
+            if parallel_processing:
+                dict_terms.append(dask.dataframe.read_csv(dict_file, dtype=object))
+            else:
+                dict_terms.append(pd.read_csv(dict_file, low_memory=False))
+            
             if id_col in dict_terms[-1].columns:
-                dict_terms[-1].set_index(id_col, drop=True, inplace=True)
+                dict_terms[-1] = dict_terms[-1].set_index(id_col, drop=True)
             dict_file = [dict_file]
         else:
             print(f'ERROR: dict_file ({dict_file}) does not exist.')
@@ -548,20 +558,21 @@ def read_dictionary_terms(dict_file=None, id_col='ID', search_col='DESCRIPTION',
 
         #Rename columns so it is consistent through rest of code
         if search_col != 'DESCRIPTION':
-            d.rename(columns={search_col:'DESCRIPTION'}, inplace=True)
+            d = d.rename(columns={search_col:'DESCRIPTION'})
         if definition_col != 'LITHOLOGY':
-            d.rename(columns={definition_col:'LITHOLOGY'}, inplace=True)
+            d = d.rename(columns={definition_col:'LITHOLOGY'})
         if class_flag_col != 'CLASS_FLAG':
-            d.rename(columns={class_flag_col:'CLASS_FLAG'}, inplace=True)
+            d = d.rename(columns={class_flag_col:'CLASS_FLAG'})
 
         #Cast all columns as type str, if not already
-        for i in range(0, np.shape(d)[1]):
-            if d.iloc[:,i].name in list(dict_termDtypes.keys()):
-                d.iloc[:,i] = d.iloc[:,i].astype(dict_termDtypes[d.iloc[:,i].name])
+        d = d.astype(dict_termDtypes)
+        #for i in range(0, np.shape(d)[1]):
+        #    if d.iloc[:,i].name in list(dict_termDtypes.keys()):
+        #        d.iloc[:,i] = d.iloc[:,i].astype(dict_termDtypes[d.iloc[:,i].name])
         
         #Delete duplicate definitions
-        d.drop_duplicates(subset='DESCRIPTION',inplace=True) #Apparently, there are some duplicate definitions, which need to be deleted first
-        d.reset_index(inplace=True, drop=True)
+        d = d.drop_duplicates(subset='DESCRIPTION') #Apparently, there are some duplicate definitions, which need to be deleted first
+        d = d.reset_index(drop=True)
 
         #Whether to remove extra columns that aren't needed from dataframe
         if rem_extra_cols:

@@ -167,13 +167,12 @@ def run(well_data,
 
     #Get pandas dataframes from input
     read_raw_txt_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.read_raw_csv).parameters.keys()}
-    if parallel_processing:
-        if 'data_dtypes' not in read_raw_txt_kwargs.keys():
-            read_raw_txt_kwargs['data_dtypes'] = w4h.read_dict(w4h.get_resources()['well_data_dtypes'])
-        if 'metadata_dtypes' not in read_raw_txt_kwargs.keys():
-            read_raw_txt_kwargs['metadata_dtypes'] = w4h.read_dict(w4h.get_resources()['metadata_dtypes'])
-        
-        well_data_IN, metadata_IN = w4h.read_raw_csv(data_filepath=well_dataPath, metadata_filepath=metadataPath, verbose=verbose, parallel_processing=parallel_processing, log=log, **read_raw_txt_kwargs)
+    if 'data_dtypes' not in read_raw_txt_kwargs.keys():
+        read_raw_txt_kwargs['data_dtypes'] = w4h.read_dict(w4h.get_resources()['well_data_dtypes'])
+    if 'metadata_dtypes' not in read_raw_txt_kwargs.keys():
+        read_raw_txt_kwargs['metadata_dtypes'] = w4h.read_dict(w4h.get_resources()['metadata_dtypes'])
+    
+    well_data_IN, metadata_IN = w4h.read_raw_csv(data_filepath=well_dataPath, metadata_filepath=metadataPath, verbose=verbose, parallel_processing=parallel_processing, log=log, **read_raw_txt_kwargs)
     #Functions to read data into dataframes. Also excludes extraneous columns, and drops header data with no location information
 
     #Define data types (file will need to be udpated)
@@ -222,17 +221,17 @@ def run(well_data,
     well_data_xyz = w4h.add_control_points(df_without_control=well_data_xyz, xcol=xcol, ycol=ycol, zcol=zcol, top_col=top_col, bottom_col=bottom_col, description_col=description_col, verbose=verbose, log=log, **add_control_points_kwargs)
 
     #Clean up data
-    well_data_xyz = w4h.remove_nonlocated(df_with_locations=well_data_xyz, log=log, verbose=verbose)
-    well_data_xyz = w4h.remove_no_topo(df_with_topo=well_data_xyz, zcol=zcol, verbose=verbose, log=log)
+    well_data_xyz = w4h.remove_nonlocated(df_with_locations=well_data_xyz, parallel_processing=parallel_processing, log=log, verbose=verbose)
+    well_data_xyz = w4h.remove_no_topo(df_with_topo=well_data_xyz, zcol=zcol, parallel_processing=parallel_processing, verbose=verbose, log=log)
 
     remove_no_depth_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.remove_no_depth).parameters.keys()}
-    well_data_xyz = w4h.remove_no_depth(well_data_xyz, verbose=verbose, top_col=top_col, bottom_col=bottom_col, log=log, **remove_no_depth_kwargs) #Drop records with no depth information
+    well_data_xyz = w4h.remove_no_depth(well_data_xyz, top_col=top_col, bottom_col=bottom_col, parallel_processing=parallel_processing, verbose=verbose, log=log, **remove_no_depth_kwargs) #Drop records with no depth information
 
     remove_bad_depth_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.remove_bad_depth).parameters.keys()}
-    well_data_xyz = w4h.remove_bad_depth(well_data_xyz, verbose=verbose, top_col=top_col, bottom_col=bottom_col, depth_type=depth_type, log=log, **remove_bad_depth_kwargs)#Drop records with bad depth information (i.e., top depth > bottom depth) (Also calculates thickness of each record)
+    well_data_xyz = w4h.remove_bad_depth(well_data_xyz, top_col=top_col, bottom_col=bottom_col, depth_type=depth_type, parallel_processing=parallel_processing, verbose=verbose, log=log, **remove_bad_depth_kwargs)#Drop records with bad depth information (i.e., top depth > bottom depth) (Also calculates thickness of each record)
 
     remove_no_formation_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.remove_no_description).parameters.keys()}
-    well_data_xyz = w4h.remove_no_description(well_data_xyz, description_col=description_col, verbose=verbose, log=log, **remove_no_formation_kwargs)
+    well_data_xyz = w4h.remove_no_description(well_data_xyz, description_col=description_col, parallel_processing=parallel_processing, verbose=verbose, log=log, **remove_no_formation_kwargs)
 
     #CLASSIFICATION
     #Read dictionary definitions and classify
@@ -241,9 +240,9 @@ def run(well_data,
     read_dictionary_terms_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.read_dictionary_terms).parameters.keys()}
     if 'class_flag' in read_dictionary_terms_kwargs.keys():
         del read_dictionary_terms_kwargs['class_flag'] #This is specific to an invidiual dict terms file, so don't want to use for all
-    specTerms = w4h.read_dictionary_terms(dict_file=specTermsPATH, log=log, **read_dictionary_terms_kwargs)
-    startTerms = w4h.read_dictionary_terms(dict_file=startTermsPATH, log=log, **read_dictionary_terms_kwargs)
-    wildcardTerms = w4h.read_dictionary_terms(dict_file=wildcardTermsPATH, log=log, **read_dictionary_terms_kwargs)
+    specTerms = w4h.read_dictionary_terms(dict_file=specTermsPATH, parallel_processing=parallel_processing, verbose=verbose, log=log, **read_dictionary_terms_kwargs)
+    startTerms = w4h.read_dictionary_terms(dict_file=startTermsPATH, parallel_processing=parallel_processing, verbose=verbose, log=log, **read_dictionary_terms_kwargs)
+    wildcardTerms = w4h.read_dictionary_terms(dict_file=wildcardTermsPATH, parallel_processing=parallel_processing, verbose=verbose, log=log, **read_dictionary_terms_kwargs)
 
     #Clean up dictionary terms
     specTerms = specTerms.drop_duplicates(subset='DESCRIPTION')
@@ -255,32 +254,42 @@ def run(well_data,
     wildcardTerms = wildcardTerms.drop_duplicates(subset='DESCRIPTION')
     wildcardTerms = wildcardTerms.reset_index(drop=True)
 
+
     if verbose:
+        noSpecTerms = specTerms.shape[0]
+        noStartTerms = startTerms.shape[0]
+        noWildcardTerms = wildcardTerms.shape[0]
+
+        if parallel_processing:
+            noSpecTerms = noSpecTerms.compute()
+            noStartTerms = noStartTerms.compute()
+            noWildcardTerms = noWildcardTerms.compute()
+
         print('\tSearch terms to be used:')
-        print('\t\t {} exact match term/definition pairs')
-        print('\t\t {} starting match term/definition pairs')
-        print('\t\t {} wildcard match term/definition pairs')
+        print(f'\t\t {noSpecTerms} exact match term/definition pairs')
+        print(f'\t\t {noStartTerms} starting match term/definition pairs')
+        print(f'\t\t {noWildcardTerms} wildcard match term/definition pairs')
 
     #CLASSIFICATIONS
     #Exact match classifications
-    well_data_xyz = w4h.specific_define(well_data_xyz, terms_df=specTerms, description_col=description_col, verbose=verbose, log=log)
-    
+    well_data_xyz = w4h.specific_define(well_data_xyz, terms_df=specTerms, description_col=description_col, parallel_processing=parallel_processing, verbose=verbose, log=log)
+
     #.startswith classifications
     if lith_dict_start is not None:
         classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
-        searchDF = w4h.start_define(df=searchDF, terms_df=startTerms, description_col=description_col, verbose=verbose, log=log)
-        well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
+        searchDF = w4h.start_define(df=searchDF, terms_df=startTerms, description_col=description_col, parallel_processing=False, verbose=verbose, log=log)
+        well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF, parallel_processing=parallel_processing) #UPDATE: Needed? ***
 
     #wildcard/any substring match classifications
     if lith_dict_wildcard is not None:
         classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
         searchDF = w4h.wildcard_define(df=searchDF, terms_df=wildcardTerms, description_col=description_col, verbose=verbose, log=log)
-        well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
+        well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF, parallel_processing=parallel_processing) #UPDATE: Needed? ***    
 
     #Depth classification
     classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
-    searchDF = w4h.depth_define(df=searchDF, thresh=550, verbose=verbose, log=log)
-    well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***
+    searchDF = w4h.depth_define(df=searchDF, thresh=550, parallel_processing=parallel_processing, verbose=verbose, log=log)
+    well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF, parallel_processing=parallel_processing) #UPDATE: Needed? ***
     
     #Fill unclassified data
     well_data_xyz = w4h.fill_unclassified(well_data_xyz, classification_col='CLASS_FLAG')
@@ -293,9 +302,9 @@ def run(well_data,
     #Sort dataframe to prepare for next steps
     #well_data_xyz = w4h.sort_dataframe(df=well_data_xyz, sort_cols=['API_NUMBER','TOP'], remove_nans=True)
     well_data_xyz = well_data_xyz.sort_values(by=[well_id_col, top_col])
-    well_data_xyz.reset_index(inplace=True, drop=True)
+    well_data_xyz = well_data_xyz.reset_index(drop=True)
     #UPDATE: Option to remove nans?
-    well_data_xyz = well_data_xyz[pd.notna(well_data_xyz["LITHOLOGY"])]
+    well_data_xyz = well_data_xyz[well_data_xyz["LITHOLOGY"].notnull()]
 
     #Analyze Surface(s) and grid(s)
     bedrockGrid, surfaceGrid = w4h.align_rasters(grids_unaligned=[bedrockElevGridIN, surfaceElevGridIN], model_grid=modelGrid, no_data_val_grid=0, log=log)

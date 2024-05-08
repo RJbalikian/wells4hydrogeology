@@ -9,7 +9,7 @@ import pandas as pd
 from w4h import logger_function, verbose_print
 
 # This function removes all data from the downholeData table where there is no location information (in the headerData table). This includes elevation info too
-def remove_nonlocated(df_with_locations, xcol='LONGITUDE', ycol='LATITUDE', no_data_val_table='', verbose=False, log=False):
+def remove_nonlocated(df_with_locations, xcol='LONGITUDE', ycol='LATITUDE', no_data_val_table='', parallel_processing=False, verbose=False, log=False):
     """Function to remove wells and well intervals where there is no location information
 
     Parameters
@@ -40,16 +40,21 @@ def remove_nonlocated(df_with_locations, xcol='LONGITUDE', ycol='LATITUDE', no_d
     
     if verbose:
         after = df_with_locations.shape[0]
+        
+        if parallel_processing:
+            after = after.compute()
+            before = before.compute()
+
         print('\tRemoved well records with no location information. ')
         print("\t\tNumber of records before removing: "+str(before))
         print("\t\tNumber of records after removing: "+str(after))
-        print("\t{} wells records removed without location information".format(before-after))
+        print(f"\t{before-after} wells records removed without location information")
 
     return df_with_locations
 
 # Function to remove data (intended for headerData) without surface topography information
 # THIS ASSUMES AND SHOULD ONLY BE RUN AFTER ALL DESIRED SURFACE TOPO DATASETS HAVE BEEN MERGED/ADDED
-def remove_no_topo(df_with_topo, zcol='ELEVATION', no_data_val_table='', verbose=False, log=False):
+def remove_no_topo(df_with_topo, zcol='ELEVATION', no_data_val_table='', parallel_processing=False, verbose=False, log=False):
     """Function to remove wells that do not have topography data (needed for layer selection later).
 
     This function is intended to be run on the metadata table after elevations have attempted to been added.
@@ -84,15 +89,20 @@ def remove_no_topo(df_with_topo, zcol='ELEVATION', no_data_val_table='', verbose
     
     if verbose:
         after = df_with_topo.shape[0]
+
+        if parallel_processing:
+            before = before.compute()
+            after = after.compute()
+
         print('\tRemoved well records with no surface elevation information. ')
         print("\t\tNumber of records before removing: "+str(before))
         print("\t\tNumber of records after removing: "+str(after))
-        print("\t{} wells records removed without surface elevation information".format(before-after))
+        print(f"\t{before-after} wells records removed without surface elevation information")
     
     return df_with_topo
 
 # This function drops all records in the downholedata with no depth information (either top or bottom depth of well interval)
-def remove_no_depth(df_with_depth, top_col='TOP', bottom_col='BOTTOM', no_data_val_table='', verbose=False, log=False):
+def remove_no_depth(df_with_depth, top_col='TOP', bottom_col='BOTTOM', no_data_val_table='', parallel_processing=False, verbose=False, log=False):
     """Function to remove well intervals with no depth information
 
     Parameters
@@ -131,18 +141,23 @@ def remove_no_depth(df_with_depth, top_col='TOP', bottom_col='BOTTOM', no_data_v
     df_with_depth = df_with_depth.dropna(subset=[top_col])
     df_with_depth = df_with_depth.dropna(subset=[bottom_col])
     df_with_depth = df_with_depth.reset_index(drop=True) #Reset index
-  
+
     if verbose:
         after = df_with_depth.shape[0]
+
+        if parallel_processing:
+            before = before.compute()
+            after = after.compute()
+
         print('\tRemoved well records with no depth information. ')
         print("\t\tNumber of records before removing: "+str(before))
         print("\t\tNumber of records after removing: "+str(after))
-        print("\t{} well records removed without depth information".format(before-after))
+        print(f"\t{before-after} well records removed without depth information")
     
     return df_with_depth
 
 # This function drops all records in downholeData with bad depth information (where the bottom of a record is nearer to the surface than the top)
-def remove_bad_depth(df_with_depth, top_col='TOP', bottom_col='BOTTOM', depth_type='depth', verbose=False, log=False):
+def remove_bad_depth(df_with_depth, top_col='TOP', bottom_col='BOTTOM', depth_type='depth', parallel_processing=False, verbose=False, log=False):
     """Function to remove all records in the dataframe with well interpretations where the depth information is bad (i.e., where the bottom of the record is neerer to the surface than the top)
 
     Parameters
@@ -179,15 +194,20 @@ def remove_bad_depth(df_with_depth, top_col='TOP', bottom_col='BOTTOM', depth_ty
 
     if verbose:
         after = df_with_depth.shape[0]
+
+        if parallel_processing:
+            before = before.compute()
+            after = after.compute()
+        
         print('\tRemoved well records with obviously bad depth information. ')
         print("\t\tNumber of records before removing: "+str(before))
         print("\t\tNumber of records after removing: "+str(after))
-        print("\t{} well records removed without depth information".format(before-after))
+        print(f"\t{before-after} well records removed without depth information")
 
     return df_with_depth
 
 # This function drops all records in downholeData with no formation in formation in the description fiel
-def remove_no_description(df_with_descriptions, description_col='FORMATION', no_data_val_table='', verbose=False, log=False):
+def remove_no_description(df_with_descriptions, description_col='FORMATION', no_data_val_table='', parallel_processing=False, verbose=False, log=False):
     """Function that removes all records in the dataframe containing the well descriptions where no description is given.
 
     Parameters
@@ -221,9 +241,14 @@ def remove_no_description(df_with_descriptions, description_col='FORMATION', no_
 
     if verbose:
         after = df_with_descriptions.shape[0]
+
+        if parallel_processing:
+            before = before.compute()
+            after = after.compute()
+
         print('\tRemoved well records without geologic descriptions. ')
         print("\t\tNumber of records before removing: "+str(before))
         print("\t\tNumber of records after removing: "+str(after))
-        print("\t{} well records removed without geologic descriptions".format(before-after))
+        print(f"\t{before-after} well records removed without geologic descriptions")
 
     return df_with_descriptions
