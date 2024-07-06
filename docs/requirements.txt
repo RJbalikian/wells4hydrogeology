@@ -12,3 +12,5 @@ markdown
 pytest
 flake8
 wells4hydrogeology
+dask
+dask-geopandas
