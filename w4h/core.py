@@ -244,7 +244,7 @@ def run(well_data,
     startTerms = w4h.read_dictionary_terms(dict_file=startTermsPATH, parallel_processing=parallel_processing, verbose=verbose, log=log, **read_dictionary_terms_kwargs)
     wildcardTerms = w4h.read_dictionary_terms(dict_file=wildcardTermsPATH, parallel_processing=parallel_processing, verbose=verbose, log=log, **read_dictionary_terms_kwargs)
 
-    #Clean up dictionary terms
+    # Clean up dictionary terms
     specTerms = specTerms.drop_duplicates(subset='DESCRIPTION')
     specTerms = specTerms.reset_index(drop=True)
 
@@ -254,24 +254,23 @@ def run(well_data,
     wildcardTerms = wildcardTerms.drop_duplicates(subset='DESCRIPTION')
     wildcardTerms = wildcardTerms.reset_index(drop=True)
 
-
     if verbose:
         noSpecTerms = specTerms.shape[0]
         noStartTerms = startTerms.shape[0]
         noWildcardTerms = wildcardTerms.shape[0]
 
         if parallel_processing:
-            noSpecTerms = noSpecTerms.compute()
-            noStartTerms = noStartTerms.compute()
-            noWildcardTerms = noWildcardTerms.compute()
+            noSpecTerms = noSpecTerms.persist()
+            noStartTerms = noStartTerms.persist()
+            noWildcardTerms = noWildcardTerms.persist()
 
         print('\tSearch terms to be used:')
         print(f'\t\t {noSpecTerms} exact match term/definition pairs')
         print(f'\t\t {noStartTerms} starting match term/definition pairs')
         print(f'\t\t {noWildcardTerms} wildcard match term/definition pairs')
 
-    #CLASSIFICATIONS
-    #Exact match classifications
+    # CLASSIFICATIONS
+    # Exact match classifications
     well_data_xyz = w4h.specific_define(well_data_xyz, terms_df=specTerms, description_col=description_col, parallel_processing=parallel_processing, verbose=verbose, log=log)
 
     #.startswith classifications
@@ -286,24 +285,24 @@ def run(well_data,
         searchDF = w4h.wildcard_define(df=searchDF, terms_df=wildcardTerms, description_col=description_col, verbose=verbose, log=log)
         well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF, parallel_processing=parallel_processing) #UPDATE: Needed? ***    
 
-    #Depth classification
+    # Depth classification
     classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
     searchDF = w4h.depth_define(df=searchDF, thresh=550, parallel_processing=parallel_processing, verbose=verbose, log=log)
     well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF, parallel_processing=parallel_processing) #UPDATE: Needed? ***
     
-    #Fill unclassified data
+    # Fill unclassified data
     well_data_xyz = w4h.fill_unclassified(well_data_xyz, classification_col='CLASS_FLAG')
 
-    #Add target interpratations
+    # Add target interpratations
     read_lithologies_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.read_lithologies).parameters.keys()}
     targetInterpDF = w4h.read_lithologies(lith_file=target_dict, log=log, **read_lithologies_kwargs)
     well_data_xyz = w4h.merge_lithologies(well_data_df=well_data_xyz, targinterps_df=targetInterpDF, target_col='TARGET', target_class='bool')
 
-    #Sort dataframe to prepare for next steps
-    #well_data_xyz = w4h.sort_dataframe(df=well_data_xyz, sort_cols=['API_NUMBER','TOP'], remove_nans=True)
+    # Sort dataframe to prepare for next steps
+    # well_data_xyz = w4h.sort_dataframe(df=well_data_xyz, sort_cols=['API_NUMBER','TOP'], remove_nans=True)
     well_data_xyz = well_data_xyz.sort_values(by=[well_id_col, top_col])
     well_data_xyz = well_data_xyz.reset_index(drop=True)
-    #UPDATE: Option to remove nans?
+    # UPDATE: Option to remove nans?
     well_data_xyz = well_data_xyz[well_data_xyz["LITHOLOGY"].notnull()]
 
     #Analyze Surface(s) and grid(s)
@@ -322,7 +321,7 @@ def run(well_data,
         del layer_target_thick_kwargs['return_all'] #This needs to be set to False, so we don't want it reading in twice
 
     resdf = w4h.layer_target_thick(df=well_data_xyz, layers=layers, return_all=False, export_dir=export_dir, depth_top_col=top_col, depth_bot_col=bottom_col, log=log, **layer_target_thick_kwargs)
-    
+
     layer_interp_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.layer_interp).parameters.keys()}
     layers_data = w4h.layer_interp(points=resdf, grid=modelGrid, layers=9, verbose=verbose, log=log, **layer_interp_kwargs)
 

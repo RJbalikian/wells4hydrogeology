@@ -370,7 +370,8 @@ def define_dtypes(undefined_df, datatypes=None, verbose=False, log=False):
 
             datatypes = read_dict(file=datatypes)
             for key in datatypes:
-                dfout[key] = dfout[key].astype(datatypes[key])
+                if key in dfout.columns:
+                    dfout[key] = dfout[key].astype(datatypes[key])
 
         elif isinstance(datatypes, dict):
             if verbose:

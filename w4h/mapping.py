@@ -30,7 +30,8 @@ from w4h import logger_function, verbose_print
 
 lidarURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
 
-#Read study area shapefile (or other file) into geopandas
+
+# Read study area shapefile (or other file) into geopandas
 def read_study_area(study_area=None, output_crs='EPSG:5070', buffer=None, return_original=False, log=False, verbose=False, **read_file_kwargs):
     """Read study area geospatial file into geopandas
 
@@ -93,7 +94,8 @@ def read_study_area(study_area=None, output_crs='EPSG:5070', buffer=None, return
         return studyAreaIN, studyAreaNoBuffer
     return studyAreaIN
 
-#Convert coords in columns to geometry in geopandas dataframe
+
+# Convert coords in columns to geometry in geopandas dataframe
 def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', 
                     input_coords_crs='EPSG:4269', output_crs='EPSG:5070', use_z=False, 
                     wkt_col='WKT', geometry_source='coords', parallel_processing=False, verbose=False, log=False):
@@ -156,7 +158,7 @@ def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELE
                         'geometry' (if column with shapely geometry objects used, as with a GeoDataFrame)""")
         
         if parallel_processing:
-            geometry = gpd.GeoDataFrame({'geometry':geometry}, geometry='geometry', crs=input_coords_crs)
+            geometry = gpd.GeoDataFrame({'geometry': geometry}, geometry='geometry', crs=input_coords_crs)
             noPartitions = df_no_geometry.npartitions
             geometry_dd = dask.dataframe.from_pandas(geometry, npartitions=noPartitions)
             df_no_geometry = dask.dataframe.concat([df_no_geometry, geometry_dd])
