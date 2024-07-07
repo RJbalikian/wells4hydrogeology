@@ -133,7 +133,7 @@ def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELE
             from shapely import wkt
             df_no_geometry['geometry'] = df_no_geometry[wkt_col].apply(wkt.loads)
             df_no_geometry.drop(wkt_col, axis=1, inplace=True) #Drop WKT column
-
+            geometry = df_no_geometry['geometry']
         elif geometry_source.lower() in coords_list:#coords = pd.concat([y, x], axis=1)
             x = np.stack(df_no_geometry[xcol])
             y = np.stack(df_no_geometry[ycol])
@@ -143,14 +143,14 @@ def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELE
             else:
                 geometry = gpd.points_from_xy(x, y, crs=input_coords_crs)
         elif geometry_source.lower() in geometryList:
-            pass
+            geometry = df_no_geometry['geometry']
         else:
             warnings.warn(message=f"""The parameter geometry_source={geometry_source} is not recognized.
                         Should be one of 'coords' (if x, y (and/or z) columns with coordintes used), 
                         'wkt' (if column with wkt string used), or 
                         'geometry' (if column with shapely geometry objects used, as with a GeoDataFrame)""")
             
-            gdf = gpd.GeoDataFrame(df_no_geometry, geometry=geometry, crs=input_coords_crs).to_crs(output_crs)
+        gdf = gpd.GeoDataFrame(df_no_geometry, geometry=geometry, crs=input_coords_crs).to_crs(output_crs)
     return gdf
 
 #Clip a geodataframe to a study area

@@ -166,10 +166,10 @@ def run(well_data,
 
     #Get pandas dataframes from input
     read_raw_txt_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.read_raw_csv).parameters.keys()}
-    if 'data_dtypes' not in read_raw_txt_kwargs.keys():
-        read_raw_txt_kwargs['data_dtypes'] = w4h.read_dict(w4h.get_resources()['well_data_dtypes'])
-    if 'metadata_dtypes' not in read_raw_txt_kwargs.keys():
-        read_raw_txt_kwargs['metadata_dtypes'] = w4h.read_dict(w4h.get_resources()['metadata_dtypes'])
+    #if 'data_dtypes' not in read_raw_txt_kwargs.keys():
+    #    read_raw_txt_kwargs['data_dtypes'] = w4h.read_dict(w4h.get_resources()['well_data_dtypes'])
+    #if 'metadata_dtypes' not in read_raw_txt_kwargs.keys():
+    #    read_raw_txt_kwargs['metadata_dtypes'] = w4h.read_dict(w4h.get_resources()['metadata_dtypes'])
     well_data_IN, metadata_IN = w4h.read_raw_csv(data_filepath=well_dataPath, metadata_filepath=metadataPath, verbose=verbose, log=log, **read_raw_txt_kwargs)
     # Functions to read data into dataframes. Also excludes extraneous columns, and drops header data with no location information
 

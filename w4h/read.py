@@ -353,7 +353,9 @@ def define_dtypes(undefined_df, datatypes=None, verbose=False, log=False):
                 return dfout
 
             datatypes = read_dict(file=datatypes)
-            dfout = dfout.astype(datatypes)
+            for key in datatypes.keys():
+                if key in dfout.columns:
+                    dfout[key] = dfout[key].astype(datatypes[key])
 
         elif isinstance(datatypes, dict):
             if verbose:
@@ -363,11 +365,6 @@ def define_dtypes(undefined_df, datatypes=None, verbose=False, log=False):
             if verbose:
                 print('ERROR: datatypes must be either dict or a filepath, not {}'.format(type(datatypes)))
             return dfout
-        
-        #This is likely redundant
-        dfcols = dfout.columns
-        for i in range(0, np.shape(dfout)[1]):
-            dfout.iloc[:,i] = undefined_df.iloc[:,i].astype(datatypes[dfcols[i]])
 
     return dfout
 
