@@ -323,7 +323,7 @@ def run(well_data,
     w4h.export_grids(grid_data=layers_data, out_path=export_dir, file_id=target_name,filetype='tif', variable_sep=True, date_stamp=True, verbose=verbose, log=log)
 
     return resdf, layers_data
-f
+
 def _run_docstring():
     nl = '\n\t'
     functionList = [w4h.file_setup, w4h.read_raw_csv, w4h.define_dtypes, w4h.merge_metadata, w4h.coords2geometry,
