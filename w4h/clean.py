@@ -35,8 +35,8 @@ def remove_nonlocated(df_with_locations, xcol='LONGITUDE', ycol='LATITUDE', no_d
     df_with_locations[xcol] = df_with_locations[xcol].replace(no_data_val_table, np.nan)
     df_with_locations[ycol] = df_with_locations[ycol].replace(no_data_val_table, np.nan)
     
-    df_with_locations.dropna(subset=xcol, inplace=True)
-    df_with_locations.dropna(subset=ycol, inplace=True)
+    df_with_locations = df_with_locations.dropna(subset=xcol)
+    df_with_locations = df_with_locations.dropna(subset=ycol)
     
     if verbose:
         after = df_with_locations.shape[0]
@@ -80,14 +80,14 @@ def remove_no_topo(df_with_topo, zcol='ELEVATION', no_data_val_table='', verbose
     before = df_with_topo.shape[0]
     
     df_with_topo[zcol] = df_with_topo[zcol].replace(no_data_val_table, np.nan)
-    df_with_topo.dropna(subset=[zcol], inplace=True)
-    
+    df_with_topo = df_with_topo.dropna(subset=[zcol])
+
     if verbose:
         after = df_with_topo.shape[0]
         print('\tRemoved well records with no surface elevation information. ')
         print("\t\tNumber of records before removing: "+str(before))
         print("\t\tNumber of records after removing: "+str(after))
-        print("\t{} wells records removed without surface elevation information".format(before-after))
+        print(f"\t{before-after} wells records removed without surface elevation information")
     
     return df_with_topo
 
@@ -130,14 +130,14 @@ def remove_no_depth(df_with_depth, top_col='TOP', bottom_col='BOTTOM', no_data_v
     #Drop records without depth information
     df_with_depth = df_with_depth.dropna(subset=[top_col])
     df_with_depth = df_with_depth.dropna(subset=[bottom_col])
-    df_with_depth.reset_index(inplace=True, drop=True) #Reset index
+    df_with_depth = df_with_depth.reset_index(drop=True) #Reset index
   
     if verbose:
         after = df_with_depth.shape[0]
         print('\tRemoved well records with no depth information. ')
         print("\t\tNumber of records before removing: "+str(before))
         print("\t\tNumber of records after removing: "+str(after))
-        print("\t{} well records removed without depth information".format(before-after))
+        print(f"\t{before-after} well records removed without depth information")
     
     return df_with_depth
 
@@ -175,14 +175,14 @@ def remove_bad_depth(df_with_depth, top_col='TOP', bottom_col='BOTTOM', depth_ty
         df_with_depth['THICKNESS'] = df_with_depth[top_col] - df_with_depth[bottom_col] #Calculate interval thickness
     before = df_with_depth.shape[0] #Calculate number of rows before dropping
     df_with_depth = df_with_depth[(df_with_depth['THICKNESS'] >= 0)] #Only include rows where interval thickness is positive (bottom is deeper than top)
-    df_with_depth.reset_index(inplace=True, drop=True) #Reset index
+    df_with_depth = df_with_depth.reset_index(drop=True) #Reset index
 
     if verbose:
         after = df_with_depth.shape[0]
         print('\tRemoved well records with obviously bad depth information. ')
         print("\t\tNumber of records before removing: "+str(before))
         print("\t\tNumber of records after removing: "+str(after))
-        print("\t{} well records removed without depth information".format(before-after))
+        print(f"\t{before-after} well records removed without depth information")
 
     return df_with_depth
 
@@ -217,13 +217,13 @@ def remove_no_description(df_with_descriptions, description_col='FORMATION', no_
 
     #Drop records without FORMATION information
     df_with_descriptions = df_with_descriptions.dropna(subset=[description_col])
-    df_with_descriptions.reset_index(inplace=True, drop=True) #Reset index
+    df_with_descriptions = df_with_descriptions.reset_index(drop=True) #Reset index
 
     if verbose:
         after = df_with_descriptions.shape[0]
         print('\tRemoved well records without geologic descriptions. ')
         print("\t\tNumber of records before removing: "+str(before))
         print("\t\tNumber of records after removing: "+str(after))
-        print("\t{} well records removed without geologic descriptions".format(before-after))
+        print(f"\t{before-after} well records removed without geologic descriptions")
 
     return df_with_descriptions

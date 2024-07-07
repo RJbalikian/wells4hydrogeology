@@ -44,7 +44,7 @@ def specific_define(df, terms_df, description_col='FORMATION', terms_col='DESCRI
         verbose_print(specific_define, locals(), exclude_params=['df', 'terms_df'])
 
     if description_col != terms_col:
-        terms_df.rename(columns={terms_col:description_col}, inplace=True)
+        terms_df = terms_df.rename(columns={terms_col:description_col})
         terms_col = description_col
 
     df[description_col] = df[description_col].astype(str)
@@ -55,11 +55,12 @@ def specific_define(df, terms_df, description_col='FORMATION', terms_col='DESCRI
     #df['FORMATION'] = df['FORMATION'].str.strip(['.,:?\t\s'])
     #terms_df['FORMATION'] = terms_df['FORMATION'].str.strip(['.,:?\t\s'])
 
-    terms_df.drop_duplicates(subset=terms_col, keep='last', inplace=True)
-    terms_df.reset_index(drop=True, inplace=True)
+
+    terms_df = terms_df.drop_duplicates(subset=terms_col, keep='last')
+    terms_df = terms_df.reset_index(drop=True)
     
-    df_Interps = pd.merge(left=df, right=terms_df.set_index(terms_col), on=description_col, how='left')
-    df_Interps.rename(columns={description_col:'FORMATION'}, inplace=True)
+    df_Interps = df.merge(right=terms_df.set_index(terms_col), left_on=description_col, right_on=terms_col, how='inner')
+    df_Interps = df_Interps.rename(columns={description_col:'FORMATION'})
     df_Interps['BEDROCK_FLAG'] = df_Interps['LITHOLOGY'] == 'BEDROCK'
     
     if verbose:
@@ -354,7 +355,7 @@ def merge_lithologies(well_data_df, targinterps_df, interp_col='INTERPRETATION',
         targinterps_df[target_col] = targinterps_df[target_col].fillna(value=-2)
         targinterps_df[target_col].astype(np.int8)
 
-    df_targ = pd.merge(well_data_df, targinterps_df.set_index(interp_col), right_on=interp_col, left_on='LITHOLOGY', how='left')
+    df_targ = well_data_df.merge(right=targinterps_df.set_index(interp_col), right_on=interp_col, left_on="LITHOLOGY", how='left')
     
     return df_targ
 

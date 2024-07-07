@@ -135,13 +135,13 @@ def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELE
             df_no_geometry.drop(wkt_col, axis=1, inplace=True) #Drop WKT column
 
         elif geometry_source.lower() in coords_list:#coords = pd.concat([y, x], axis=1)
-            x = df_no_geometry[xcol].to_numpy()
-            y = df_no_geometry[ycol].to_numpy()
+            x = np.stack(df_no_geometry[xcol])
+            y = np.stack(df_no_geometry[ycol])
             if use_z:
-                z = df_no_geometry[zcol].to_numpy()
-                df_no_geometry["geometry"] = gpd.points_from_xy(x, y, z=z, crs=input_coords_crs)
+                z = np.stack(df_no_geometry[zcol])
+                geometry = gpd.points_from_xy(x, y, z=z, crs=input_coords_crs)
             else:
-                df_no_geometry["geometry"] = gpd.points_from_xy(x, y, crs=input_coords_crs)
+                geometry = gpd.points_from_xy(x, y, crs=input_coords_crs)
         elif geometry_source.lower() in geometryList:
             pass
         else:
@@ -150,7 +150,7 @@ def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELE
                         'wkt' (if column with wkt string used), or 
                         'geometry' (if column with shapely geometry objects used, as with a GeoDataFrame)""")
             
-        gdf = gpd.GeoDataFrame(df_no_geometry, geometry='geometry', crs=input_coords_crs).to_crs(output_crs)
+            gdf = gpd.GeoDataFrame(df_no_geometry, geometry=geometry, crs=input_coords_crs).to_crs(output_crs)
     return gdf
 
 #Clip a geodataframe to a study area
@@ -182,7 +182,7 @@ def clip_gdf2study_area(study_area, gdf, log=False, verbose=False):
     else:
         studyArea_proj = study_area.to_crs(gdf.crs).copy()
         gdfClip = gpd.clip(gdf, studyArea_proj) #Easier to project just study area to ensure data fit
-        gdfClip.reset_index(inplace=True, drop=True) #Reset index
+        gdfClip = gdfClip.reset_index(drop=True) #Reset index
     
     return gdfClip
 
@@ -243,8 +243,8 @@ def sample_raster_points(raster=None, points_df=None, well_id_col='API_NUMBER', 
     yCOLOUT = ycol+'_PROJ'
     points_df[xCOLOUT] = points_df['geometry'].x
     points_df[yCOLOUT] = points_df['geometry'].y
-    xData = np.array(points_df[xCOLOUT].values)
-    yData = np.array(points_df[yCOLOUT].values)
+    #xData = np.array(points_df[xCOLOUT].values)
+    #yData = np.array(points_df[yCOLOUT].values)
     zData = []
     zID = []
     zInd = []

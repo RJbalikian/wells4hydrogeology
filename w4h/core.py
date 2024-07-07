@@ -107,10 +107,10 @@ def run(well_data,
 
         if metadata is None:
             if well_data.is_dir():
-                #If the two files are supposed to be in the same directory (or just want well_data found)
+                # If the two files are supposed to be in the same directory (or just want well_data found)
                 well_dataPath, metadataPath = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
             elif well_data.exists():
-                #If well_data is a file, and metadata is not used
+                # If well_data is a file, and metadata is not used
                 well_dataPath, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
                 metadataPath = None
             else:
@@ -119,21 +119,21 @@ def run(well_data,
         elif isinstance(metadata, pathlib.PurePath) or isinstance(metadata, str):
             #Metdata has specifically been specified by a filepath
             if isinstance(metadata, str):
-                metadata = pathlib.Path(metadata)    
+                metadata = pathlib.Path(metadata)
             well_dataPath, metadataPath = w4h.file_setup(well_data=well_data, metadata=metadata, **file_setup_kwargs)                
         else:
-            if isinstance(metadata, pd.DataFrame):
+            if isinstance(metadata, (pd.DataFrame, gpd.GeoDataFrame)):
                 well_dataPath, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
                 metadataPath = metadata
             elif metadata is None:
                 well_dataPath, _ = w4h.file_setup(well_data=well_data, verbose=verbose, log=log, **file_setup_kwargs)             
 
-    elif isinstance(well_data, pd.DataFrame):
-        if isinstance(metadata, pd.DataFrame):
+    elif isinstance(well_data, (pd.DataFrame, gpd.GeoDataFrame)):
+        if isinstance(metadata, (pd.DataFrame, gpd.GeoDataFrame)):
             well_dataPath = well_data
             metadataPath = metadata
         elif isinstance(metadata, pathlib.PurePath) or isinstance(metadata, str):
-            _, metadataPath = w4h.file_setup(well_data=metadata, metadata=metadata, verbose=verbose, log=log, **file_setup_kwargs)                
+            _, metadataPath = w4h.file_setup(well_data=metadata, metadata=metadata, verbose=verbose, log=log, **file_setup_kwargs)
             well_dataPath = well_data
         else:
             print('ERROR: metadata must be a string filepath, a pathlib.Path object, or pandas.DataFrame')
@@ -166,12 +166,16 @@ def run(well_data,
 
     #Get pandas dataframes from input
     read_raw_txt_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.read_raw_csv).parameters.keys()}
+    if 'data_dtypes' not in read_raw_txt_kwargs.keys():
+        read_raw_txt_kwargs['data_dtypes'] = w4h.read_dict(w4h.get_resources()['well_data_dtypes'])
+    if 'metadata_dtypes' not in read_raw_txt_kwargs.keys():
+        read_raw_txt_kwargs['metadata_dtypes'] = w4h.read_dict(w4h.get_resources()['metadata_dtypes'])
     well_data_IN, metadata_IN = w4h.read_raw_csv(data_filepath=well_dataPath, metadata_filepath=metadataPath, verbose=verbose, log=log, **read_raw_txt_kwargs)
-    #Functions to read data into dataframes. Also excludes extraneous columns, and drops header data with no location information
+    # Functions to read data into dataframes. Also excludes extraneous columns, and drops header data with no location information
 
-    #Define data types (file will need to be udpated)
-    well_data_DF = w4h.define_dtypes(undefined_df=well_data_IN, datatypes='./resources/downholeDataTypes.txt', verbose=verbose, log=log)
-    metadata_DF = w4h.define_dtypes(undefined_df=metadata_IN, datatypes='./resources/headerDataTypes.txt', verbose=verbose, log=log)
+    # Define data types (file will need to be udpated)
+    well_data_DF = w4h.define_dtypes(undefined_df=well_data_IN, datatypes=w4h.get_resources()['well_data_dtypes'], verbose=verbose, log=log)
+    metadata_DF = w4h.define_dtypes(undefined_df=metadata_IN, datatypes=w4h.get_resources()['metadata_dtypes'], verbose=verbose, log=log)
 
     if metadata_DF is None:
         well_data_xyz = well_data_DF
@@ -234,21 +238,25 @@ def run(well_data,
     startTerms = w4h.read_dictionary_terms(dict_file=startTermsPATH, log=log, **read_dictionary_terms_kwargs)
     wildcardTerms = w4h.read_dictionary_terms(dict_file=wildcardTermsPATH, log=log, **read_dictionary_terms_kwargs)
 
-    #Clean up dictionary terms
-    specTerms.drop_duplicates(subset='DESCRIPTION', inplace=True)
-    specTerms.reset_index(inplace=True, drop=True)
+    # Clean up dictionary terms
+    specTerms = specTerms.drop_duplicates(subset='DESCRIPTION')
+    specTerms = specTerms.reset_index(drop=True)
 
-    startTerms.drop_duplicates(subset='DESCRIPTION', inplace=True)
-    startTerms.reset_index(inplace=True, drop=True)
+    startTerms = startTerms.drop_duplicates(subset='DESCRIPTION')
+    startTerms = startTerms.reset_index(drop=True)
 
-    wildcardTerms.drop_duplicates(subset='DESCRIPTION', inplace=True)
-    wildcardTerms.reset_index(inplace=True, drop=True)
+    wildcardTerms = wildcardTerms.drop_duplicates(subset='DESCRIPTION')
+    wildcardTerms = wildcardTerms.reset_index(drop=True)
 
     if verbose:
+        noSpecTerms = specTerms.shape[0]
+        noStartTerms = startTerms.shape[0]
+        noWildcardTerms = wildcardTerms.shape[0]
+        
         print('\tSearch terms to be used:')
-        print('\t\t {} exact match term/definition pairs')
-        print('\t\t {} starting match term/definition pairs')
-        print('\t\t {} wildcard match term/definition pairs')
+        print(f'\t\t {noSpecTerms} exact match term/definition pairs')
+        print(f'\t\t {noStartTerms} starting match term/definition pairs')
+        print(f'\t\t {noWildcardTerms} wildcard match term/definition pairs')
 
     #CLASSIFICATIONS
     #Exact match classifications
@@ -282,9 +290,10 @@ def run(well_data,
     #Sort dataframe to prepare for next steps
     #well_data_xyz = w4h.sort_dataframe(df=well_data_xyz, sort_cols=['API_NUMBER','TOP'], remove_nans=True)
     well_data_xyz = well_data_xyz.sort_values(by=[well_id_col, top_col])
-    well_data_xyz.reset_index(inplace=True, drop=True)
-    #UPDATE: Option to remove nans?
-    well_data_xyz = well_data_xyz[pd.notna(well_data_xyz["LITHOLOGY"])]
+    well_data_xyz = well_data_xyz.reset_index(drop=True)
+    
+    # UPDATE: Option to remove nans?
+    well_data_xyz = well_data_xyz[well_data_xyz["LITHOLOGY"].notnull()]
 
     #Analyze Surface(s) and grid(s)
     bedrockGrid, surfaceGrid = w4h.align_rasters(grids_unaligned=[bedrockElevGridIN, surfaceElevGridIN], model_grid=modelGrid, no_data_val_grid=0, log=log)
@@ -314,7 +323,7 @@ def run(well_data,
     w4h.export_grids(grid_data=layers_data, out_path=export_dir, file_id=target_name,filetype='tif', variable_sep=True, date_stamp=True, verbose=verbose, log=log)
 
     return resdf, layers_data
-
+f
 def _run_docstring():
     nl = '\n\t'
     functionList = [w4h.file_setup, w4h.read_raw_csv, w4h.define_dtypes, w4h.merge_metadata, w4h.coords2geometry,
