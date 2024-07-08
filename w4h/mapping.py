@@ -27,7 +27,8 @@ from w4h import logger_function, verbose_print
 
 lidarURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
 
-#Read study area shapefile (or other file) into geopandas
+
+# Read study area shapefile (or other file) into geopandas
 def read_study_area(study_area=None, output_crs='EPSG:5070', buffer=None, return_original=False, log=False, verbose=False, **read_file_kwargs):
     """Read study area geospatial file into geopandas
 
@@ -90,7 +91,8 @@ def read_study_area(study_area=None, output_crs='EPSG:5070', buffer=None, return
         return studyAreaIN, studyAreaNoBuffer
     return studyAreaIN
 
-#Convert coords in columns to geometry in geopandas dataframe
+
+# Convert coords in columns to geometry in geopandas dataframe
 def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', input_coords_crs='EPSG:4269', output_crs='EPSG:5070', use_z=False, wkt_col='WKT', geometry_source='coords', verbose=False, log=False):
     """Adds geometry to points with xy coordinates in the specified coordinate reference system.
 
@@ -153,7 +155,8 @@ def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELE
         gdf = gpd.GeoDataFrame(df_no_geometry, geometry=geometry, crs=input_coords_crs).to_crs(output_crs)
     return gdf
 
-#Clip a geodataframe to a study area
+
+# Clip a geodataframe to a study area
 def clip_gdf2study_area(study_area, gdf, log=False, verbose=False):
     """Clips dataframe to only include things within study area.
 
@@ -186,7 +189,8 @@ def clip_gdf2study_area(study_area, gdf, log=False, verbose=False):
     
     return gdfClip
 
-#Function to sample raster points to points specified in geodataframe
+
+# Function to sample raster points to points specified in geodataframe
 def sample_raster_points(raster=None, points_df=None, well_id_col='API_NUMBER', xcol='LONGITUDE', ycol='LATITUDE', new_col='SAMPLED', verbose=False, log=False):  
     """Sample raster values to points from geopandas geodataframe.
 
@@ -269,7 +273,8 @@ def sample_raster_points(raster=None, points_df=None, well_id_col='API_NUMBER', 
     #points_df[new_col] = zData#sampleDF[new_col]
     return points_df
 
-#Merge xyz dataframe into a metadata dataframe
+
+# Merge xyz dataframe into a metadata dataframe
 def xyz_metadata_merge(xyz, metadata, verbose=False, log=False):
     """Add elevation to header data file.
 
@@ -296,7 +301,8 @@ def xyz_metadata_merge(xyz, metadata, verbose=False, log=False):
     headerXYZData.rename({'LATITUDE_y':'LATITUDE', 'LONGITUDE_y':'LONGITUDE'}, axis=1, inplace=True)
     return headerXYZData
 
-#Read wcsservice into rioxarray
+
+# Read wcsservice into rioxarray
 def read_wcs(study_area, wcs_url=lidarURL, res_x=30, res_y=30, verbose=False, log=False, **kwargs):
     """Reads a WebCoverageService from a url and returns a rioxarray dataset containing it.
 
@@ -419,7 +425,8 @@ def read_wcs(study_area, wcs_url=lidarURL, res_x=30, res_y=30, verbose=False, lo
 
     return wcsData_rxr
 
-#Read wms service into rioxarray
+
+# Read wms service into rioxarray
 def read_wms(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:None', wms_url=lidarURL, srs='EPSG:3857', 
              clip_to_studyarea=True, bbox=[-9889002.615500,5134541.069716,-9737541.607038,5239029.627400],
              res_x=30, res_y=30, size_x=512, size_y=512, 
@@ -540,7 +547,8 @@ def read_wms(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:None', wms_url=l
 
     return wmsData_rxr
 
-#Clip a grid to a study area
+
+# Clip a grid to a study area
 def grid2study_area(study_area, grid, output_crs='EPSG:5070',verbose=False, log=False):
     """Clips grid to study area.
 
@@ -604,7 +612,8 @@ def grid2study_area(study_area, grid, output_crs='EPSG:5070',verbose=False, log=
 
     return grid
 
-#Read the model grid into (rio)xarray
+
+# Read the model grid into (rio)xarray
 def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_grid=True, node_byspace=True, grid_crs=None, output_crs='EPSG:5070', verbose=False, log=False):
     """Reads in model grid to xarray data array
 
@@ -716,12 +725,14 @@ def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_g
             for k in spatRefDict:
                 modelGrid.spatial_ref.attrs[k] = spatRefDict[k]
     
+    # Remove extra "band" dimension if only a single band
     if 'band' in modelGrid.sizes.keys() and modelGrid.sizes['band'] == 1:
         modelGrid = modelGrid.isel(band=0)
     
     return modelGrid
 
-#Read a grid from a file in using rioxarray
+
+# Read a grid from a file in using rioxarray
 def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service=False, study_area=None,  grid_crs=None, output_crs='EPSG:5070', verbose=False, log=False, **kwargs):
     """Reads in grid
 
@@ -799,10 +810,15 @@ def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service
             pass
                 
         gridIN = gridIN.where(gridIN != no_data_val_grid, other=np.nan)  #Replace no data values with NaNs
-
+    
+    # Remove extra "band" dimension if only a single band
+    if 'band' in gridIN.sizes.keys() and gridIN.sizes['band'] == 1:
+        gridIN = gridIN.isel(band=0)
+    
     return gridIN
 
-#Align and coregister rasters
+
+# Align and coregister rasters
 def align_rasters(grids_unaligned=None, model_grid=None,
                   no_data_val_grid=0, verbose=False, log=False):
     """Reprojects two rasters and aligns their pixels
@@ -855,7 +871,8 @@ def align_rasters(grids_unaligned=None, model_grid=None,
         
     return alignedGrids
 
-#Get drift and layer thickness, given a surface and bedrock grid
+
+# Get drift and layer thickness, given a surface and bedrock grid
 def get_drift_thick(surface_elev=None, bedrock_elev=None, layers=9, plot=False, verbose=False, log=False):
     """Finds the distance from surface_elev to bedrock_elev and then divides by number of layers to get layer thickness.
 
