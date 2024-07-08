@@ -377,11 +377,11 @@ def layer_interp(points, grid, layers=None, interp_kind='nearest', return_type='
         interpVal = pts[target_col]
 
         #return points
-        dataX.dropna(inplace=True)
+        dataX = dataX.dropna()
         dataY = dataY.loc[dataX.index]
-        dataY.dropna(inplace=True)
+        dataY = dataY.dropna()
         interpVal = interpVal.loc[dataY.index]
-        interpVal.dropna(inplace=True)
+        interpVal = interpVal.dropna()
         
         dataX = dataX.loc[interpVal.index]
         dataY = dataY.loc[interpVal.index]
@@ -430,7 +430,6 @@ def layer_interp(points, grid, layers=None, interp_kind='nearest', return_type='
 
         #global ZTest
         #ZTest = Z
-
         interp_grid = xr.DataArray( #Create new datarray with new data values, but everything else the same
                     data=Z,
                     dims=grid.dims,
@@ -449,7 +448,6 @@ def layer_interp(points, grid, layers=None, interp_kind='nearest', return_type='
         del interpVal
         del interp
 
-        #interp_grid=interp_grid.interpolate_na(dim=x)
         zFillDigs = len(str(layers))
         daDict['Layer'+str(lyr).zfill(zFillDigs)] = interp_grid
         del interp_grid
@@ -467,7 +465,7 @@ def layer_interp(points, grid, layers=None, interp_kind='nearest', return_type='
         if verbose:
             print('Done with interpolation, getting global attrs')
 
-        #Get common attributes from all layers to use as "global" attributes
+        # Get common attributes from all layers to use as "global" attributes
         common_attrs = {}
         for i, (var_name, data_array) in enumerate(interp_data.data_vars.items()):
             if i == 0:

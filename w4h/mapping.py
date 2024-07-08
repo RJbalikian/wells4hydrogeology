@@ -715,6 +715,10 @@ def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_g
         if grid_crs is None or grid_crs=='isws' or grid_crs=='ISWS':
             for k in spatRefDict:
                 modelGrid.spatial_ref.attrs[k] = spatRefDict[k]
+    
+    if 'band' in modelGrid.sizes.keys() and modelGrid.sizes['band'] == 1:
+        modelGrid = modelGrid.isel(band=0)
+    
     return modelGrid
 
 #Read a grid from a file in using rioxarray
