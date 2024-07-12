@@ -141,7 +141,9 @@ def run(well_data,
         print('ERROR: well_data must be a string filepath, a pathlib.Path object, or pandas.DataFrame')
 
     if not export_dir:
-        if export_dir is False:
+        if export_dir is False or export_dir is None:
+            if verbose:
+                print("\tData will not be exported")
             pass
         else:
             nowTime = datetime.datetime.now()
