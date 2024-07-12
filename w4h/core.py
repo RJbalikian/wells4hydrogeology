@@ -25,9 +25,10 @@ def run(well_data,
         bedrock_elev_grid,
         model_grid=None,
         metadata=None,
+        keep_all_cols=True,
         layers = 9,
-        well_data_cols=None, well_metadata_cols=None, description_col='FORMATION', top_col='TOP', bottom_col='BOTTOM', depth_type='depth',
-        study_area=None, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEVATION', well_id_col='API_NUMBER',
+        description_col='FORMATION', top_col='TOP', bottom_col='BOTTOM', depth_type='depth',
+        study_area=None, xcol='LONGITUDE', ycol='LATITUDE', zcol='SURFACE_ELEV', well_id_col='API_NUMBER',
         lith_dict=None, lith_dict_start=None, lith_dict_wildcard=None,
         target_dict=None,
         target_name='',
@@ -51,10 +52,8 @@ def run(well_data,
         _description_        
     metadata : str or pathlib.Path object, or None, default=None
         Filepath to file or directory containing well metadata, such as location and elevation. If None, will check if well_data is a directory, and if so, will use metadata_filename to search in same directory.
-    well_data_cols : List or list-like
-        Columns to 
-    well_metadata_cols : List or list-like
-        _description_
+    keep_all_cols : bool, default=True
+        Whether to keep all columns of the input dataframes/files. If True, no columns are excluded. If False, only keeps necessary columns.
     layers : int, default = 9
         The number of layers in the model grid
     description_col : str, default = 'FORMATION'
@@ -216,6 +215,17 @@ def run(well_data,
     add_control_points_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.add_control_points).parameters.keys()}
     well_data_xyz = w4h.add_control_points(df_without_control=well_data_xyz, xcol=xcol, ycol=ycol, zcol=zcol, top_col=top_col, bottom_col=bottom_col, description_col=description_col, verbose=verbose, log=log, **add_control_points_kwargs)
 
+    #Analyze Surface(s) and grid(s)
+    bedrockGrid, surfaceGrid = w4h.align_rasters(grids_unaligned=[bedrockElevGridIN, surfaceElevGridIN], model_grid=modelGrid, no_data_val_grid=0, log=log)
+    driftThickGrid, layerThickGrid = w4h.get_drift_thick(surface_elev=surfaceGrid, bedrock_elev=bedrockGrid, layers=layers, plot=verbose, log=log)
+    
+    well_data_xyz = w4h.sample_raster_points(raster=bedrockGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col='BEDROCK_ELEV', verbose=verbose, log=log)
+    well_data_xyz = w4h.sample_raster_points(raster=surfaceGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col='SURFACE_ELEV', verbose=verbose, log=log)
+    well_data_xyz['BEDROCK_DEPTH'] = well_data_xyz['SURFACE_ELEV'] - well_data_xyz['BEDROCK_ELEV']
+    well_data_xyz['LAYER_THICK'] = well_data_xyz['BEDROCK_DEPTH'] / layers
+    
+    well_data_xyz = w4h.get_layer_depths(df_with_depths=well_data_xyz, layers=layers, log=log)
+
     #Clean up data
     well_data_xyz = w4h.remove_nonlocated(df_with_locations=well_data_xyz, log=log, verbose=verbose)
     well_data_xyz = w4h.remove_no_topo(df_with_topo=well_data_xyz, zcol=zcol, verbose=verbose, log=log)
@@ -296,17 +306,6 @@ def run(well_data,
     
     # UPDATE: Option to remove nans?
     well_data_xyz = well_data_xyz[well_data_xyz["LITHOLOGY"].notnull()]
-
-    #Analyze Surface(s) and grid(s)
-    bedrockGrid, surfaceGrid = w4h.align_rasters(grids_unaligned=[bedrockElevGridIN, surfaceElevGridIN], model_grid=modelGrid, no_data_val_grid=0, log=log)
-    driftThickGrid, layerThickGrid = w4h.get_drift_thick(surface_elev=surfaceGrid, bedrock_elev=bedrockGrid, layers=layers, plot=verbose, log=log)
-    
-    well_data_xyz = w4h.sample_raster_points(raster=bedrockGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col='BEDROCK_ELEV', verbose=verbose, log=log)
-    well_data_xyz = w4h.sample_raster_points(raster=surfaceGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col='SURFACE_ELEV', verbose=verbose, log=log)
-    well_data_xyz['BEDROCK_DEPTH'] = well_data_xyz['SURFACE_ELEV'] - well_data_xyz['BEDROCK_ELEV']
-    well_data_xyz['LAYER_THICK'] = well_data_xyz['BEDROCK_DEPTH'] / layers
-    
-    well_data_xyz = w4h.get_layer_depths(df_with_depths=well_data_xyz, layers=layers, log=log)
 
     layer_target_thick_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.layer_target_thick).parameters.keys()}
     if 'return_all' in layer_target_thick_kwargs.keys():

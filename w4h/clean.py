@@ -49,7 +49,7 @@ def remove_nonlocated(df_with_locations, xcol='LONGITUDE', ycol='LATITUDE', no_d
 
 # Function to remove data (intended for headerData) without surface topography information
 # THIS ASSUMES AND SHOULD ONLY BE RUN AFTER ALL DESIRED SURFACE TOPO DATASETS HAVE BEEN MERGED/ADDED
-def remove_no_topo(df_with_topo, zcol='ELEVATION', no_data_val_table='', verbose=False, log=False):
+def remove_no_topo(df_with_topo, zcol='SURFACE_ELEV', no_data_val_table='', verbose=False, log=False):
     """Function to remove wells that do not have topography data (needed for layer selection later).
 
     This function is intended to be run on the metadata table after elevations have attempted to been added.
@@ -90,6 +90,7 @@ def remove_no_topo(df_with_topo, zcol='ELEVATION', no_data_val_table='', verbose
         print(f"\t{before-after} wells records removed without surface elevation information")
     
     return df_with_topo
+
 
 # This function drops all records in the downholedata with no depth information (either top or bottom depth of well interval)
 def remove_no_depth(df_with_depth, top_col='TOP', bottom_col='BOTTOM', no_data_val_table='', verbose=False, log=False):
