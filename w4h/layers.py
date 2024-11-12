@@ -283,22 +283,22 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
     else:
         return resdf_list
 
-#Interpolate layers to model grid
-def layer_interp(points, grid, layers=None, interp_kind='nearest', return_type='dataarray', export_dir=None, target_col='TARG_THICK_PER', layer_col='LAYER', xcol=None, ycol=None, xcoord='x', ycoord='y', log=False, verbose=False, **kwargs):
-    """Function to interpolate results, going from points to grid data. Uses scipy.interpolate module.
+#Interpolate layers to model model_grid
+def layer_interp(points, model_grid, layers=None, interp_kind='nearest', surface_grid=None, bedrock_grid=None, layer_thick_grid=None, drift_thick_grid=None, return_type='dataset', export_dir=None, target_col='TARG_THICK_PER', layer_col='LAYER', xcol=None, ycol=None, xcoord='x', ycoord='y', log=False, verbose=False, **kwargs):
+    """Function to interpolate results, going from points to model_grid data. Uses scipy.interpolate module.
 
     Parameters
     ----------
     points : list
         List containing pandas dataframes or geopandas geoadataframes containing the point data. Should be resDF_list output from layer_target_thick().
-    grid : xr.DataArray or xr.Dataset
-        Xarray DataArray or DataSet with the coordinates/spatial reference of the output grid to interpolate to
+    model_grid : xr.DataArray or xr.Dataset
+        Xarray DataArray or DataSet with the coordinates/spatial reference of the output model_grid to interpolate to
     layers : int, default=None
         Number of layers for interpolation. If None, uses the length ofthe points list to determine number of layers. By default None.
     interp_kind : str, {'nearest', 'interp2d','linear', 'cloughtocher', 'radial basis function'}
         Type of interpolation to use. See scipy.interpolate N-D scattered. Values can be any of the following (also shown in "kind" column of N-D scattered section of table here: https://docs.scipy.org/doc/scipy/tutorial/interpolate.html). By default 'nearest'
-    return_type : str, {'dataarray', 'dataset'}
-        Type of xarray object to return, either xr.DataArray or xr.Dataset, by default 'dataarray.'
+    return_type : str, {'dataset', 'dataarray'}
+        Type of xarray object to return, either xr.DataArray or xr.Dataset, by default 'dataset.'
     export_dir : str or pathlib.Path, default=None
         Export directory for interpolated grids, using w4h.export_grids(). If None, does not export, by default None.
     target_col : str, default = 'TARG_THICK_PER'
@@ -310,9 +310,9 @@ def layer_interp(points, grid, layers=None, interp_kind='nearest', return_type='
     ycol : str, default = 'None'
         Name of column containing y coordinates. If None, will look for 'geometry' column, as in a geopandas.GeoDataframe. By default None
     xcoord : str, default='x'
-        Name of x coordinate in grid, used to extract x values of grid, by default 'x'
+        Name of x coordinate in model_grid, used to extract x values of model_grid, by default 'x'
     ycoord : str, default='y'
-        Name of y coordinate in grid, used to extract x values of grid, by default 'y'
+        Name of y coordinate in model_grid, used to extract x values of model_grid, by default 'y'
     log : bool, default = True
         Whether to log inputs and outputs to log file.
     **kwargs
@@ -326,7 +326,7 @@ def layer_interp(points, grid, layers=None, interp_kind='nearest', return_type='
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
     if verbose:
-        verbose_print(layer_interp, locals(), exclude_params=['points', 'grid'])
+        verbose_print(layer_interp, locals(), exclude_params=['points', 'model_grid'])
 
     nnList = ['nearest', 'nearest neighbor', 'nearestneighbor','neighbor',  'nn','n']
     splineList = ['interp2d', 'interp2', 'interp', 'spline', 'spl', 'sp', 's']
@@ -336,8 +336,8 @@ def layer_interp(points, grid, layers=None, interp_kind='nearest', return_type='
     #k-nearest neighbors from scikit-learn?
     #kriging? (from pykrige or maybe also from scikit-learn)
     
-    X = np.round(grid[xcoord].values, 5)# #Extract xcoords from grid
-    Y = np.round(grid[ycoord].values, 5)# #Extract ycoords from grid
+    X = np.round(model_grid[xcoord].values, 5)  # Extract xcoords from model_grid
+    Y = np.round(model_grid[ycoord].values, 5)  # Extract ycoords from model_grid
     
     if layers is None and (type(points) is list or type(points) is dict):
         layers = len(points)
@@ -347,6 +347,7 @@ def layer_interp(points, grid, layers=None, interp_kind='nearest', return_type='
 
     if verbose:
         print('\tInterpolating target lithology at each layer:')
+    
     daDict = {}
     for lyr in range(1, layers+1):
         
@@ -373,10 +374,9 @@ def layer_interp(points, grid, layers=None, interp_kind='nearest', return_type='
         else:
             dataY = pts[ycol]
 
-        #layer = pts[layer_col]        
         interpVal = pts[target_col]
 
-        #return points
+        # Return points
         dataX = dataX.dropna()
         dataY = dataY.loc[dataX.index]
         dataY = dataY.dropna()
@@ -428,12 +428,10 @@ def layer_interp(points, grid, layers=None, interp_kind='nearest', return_type='
             interp = interpolate.NearestNDInterpolator(list(zip(dataX, dataY)), interpVal, **kwargs)
             Z = interp(X, Y)
 
-        #global ZTest
-        #ZTest = Z
         interp_grid = xr.DataArray( #Create new datarray with new data values, but everything else the same
                     data=Z,
-                    dims=grid.dims,
-                    coords=grid.coords)
+                    dims=model_grid.dims,
+                    coords=model_grid.coords)
         
         if 'band' in interp_grid.coords:
             interp_grid = interp_grid.drop_vars('band')
@@ -454,16 +452,23 @@ def layer_interp(points, grid, layers=None, interp_kind='nearest', return_type='
         if verbose:
             print('\t\tCompleted {} interpolation for Layer {}'.format(str(interpType).lower(), str(lyr).zfill(zFillDigs)))
 
-    dataAList = ['dataarray', 'da', 'a', 'array']
-    dataSList = ['dataset', 'ds', 'set']
 
-    if return_type.lower() in dataAList:
-        interp_data = xr.concat(daDict.values(), dim='Layer')
-        interp_data = interp_data.assign_coords(Layer=np.arange(1,10))
-    elif return_type.lower() in dataSList:
-        interp_data = xr.Dataset(daDict)
+
+    dataArrayList = ['dataarray', 'da', 'a', 'array']
+    dataSetList = ['dataset', 'ds', 'set']
+
+    interp_data = xr.concat(daDict.values(), dim='Layer')
+    interp_data = interp_data.assign_coords(Layer=np.arange(1, layers+1))
+    
+    if return_type.lower() in dataArrayList:
+        pass        
+    else:
+        if return_type.lower() not in dataSetList and verbose:
+            print(f"{return_type} is not a valid input for return_type. Please set return_type to either 'dataarray' or 'dataset'")
+            print("Using dataset by default")            
+        interp_data = xr.Dataset(data_vars={'Model_Layers': interp_data})
         if verbose:
-            print('Done with interpolation, getting global attrs')
+            print('Done with interpolation, getting additional layers and attributes')
 
         # Get common attributes from all layers to use as "global" attributes
         common_attrs = {}
@@ -473,9 +478,6 @@ def layer_interp(points, grid, layers=None, interp_kind='nearest', return_type='
             else:
                 common_attrs = {k: v for k, v in common_attrs.items() if k in data_array.attrs and data_array.attrs[k] == v}
         interp_data.attrs.update(common_attrs)
-    else:
-        print(f"{return_type} is not a valid input for return_type. Please set return_type to either 'dataarray' or 'dataset'")
-        return
 
     if verbose:
         for i, layer_data in enumerate(interp_data):

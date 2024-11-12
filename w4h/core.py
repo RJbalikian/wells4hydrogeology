@@ -11,6 +11,7 @@ import pkg_resources
 import zipfile
 
 import geopandas as gpd
+import numpy as np
 import pandas as pd
 import rioxarray as rxr
 from shapely import wkt
@@ -194,7 +195,7 @@ def run(well_data,
         studyAreaIN = None
         use_study_area = False
     else:
-        studyAreaIN = w4h.read_study_area(study_area_path=study_area, log=log, **read_study_area_kwargs)
+        studyAreaIN = w4h.read_study_area(study_area=study_area, log=log, **read_study_area_kwargs)
         use_study_area = True
 
     clip_gdf2study_area_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.clip_gdf2study_area).parameters.keys()}
@@ -313,17 +314,33 @@ def run(well_data,
 
     resdf = w4h.layer_target_thick(df=well_data_xyz, layers=layers, return_all=False, export_dir=export_dir, depth_top_col=top_col, depth_bot_col=bottom_col, log=log, **layer_target_thick_kwargs)
     
+    # bedrockGrid, surfaceGrid, driftThickGrid, layerThickGrid
     layer_interp_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.layer_interp).parameters.keys()}
-    layers_data = w4h.layer_interp(points=resdf, grid=modelGrid, layers=9, verbose=verbose, log=log, **layer_interp_kwargs)
+    layers_data = w4h.layer_interp(points=resdf, model_grid=modelGrid, layers=layers, verbose=verbose, log=log, **layer_interp_kwargs)
 
+    # Add surface, bedrock, and derived grids
+    layers_data['Surface_Elevation'] = surfaceGrid
+    layers_data['Bedrock_Elevation'] = bedrockGrid
+    layers_data['Drift_Thickness'] = driftThickGrid
+    layers_data['Layer_Thickness'] = layerThickGrid
+
+    # Add each layer's elevation as an unindexed coordinate
+    layerElevs = []
+    for i in range(1, layers+1):
+        layerElevs.append((layers_data['Surface_Elevation'] - (layers_data['Layer_Thickness']*i)).values)
+    layerElevs = np.array(layerElevs)
+    layers_data = layers_data.assign_coords(layer_elevs=(['Layer', "y", "x"], layerElevs))
+
+    # Calculate current time for export string
     nowTime = datetime.datetime.now()
-    nowTime = str(nowTime).replace(':', '-').replace(' ','_').split('.')[0]
+    nowTime = str(nowTime).replace(':', '-').replace(' ', '_').split('.')[0]
     nowTimeStr = '_'+str(nowTime)
 
     #THIS MAY BE REPEAT OF LAST LINES OF layer_interp()
     w4h.export_grids(grid_data=layers_data, out_path=export_dir, file_id=target_name,filetype='tif', variable_sep=True, date_stamp=True, verbose=verbose, log=log)
 
     return resdf, layers_data
+
 
 def _run_docstring():
     nl = '\n\t'

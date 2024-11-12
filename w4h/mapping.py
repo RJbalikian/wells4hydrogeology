@@ -29,7 +29,7 @@ lidarURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewi
 
 
 # Read study area shapefile (or other file) into geopandas
-def read_study_area(study_area=None, output_crs='EPSG:5070', buffer=None, return_original=False, log=False, verbose=False, **read_file_kwargs):
+def read_study_area(study_area=None, study_area_crs=None, output_crs='EPSG:5070', buffer=None, return_original=False, log=False, verbose=False, **read_file_kwargs):
     """Read study area geospatial file into geopandas
 
     Parameters
@@ -37,8 +37,11 @@ def read_study_area(study_area=None, output_crs='EPSG:5070', buffer=None, return
     study_area : str, pathlib.Path, geopandas.GeoDataFrame, or shapely.Geometry
         Filepath to any geospatial file readable by geopandas. 
         Polygon is best, but may work with other types if extent is correct.
+        If shapely.Geometry, the crs should also be specified using a valid input to gpd.GeoDataFrame(crs=<crs>).
     study_area_crs : str, tuple, dict, optional
-        CRS designation readable by geopandas/pyproj
+        Not needed unless CRS must be read in manually (e.g, with a shapely.Geometry). CRS designation readable by geopandas/pyproj.
+    output_crs : str, tuple, dict, optional
+        CRS to transform study_area to before returning. CRS designation should be readable by geopandas/pyproj. By default, 'EPSG:5070'.
     buffer : None or numeric, default=None
         If None, no buffer created. If a numeric value is given (float or int, for example), a buffer will be created at that distance in the unit of the study_area_crs.
     return_original : bool, default=False
@@ -55,6 +58,8 @@ def read_study_area(study_area=None, output_crs='EPSG:5070', buffer=None, return
     """
     
     if study_area is None:
+        if verbose:
+            print("\tNo study_area specified, using the study area in the included sample data.")
         study_area = w4h.get_resources()['study_area']
 
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
@@ -64,13 +69,7 @@ def read_study_area(study_area=None, output_crs='EPSG:5070', buffer=None, return
     if isinstance(study_area, (gpd.GeoDataFrame, gpd.GeoSeries)):
         studyAreaIN = study_area
     elif isinstance(study_area, shapely.Geometry):
-        if 'crs' in read_file_kwargs:
-            crs = read_file_kwargs['crs']
-        else:
-            warnings.warn('A shapely Geometry object was read in as the study area, but no crs specified. Using CRS specified in output_crs: {output_crs}.\
-                          You can specify the crs as a keyword argument in the read_study_area() function')
-            crs = output_crs
-        studyAreaIN = gpd.GeoDataFrame(index=[0], crs=crs, geometry=[study_area])
+        studyAreaIN = gpd.GeoDataFrame(index=[0], crs=study_area_crs, geometry=[study_area])
     else:
         studyAreaIN = gpd.read_file(study_area, **read_file_kwargs)
     studyAreaIN.to_crs(output_crs, inplace=True)
@@ -762,6 +761,25 @@ def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
         verbose_print(read_grid, locals(), exclude_params=['study_area'])
+
+    # Get study area and study_areaa_crs situated first
+    if study_area is not None:
+        if not isinstance(study_area, gpd.GeoDataFrame):
+            if isinstance(study_area, (str, pathlib.Path)) or pathlib.Path(study_area).exists():
+                if verbose:
+                    print(f"\tThe study_area parameter is not a geopandas.GeoDataframe object. Attempting to read now.")
+                    
+                study_area_kwargs = {k: v for k, v in kwargs.items() if k in inspect.signature(read_study_area).parameters.keys()}
+                study_area = read_study_area(study_area=study_area, output_crs=output_crs, verbose=verbose, log=log, **study_area_kwargs)
+            else:
+                raise RuntimeError(f'\tstudy_area={study_area} was specified, but this is not a geopandas.GeoDataFrame and cannot be read by w4h.read_study_area()')
+        
+        study_area_crs = study_area.crs
+    
+        if study_area_crs is None:
+            study_area_crs = study_area.crs
+        study_area = study_area.to_crs(output_crs)
+        study_area_crs = study_area.crs
         
     if grid_type=='model':
         if 'read_grid' in list(kwargs.keys()):
@@ -770,33 +788,29 @@ def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service
             rgrid=True
         gridIN = read_model_grid(model_grid_path=grid_path, study_area=study_area,  no_data_val_grid=0, read_grid=rgrid, grid_crs=grid_crs, output_crs=output_crs, verbose=verbose)
     else:
-        if use_service==False:
-            gridIN = rxr.open_rasterio(grid_path)
-        elif use_service.lower()=='wcs':
+        if str(use_service).lower() == 'wcs':
             gridIN = read_wcs(study_area, wcs_url=lidarURL, **kwargs)
-        elif use_service.lower()=='wms':
+        elif str(use_service).lower() == 'wms':
             gridIN = read_wms(study_area, wcs_url=lidarURL, **kwargs)
-        elif use_service:
+        elif use_service is True:
             #Deafults to wms
             gridIN = read_wms(study_area, wcs_url=lidarURL, **kwargs)
-        
+        else:
+            gridIN = rxr.open_rasterio(grid_path)
+            
         if study_area is not None:
-            study_area_crs = study_area.crs
             if grid_crs is None:
                 try:
                     grid_crs = pyproj.CRS.from_wkt(gridIN.rio.crs.to_wkt())
                 except Exception:
+                    if verbose:
+                        print(f"\t CRS could not be extracted from grid itself. Assuming sample CRS:\n\t {w4h.get_resources()['ISWS_CRS']}")
                     iswsCRS = pyproj.CRS.from_json_dict(w4h.read_dict(w4h.get_resources()['ISWS_CRS']))
                     gridIN.rio.write_crs(iswsCRS)
-            elif grid_crs.lower()=='isws':
+            elif grid_crs.lower() == 'isws':
                 iswsCRS = pyproj.CRS.from_json_dict(w4h.read_dict(w4h.get_resources()['ISWS_CRS']))
                 gridIN.rio.write_crs(iswsCRS)
-                        
-            if study_area_crs is None:
-                study_area_crs=study_area.crs
-            study_area = study_area.to_crs(output_crs)
-            study_area_crs=study_area.crs
-            
+                
             gridIN = gridIN.rio.reproject(output_crs)
             gridIN = grid2study_area(study_area=study_area, grid=gridIN, output_crs=output_crs,)
         else:
@@ -814,6 +828,9 @@ def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service
     # Remove extra "band" dimension if only a single band
     if 'band' in gridIN.sizes.keys() and gridIN.sizes['band'] == 1:
         gridIN = gridIN.isel(band=0)
+
+    if 'band' in gridIN.coords and gridIN.coords['band'].shape == ():
+        gridIN = gridIN.drop_vars('band')
     
     return gridIN
 
