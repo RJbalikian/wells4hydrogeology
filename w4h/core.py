@@ -33,6 +33,8 @@ def run(well_data,
         lith_dict=None, lith_dict_start=None, lith_dict_wildcard=None,
         target_dict=None,
         target_name='',
+        include_elevation_grids=True,
+        include_elevation_coordinates=True,
         export_dir=None,
         verbose=False,
         log=False,
@@ -318,18 +320,20 @@ def run(well_data,
     layer_interp_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.layer_interp).parameters.keys()}
     layers_data = w4h.layer_interp(points=resdf, model_grid=modelGrid, layers=layers, verbose=verbose, log=log, **layer_interp_kwargs)
 
-    # Add surface, bedrock, and derived grids
-    layers_data['Surface_Elevation'] = surfaceGrid
-    layers_data['Bedrock_Elevation'] = bedrockGrid
-    layers_data['Drift_Thickness'] = driftThickGrid
-    layers_data['Layer_Thickness'] = layerThickGrid
+    if include_elevation_grids:
+        # Add surface, bedrock, and derived grids
+        layers_data['Surface_Elevation'] = surfaceGrid
+        layers_data['Bedrock_Elevation'] = bedrockGrid
+        layers_data['Drift_Thickness'] = driftThickGrid
+        layers_data['Layer_Thickness'] = layerThickGrid
 
-    # Add each layer's elevation as an unindexed coordinate
-    layerElevs = []
-    for i in range(1, layers+1):
-        layerElevs.append((layers_data['Surface_Elevation'] - (layers_data['Layer_Thickness']*i)).values)
-    layerElevs = np.array(layerElevs)
-    layers_data = layers_data.assign_coords(layer_elevs=(['Layer', "y", "x"], layerElevs))
+    if include_elevation_coordinates:
+        # Add each layer's elevation as an unindexed coordinate
+        layerElevs = []
+        for i in range(1, layers+1):
+            layerElevs.append((layers_data['Surface_Elevation'] - (layers_data['Layer_Thickness']*i)).values)
+        layerElevs = np.array(layerElevs)
+        layers_data = layers_data.assign_coords(layer_elevs=(['Layer', "y", "x"], layerElevs))
 
     # Calculate current time for export string
     nowTime = datetime.datetime.now()
