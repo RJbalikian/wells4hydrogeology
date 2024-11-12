@@ -21,6 +21,7 @@ from shapely.geometry import Point
 
 import w4h
 
+# Main function to run model all at once
 def run(well_data,
         surf_elev_grid,
         bedrock_elev_grid,
@@ -351,6 +352,7 @@ def run(well_data,
     return resdf, layers_data
 
 
+# Function to update docstring for run function, used in __init__ file 
 def _run_docstring():
     nl = '\n\t'
     functionList = [w4h.file_setup, w4h.read_raw_csv, w4h.define_dtypes, w4h.merge_metadata, w4h.coords2geometry,
@@ -411,7 +413,9 @@ def _run_docstring():
     """
     return run_docstring
 
-log_filename=None #Set up so exists but is None
+
+# Function for logging (experimental)
+log_filename = None  #initialize so variable exists but is None
 def logger_function(logtocommence, parameters, func_name):
     """Function to log other functions, to be called from within other functions
 
@@ -478,6 +482,8 @@ def logger_function(logtocommence, parameters, func_name):
             pass
     return
 
+
+# Reusable function for consistently-formatted verbose printing output
 def verbose_print(func, local_variables, exclude_params=[]):
     print_list = ['\n']
     sTime = datetime.datetime.now()
@@ -499,7 +505,8 @@ def verbose_print(func, local_variables, exclude_params=[]):
         print(line)
     return print_list
 
-#Get filepaths for package resources in dictionary format
+
+# Get filepaths for package resources in dictionary format
 resource_dir = pathlib.Path(pkg_resources.resource_filename(__name__, 'resources/resources_home.txt')).parent
 def get_resources(resource_type='filepaths', scope='local', verbose=False):
     """Function to get filepaths for resources included with package
@@ -619,6 +626,8 @@ def get_resources(resource_type='filepaths', scope='local', verbose=False):
 
     return resources_dict
 
+
+# Only used for development purposes, check that parameters are unique
 def __check_parameter_names(verbose=True):
     #Check parameters are unique
     import inspect
