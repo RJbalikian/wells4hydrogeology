@@ -85,6 +85,11 @@ def run(well_data,
         _description_
     target_name : str, default = 'CoarseFine'
         Name of target of interest, to be used on exported files
+    include_elevation_grid : bool, default = True
+        Whether to include the elevation grids (surface, bedrock, and derived total "drift" thickness and layer thickness)
+    include_elevation_coordinates : bool, default = True
+        Whether to include the elevation coordinates for each grid point at all layers in the output.
+        If True, these are saved as unindexed coordinates.
     export_dir : str or pathlib.Path object, default = None
         Directory to export output files
     verbose : bool, default = False
