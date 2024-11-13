@@ -4,6 +4,7 @@
 import datetime
 import inspect
 
+import dask
 import pandas as pd
 import numpy as np
 
@@ -17,8 +18,69 @@ from w4h import logger_function, verbose_print
 #- 5: Wildcard match (any substring) - more liberal
 #- Top of well?
 
+
+#Define well intervals by depth
+def depth_define(df, top_col='TOP', thresh=550.0, parallel_processing=False, verbose=False, log=False):
+    """Function to define all intervals lower than thresh as bedrock
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe to classify
+    top_col : str, default = 'TOP'
+        Name of column that contains the depth information, likely of the top of the well interval, by default 'TOP'
+    thresh : float, default = 550.0
+        Depth (in units used in df['top_col']) below which all intervals will be classified as bedrock, by default 550.0.
+    verbose : bool, default = False
+        Whether to print results, by default False
+    log : bool, default = True
+        Whether to log results to log file
+
+    Returns
+    -------
+    df : pandas.DataFrame
+        Dataframe containing intervals classified as bedrock due to depth
+    """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+    if verbose:
+        verbose_print(depth_define, locals(), exclude_params=['df'])
+
+    df = df.copy()
+    df['CLASS_FLAG'] = df['CLASS_FLAG'].mask(df[top_col] > thresh, 3)  # Add a Classification Flag of 3 (bedrock b/c it's deepter than 550') to all records where the top of the interval is >550'
+    df['BEDROCK_FLAG'] = df['BEDROCK_FLAG'].mask(df[top_col] > thresh, True)
+
+    if verbose:
+        total = df.shape[0]
+
+        if parallel_processing:
+            print("numRecsClass")
+            numRecsClass = int(df[df['CLASS_FLAG']==3]['CLASS_FLAG'].sum().compute())
+            if total.compute() > 0:
+                print("Computing percRecsClass")
+                percRecsClass = round((numRecsClass / total.compute())*100,2)
+                print("Computing recsRemaining")
+                recsRemainig = df['CLASS_FLAG'].isna().sum().compute()
+            else:
+                percRecsClass = 0
+                recsRemainig = 0
+        else:
+            numRecsClass = int(df[df['CLASS_FLAG']==3]['CLASS_FLAG'].sum())
+            if total > 0:
+                percRecsClass = round((numRecsClass / total)*100,2)
+                recsRemainig = df['CLASS_FLAG'].isna().sum()
+            else:
+                percRecsClass = 0
+                recsRemainig = 0
+
+        print('\tClassified bedrock well records using depth threshold at depth of {}'.format(thresh))
+        print("\t\t{} records classified using bedrock threshold depth ({}% of unclassified  data)".format(numRecsClass, percRecsClass))
+        print(f'\t\t{recsRemainig} records remain unclassified ({100-percRecsClass}% of unclassified  data).')
+        
+    return df
+
+
 #Define records with full search term
-def specific_define(df, terms_df, description_col='FORMATION', terms_col='DESCRIPTION', verbose=False, log=False):
+def specific_define(df, terms_df, description_col='FORMATION', terms_col='DESCRIPTION', parallel_processing=False, verbose=False, log=False):
     """Function to classify terms that have been specifically defined in the terms_df.
 
     Parameters
@@ -55,20 +117,25 @@ def specific_define(df, terms_df, description_col='FORMATION', terms_col='DESCRI
     #df['FORMATION'] = df['FORMATION'].str.strip(['.,:?\t\s'])
     #terms_df['FORMATION'] = terms_df['FORMATION'].str.strip(['.,:?\t\s'])
 
-
     terms_df = terms_df.drop_duplicates(subset=terms_col, keep='last')
     terms_df = terms_df.reset_index(drop=True)
     
     df_Interps = df.merge(right=terms_df.set_index(terms_col), left_on=description_col, right_on=terms_col, how='inner')
+    #df_Interps = pd.merge(left=df, right=terms_df.set_index(terms_col), on=description_col, how='left')
     df_Interps = df_Interps.rename(columns={description_col:'FORMATION'})
     df_Interps['BEDROCK_FLAG'] = df_Interps['LITHOLOGY'] == 'BEDROCK'
     
     if verbose:
         totRecords = df_Interps.shape[0]
-        numRecsClass = int(df_Interps[df_Interps['CLASS_FLAG']==1]['CLASS_FLAG'].sum())
-        recsRemainig = df_Interps['CLASS_FLAG'].isna().sum()
-        percRecsClass= round(( numRecsClass / totRecords)*100, 2)
-        
+        if parallel_processing:
+            numRecsClass = int(df_Interps['CLASS_FLAG'].eq(1).sum().compute())
+            recsRemainig = int(df_Interps['CLASS_FLAG'].isna().sum().compute())
+            percRecsClass= round(( numRecsClass / totRecords.compute())*100, 2)
+        else:
+            numRecsClass = int(df_Interps[df_Interps['CLASS_FLAG']==1]['CLASS_FLAG'].sum())
+            recsRemainig = df_Interps['CLASS_FLAG'].isna().sum()
+            percRecsClass= round(( numRecsClass / totRecords)*100, 2)
+            
         print('\tClassified well records using exact matches')
         print("\t\t{} records classified using exact matches ({}% of unclassified data)".format(numRecsClass, percRecsClass))
         print('\t\t{} records remain unclassified ({}% of unclassified data).'.format(recsRemainig, 100-percRecsClass))
@@ -96,13 +163,13 @@ def split_defined(df, classification_col='CLASS_FLAG', verbose=False, log=False)
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    classifedDF= df[df[classification_col].notna()] #Already-classifed data
-    searchDF = df[df[classification_col].isna()] #Unclassified data
-        
+    searchDF = df[df[classification_col].isna()]  # Unclassified data
+    classifedDF = df[df[classification_col].notnull()]  # Already-classifed data
+
     return classifedDF, searchDF
 
 #Classify downhole data by the initial substring
-def start_define(df, terms_df, description_col='FORMATION', terms_col='DESCRIPTION', verbose=False, log=False):
+def start_define(df, terms_df, description_col='FORMATION', terms_col='DESCRIPTION', parallel_processing=False, verbose=False, log=False):
     """Function to classify descriptions according to starting substring. 
 
     Parameters
@@ -142,9 +209,14 @@ def start_define(df, terms_df, description_col='FORMATION', terms_col='DESCRIPTI
     df['BEDROCK_FLAG'].loc[df["LITHOLOGY"] == 'BEDROCK']
     
     if verbose:
-        numRecsClass = int(df[df['CLASS_FLAG']==4]['CLASS_FLAG'].sum())
-        percRecsClass= round((df[df['CLASS_FLAG']==4]['CLASS_FLAG'].sum()/df.shape[0])*100,2)
-        recsRemainig = df['CLASS_FLAG'].isna().sum()
+        if parallel_processing:
+            numRecsClass = int(df[df['CLASS_FLAG']==4]['CLASS_FLAG'].sum().compute())
+            percRecsClass= round((numRecsClass/df.shape[0].compute())*100,2)
+            recsRemainig = df['CLASS_FLAG'].isna().sum().compute()
+        else:
+            numRecsClass = int(df[df['CLASS_FLAG']==4]['CLASS_FLAG'].sum())
+            percRecsClass= round((numRecsClass/df.shape[0])*100,2)
+            recsRemainig = df['CLASS_FLAG'].isna().sum()
 
         print('\tClassified well records using initial substring matches')
         print("\t\t{} records classified using initial substring matches ({}% of unclassified  data)".format(numRecsClass, percRecsClass))
@@ -203,7 +275,7 @@ def wildcard_define(df, terms_df, description_col='FORMATION', terms_col='DESCRI
     return df
 
 #Merge data back together
-def remerge_data(classifieddf, searchdf):
+def remerge_data(classifieddf, searchdf, parallel_processing=False):
     """Function to merge newly-classified (or not) and previously classified data
 
     Parameters
@@ -218,54 +290,12 @@ def remerge_data(classifieddf, searchdf):
     remergeDF : pandas.DataFrame
         Dataframe containing all the data, merged back together
     """
-    remergeDF = pd.concat([classifieddf,searchdf], join='inner').sort_index()
+    if parallel_processing:
+        remergeDF = dask.dataframe.concat([classifieddf,searchdf], join='inner').reset_index()
+    else:
+        remergeDF = pd.concat([classifieddf,searchdf], join='inner').sort_index()
+
     return remergeDF
-
-#Define well intervals by depth
-def depth_define(df, top_col='TOP', thresh=550.0, verbose=False, log=False):
-    """Function to define all intervals lower than thresh as bedrock
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Dataframe to classify
-    top_col : str, default = 'TOP'
-        Name of column that contains the depth information, likely of the top of the well interval, by default 'TOP'
-    thresh : float, default = 550.0
-        Depth (in units used in df['top_col']) below which all intervals will be classified as bedrock, by default 550.0.
-    verbose : bool, default = False
-        Whether to print results, by default False
-    log : bool, default = True
-        Whether to log results to log file
-
-    Returns
-    -------
-    df : pandas.DataFrame
-        Dataframe containing intervals classified as bedrock due to depth
-    """
-    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-    if verbose:
-        verbose_print(depth_define, locals(), exclude_params=['df'])
-    df = df.copy()
-    df['CLASS_FLAG'] = df['CLASS_FLAG'].mask(df[top_col] > thresh, 3)  # Add a Classification Flag of 3 (bedrock b/c it's deepter than 550') to all records where the top of the interval is >550'
-    df['BEDROCK_FLAG'] = df['BEDROCK_FLAG'].mask(df[top_col] > thresh, True)
-
-    if verbose:
-        if df.CLASS_FLAG.notnull().sum() == 0:
-            brDepthClass = 0
-        else:
-            brDepthClass = df['CLASS_FLAG'].value_counts()[3.0]
-        total = df.shape[0]
-
-        numRecsClass = int(df[df['CLASS_FLAG']==3]['CLASS_FLAG'].sum())
-        percRecsClass= round((df[df['CLASS_FLAG']==3]['CLASS_FLAG'].sum() / total)*100,2)
-        recsRemainig = df['CLASS_FLAG'].isna().sum()
-
-        print('\tClassified bedrock well records using depth threshold at depth of {}'.format(thresh))
-        print("\t\t{} records classified using bedrock threshold depth ({}% of unclassified  data)".format(numRecsClass, percRecsClass))
-        print(f'\t\t{recsRemainig} records remain unclassified ({100-percRecsClass}% of unclassified  data).')
-        
-    return df
 
 #Output data that still needs to be defined
 def export_undefined(df, outdir):
@@ -356,6 +386,7 @@ def merge_lithologies(well_data_df, targinterps_df, interp_col='INTERPRETATION',
         targinterps_df[target_col].astype(np.int8)
 
     df_targ = well_data_df.merge(right=targinterps_df.set_index(interp_col), right_on=interp_col, left_on="LITHOLOGY", how='left')
+    #df_targ = pd.merge(well_data_df, targinterps_df.set_index(interp_col), right_on=interp_col, left_on='LITHOLOGY', how='left')
     
     return df_targ
 
