@@ -65,6 +65,9 @@ from w4h.read import (get_current_date,
                       read_lithologies,
                       add_control_points)
 
+from w4h.visualization import(
+                            plot_cross_section
+                             )
 
 __all__ = ('logger_function', 'verbose_print', 'run', 'get_resources',
            # Classify
@@ -118,7 +121,9 @@ __all__ = ('logger_function', 'verbose_print', 'run', 'get_resources',
            'get_search_terms',
            'read_dictionary_terms',
            'read_lithologies',
-           'add_control_points'
+           'add_control_points',
+           # Visualization
+           'plot_cross_section'
            )
 
 # Update the w4h.run() help() return to actually be helpful
