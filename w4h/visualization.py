@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import shapely
 
-def plot_cross_section(dataset, profile=None, profile_direction=None, xcoord='x', ycoord='y', verbose=False, **kwargs):
+def plot_cross_section(dataset, profile=None, profile_direction=None, xcoord='x', ycoord='y', show_layers=True, verbose=False, **kwargs):
     if profile is None:
         firstX = dataset.coords[xcoord].values[0]
         midX = np.mean(dataset.coords[xcoord].values)
@@ -126,6 +126,7 @@ def plot_cross_section(dataset, profile=None, profile_direction=None, xcoord='x'
                 subsegSamplePoints.append(segmentLineString.line_interpolate_point(distance=currSubsegDistance))
             segSamplePoints.extend(subsegSamplePoints)
 
+        print(len(segSamplePoints))
         profileLineString = shapely.LineString(segSamplePoints)
         for point in segSamplePoints:
             xcoord, ycoord = point.xy
@@ -137,6 +138,11 @@ def plot_cross_section(dataset, profile=None, profile_direction=None, xcoord='x'
         surfElevArr = np.array(surfaceElevs).flatten()
         bedElevArr = np.array(bedrockElevs).flatten()
 
+        print(np.array(segSamplePoints).shape, np.array(segSamplePoints).size)
+        print(surfElevArr.shape, surfElevArr.size)
+        print(bedElevArr.shape, bedElevArr.size)
+        print(np.array(modelData).shape, np.array(modelData).size)
+        print(np.array(layerElevs).shape, np.array(layerElevs).size)
         profileDicts.append({'XY': shapely.LineString(segSamplePoints),
                             'Surface_Elevation': surfElevArr,
                             'Bedrock_Elevation': bedElevArr,
@@ -147,7 +153,6 @@ def plot_cross_section(dataset, profile=None, profile_direction=None, xcoord='x'
             
     # Now just need to plot, got data
     # FROM HERE ON DOWN DOES NOT WORK PERFECTLY, NEED TO ADJUST FOR DIFFERENT ORIENTATIONS
-    show_layers=True
     for profile in profileDicts:
         xArray, yArray = profile["XY"].xy
         xArray = np.array(xArray.tolist())
@@ -161,10 +166,19 @@ def plot_cross_section(dataset, profile=None, profile_direction=None, xcoord='x'
 
         # Filter xArray, layer_elevs, and Model_Layers based on valid rows
         xArray_filtered = xArray[valid_rows]
+        yArray_filtered = yArray[valid_rows]
+        br_elevs_filtered = br_elev[valid_rows]
+        surf_elevs_filtered = surf_elev[valid_rows]
         layer_elevs_filtered = layer_elevs[valid_rows, :]
         Model_Layers_filtered = Model_Layers[valid_rows, :]
 
-        X = np.tile(xArray_filtered, (layer_elevs_filtered.shape[1], 1)).T
+        if profile['profile_direction'] in xOrients:
+            X = np.tile(xArray_filtered, (layer_elevs_filtered.shape[1], 1)).T
+            coords = xArray_filtered
+        else:
+            X = np.tile(yArray_filtered, (layer_elevs_filtered.shape[1], 1)).T
+            coords = yArray_filtered
+
         Y = layer_elevs_filtered
 
         # Set up plot
@@ -182,18 +196,18 @@ def plot_cross_section(dataset, profile=None, profile_direction=None, xcoord='x'
             print('colormesh didnt work')
 
         if show_layers:
-            plt.plot(xArray, profile['layer_elevs'], c='k', linewidth=0.5)
-        if len(xArray)< 1000:
-            plt.vlines(xArray, ymin=profile['Bedrock_Elevation'], ymax=profile['Surface_Elevation'], linewidths=0.25, colors='k')
-        minBR = np.nanmin(profile['Bedrock_Elevation'])
+            plt.plot(coords, layer_elevs_filtered, c='k', linewidth=0.5)
+        if len(coords)< 1000:
+            plt.vlines(coords, ymin=br_elevs_filtered, ymax=surf_elevs_filtered, linewidths=0.25, colors='k')
+        minBR = np.nanmin(br_elevs_filtered)
         stopVal=np.nanmax(np.subtract(surf_elev, br_elev))/(9/1.25)
         stepVal = stopVal//10
-        plt.fill_between(xArray, br_elev, br_elev-(stopVal), facecolor='white', linewidth=3)
+        plt.fill_between(coords, br_elevs_filtered, br_elevs_filtered-(stopVal), facecolor='white', linewidth=3)
         for i in np.arange(0, stopVal, stepVal):
-            plt.fill_between(xArray, br_elev, br_elev-(stopVal-i), facecolor='purple', linewidth=3, alpha=0.1)
+            plt.fill_between(coords, br_elevs_filtered, br_elevs_filtered-(stopVal-i), facecolor='purple', linewidth=3, alpha=0.1)
 
-        plt.plot(xArray, br_elev, c='purple', linewidth=3)
-        plt.plot(xArray, surf_elev, c='k', linewidth=3)
+        plt.plot(coords, br_elevs_filtered, c='purple', linewidth=3)
+        plt.plot(coords, surf_elevs_filtered, c='k', linewidth=3)
         plt.show()
 
     return profileDicts
