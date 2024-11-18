@@ -10,7 +10,7 @@ setup(
         name="wells4hydrogeology",
         author="Riley Balikian",
         author_email="balikian@illinois.edu",
-        version="0.0.23",
+        version="0.0.24-dev",
         package_data={'w4h':
                       ['resources/*', 'resources/sample_data/*',
                        'resources/sample_data/statewide_sample_data/*',

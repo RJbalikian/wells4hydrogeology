@@ -1,20 +1,18 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>w4h.layers &mdash; w4h 0.0.22-dev documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=92fd9be5" />
-      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../_static/documentation_options.js?v=7d709ffc"></script>
-        <script src="../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/documentation_options.js?v=7d709ffc"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -370,24 +368,24 @@
         <span class="k">return</span> <span class="n">resdf_list</span></div>
 
 
-<span class="c1">#Interpolate layers to model grid</span>
+<span class="c1">#Interpolate layers to model model_grid</span>
 <div class="viewcode-block" id="layer_interp">
 <a class="viewcode-back" href="../../w4h.layers.html#w4h.layer_interp">[docs]</a>
-<span class="k">def</span> <span class="nf">layer_interp</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interp_kind</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">,</span> <span class="n">return_type</span><span class="o">=</span><span class="s1">&#39;dataarray&#39;</span><span class="p">,</span> <span class="n">export_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">target_col</span><span class="o">=</span><span class="s1">&#39;TARG_THICK_PER&#39;</span><span class="p">,</span> <span class="n">layer_col</span><span class="o">=</span><span class="s1">&#39;LAYER&#39;</span><span class="p">,</span> <span class="n">xcol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xcoord</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">ycoord</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to interpolate results, going from points to grid data. Uses scipy.interpolate module.</span>
+<span class="k">def</span> <span class="nf">layer_interp</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">model_grid</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interp_kind</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">,</span> <span class="n">surface_grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bedrock_grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">layer_thick_grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">drift_thick_grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_type</span><span class="o">=</span><span class="s1">&#39;dataset&#39;</span><span class="p">,</span> <span class="n">export_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">target_col</span><span class="o">=</span><span class="s1">&#39;TARG_THICK_PER&#39;</span><span class="p">,</span> <span class="n">layer_col</span><span class="o">=</span><span class="s1">&#39;LAYER&#39;</span><span class="p">,</span> <span class="n">xcol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xcoord</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">ycoord</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to interpolate results, going from points to model_grid data. Uses scipy.interpolate module.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    points : list</span>
 <span class="sd">        List containing pandas dataframes or geopandas geoadataframes containing the point data. Should be resDF_list output from layer_target_thick().</span>
-<span class="sd">    grid : xr.DataArray or xr.Dataset</span>
-<span class="sd">        Xarray DataArray or DataSet with the coordinates/spatial reference of the output grid to interpolate to</span>
+<span class="sd">    model_grid : xr.DataArray or xr.Dataset</span>
+<span class="sd">        Xarray DataArray or DataSet with the coordinates/spatial reference of the output model_grid to interpolate to</span>
 <span class="sd">    layers : int, default=None</span>
 <span class="sd">        Number of layers for interpolation. If None, uses the length ofthe points list to determine number of layers. By default None.</span>
 <span class="sd">    interp_kind : str, {&#39;nearest&#39;, &#39;interp2d&#39;,&#39;linear&#39;, &#39;cloughtocher&#39;, &#39;radial basis function&#39;}</span>
 <span class="sd">        Type of interpolation to use. See scipy.interpolate N-D scattered. Values can be any of the following (also shown in &quot;kind&quot; column of N-D scattered section of table here: https://docs.scipy.org/doc/scipy/tutorial/interpolate.html). By default &#39;nearest&#39;</span>
-<span class="sd">    return_type : str, {&#39;dataarray&#39;, &#39;dataset&#39;}</span>
-<span class="sd">        Type of xarray object to return, either xr.DataArray or xr.Dataset, by default &#39;dataarray.&#39;</span>
+<span class="sd">    return_type : str, {&#39;dataset&#39;, &#39;dataarray&#39;}</span>
+<span class="sd">        Type of xarray object to return, either xr.DataArray or xr.Dataset, by default &#39;dataset.&#39;</span>
 <span class="sd">    export_dir : str or pathlib.Path, default=None</span>
 <span class="sd">        Export directory for interpolated grids, using w4h.export_grids(). If None, does not export, by default None.</span>
 <span class="sd">    target_col : str, default = &#39;TARG_THICK_PER&#39;</span>
@@ -399,9 +397,9 @@
 <span class="sd">    ycol : str, default = &#39;None&#39;</span>
 <span class="sd">        Name of column containing y coordinates. If None, will look for &#39;geometry&#39; column, as in a geopandas.GeoDataframe. By default None</span>
 <span class="sd">    xcoord : str, default=&#39;x&#39;</span>
-<span class="sd">        Name of x coordinate in grid, used to extract x values of grid, by default &#39;x&#39;</span>
+<span class="sd">        Name of x coordinate in model_grid, used to extract x values of model_grid, by default &#39;x&#39;</span>
 <span class="sd">    ycoord : str, default=&#39;y&#39;</span>
-<span class="sd">        Name of y coordinate in grid, used to extract x values of grid, by default &#39;y&#39;</span>
+<span class="sd">        Name of y coordinate in model_grid, used to extract x values of model_grid, by default &#39;y&#39;</span>
 <span class="sd">    log : bool, default = True</span>
 <span class="sd">        Whether to log inputs and outputs to log file.</span>
 <span class="sd">    **kwargs</span>
@@ -415,7 +413,7 @@
     <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="n">verbose_print</span><span class="p">(</span><span class="n">layer_interp</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">,</span> <span class="s1">&#39;grid&#39;</span><span class="p">])</span>
+        <span class="n">verbose_print</span><span class="p">(</span><span class="n">layer_interp</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">,</span> <span class="s1">&#39;model_grid&#39;</span><span class="p">])</span>
 
     <span class="n">nnList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;nearest&#39;</span><span class="p">,</span> <span class="s1">&#39;nearest neighbor&#39;</span><span class="p">,</span> <span class="s1">&#39;nearestneighbor&#39;</span><span class="p">,</span><span class="s1">&#39;neighbor&#39;</span><span class="p">,</span>  <span class="s1">&#39;nn&#39;</span><span class="p">,</span><span class="s1">&#39;n&#39;</span><span class="p">]</span>
     <span class="n">splineList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;interp2d&#39;</span><span class="p">,</span> <span class="s1">&#39;interp2&#39;</span><span class="p">,</span> <span class="s1">&#39;interp&#39;</span><span class="p">,</span> <span class="s1">&#39;spline&#39;</span><span class="p">,</span> <span class="s1">&#39;spl&#39;</span><span class="p">,</span> <span class="s1">&#39;sp&#39;</span><span class="p">,</span> <span class="s1">&#39;s&#39;</span><span class="p">]</span>
@@ -425,8 +423,8 @@
     <span class="c1">#k-nearest neighbors from scikit-learn?</span>
     <span class="c1">#kriging? (from pykrige or maybe also from scikit-learn)</span>
     
-    <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="n">xcoord</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span><span class="c1"># #Extract xcoords from grid</span>
-    <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="n">ycoord</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span><span class="c1"># #Extract ycoords from grid</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">model_grid</span><span class="p">[</span><span class="n">xcoord</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>  <span class="c1"># Extract xcoords from model_grid</span>
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">model_grid</span><span class="p">[</span><span class="n">ycoord</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>  <span class="c1"># Extract ycoords from model_grid</span>
     
     <span class="k">if</span> <span class="n">layers</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">points</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="n">points</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="n">layers</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
@@ -436,6 +434,7 @@
 
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">Interpolating target lithology at each layer:&#39;</span><span class="p">)</span>
+    
     <span class="n">daDict</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">lyr</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">layers</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
         
@@ -462,15 +461,14 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">dataY</span> <span class="o">=</span> <span class="n">pts</span><span class="p">[</span><span class="n">ycol</span><span class="p">]</span>
 
-        <span class="c1">#layer = pts[layer_col]        </span>
         <span class="n">interpVal</span> <span class="o">=</span> <span class="n">pts</span><span class="p">[</span><span class="n">target_col</span><span class="p">]</span>
 
-        <span class="c1">#return points</span>
-        <span class="n">dataX</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># Return points</span>
+        <span class="n">dataX</span> <span class="o">=</span> <span class="n">dataX</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
         <span class="n">dataY</span> <span class="o">=</span> <span class="n">dataY</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">dataX</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
-        <span class="n">dataY</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">dataY</span> <span class="o">=</span> <span class="n">dataY</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
         <span class="n">interpVal</span> <span class="o">=</span> <span class="n">interpVal</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">dataY</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
-        <span class="n">interpVal</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">interpVal</span> <span class="o">=</span> <span class="n">interpVal</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
         
         <span class="n">dataX</span> <span class="o">=</span> <span class="n">dataX</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">interpVal</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
         <span class="n">dataY</span> <span class="o">=</span> <span class="n">dataY</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">interpVal</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
@@ -517,13 +515,10 @@
             <span class="n">interp</span> <span class="o">=</span> <span class="n">interpolate</span><span class="o">.</span><span class="n">NearestNDInterpolator</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">dataX</span><span class="p">,</span> <span class="n">dataY</span><span class="p">)),</span> <span class="n">interpVal</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="n">Z</span> <span class="o">=</span> <span class="n">interp</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
 
-        <span class="c1">#global ZTest</span>
-        <span class="c1">#ZTest = Z</span>
-
         <span class="n">interp_grid</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span> <span class="c1">#Create new datarray with new data values, but everything else the same</span>
                     <span class="n">data</span><span class="o">=</span><span class="n">Z</span><span class="p">,</span>
-                    <span class="n">dims</span><span class="o">=</span><span class="n">grid</span><span class="o">.</span><span class="n">dims</span><span class="p">,</span>
-                    <span class="n">coords</span><span class="o">=</span><span class="n">grid</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
+                    <span class="n">dims</span><span class="o">=</span><span class="n">model_grid</span><span class="o">.</span><span class="n">dims</span><span class="p">,</span>
+                    <span class="n">coords</span><span class="o">=</span><span class="n">model_grid</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
         
         <span class="k">if</span> <span class="s1">&#39;band&#39;</span> <span class="ow">in</span> <span class="n">interp_grid</span><span class="o">.</span><span class="n">coords</span><span class="p">:</span>
             <span class="n">interp_grid</span> <span class="o">=</span> <span class="n">interp_grid</span><span class="o">.</span><span class="n">drop_vars</span><span class="p">(</span><span class="s1">&#39;band&#39;</span><span class="p">)</span>
@@ -538,25 +533,31 @@
         <span class="k">del</span> <span class="n">interpVal</span>
         <span class="k">del</span> <span class="n">interp</span>
 
-        <span class="c1">#interp_grid=interp_grid.interpolate_na(dim=x)</span>
         <span class="n">zFillDigs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">layers</span><span class="p">))</span>
         <span class="n">daDict</span><span class="p">[</span><span class="s1">&#39;Layer&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">lyr</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="n">zFillDigs</span><span class="p">)]</span> <span class="o">=</span> <span class="n">interp_grid</span>
         <span class="k">del</span> <span class="n">interp_grid</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t\t</span><span class="s1">Completed </span><span class="si">{}</span><span class="s1"> interpolation for Layer </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">interpType</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="nb">str</span><span class="p">(</span><span class="n">lyr</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="n">zFillDigs</span><span class="p">)))</span>
 
-    <span class="n">dataAList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;dataarray&#39;</span><span class="p">,</span> <span class="s1">&#39;da&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;array&#39;</span><span class="p">]</span>
-    <span class="n">dataSList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;dataset&#39;</span><span class="p">,</span> <span class="s1">&#39;ds&#39;</span><span class="p">,</span> <span class="s1">&#39;set&#39;</span><span class="p">]</span>
 
-    <span class="k">if</span> <span class="n">return_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">dataAList</span><span class="p">:</span>
-        <span class="n">interp_data</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">daDict</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">dim</span><span class="o">=</span><span class="s1">&#39;Layer&#39;</span><span class="p">)</span>
-        <span class="n">interp_data</span> <span class="o">=</span> <span class="n">interp_data</span><span class="o">.</span><span class="n">assign_coords</span><span class="p">(</span><span class="n">Layer</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
-    <span class="k">elif</span> <span class="n">return_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">dataSList</span><span class="p">:</span>
-        <span class="n">interp_data</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">daDict</span><span class="p">)</span>
+
+    <span class="n">dataArrayList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;dataarray&#39;</span><span class="p">,</span> <span class="s1">&#39;da&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;array&#39;</span><span class="p">]</span>
+    <span class="n">dataSetList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;dataset&#39;</span><span class="p">,</span> <span class="s1">&#39;ds&#39;</span><span class="p">,</span> <span class="s1">&#39;set&#39;</span><span class="p">]</span>
+
+    <span class="n">interp_data</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">daDict</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">dim</span><span class="o">=</span><span class="s1">&#39;Layer&#39;</span><span class="p">)</span>
+    <span class="n">interp_data</span> <span class="o">=</span> <span class="n">interp_data</span><span class="o">.</span><span class="n">assign_coords</span><span class="p">(</span><span class="n">Layer</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">layers</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+    
+    <span class="k">if</span> <span class="n">return_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">dataArrayList</span><span class="p">:</span>
+        <span class="k">pass</span>        
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">return_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dataSetList</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">return_type</span><span class="si">}</span><span class="s2"> is not a valid input for return_type. Please set return_type to either &#39;dataarray&#39; or &#39;dataset&#39;&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Using dataset by default&quot;</span><span class="p">)</span>            
+        <span class="n">interp_data</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">data_vars</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Model_Layers&#39;</span><span class="p">:</span> <span class="n">interp_data</span><span class="p">})</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Done with interpolation, getting global attrs&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Done with interpolation, getting additional layers and attributes&#39;</span><span class="p">)</span>
 
-        <span class="c1">#Get common attributes from all layers to use as &quot;global&quot; attributes</span>
+        <span class="c1"># Get common attributes from all layers to use as &quot;global&quot; attributes</span>
         <span class="n">common_attrs</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">data_array</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">interp_data</span><span class="o">.</span><span class="n">data_vars</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
             <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -564,9 +565,6 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">common_attrs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">common_attrs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">data_array</span><span class="o">.</span><span class="n">attrs</span> <span class="ow">and</span> <span class="n">data_array</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">==</span> <span class="n">v</span><span class="p">}</span>
         <span class="n">interp_data</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">common_attrs</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">return_type</span><span class="si">}</span><span class="s2"> is not a valid input for return_type. Please set return_type to either &#39;dataarray&#39; or &#39;dataset&#39;&quot;</span><span class="p">)</span>
-        <span class="k">return</span>
 
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">layer_data</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">interp_data</span><span class="p">):</span>

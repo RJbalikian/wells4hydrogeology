@@ -19,3 +19,4 @@ Submodules
    w4h.layers
    w4h.mapping
    w4h.read
+   w4h.visualization

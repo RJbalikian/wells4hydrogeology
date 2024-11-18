@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="./">
 <head>
@@ -5,17 +7,13 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>w4h.layers module &mdash; w4h 0.0.22-dev documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="_static/documentation_options.js?v=7d709ffc"></script>
-        <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/documentation_options.js?v=7d709ffc"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -70,6 +68,7 @@
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.logger_function"><code class="docutils literal notranslate"><span class="pre">logger_function()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.merge_lithologies"><code class="docutils literal notranslate"><span class="pre">merge_lithologies()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.merge_metadata"><code class="docutils literal notranslate"><span class="pre">merge_metadata()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.plot_cross_section"><code class="docutils literal notranslate"><span class="pre">plot_cross_section()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_dict"><code class="docutils literal notranslate"><span class="pre">read_dict()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_dictionary_terms"><code class="docutils literal notranslate"><span class="pre">read_dictionary_terms()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_grid"><code class="docutils literal notranslate"><span class="pre">read_grid()</span></code></a></li>
@@ -110,6 +109,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="w4h.mapping.html">w4h.mapping module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="w4h.read.html">w4h.read module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="w4h.visualization.html">w4h.visualization module</a></li>
 </ul>
 </li>
 </ul>
@@ -213,20 +213,20 @@ and for interpolating data within the layers</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="w4h.layers.layer_interp">
-<span class="sig-prename descclassname"><span class="pre">w4h.layers.</span></span><span class="sig-name descname"><span class="pre">layer_interp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interp_kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nearest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dataarray'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TARG_THICK_PER'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'LAYER'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xcol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ycol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xcoord</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'x'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ycoord</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'y'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/layers.html#layer_interp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.layers.layer_interp" title="Link to this definition">¶</a></dt>
-<dd><p>Function to interpolate results, going from points to grid data. Uses scipy.interpolate module.</p>
+<span class="sig-prename descclassname"><span class="pre">w4h.layers.</span></span><span class="sig-name descname"><span class="pre">layer_interp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interp_kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nearest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surface_grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bedrock_grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_thick_grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drift_thick_grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dataset'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TARG_THICK_PER'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'LAYER'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xcol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ycol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xcoord</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'x'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ycoord</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'y'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/layers.html#layer_interp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.layers.layer_interp" title="Link to this definition">¶</a></dt>
+<dd><p>Function to interpolate results, going from points to model_grid data. Uses scipy.interpolate module.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>points</strong><span class="classifier">list</span></dt><dd><p>List containing pandas dataframes or geopandas geoadataframes containing the point data. Should be resDF_list output from layer_target_thick().</p>
 </dd>
-<dt><strong>grid</strong><span class="classifier">xr.DataArray or xr.Dataset</span></dt><dd><p>Xarray DataArray or DataSet with the coordinates/spatial reference of the output grid to interpolate to</p>
+<dt><strong>model_grid</strong><span class="classifier">xr.DataArray or xr.Dataset</span></dt><dd><p>Xarray DataArray or DataSet with the coordinates/spatial reference of the output model_grid to interpolate to</p>
 </dd>
 <dt><strong>layers</strong><span class="classifier">int, default=None</span></dt><dd><p>Number of layers for interpolation. If None, uses the length ofthe points list to determine number of layers. By default None.</p>
 </dd>
 <dt><strong>interp_kind</strong><span class="classifier">str, {‘nearest’, ‘interp2d’,’linear’, ‘cloughtocher’, ‘radial basis function’}</span></dt><dd><p>Type of interpolation to use. See scipy.interpolate N-D scattered. Values can be any of the following (also shown in “kind” column of N-D scattered section of table here: <a class="reference external" href="https://docs.scipy.org/doc/scipy/tutorial/interpolate.html">https://docs.scipy.org/doc/scipy/tutorial/interpolate.html</a>). By default ‘nearest’</p>
 </dd>
-<dt><strong>return_type</strong><span class="classifier">str, {‘dataarray’, ‘dataset’}</span></dt><dd><p>Type of xarray object to return, either xr.DataArray or xr.Dataset, by default ‘dataarray.’</p>
+<dt><strong>return_type</strong><span class="classifier">str, {‘dataset’, ‘dataarray’}</span></dt><dd><p>Type of xarray object to return, either xr.DataArray or xr.Dataset, by default ‘dataset.’</p>
 </dd>
 <dt><strong>export_dir</strong><span class="classifier">str or pathlib.Path, default=None</span></dt><dd><p>Export directory for interpolated grids, using w4h.export_grids(). If None, does not export, by default None.</p>
 </dd>
@@ -238,9 +238,9 @@ and for interpolating data within the layers</p>
 </dd>
 <dt><strong>ycol</strong><span class="classifier">str, default = ‘None’</span></dt><dd><p>Name of column containing y coordinates. If None, will look for ‘geometry’ column, as in a geopandas.GeoDataframe. By default None</p>
 </dd>
-<dt><strong>xcoord</strong><span class="classifier">str, default=’x’</span></dt><dd><p>Name of x coordinate in grid, used to extract x values of grid, by default ‘x’</p>
+<dt><strong>xcoord</strong><span class="classifier">str, default=’x’</span></dt><dd><p>Name of x coordinate in model_grid, used to extract x values of model_grid, by default ‘x’</p>
 </dd>
-<dt><strong>ycoord</strong><span class="classifier">str, default=’y’</span></dt><dd><p>Name of y coordinate in grid, used to extract x values of grid, by default ‘y’</p>
+<dt><strong>ycoord</strong><span class="classifier">str, default=’y’</span></dt><dd><p>Name of y coordinate in model_grid, used to extract x values of model_grid, by default ‘y’</p>
 </dd>
 <dt><strong>log</strong><span class="classifier">bool, default = True</span></dt><dd><p>Whether to log inputs and outputs to log file.</p>
 </dd>

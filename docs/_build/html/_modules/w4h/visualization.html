@@ -1,0 +1,322 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>w4h.visualization &mdash; w4h 0.0.22-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/documentation_options.js?v=7d709ffc"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            w4h
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.html">w4h package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.classify.html">w4h.classify module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.clean.html">w4h.clean module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.core.html">w4h.core module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.export.html">w4h.export module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.layers.html">w4h.layers module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.mapping.html">w4h.mapping module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.read.html">w4h.read module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">w4h</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">w4h.visualization</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for w4h.visualization</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;The visualization module contains functions for creating plots and data vizualizations from outputs from w4h.run()&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">geopandas</span> <span class="k">as</span> <span class="nn">gpd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">shapely</span>
+
+<div class="viewcode-block" id="plot_cross_section">
+<a class="viewcode-back" href="../../w4h.visualization.html#w4h.plot_cross_section">[docs]</a>
+<span class="k">def</span> <span class="nf">plot_cross_section</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">profile_direction</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xcoord</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">ycoord</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">show_layers</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">profile</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">firstX</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">xcoord</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">midX</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">xcoord</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+        <span class="n">lastX</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">xcoord</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">firstY</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">ycoord</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">midY</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">ycoord</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+        <span class="n">lastY</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">ycoord</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        
+        <span class="n">profileX</span> <span class="o">=</span> <span class="n">shapely</span><span class="o">.</span><span class="n">LineString</span><span class="p">([[</span><span class="n">firstX</span><span class="p">,</span> <span class="n">midY</span><span class="p">],</span> <span class="p">[</span><span class="n">lastX</span><span class="p">,</span> <span class="n">midY</span><span class="p">]])</span>
+        <span class="n">profileY</span> <span class="o">=</span> <span class="n">shapely</span><span class="o">.</span><span class="n">LineString</span><span class="p">([[</span><span class="n">midX</span><span class="p">,</span> <span class="n">firstY</span><span class="p">],</span> <span class="p">[</span><span class="n">midX</span><span class="p">,</span> <span class="n">lastY</span><span class="p">]])</span>
+        <span class="n">profile</span> <span class="o">=</span> <span class="p">[</span><span class="n">profileX</span><span class="p">,</span> <span class="n">profileY</span><span class="p">]</span>
+        <span class="c1">#profile_direction = [&#39;WE&#39;, &#39;SN&#39;]</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">):</span>
+        <span class="n">profile</span> <span class="o">=</span> <span class="n">profile</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">shapely</span><span class="o">.</span><span class="n">Geometry</span><span class="p">):</span>
+        <span class="n">profile</span> <span class="o">=</span> <span class="p">[</span><span class="n">profile</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="p">(</span><span class="n">shapely</span><span class="o">.</span><span class="n">Geometry</span><span class="p">,</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">))</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">profile</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;If using a list or tuple for profile parameter, all items must be a shapely Geometry or geopandas GeoDataFrame&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="n">newProfiles</span> <span class="o">=</span> <span class="n">profile</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">profile</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">):</span>
+                <span class="n">profileExt</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+                <span class="n">newProfiles</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">profileExt</span><span class="p">)</span>
+        <span class="n">profile</span> <span class="o">=</span> <span class="n">newProfiles</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">The profile parameter must shapely Geometry or geopandas GeoDataFrame or a list of those objects&quot;</span><span class="p">)</span>
+        <span class="k">return</span> 
+    
+    <span class="k">if</span> <span class="n">profile_direction</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">profile_direction</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">profile</span><span class="p">:</span>
+            <span class="n">firstCoord</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">lastCoord</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">xRange</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lastCoord</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">firstCoord</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">yRange</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lastCoord</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">firstCoord</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            
+            <span class="k">if</span> <span class="n">yRange</span> <span class="o">&gt;</span> <span class="n">xRange</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">lastCoord</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">firstCoord</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                    <span class="n">profile_direction</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;SN&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">profile_direction</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;NS&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">lastCoord</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">firstCoord</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                    <span class="n">profile_direction</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;WE&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">profile_direction</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;EW&quot;</span><span class="p">)</span>                    
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">profile_direction</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">profile</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">profile and profile_direction must be the same length, but len(profile)=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">profile</span><span class="p">)</span><span class="si">}</span><span class="s2"> and len(profile_direction)=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">profile_direction</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="n">profileDicts</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># Iterate through each profile</span>
+    <span class="k">for</span> <span class="n">p_i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">profile</span><span class="p">):</span>
+        <span class="c1"># Temporary lists for each segment/vertex</span>
+        <span class="n">segLengths</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">segOrientations</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">segSamplePoints</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">surfaceElevs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">bedrockElevs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">layerElevs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">modelData</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="c1"># Iterate through each segment/vertex of the profile</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">vertex</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">coords</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">prevVertex</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="n">segmentLineString</span> <span class="o">=</span> <span class="n">shapely</span><span class="o">.</span><span class="n">LineString</span><span class="p">([</span><span class="n">prevVertex</span><span class="p">,</span> <span class="n">vertex</span><span class="p">])</span>
+            <span class="n">segXCoords</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="n">prevVertex</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">vertex</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+            <span class="n">segYCoords</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="n">prevVertex</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">vertex</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+
+            <span class="n">segXCoordsDists</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">segXCoords</span><span class="p">)</span>
+            <span class="n">segYCoordsDists</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">segYCoords</span><span class="p">)</span>
+            <span class="n">segLengths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">segmentLineString</span><span class="o">.</span><span class="n">length</span><span class="p">)</span>
+
+            <span class="c1"># Get distance of each segment</span>
+            <span class="n">y1</span> <span class="o">=</span> <span class="n">vertex</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">y0</span> <span class="o">=</span> <span class="n">prevVertex</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">x1</span> <span class="o">=</span> <span class="n">vertex</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">x0</span> <span class="o">=</span> <span class="n">prevVertex</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">yDist</span> <span class="o">=</span> <span class="n">y1</span><span class="o">-</span><span class="n">y0</span>
+            <span class="n">xDist</span> <span class="o">=</span> <span class="n">x1</span><span class="o">-</span><span class="n">x0</span>
+
+            <span class="c1"># Get orientation of segment</span>
+            <span class="n">segOrient</span><span class="o">=</span><span class="s1">&#39;WE&#39;</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">yDist</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">abs</span><span class="p">(</span><span class="n">xDist</span><span class="p">):</span>
+                <span class="n">segOrient</span> <span class="o">=</span> <span class="s1">&#39;SN&#39;</span>
+                <span class="k">if</span> <span class="n">yDist</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">segOrient</span> <span class="o">=</span> <span class="s1">&#39;NS&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">xDist</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">segOrient</span> <span class="o">=</span> <span class="s1">&#39;EW&#39;</span>
+            <span class="n">segOrientations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">segOrient</span><span class="p">)</span>
+            <span class="n">yOrients</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;NS&#39;</span><span class="p">,</span> <span class="s2">&quot;SN&quot;</span><span class="p">]</span>
+            <span class="n">xOrients</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;WE&#39;</span><span class="p">,</span> <span class="s2">&quot;EW&quot;</span><span class="p">]</span>
+
+            <span class="c1"># Get coordinates to sample for profile</span>
+            <span class="k">if</span> <span class="n">segOrient</span> <span class="ow">in</span> <span class="n">xOrients</span><span class="p">:</span>
+                <span class="n">vertexIndex</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">otherVertextInd</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">segCoords</span> <span class="o">=</span> <span class="n">segXCoords</span>
+                <span class="n">segCoordsDists</span> <span class="o">=</span> <span class="n">segXCoordsDists</span> 
+
+            <span class="k">else</span><span class="p">:</span> <span class="c1"># if oriented more NS</span>
+                <span class="n">vertexIndex</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">otherVertextInd</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">segCoords</span> <span class="o">=</span> <span class="n">segYCoords</span>
+                <span class="n">segCoordsDists</span> <span class="o">=</span> <span class="n">segYCoordsDists</span> 
+
+            <span class="c1"># For each segment, get each xy value as shapely point at each existing coordinate value</span>
+            <span class="n">subsegSamplePoints</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">segmentSegment</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">segCoordsDists</span><span class="p">):</span>
+                <span class="n">currSubsegDistance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">segCoordsDists</span><span class="p">[:</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">subsegSamplePoints</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">segmentLineString</span><span class="o">.</span><span class="n">line_interpolate_point</span><span class="p">(</span><span class="n">distance</span><span class="o">=</span><span class="n">currSubsegDistance</span><span class="p">))</span>
+            <span class="n">segSamplePoints</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">subsegSamplePoints</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">segSamplePoints</span><span class="p">))</span>
+        <span class="n">profileLineString</span> <span class="o">=</span> <span class="n">shapely</span><span class="o">.</span><span class="n">LineString</span><span class="p">(</span><span class="n">segSamplePoints</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">segSamplePoints</span><span class="p">:</span>
+            <span class="n">xcoord</span><span class="p">,</span> <span class="n">ycoord</span> <span class="o">=</span> <span class="n">point</span><span class="o">.</span><span class="n">xy</span>
+            <span class="n">surfaceElevs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;Surface_Elevation&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">xcoord</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">ycoord</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+            <span class="n">bedrockElevs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;Bedrock_Elevation&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">xcoord</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">ycoord</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+            <span class="n">modelData</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;Model_Layers&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">xcoord</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">ycoord</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+            <span class="n">layerElevs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">&#39;layer_elevs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">xcoord</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">ycoord</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+        
+        <span class="n">surfElevArr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">surfaceElevs</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="n">bedElevArr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">bedrockElevs</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">segSamplePoints</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">segSamplePoints</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">surfElevArr</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">surfElevArr</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">bedElevArr</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">bedElevArr</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">modelData</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">modelData</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">layerElevs</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">layerElevs</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+        <span class="n">profileDicts</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;XY&#39;</span><span class="p">:</span> <span class="n">shapely</span><span class="o">.</span><span class="n">LineString</span><span class="p">(</span><span class="n">segSamplePoints</span><span class="p">),</span>
+                            <span class="s1">&#39;Surface_Elevation&#39;</span><span class="p">:</span> <span class="n">surfElevArr</span><span class="p">,</span>
+                            <span class="s1">&#39;Bedrock_Elevation&#39;</span><span class="p">:</span> <span class="n">bedElevArr</span><span class="p">,</span>
+                            <span class="s1">&#39;Model_Layers&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">modelData</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">surfElevArr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">9</span><span class="p">)),</span>
+                            <span class="s1">&#39;layer_elevs&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">layerElevs</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">surfElevArr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">9</span><span class="p">)),</span>
+                            <span class="s1">&#39;profile_direction&#39;</span><span class="p">:</span> <span class="n">profile_direction</span><span class="p">[</span><span class="n">p_i</span><span class="p">]</span>
+                            <span class="p">})</span>
+            
+    <span class="c1"># Now just need to plot, got data</span>
+    <span class="c1"># FROM HERE ON DOWN DOES NOT WORK PERFECTLY, NEED TO ADJUST FOR DIFFERENT ORIENTATIONS</span>
+    <span class="k">for</span> <span class="n">profile</span> <span class="ow">in</span> <span class="n">profileDicts</span><span class="p">:</span>
+        <span class="n">xArray</span><span class="p">,</span> <span class="n">yArray</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s2">&quot;XY&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">xy</span>
+        <span class="n">xArray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">xArray</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+        <span class="n">yArray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">yArray</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+        <span class="n">layer_elevs</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;layer_elevs&#39;</span><span class="p">]</span>
+        <span class="n">Model_Layers</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s2">&quot;Model_Layers&quot;</span><span class="p">]</span>
+        <span class="n">br_elev</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;Bedrock_Elevation&#39;</span><span class="p">]</span>
+        <span class="n">surf_elev</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;Surface_Elevation&#39;</span><span class="p">]</span>
+        <span class="c1"># Find rows in layer_elevs that contain any NaN values</span>
+        <span class="n">valid_rows</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">layer_elevs</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Filter xArray, layer_elevs, and Model_Layers based on valid rows</span>
+        <span class="n">xArray_filtered</span> <span class="o">=</span> <span class="n">xArray</span><span class="p">[</span><span class="n">valid_rows</span><span class="p">]</span>
+        <span class="n">yArray_filtered</span> <span class="o">=</span> <span class="n">yArray</span><span class="p">[</span><span class="n">valid_rows</span><span class="p">]</span>
+        <span class="n">br_elevs_filtered</span> <span class="o">=</span> <span class="n">br_elev</span><span class="p">[</span><span class="n">valid_rows</span><span class="p">]</span>
+        <span class="n">surf_elevs_filtered</span> <span class="o">=</span> <span class="n">surf_elev</span><span class="p">[</span><span class="n">valid_rows</span><span class="p">]</span>
+        <span class="n">layer_elevs_filtered</span> <span class="o">=</span> <span class="n">layer_elevs</span><span class="p">[</span><span class="n">valid_rows</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">Model_Layers_filtered</span> <span class="o">=</span> <span class="n">Model_Layers</span><span class="p">[</span><span class="n">valid_rows</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="k">if</span> <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;profile_direction&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">xOrients</span><span class="p">:</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">xArray_filtered</span><span class="p">,</span> <span class="p">(</span><span class="n">layer_elevs_filtered</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">coords</span> <span class="o">=</span> <span class="n">xArray_filtered</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">yArray_filtered</span><span class="p">,</span> <span class="p">(</span><span class="n">layer_elevs_filtered</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">coords</span> <span class="o">=</span> <span class="n">yArray_filtered</span>
+
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">layer_elevs_filtered</span>
+
+        <span class="c1"># Set up plot</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.figsize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;xtick.top&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;xtick.labeltop&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;ytick.right&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;ytick.labelright&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+
+        <span class="c1"># Plot data</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">pcm</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Model_Layers_filtered</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Oranges&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;colormesh didnt work&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">show_layers</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">layer_elevs_filtered</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span><span class="o">&lt;</span> <span class="mi">1000</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">vlines</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">ymin</span><span class="o">=</span><span class="n">br_elevs_filtered</span><span class="p">,</span> <span class="n">ymax</span><span class="o">=</span><span class="n">surf_elevs_filtered</span><span class="p">,</span> <span class="n">linewidths</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+        <span class="n">minBR</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">br_elevs_filtered</span><span class="p">)</span>
+        <span class="n">stopVal</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="n">surf_elev</span><span class="p">,</span> <span class="n">br_elev</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="mi">9</span><span class="o">/</span><span class="mf">1.25</span><span class="p">)</span>
+        <span class="n">stepVal</span> <span class="o">=</span> <span class="n">stopVal</span><span class="o">//</span><span class="mi">10</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">br_elevs_filtered</span><span class="p">,</span> <span class="n">br_elevs_filtered</span><span class="o">-</span><span class="p">(</span><span class="n">stopVal</span><span class="p">),</span> <span class="n">facecolor</span><span class="o">=</span><span class="s1">&#39;white&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">stopVal</span><span class="p">,</span> <span class="n">stepVal</span><span class="p">):</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">br_elevs_filtered</span><span class="p">,</span> <span class="n">br_elevs_filtered</span><span class="o">-</span><span class="p">(</span><span class="n">stopVal</span><span class="o">-</span><span class="n">i</span><span class="p">),</span> <span class="n">facecolor</span><span class="o">=</span><span class="s1">&#39;purple&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">br_elevs_filtered</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;purple&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">surf_elevs_filtered</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">profileDicts</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

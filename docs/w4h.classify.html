@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="./">
 <head>
@@ -5,17 +7,13 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>w4h.classify module &mdash; w4h 0.0.22-dev documentation</title>
-      <link rel="stylesheet" type="text/css" href="pygments.css?v=92fd9be5" />
-      <link rel="stylesheet" type="text/css" href="theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="theme.css?v=e59714d7" />
 
   
-  <!--[if lt IE 9]>
-    <script src="html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="documentation_options.js?v=7d709ffc"></script>
-        <script src="doctools.js?v=888ff710"></script>
-        <script src="sphinx_highlight.js?v=dc90522c"></script>
+      <script src="documentation_options.js?v=7d709ffc"></script>
+      <script src="doctools.js?v=9bcbadda"></script>
+      <script src="sphinx_highlight.js?v=dc90522c"></script>
     <script src="theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -70,6 +68,7 @@
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.logger_function"><code class="docutils literal notranslate"><span class="pre">logger_function()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.merge_lithologies"><code class="docutils literal notranslate"><span class="pre">merge_lithologies()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.merge_metadata"><code class="docutils literal notranslate"><span class="pre">merge_metadata()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.plot_cross_section"><code class="docutils literal notranslate"><span class="pre">plot_cross_section()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_dict"><code class="docutils literal notranslate"><span class="pre">read_dict()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_dictionary_terms"><code class="docutils literal notranslate"><span class="pre">read_dictionary_terms()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_grid"><code class="docutils literal notranslate"><span class="pre">read_grid()</span></code></a></li>
@@ -116,6 +115,7 @@
 <li class="toctree-l3"><a class="reference internal" href="w4h.layers.html">w4h.layers module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="w4h.mapping.html">w4h.mapping module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="w4h.read.html">w4h.read module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="w4h.visualization.html">w4h.visualization module</a></li>
 </ul>
 </li>
 </ul>
@@ -172,7 +172,7 @@
 <p>The Classify module contains functions for defining geological intervals into a preset subset of geologic interpretations.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="w4h.classify.depth_define">
-<span class="sig-prename descclassname"><span class="pre">w4h.classify.</span></span><span class="sig-name descname"><span class="pre">depth_define</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TOP'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">550.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/classify.html#depth_define"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.classify.depth_define" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">w4h.classify.</span></span><span class="sig-name descname"><span class="pre">depth_define</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TOP'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">550.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel_processing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/classify.html#depth_define"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.classify.depth_define" title="Link to this definition">¶</a></dt>
 <dd><p>Function to define all intervals lower than thresh as bedrock</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -294,7 +294,7 @@ to get the unique values.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="w4h.classify.remerge_data">
-<span class="sig-prename descclassname"><span class="pre">w4h.classify.</span></span><span class="sig-name descname"><span class="pre">remerge_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">classifieddf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">searchdf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/classify.html#remerge_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.classify.remerge_data" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">w4h.classify.</span></span><span class="sig-name descname"><span class="pre">remerge_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">classifieddf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">searchdf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel_processing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/classify.html#remerge_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.classify.remerge_data" title="Link to this definition">¶</a></dt>
 <dd><p>Function to merge newly-classified (or not) and previously classified data</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -340,7 +340,7 @@ to get the unique values.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="w4h.classify.specific_define">
-<span class="sig-prename descclassname"><span class="pre">w4h.classify.</span></span><span class="sig-name descname"><span class="pre">specific_define</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">terms_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'FORMATION'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">terms_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'DESCRIPTION'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/classify.html#specific_define"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.classify.specific_define" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">w4h.classify.</span></span><span class="sig-name descname"><span class="pre">specific_define</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">terms_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'FORMATION'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">terms_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'DESCRIPTION'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel_processing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/classify.html#specific_define"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.classify.specific_define" title="Link to this definition">¶</a></dt>
 <dd><p>Function to classify terms that have been specifically defined in the terms_df.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -394,7 +394,7 @@ to get the unique values.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="w4h.classify.start_define">
-<span class="sig-prename descclassname"><span class="pre">w4h.classify.</span></span><span class="sig-name descname"><span class="pre">start_define</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">terms_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'FORMATION'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">terms_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'DESCRIPTION'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/classify.html#start_define"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.classify.start_define" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">w4h.classify.</span></span><span class="sig-name descname"><span class="pre">start_define</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">terms_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'FORMATION'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">terms_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'DESCRIPTION'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel_processing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/classify.html#start_define"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.classify.start_define" title="Link to this definition">¶</a></dt>
 <dd><p>Function to classify descriptions according to starting substring.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>

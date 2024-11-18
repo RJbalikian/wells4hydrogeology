@@ -1,20 +1,18 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>w4h.classify &mdash; w4h 0.0.22-dev documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=92fd9be5" />
-      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../_static/documentation_options.js?v=7d709ffc"></script>
-        <script src="../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/documentation_options.js?v=7d709ffc"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -82,6 +80,7 @@
 <span class="kn">import</span> <span class="nn">datetime</span>
 <span class="kn">import</span> <span class="nn">inspect</span>
 
+<span class="kn">import</span> <span class="nn">dask</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
@@ -95,10 +94,74 @@
 <span class="c1">#- 5: Wildcard match (any substring) - more liberal</span>
 <span class="c1">#- Top of well?</span>
 
+
+<span class="c1">#Define well intervals by depth</span>
+<div class="viewcode-block" id="depth_define">
+<a class="viewcode-back" href="../../w4h.classify.html#w4h.depth_define">[docs]</a>
+<span class="k">def</span> <span class="nf">depth_define</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">top_col</span><span class="o">=</span><span class="s1">&#39;TOP&#39;</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="mf">550.0</span><span class="p">,</span> <span class="n">parallel_processing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to define all intervals lower than thresh as bedrock</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    df : pandas.DataFrame</span>
+<span class="sd">        Dataframe to classify</span>
+<span class="sd">    top_col : str, default = &#39;TOP&#39;</span>
+<span class="sd">        Name of column that contains the depth information, likely of the top of the well interval, by default &#39;TOP&#39;</span>
+<span class="sd">    thresh : float, default = 550.0</span>
+<span class="sd">        Depth (in units used in df[&#39;top_col&#39;]) below which all intervals will be classified as bedrock, by default 550.0.</span>
+<span class="sd">    verbose : bool, default = False</span>
+<span class="sd">        Whether to print results, by default False</span>
+<span class="sd">    log : bool, default = True</span>
+<span class="sd">        Whether to log results to log file</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    df : pandas.DataFrame</span>
+<span class="sd">        Dataframe containing intervals classified as bedrock due to depth</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="n">verbose_print</span><span class="p">(</span><span class="n">depth_define</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;df&#39;</span><span class="p">])</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mask</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">top_col</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">thresh</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>  <span class="c1"># Add a Classification Flag of 3 (bedrock b/c it&#39;s deepter than 550&#39;) to all records where the top of the interval is &gt;550&#39;</span>
+    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;BEDROCK_FLAG&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;BEDROCK_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mask</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">top_col</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">thresh</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">parallel_processing</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;numRecsClass&quot;</span><span class="p">)</span>
+            <span class="n">numRecsClass</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">3</span><span class="p">][</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">compute</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">total</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Computing percRecsClass&quot;</span><span class="p">)</span>
+                <span class="n">percRecsClass</span> <span class="o">=</span> <span class="nb">round</span><span class="p">((</span><span class="n">numRecsClass</span> <span class="o">/</span> <span class="n">total</span><span class="o">.</span><span class="n">compute</span><span class="p">())</span><span class="o">*</span><span class="mi">100</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Computing recsRemaining&quot;</span><span class="p">)</span>
+                <span class="n">recsRemainig</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">percRecsClass</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">recsRemainig</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">numRecsClass</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">3</span><span class="p">][</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">total</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">percRecsClass</span> <span class="o">=</span> <span class="nb">round</span><span class="p">((</span><span class="n">numRecsClass</span> <span class="o">/</span> <span class="n">total</span><span class="p">)</span><span class="o">*</span><span class="mi">100</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+                <span class="n">recsRemainig</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">percRecsClass</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">recsRemainig</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">Classified bedrock well records using depth threshold at depth of </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">thresh</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="si">{}</span><span class="s2"> records classified using bedrock threshold depth (</span><span class="si">{}% o</span><span class="s2">f unclassified  data)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">numRecsClass</span><span class="p">,</span> <span class="n">percRecsClass</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\t\t</span><span class="si">{</span><span class="n">recsRemainig</span><span class="si">}</span><span class="s1"> records remain unclassified (</span><span class="si">{</span><span class="mi">100</span><span class="o">-</span><span class="n">percRecsClass</span><span class="si">}</span><span class="s1">% of unclassified  data).&#39;</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">df</span></div>
+
+
+
 <span class="c1">#Define records with full search term</span>
 <div class="viewcode-block" id="specific_define">
 <a class="viewcode-back" href="../../w4h.classify.html#w4h.specific_define">[docs]</a>
-<span class="k">def</span> <span class="nf">specific_define</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">terms_df</span><span class="p">,</span> <span class="n">description_col</span><span class="o">=</span><span class="s1">&#39;FORMATION&#39;</span><span class="p">,</span> <span class="n">terms_col</span><span class="o">=</span><span class="s1">&#39;DESCRIPTION&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">specific_define</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">terms_df</span><span class="p">,</span> <span class="n">description_col</span><span class="o">=</span><span class="s1">&#39;FORMATION&#39;</span><span class="p">,</span> <span class="n">terms_col</span><span class="o">=</span><span class="s1">&#39;DESCRIPTION&#39;</span><span class="p">,</span> <span class="n">parallel_processing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to classify terms that have been specifically defined in the terms_df.</span>
 
 <span class="sd">    Parameters</span>
@@ -124,7 +187,7 @@
         <span class="n">verbose_print</span><span class="p">(</span><span class="n">specific_define</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;df&#39;</span><span class="p">,</span> <span class="s1">&#39;terms_df&#39;</span><span class="p">])</span>
 
     <span class="k">if</span> <span class="n">description_col</span> <span class="o">!=</span> <span class="n">terms_col</span><span class="p">:</span>
-        <span class="n">terms_df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="n">terms_col</span><span class="p">:</span><span class="n">description_col</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">terms_df</span> <span class="o">=</span> <span class="n">terms_df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="n">terms_col</span><span class="p">:</span><span class="n">description_col</span><span class="p">})</span>
         <span class="n">terms_col</span> <span class="o">=</span> <span class="n">description_col</span>
 
     <span class="n">df</span><span class="p">[</span><span class="n">description_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">description_col</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
@@ -135,19 +198,25 @@
     <span class="c1">#df[&#39;FORMATION&#39;] = df[&#39;FORMATION&#39;].str.strip([&#39;.,:?\t\s&#39;])</span>
     <span class="c1">#terms_df[&#39;FORMATION&#39;] = terms_df[&#39;FORMATION&#39;].str.strip([&#39;.,:?\t\s&#39;])</span>
 
-    <span class="n">terms_df</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="n">terms_col</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="s1">&#39;last&#39;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">terms_df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">terms_df</span> <span class="o">=</span> <span class="n">terms_df</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="n">terms_col</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="s1">&#39;last&#39;</span><span class="p">)</span>
+    <span class="n">terms_df</span> <span class="o">=</span> <span class="n">terms_df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     
-    <span class="n">df_Interps</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="n">terms_df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">terms_col</span><span class="p">),</span> <span class="n">on</span><span class="o">=</span><span class="n">description_col</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">)</span>
-    <span class="n">df_Interps</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="n">description_col</span><span class="p">:</span><span class="s1">&#39;FORMATION&#39;</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">df_Interps</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">right</span><span class="o">=</span><span class="n">terms_df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">terms_col</span><span class="p">),</span> <span class="n">left_on</span><span class="o">=</span><span class="n">description_col</span><span class="p">,</span> <span class="n">right_on</span><span class="o">=</span><span class="n">terms_col</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s1">&#39;inner&#39;</span><span class="p">)</span>
+    <span class="c1">#df_Interps = pd.merge(left=df, right=terms_df.set_index(terms_col), on=description_col, how=&#39;left&#39;)</span>
+    <span class="n">df_Interps</span> <span class="o">=</span> <span class="n">df_Interps</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="n">description_col</span><span class="p">:</span><span class="s1">&#39;FORMATION&#39;</span><span class="p">})</span>
     <span class="n">df_Interps</span><span class="p">[</span><span class="s1">&#39;BEDROCK_FLAG&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_Interps</span><span class="p">[</span><span class="s1">&#39;LITHOLOGY&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;BEDROCK&#39;</span>
     
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="n">totRecords</span> <span class="o">=</span> <span class="n">df_Interps</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">numRecsClass</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">df_Interps</span><span class="p">[</span><span class="n">df_Interps</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
-        <span class="n">recsRemainig</span> <span class="o">=</span> <span class="n">df_Interps</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-        <span class="n">percRecsClass</span><span class="o">=</span> <span class="nb">round</span><span class="p">((</span> <span class="n">numRecsClass</span> <span class="o">/</span> <span class="n">totRecords</span><span class="p">)</span><span class="o">*</span><span class="mi">100</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-        
+        <span class="k">if</span> <span class="n">parallel_processing</span><span class="p">:</span>
+            <span class="n">numRecsClass</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">df_Interps</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">compute</span><span class="p">())</span>
+            <span class="n">recsRemainig</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">df_Interps</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">compute</span><span class="p">())</span>
+            <span class="n">percRecsClass</span><span class="o">=</span> <span class="nb">round</span><span class="p">((</span> <span class="n">numRecsClass</span> <span class="o">/</span> <span class="n">totRecords</span><span class="o">.</span><span class="n">compute</span><span class="p">())</span><span class="o">*</span><span class="mi">100</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">numRecsClass</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">df_Interps</span><span class="p">[</span><span class="n">df_Interps</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+            <span class="n">recsRemainig</span> <span class="o">=</span> <span class="n">df_Interps</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="n">percRecsClass</span><span class="o">=</span> <span class="nb">round</span><span class="p">((</span> <span class="n">numRecsClass</span> <span class="o">/</span> <span class="n">totRecords</span><span class="p">)</span><span class="o">*</span><span class="mi">100</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+            
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">Classified well records using exact matches&#39;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="si">{}</span><span class="s2"> records classified using exact matches (</span><span class="si">{}% o</span><span class="s2">f unclassified data)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">numRecsClass</span><span class="p">,</span> <span class="n">percRecsClass</span><span class="p">))</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t\t</span><span class="si">{}</span><span class="s1"> records remain unclassified (</span><span class="si">{}% o</span><span class="s1">f unclassified data).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">recsRemainig</span><span class="p">,</span> <span class="mi">100</span><span class="o">-</span><span class="n">percRecsClass</span><span class="p">))</span>
@@ -178,16 +247,16 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
 
-    <span class="n">classifedDF</span><span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">classification_col</span><span class="p">]</span><span class="o">.</span><span class="n">notna</span><span class="p">()]</span> <span class="c1">#Already-classifed data</span>
-    <span class="n">searchDF</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">classification_col</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()]</span> <span class="c1">#Unclassified data</span>
-        
+    <span class="n">searchDF</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">classification_col</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()]</span>  <span class="c1"># Unclassified data</span>
+    <span class="n">classifedDF</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">classification_col</span><span class="p">]</span><span class="o">.</span><span class="n">notnull</span><span class="p">()]</span>  <span class="c1"># Already-classifed data</span>
+
     <span class="k">return</span> <span class="n">classifedDF</span><span class="p">,</span> <span class="n">searchDF</span></div>
 
 
 <span class="c1">#Classify downhole data by the initial substring</span>
 <div class="viewcode-block" id="start_define">
 <a class="viewcode-back" href="../../w4h.classify.html#w4h.start_define">[docs]</a>
-<span class="k">def</span> <span class="nf">start_define</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">terms_df</span><span class="p">,</span> <span class="n">description_col</span><span class="o">=</span><span class="s1">&#39;FORMATION&#39;</span><span class="p">,</span> <span class="n">terms_col</span><span class="o">=</span><span class="s1">&#39;DESCRIPTION&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">start_define</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">terms_df</span><span class="p">,</span> <span class="n">description_col</span><span class="o">=</span><span class="s1">&#39;FORMATION&#39;</span><span class="p">,</span> <span class="n">terms_col</span><span class="o">=</span><span class="s1">&#39;DESCRIPTION&#39;</span><span class="p">,</span> <span class="n">parallel_processing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to classify descriptions according to starting substring. </span>
 
 <span class="sd">    Parameters</span>
@@ -227,9 +296,14 @@
     <span class="n">df</span><span class="p">[</span><span class="s1">&#39;BEDROCK_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;LITHOLOGY&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;BEDROCK&#39;</span><span class="p">]</span>
     
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="n">numRecsClass</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">4</span><span class="p">][</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
-        <span class="n">percRecsClass</span><span class="o">=</span> <span class="nb">round</span><span class="p">((</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">4</span><span class="p">][</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">/</span><span class="n">df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">*</span><span class="mi">100</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
-        <span class="n">recsRemainig</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">parallel_processing</span><span class="p">:</span>
+            <span class="n">numRecsClass</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">4</span><span class="p">][</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">compute</span><span class="p">())</span>
+            <span class="n">percRecsClass</span><span class="o">=</span> <span class="nb">round</span><span class="p">((</span><span class="n">numRecsClass</span><span class="o">/</span><span class="n">df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">compute</span><span class="p">())</span><span class="o">*</span><span class="mi">100</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">recsRemainig</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">numRecsClass</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">4</span><span class="p">][</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+            <span class="n">percRecsClass</span><span class="o">=</span> <span class="nb">round</span><span class="p">((</span><span class="n">numRecsClass</span><span class="o">/</span><span class="n">df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">*</span><span class="mi">100</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">recsRemainig</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
 
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">Classified well records using initial substring matches&#39;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="si">{}</span><span class="s2"> records classified using initial substring matches (</span><span class="si">{}% o</span><span class="s2">f unclassified  data)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">numRecsClass</span><span class="p">,</span> <span class="n">percRecsClass</span><span class="p">))</span>
@@ -294,7 +368,7 @@
 <span class="c1">#Merge data back together</span>
 <div class="viewcode-block" id="remerge_data">
 <a class="viewcode-back" href="../../w4h.classify.html#w4h.remerge_data">[docs]</a>
-<span class="k">def</span> <span class="nf">remerge_data</span><span class="p">(</span><span class="n">classifieddf</span><span class="p">,</span> <span class="n">searchdf</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">remerge_data</span><span class="p">(</span><span class="n">classifieddf</span><span class="p">,</span> <span class="n">searchdf</span><span class="p">,</span> <span class="n">parallel_processing</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to merge newly-classified (or not) and previously classified data</span>
 
 <span class="sd">    Parameters</span>
@@ -309,57 +383,12 @@
 <span class="sd">    remergeDF : pandas.DataFrame</span>
 <span class="sd">        Dataframe containing all the data, merged back together</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">remergeDF</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">classifieddf</span><span class="p">,</span><span class="n">searchdf</span><span class="p">],</span> <span class="n">join</span><span class="o">=</span><span class="s1">&#39;inner&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">parallel_processing</span><span class="p">:</span>
+        <span class="n">remergeDF</span> <span class="o">=</span> <span class="n">dask</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">classifieddf</span><span class="p">,</span><span class="n">searchdf</span><span class="p">],</span> <span class="n">join</span><span class="o">=</span><span class="s1">&#39;inner&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">remergeDF</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">classifieddf</span><span class="p">,</span><span class="n">searchdf</span><span class="p">],</span> <span class="n">join</span><span class="o">=</span><span class="s1">&#39;inner&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span>
+
     <span class="k">return</span> <span class="n">remergeDF</span></div>
-
-
-<span class="c1">#Define well intervals by depth</span>
-<div class="viewcode-block" id="depth_define">
-<a class="viewcode-back" href="../../w4h.classify.html#w4h.depth_define">[docs]</a>
-<span class="k">def</span> <span class="nf">depth_define</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">top_col</span><span class="o">=</span><span class="s1">&#39;TOP&#39;</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="mf">550.0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to define all intervals lower than thresh as bedrock</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    df : pandas.DataFrame</span>
-<span class="sd">        Dataframe to classify</span>
-<span class="sd">    top_col : str, default = &#39;TOP&#39;</span>
-<span class="sd">        Name of column that contains the depth information, likely of the top of the well interval, by default &#39;TOP&#39;</span>
-<span class="sd">    thresh : float, default = 550.0</span>
-<span class="sd">        Depth (in units used in df[&#39;top_col&#39;]) below which all intervals will be classified as bedrock, by default 550.0.</span>
-<span class="sd">    verbose : bool, default = False</span>
-<span class="sd">        Whether to print results, by default False</span>
-<span class="sd">    log : bool, default = True</span>
-<span class="sd">        Whether to log results to log file</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    df : pandas.DataFrame</span>
-<span class="sd">        Dataframe containing intervals classified as bedrock due to depth</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="n">verbose_print</span><span class="p">(</span><span class="n">depth_define</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;df&#39;</span><span class="p">])</span>
-    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mask</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">top_col</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">thresh</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>  <span class="c1"># Add a Classification Flag of 3 (bedrock b/c it&#39;s deepter than 550&#39;) to all records where the top of the interval is &gt;550&#39;</span>
-    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;BEDROCK_FLAG&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;BEDROCK_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mask</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">top_col</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">thresh</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">df</span><span class="o">.</span><span class="n">CLASS_FLAG</span><span class="o">.</span><span class="n">notnull</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">brDepthClass</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">brDepthClass</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()[</span><span class="mf">3.0</span><span class="p">]</span>
-        <span class="n">total</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-
-        <span class="n">numRecsClass</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">3</span><span class="p">][</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
-        <span class="n">percRecsClass</span><span class="o">=</span> <span class="nb">round</span><span class="p">((</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">3</span><span class="p">][</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">total</span><span class="p">)</span><span class="o">*</span><span class="mi">100</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
-        <span class="n">recsRemainig</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">Classified bedrock well records using depth threshold at depth of </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">thresh</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="si">{}</span><span class="s2"> records classified using bedrock threshold depth (</span><span class="si">{}% o</span><span class="s2">f unclassified  data)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">numRecsClass</span><span class="p">,</span> <span class="n">percRecsClass</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\t\t</span><span class="si">{</span><span class="n">recsRemainig</span><span class="si">}</span><span class="s1"> records remain unclassified (</span><span class="si">{</span><span class="mi">100</span><span class="o">-</span><span class="n">percRecsClass</span><span class="si">}</span><span class="s1">% of unclassified  data).&#39;</span><span class="p">)</span>
-        
-    <span class="k">return</span> <span class="n">df</span></div>
 
 
 <span class="c1">#Output data that still needs to be defined</span>
@@ -458,7 +487,8 @@
         <span class="n">targinterps_df</span><span class="p">[</span><span class="n">target_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">targinterps_df</span><span class="p">[</span><span class="n">target_col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">value</span><span class="o">=-</span><span class="mi">2</span><span class="p">)</span>
         <span class="n">targinterps_df</span><span class="p">[</span><span class="n">target_col</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
 
-    <span class="n">df_targ</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">well_data_df</span><span class="p">,</span> <span class="n">targinterps_df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">interp_col</span><span class="p">),</span> <span class="n">right_on</span><span class="o">=</span><span class="n">interp_col</span><span class="p">,</span> <span class="n">left_on</span><span class="o">=</span><span class="s1">&#39;LITHOLOGY&#39;</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">)</span>
+    <span class="n">df_targ</span> <span class="o">=</span> <span class="n">well_data_df</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">right</span><span class="o">=</span><span class="n">targinterps_df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">interp_col</span><span class="p">),</span> <span class="n">right_on</span><span class="o">=</span><span class="n">interp_col</span><span class="p">,</span> <span class="n">left_on</span><span class="o">=</span><span class="s2">&quot;LITHOLOGY&quot;</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">)</span>
+    <span class="c1">#df_targ = pd.merge(well_data_df, targinterps_df.set_index(interp_col), right_on=interp_col, left_on=&#39;LITHOLOGY&#39;, how=&#39;left&#39;)</span>
     
     <span class="k">return</span> <span class="n">df_targ</span></div>
 
