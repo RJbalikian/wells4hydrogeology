@@ -148,8 +148,59 @@
 <p>The visualization module contains functions for creating plots and data vizualizations from outputs from w4h.run()</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="w4h.visualization.plot_cross_section">
-<span class="sig-prename descclassname"><span class="pre">w4h.visualization.</span></span><span class="sig-name descname"><span class="pre">plot_cross_section</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile_direction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xcoord</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'x'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ycoord</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'y'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/visualization.html#plot_cross_section"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.visualization.plot_cross_section" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<span class="sig-prename descclassname"><span class="pre">w4h.visualization.</span></span><span class="sig-name descname"><span class="pre">plot_cross_section</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile_direction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xcoord</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'x'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ycoord</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'y'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapped_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Depth_to_Bedrock'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross_section_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Model_Layers'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surface_elevation_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Surface_Elevation'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bedrock_elevation_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Bedrock_Elevation'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_elevation_coordinate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'layer_elevs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_profile_dicts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elev_unit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'feet'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convert_elevation_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/visualization.html#plot_cross_section"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.visualization.plot_cross_section" title="Link to this definition">¶</a></dt>
+<dd><p>Function to plot cross section profiles for datasets with properly configured coordinates and variables.
+This is intended to work “out of the box” with the xarray.Datasets output from w4h.run()</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>dataset</strong><span class="classifier">xarray.Dataset</span></dt><dd><p>The xarray.Dataset with the proper data variables. Works “out of the box” with outputs from w4h.run().</p>
+</dd>
+<dt><strong>profile</strong><span class="classifier">None, shapely.Linestring, list of coordinates, or geopandas.GeoDataFrame, optional</span></dt><dd><p>The profile(s) for which to create the cross sections.
+If None, by default creates one X profile and one Y profile in the middle of each dimension, by default None</p>
+</dd>
+<dt><strong>profile_direction</strong><span class="classifier">list of str, optional</span></dt><dd><p>List of strings (list is same length as profile) indicating the direction to use for the profile. 
+If None, will be [‘WE’, ‘SN’] to fit with profile=None defaults, by default None</p>
+</dd>
+<dt><strong>xcoord</strong><span class="classifier">str, optional</span></dt><dd><p>Name of x coordinate, by default ‘x’</p>
+</dd>
+<dt><strong>ycoord</strong><span class="classifier">str, optional</span></dt><dd><p>Name of y coordinate, by default ‘y’</p>
+</dd>
+<dt><strong>mapped_variable</strong><span class="classifier">str, optional</span></dt><dd><p>Name of variable to show in main map, by default ‘Depth_to_Bedrock’</p>
+</dd>
+<dt><strong>cross_section_variable</strong><span class="classifier">str, optional</span></dt><dd><p>Name of variable to use for cross section profiles, by default ‘Model_Layers’</p>
+</dd>
+<dt><strong>surface_elevation_variable</strong><span class="classifier">str, optional</span></dt><dd><p>Variable to use for the surface elevation, by default ‘Surface_Elevation’</p>
+</dd>
+<dt><strong>bedrock_elevation_variable</strong><span class="classifier">str, optional</span></dt><dd><p>Variable to use for the bedrock elevation, by default ‘Bedrock_Elevation’</p>
+</dd>
+<dt><strong>layer_elevation_coordinate</strong><span class="classifier">str, optional</span></dt><dd><p>Coordinate name to use for the layer elevations. 
+This should be a non-indexed coordinate with the shape of the x, y, and layer coordinates, by default ‘layer_elevs’</p>
+</dd>
+<dt><strong>show_layers</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to plot the layer boundaries on the cross section, by default True</p>
+</dd>
+<dt><strong>return_profile_dicts</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to return the profile dictionaries, rather than the matplotlib.Figure, by default False</p>
+</dd>
+<dt><strong>elev_unit</strong><span class="classifier">str, optional</span></dt><dd><p>Unit of elevation for the elevation data, by default ‘feet’</p>
+</dd>
+<dt><strong>convert_elevation_to</strong><span class="classifier">str, optional</span></dt><dd><p>If None (default), does not convert elevation. Otherwise, will convert elevation to specified unit.
+Only conversion between ‘ft’ and ‘meters’ supported.</p>
+</dd>
+<dt><strong>title</strong><span class="classifier">str, optional</span></dt><dd><p>Title to use for the output figure. If None, will be derived from variable names, by default None</p>
+</dd>
+<dt><strong>verbose</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to print information about process to terminal, by default False</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>matplotlib.Figure</dt><dd><p>Matplotlib.Figure instance is returned, unles return_profile_dicts is True.
+If return_profile_dicts=True, then a list of dicts with information about the profiles is returned.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
 
 </section>
 
