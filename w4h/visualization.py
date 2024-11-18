@@ -1,4 +1,6 @@
 """The visualization module contains functions for creating plots and data vizualizations from outputs from w4h.run()"""
+import warnings
+
 import geopandas as gpd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -14,7 +16,7 @@ def plot_cross_section(dataset, profile=None, profile_direction=None,
                        bedrock_elevation_variable='Bedrock_Elevation',
                        layer_elevation_coordinate='layer_elevs',
                        show_layers=True, return_profile_dicts=False,
-                       elev_unit='ft', 
+                       elev_unit='feet', convert_elevation_to=None,
                        title=None,
                        verbose=False, **kwargs):
     """Function to plot cross section profiles for datasets with properly configured coordinates and variables.
@@ -50,8 +52,11 @@ def plot_cross_section(dataset, profile=None, profile_direction=None,
     return_profile_dicts : bool, optional
         Whether to return the profile dictionaries, rather than the matplotlib.Figure, by default False
     elev_unit : str, optional
-        Unit of elevation for the elevation data, by default 'ft'
-    title : _type_, optional
+        Unit of elevation for the elevation data, by default 'feet'
+    convert_elevation_to : str, optional
+        If None (default), does not convert elevation. Otherwise, will convert elevation to specified unit.
+        Only conversion between 'ft' and 'meters' supported.
+    title : str, optional
         Title to use for the output figure. If None, will be derived from variable names, by default None
     verbose : bool, optional
         Whether to print information about process to terminal, by default False
@@ -117,6 +122,23 @@ def plot_cross_section(dataset, profile=None, profile_direction=None,
     if len(profile_direction) != len(profile):
         print(f"\tprofile and profile_direction must be the same length, but len(profile)={len(profile)} and len(profile_direction)={len(profile_direction)}")
         return
+
+
+    if convert_elevation_to is not None:
+        if elev_unit.lower() in ['feet', 'foot', 'ft', 'f']:
+            if str(convert_elevation_to).lower() in ['meters', 'metres', 'meter', 'metre', 'mtr', 'm']:
+                dataset[mapped_variable] = dataset[mapped_variable] * 0.3048
+                dataset[surface_elevation_variable] = dataset[surface_elevation_variable] * 0.3048
+                dataset[bedrock_elevation_variable] = dataset[bedrock_elevation_variable] * 0.3048
+                dataset[layer_elevation_coordinate] = dataset[layer_elevation_coordinate] * 0.3048
+                elev_unit = 'meters'
+        elif elev_unit.lower() in ['meters', 'metres', 'meter', 'metre', 'mtr', 'm']:
+            if str(convert_elevation_to).lower() in ['feet', 'foot', 'ft', 'f']:
+                dataset[mapped_variable] = dataset[mapped_variable] * 3.2808399
+                dataset[surface_elevation_variable] = dataset[surface_elevation_variable] * 3.2808399
+                dataset[bedrock_elevation_variable] = dataset[bedrock_elevation_variable] * 3.2808399
+                dataset[layer_elevation_coordinate] = dataset[layer_elevation_coordinate] * 3.2808399
+                elev_unit = 'feet'
 
     profileDicts = []
     # Iterate through each profile
@@ -192,7 +214,7 @@ def plot_cross_section(dataset, profile=None, profile_direction=None,
             bedrockElevs.append(dataset[bedrock_elevation_variable].sel(x=xcoord, y=ycoord, method='nearest').values)
             modelData.append(dataset[cross_section_variable].sel(x=xcoord, y=ycoord, method='nearest').values)
             layerElevs.append(dataset.coords[layer_elevation_coordinate].sel(x=xcoord, y=ycoord, method='nearest').values)
-        
+    
         surfElevArr = np.array(surfaceElevs).flatten()
         bedElevArr = np.array(bedrockElevs).flatten()
 
@@ -201,12 +223,11 @@ def plot_cross_section(dataset, profile=None, profile_direction=None,
                              'Bedrock_Elevation': bedElevArr,
                              'xSection_Data': np.array(modelData).reshape((surfElevArr.shape[0], 9)),
                              'layer_elevs': np.array(layerElevs).reshape((surfElevArr.shape[0], 9)),
-                             'profile_direction': profile_direction[p_i]
+                             'profile_direction': profile_direction[p_i],
+                             'elev_unit': elev_unit
                              })
-            
-    # Now just need to plot, got data
-    # FROM HERE ON DOWN DOES NOT WORK PERFECTLY, NEED TO ADJUST FOR DIFFERENT ORIENTATIONS
-    
+
+    # Now just need to plot, already got data
     # Set up entire figure
     noSubplots = len(profileDicts)
     xSecSPList = []
@@ -244,8 +265,11 @@ def plot_cross_section(dataset, profile=None, profile_direction=None,
     else:
         titleStr = title
 
-    # Code to make map here
-    dataset[mapped_variable].plot(ax=ax['MAP'])
+    # Code to make map
+    colorbar_kwargs = {'label': f"{mVarTitle} [{elev_unit}]"}
+    dataset[mapped_variable].plot(ax=ax['MAP'],
+                                cbar_kwargs=colorbar_kwargs)
+    
     ax['MAP'].ticklabel_format(style='plain')
     ax['MAP'].set_aspect('equal')
     ax['MAP'].set_title(titleStr)
@@ -255,7 +279,7 @@ def plot_cross_section(dataset, profile=None, profile_direction=None,
     yUnit = 'Deg.'
     xName = 'Longitude'
     yName = 'Latitude'
-    
+
     for a in proj.axis_info:
         if hasattr(a, 'direction'):
             if a.direction.upper() in xOrients:
@@ -269,7 +293,7 @@ def plot_cross_section(dataset, profile=None, profile_direction=None,
     yCoordLabel = f"{yName.upper()} [{yUnit.upper()}]"
     ax['MAP'].set_xlabel(xCoordLabel)
     ax['MAP'].set_ylabel(yCoordLabel)
-    
+
     # Code for plotting each profile
     for profile in profileDicts:
         # Set up plot
@@ -331,7 +355,9 @@ def plot_cross_section(dataset, profile=None, profile_direction=None,
 
         # Plot data
         try:
-            pcm = ax[currSubP].pcolormesh(X, Y, xSection_Data_filtered, cmap='Oranges', alpha=0.8)
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                pcm = ax[currSubP].pcolormesh(X, Y, xSection_Data_filtered, cmap='Oranges', alpha=0.8)
             #fig.colorbar(pcm, ax=ax['MAP'])
         except Exception as e:
             print(f'colormesh didnt work: {e}')
@@ -384,7 +410,7 @@ def plot_cross_section(dataset, profile=None, profile_direction=None,
                                                           foreground="w")])
 
         ax[currSubP].set_xlabel(coordLabel)
-        ax[currSubP].set_ylabel(f"Elevation [{elev_unit}]")
+        ax[currSubP].set_ylabel(f"Elevation [{profile['elev_unit']}]")
         
     plt.show()
 
