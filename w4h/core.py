@@ -330,7 +330,7 @@ def run(well_data,
         # Add surface, bedrock, and derived grids
         layers_data['Surface_Elevation'] = surfaceGrid
         layers_data['Bedrock_Elevation'] = bedrockGrid
-        layers_data['Drift_Thickness'] = driftThickGrid
+        layers_data['Bedrock_Depth'] = driftThickGrid
         layers_data['Layer_Thickness'] = layerThickGrid
 
     if include_elevation_coordinates:
