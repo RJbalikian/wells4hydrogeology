@@ -17,7 +17,7 @@ setup(
                        'resources/sample_data/DictionaryTerms/*',
                        'resources/sample_data/LithologyInterpretations/*']},
         install_requires=["geopandas", "rioxarray", "owslib", "scipy",
-                          "matplotlib", "pandas", "numpy"],
+                          "matplotlib", "pandas", "numpy", "dask", "setuptools"],
         long_description_content_type="text/markdown",
         long_description=long_description,
         packages=find_packages(),
