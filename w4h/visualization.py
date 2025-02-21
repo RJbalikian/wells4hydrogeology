@@ -10,7 +10,7 @@ import shapely
 
 def plot_cross_section(dataset, profile=None, profile_direction=None,
                        xcoord='x', ycoord='y',
-                       mapped_variable='Depth_to_Bedrock',
+                       mapped_variable='Bedrock_Depth',
                        cross_section_variable='Model_Layers',
                        surface_elevation_variable='Surface_Elevation',
                        bedrock_elevation_variable='Bedrock_Elevation',
