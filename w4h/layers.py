@@ -181,47 +181,64 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
     #Generate Column names based on (looped) integers
     for layer in layerList:
         zStr = 'ELEV'
-        zColT = 'TOP_ELEV'
-        zColB = 'BOT_ELEV'
-        topCol = zStr+'_LAYER'+str(layer)
+        wellIntTop_col = 'TOP_ELEV'
+        wellIntBot_col = 'BOT_ELEV'
+        modelLyrTop_Col = zStr+'_LAYER'+str(layer)
         if layer != 9: #For all layers except the bottom layer....
-            botCol = zStr+'_LAYER'+str(layer+1) #use the layer below it to 
+            modelLyrBot_col = zStr+'_LAYER'+str(layer+1) #use the layer below it to 
         else: #Otherwise, ...
-            botCol = "BEDROCK_"+zStr #Use the (corrected) bedrock depth
+            modelLyrBot_col = "BEDROCK_"+zStr #Use the (corrected) bedrock depth
 
         #Divide records into 4 categories for ease of calculation, to be joined back together later  
             #Category 1: Well interval starts above layer top, ends within model layer
             #Category 2: Well interval is entirely contained withing model layer
             #Category 3: Well interval starts within model layer, continues through bottom of model layer
             #Category 4: well interval begins and ends on either side of model layer (model layer is contained within well layer)
-
+        df['API_NUMBER'] = df['API_NUMBER'].astype(int).astype(str)
         #records1 = intervals that go through the top of the layer and bottom is within layer
-        records1 = df.loc[(df[zColT] >= df[topCol]) & #Top of the well interval is above or equal to the top of the layer
-                        (df[zColB] <= df[topCol]) & # & #Bottom is below the top of the layer
-                        (df[zColB] <= df[zColT])].copy() #Bottom is deeper than top (should already be the case)
-        records1['TARG_THICK'] = pd.DataFrame(np.round((records1.loc[:,topCol]-records1.loc[: , zColB]) * records1['TARGET'],3)).copy() #Multiply "target" (1 or 0) by length within layer            
+        records1 = df.loc[(df[wellIntTop_col] > df[modelLyrTop_Col]) & #Top of the well interval is above or equal to the top of the layer
+                        (df[wellIntBot_col] <= df[modelLyrTop_Col]) & # & #Bottom is below the top of the layer
+                        (df[wellIntBot_col] <= df[wellIntTop_col])].copy() #Bottom is deeper than top (should already be the case)
+        records1['TARG_THICK'] = pd.DataFrame(np.round((records1.loc[:,modelLyrTop_Col]-records1.loc[: , wellIntBot_col]) * records1['TARGET'],3)).copy() #Multiply "target" (1 or 0) by length within layer            
         
         #records2 = entire interval is within layer
-        records2 = df.loc[(df[zColT] <= df[topCol]) & #Top of the well is lower than top of the layer 
-                    (df[zColB] >= df[botCol]) & #Bottom of the well is above bottom of the layer 
-                    (df[zColB] <= df[zColT])].copy() #Bottom ofthe well is deeper than or equal to top (should already be the case)
-        records2['TARG_THICK'] = pd.DataFrame(np.round((records2.loc[: , zColT] - records2.loc[: , zColB]) * records2['TARGET'],3)).copy()
+        records2 = df.loc[(df[wellIntTop_col] <= df[modelLyrTop_Col]) & #Top of the well is lower than top of the layer 
+                    (df[wellIntBot_col] >= df[modelLyrBot_col]) & #Bottom of the well is above bottom of the layer 
+                    (df[wellIntBot_col] <= df[wellIntTop_col])].copy() #Bottom ofthe well is deeper than or equal to top (should already be the case)
+        records2['TARG_THICK'] = pd.DataFrame(np.round((records2.loc[: , wellIntTop_col] - records2.loc[: , wellIntBot_col]) * records2['TARGET'],3)).copy()
 
         #records3 = intervals with top within layer and bottom of interval going through bottom of layer
-        records3 = df.loc[(df[zColT] > df[botCol]) & #Top of the well is above bottom of layer
-                    (df[zColB] < df[botCol]) & #Bottom of the well is below bottom of layer
-                    (df[zColT] <= df[topCol]) & #Top of well is below top of layer
-                    (df[zColB] <= df[zColT])].copy() #Bottom is deeper than top (should already be the case)
-        records3['TARG_THICK'] = pd.DataFrame(np.round((records3.loc[: , zColT] - (records3.loc[:,botCol]))*records3['TARGET'],3)).copy()
+        records3 = df.loc[(df[wellIntTop_col] >= df[modelLyrBot_col]) & #Top of the well is above bottom of layer
+                    (df[wellIntTop_col] <= df[modelLyrTop_Col]) & #Top of well is below top of layer
+                    (df[wellIntBot_col] < df[modelLyrBot_col]) & #Bottom of the well is below bottom of layer
+                    (df[wellIntBot_col] <= df[wellIntTop_col])].copy() #Bottom is deeper than top (should already be the case)
+        records3['TARG_THICK'] = pd.DataFrame(np.round((records3.loc[: , wellIntTop_col] - (records3.loc[:,modelLyrBot_col]))*records3['TARGET'],3)).copy()
 
         #records4 = interval goes through entire layer
-        records4 = df.loc[(df[zColT] >= df[topCol]) & #Top of well is above top of layer
-                    (df[zColB] < df[botCol]) & #Bottom of well is below bottom of layer
-                    (df[zColB] <= df[zColT])].copy() #Bottom of well is below top of well
-        records4['TARG_THICK'] = pd.DataFrame(np.round((records4.loc[: , topCol]-records4.loc[: , botCol]) * records4['TARGET'],3)).copy()
+        records4 = df.loc[(df[wellIntTop_col] > df[modelLyrTop_Col]) & #Top of well is above top of layer
+                    (df[wellIntBot_col] < df[modelLyrBot_col]) & #Bottom of well is below bottom of layer
+                    (df[wellIntBot_col] <= df[wellIntTop_col])].copy() #Bottom of well is below top of well
+        records4['TARG_THICK'] = pd.DataFrame(np.round((records4.loc[: , modelLyrTop_Col]-records4.loc[: , modelLyrBot_col]) * records4['TARGET'],3)).copy()
 
+        # Truth check
+        inputRecordList = [records1, records3, records4]
+        truthCheckedRecords = []
+        for i, recDF in enumerate(inputRecordList):
+            if recDF.shape[0]>1:
+                recDF = recDF.loc[recDF['TARG_THICK'].idxmax()]
+            
+            truthCheckedRecords.append(recDF)
+
+        # Truth check records category 2, which may have multiples
+        rec2Sorted = records2.sort_values(by='TARG_THICK', ascending=False)
+        subS = ['API_NUMBER', 'TOP', "BOTTOM"]
+        records2 = rec2Sorted.drop_duplicates(subset=subS, 
+                                            keep='first')
+
+        truthCheckedRecords.insert(1, records2)
+        
         #Put the four calculated record categories back together into single dataframe
-        res = pd.concat([records1, records2, records3, records4])
+        res = pd.concat(truthCheckedRecords)
 
         #The sign may be reversed if using depth rather than elevation
         if (res['TARG_THICK'] < 0).all():
@@ -230,28 +247,31 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
         #Cannot have negative thicknesses
         res['TARG_THICK'] = res['TARG_THICK'].clip(lower=0)
         res['LAYER_THICK'] = res['LAYER_THICK'].clip(lower=0)
-        
-        #Get geometrys for each unique API/well
+
+        #Get geometries for each unique API/well
         res.reset_index(drop=True, inplace=True)
         #Calculate thickness for each well interval in the layer indicated (e.g., if there are two well intervals from same well in one model layer)
-        res_df = res.groupby(by=['API_NUMBER','LATITUDE','LONGITUDE'], as_index=False)['TARG_THICK'].sum(numeric_only=True)
-        mergeRes = res.drop(['LATITUDE', "LONGITUDE", "TARG_THICK"], axis=1)
-        res_df = pd.merge(left=res_df, right=mergeRes, how='inner', on='API_NUMBER')
-        
-        res_df['TARG_THICK'] = res_df['TARG_THICK'].clip(upper=res_df['LAYER_THICK'])
+        res_df = res.groupby(by=['API_NUMBER','LATITUDE','LONGITUDE'], as_index=False)['TARG_THICK'].sum()
 
+        mergeRes = res.drop(['LATITUDE', "LONGITUDE", "TARG_THICK"], axis=1)
+        res_df = pd.merge(left=res_df, right=mergeRes, how='left', on='API_NUMBER')
+        
+        testDF = pd.DataFrame()
+        testDF['TARG_THICK'] = res_df['TARG_THICK'].clip(upper=res_df['LAYER_THICK'])
+
+        
         uniqInd = pd.DataFrame([v.values[0] for k, v in res.groupby(by=['API_NUMBER','LATITUDE','LONGITUDE']).groups.items()]).loc[:,0]
         geomCol = res.loc[uniqInd, 'geometry']
         geomCol = pd.DataFrame(geomCol[~geomCol.index.duplicated(keep='first')]).reset_index()
         
         #Calculate thickness as percent of total layer thickness
-        res_df['TARG_THICK_PER'] =  pd.DataFrame(np.round(res_df['TARG_THICK']/res_df['LAYER_THICK'],3))
+        res_df['TARG_THICK_PER'] =  pd.DataFrame(np.round(res_df['TARG_THICK']/res_df['LAYER_THICK'],3)).clip(upper=1)
         #Replace np.inf and np.nans with 0
         res_df['TARG_THICK_PER'] = res_df['TARG_THICK_PER'].where(res_df['TARG_THICK_PER']!=np.inf, other=0)
         res_df['TARG_THICK_PER'] = res_df['TARG_THICK_PER'].where(res_df['TARG_THICK_PER']!=np.nan, other=0)
 
         res_df["LAYER"] = layer #Just to have as part of the output file, include the present layer in the file itself as a separate column
-        res_df = res_df[['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'LATITUDE_PROJ', 'LONGITUDE_PROJ','TOP', 'BOTTOM', 'TOP_ELEV', 'BOT_ELEV', 'SURFACE_ELEV', topCol, botCol,'LAYER_THICK','TARG_THICK', 'TARG_THICK_PER', 'LAYER']].copy() #Format dataframe for output
+        res_df = res_df[['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'LATITUDE_PROJ', 'LONGITUDE_PROJ','TOP', 'BOTTOM', 'TOP_ELEV', 'BOT_ELEV', 'SURFACE_ELEV', modelLyrTop_Col, modelLyrBot_col,'LAYER_THICK','TARG_THICK', 'TARG_THICK_PER', 'LAYER']].copy() #Format dataframe for output
         res_df = gpd.GeoDataFrame(res_df, geometry=geomCol.loc[:,'geometry'])
 
         resdf_list.append(res_df)

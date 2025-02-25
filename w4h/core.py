@@ -184,14 +184,14 @@ def run(well_data,
     # Functions to read data into dataframes. Also excludes extraneous columns, and drops header data with no location information
 
     # Define data types (file will need to be udpated)
-    well_data_DF = w4h.define_dtypes(undefined_df=well_data_IN, datatypes=w4h.get_resources()['well_data_dtypes'], verbose=verbose, log=log)
-    metadata_DF = w4h.define_dtypes(undefined_df=metadata_IN, datatypes=w4h.get_resources()['metadata_dtypes'], verbose=verbose, log=log)
+    #well_data_DF = w4h.define_dtypes(undefined_df=well_data_IN, datatypes=w4h.get_resources()['well_data_dtypes'], verbose=verbose, log=log)
+    #metadata_DF = w4h.define_dtypes(undefined_df=metadata_IN, datatypes=w4h.get_resources()['metadata_dtypes'], verbose=verbose, log=log)
 
-    if metadata_DF is None:
-        well_data_xyz = well_data_DF
+    if metadata_IN is None:
+        well_data_xyz = well_data_IN
     else:
         merge_metadata_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.merge_metadata).parameters.keys()}
-        well_data_xyz = w4h.merge_metadata(data_df=well_data_DF, header_df=metadata_DF, data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, **merge_metadata_kwargs)
+        well_data_xyz = w4h.merge_metadata(data_df=well_data_IN, header_df=metadata_IN, data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, **merge_metadata_kwargs)
 
     #Convert well_data_xyz to have geometry
     coords2geometry_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.coords2geometry).parameters.keys()}
