@@ -351,7 +351,9 @@ def plot_cross_section(dataset, profile=None, profile_direction=None,
             coords = yArray_filtered
             coordLabel = yCoordLabel
 
-        Y = layer_elevs_filtered
+        # Get Y values, have to be shifted up by 1/2 of layer thick to plot correctly
+        Yfilter = layer_elevs_filtered
+        Y = np.add(Yfilter, np.tile(np.nanmedian(np.diff(Yfilter, axis=-1), axis=-1)/2, (Yfilter.shape[1], 1)).T)
 
         # Plot data
         try:
