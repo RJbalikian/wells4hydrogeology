@@ -316,6 +316,7 @@ def run(well_data,
     # UPDATE: Option to remove nans?
     well_data_xyz = well_data_xyz[well_data_xyz["LITHOLOGY"].notnull()]
 
+
     layer_target_thick_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.layer_target_thick).parameters.keys()}
     if 'return_all' in layer_target_thick_kwargs.keys():
         del layer_target_thick_kwargs['return_all'] #This needs to be set to False, so we don't want it reading in twice

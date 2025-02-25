@@ -200,6 +200,7 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
                         (df[zColB] <= df[topCol]) & # & #Bottom is below the top of the layer
                         (df[zColB] <= df[zColT])].copy() #Bottom is deeper than top (should already be the case)
         records1['TARG_THICK'] = pd.DataFrame(np.round((records1.loc[:,topCol]-records1.loc[: , zColB]) * records1['TARGET'],3)).copy() #Multiply "target" (1 or 0) by length within layer            
+        
         #records2 = entire interval is within layer
         records2 = df.loc[(df[zColT] <= df[topCol]) & #Top of the well is lower than top of the layer 
                     (df[zColB] >= df[botCol]) & #Bottom of the well is above bottom of the layer 
@@ -221,6 +222,7 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
 
         #Put the four calculated record categories back together into single dataframe
         res = pd.concat([records1, records2, records3, records4])
+
         #The sign may be reversed if using depth rather than elevation
         if (res['TARG_THICK'] < 0).all():
             res['TARG_THICK'] = res['TARG_THICK'] * -1
@@ -231,13 +233,19 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
         
         #Get geometrys for each unique API/well
         res.reset_index(drop=True, inplace=True)
-        res_df = res.groupby(by=['API_NUMBER','LATITUDE','LONGITUDE'], as_index=False).sum(numeric_only=True)#Calculate thickness for each well interval in the layer indicated (e.g., if there are two well intervals from same well in one model layer)
+        #Calculate thickness for each well interval in the layer indicated (e.g., if there are two well intervals from same well in one model layer)
+        res_df = res.groupby(by=['API_NUMBER','LATITUDE','LONGITUDE'], as_index=False)['TARG_THICK'].sum(numeric_only=True)
+        mergeRes = res.drop(['LATITUDE', "LONGITUDE", "TARG_THICK"], axis=1)
+        res_df = pd.merge(left=res_df, right=mergeRes, how='inner', on='API_NUMBER')
+        
+        res_df['TARG_THICK'] = res_df['TARG_THICK'].clip(upper=res_df['LAYER_THICK'])
+
         uniqInd = pd.DataFrame([v.values[0] for k, v in res.groupby(by=['API_NUMBER','LATITUDE','LONGITUDE']).groups.items()]).loc[:,0]
         geomCol = res.loc[uniqInd, 'geometry']
         geomCol = pd.DataFrame(geomCol[~geomCol.index.duplicated(keep='first')]).reset_index()
         
-
-        res_df['TARG_THICK_PER'] =  pd.DataFrame(np.round(res_df['TARG_THICK']/res_df['LAYER_THICK'],3)) #Calculate thickness as percent of total layer thickness
+        #Calculate thickness as percent of total layer thickness
+        res_df['TARG_THICK_PER'] =  pd.DataFrame(np.round(res_df['TARG_THICK']/res_df['LAYER_THICK'],3))
         #Replace np.inf and np.nans with 0
         res_df['TARG_THICK_PER'] = res_df['TARG_THICK_PER'].where(res_df['TARG_THICK_PER']!=np.inf, other=0)
         res_df['TARG_THICK_PER'] = res_df['TARG_THICK_PER'].where(res_df['TARG_THICK_PER']!=np.nan, other=0)
@@ -245,6 +253,7 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
         res_df["LAYER"] = layer #Just to have as part of the output file, include the present layer in the file itself as a separate column
         res_df = res_df[['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'LATITUDE_PROJ', 'LONGITUDE_PROJ','TOP', 'BOTTOM', 'TOP_ELEV', 'BOT_ELEV', 'SURFACE_ELEV', topCol, botCol,'LAYER_THICK','TARG_THICK', 'TARG_THICK_PER', 'LAYER']].copy() #Format dataframe for output
         res_df = gpd.GeoDataFrame(res_df, geometry=geomCol.loc[:,'geometry'])
+
         resdf_list.append(res_df)
         res_list.append(res)
 
