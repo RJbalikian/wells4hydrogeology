@@ -88,7 +88,7 @@
 <a class="viewcode-back" href="../../w4h.visualization.html#w4h.plot_cross_section">[docs]</a>
 <span class="k">def</span> <span class="nf">plot_cross_section</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">profile_direction</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                        <span class="n">xcoord</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">ycoord</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span>
-                       <span class="n">mapped_variable</span><span class="o">=</span><span class="s1">&#39;Depth_to_Bedrock&#39;</span><span class="p">,</span>
+                       <span class="n">mapped_variable</span><span class="o">=</span><span class="s1">&#39;Bedrock_Depth&#39;</span><span class="p">,</span>
                        <span class="n">cross_section_variable</span><span class="o">=</span><span class="s1">&#39;Model_Layers&#39;</span><span class="p">,</span>
                        <span class="n">surface_elevation_variable</span><span class="o">=</span><span class="s1">&#39;Surface_Elevation&#39;</span><span class="p">,</span>
                        <span class="n">bedrock_elevation_variable</span><span class="o">=</span><span class="s1">&#39;Bedrock_Elevation&#39;</span><span class="p">,</span>
@@ -196,6 +196,8 @@
                     <span class="n">profile_direction</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;WE&quot;</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">profile_direction</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;EW&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">profile_direction</span><span class="p">)</span><span class="o">==</span><span class="nb">str</span><span class="p">:</span>
+        <span class="n">profile_direction</span> <span class="o">=</span> <span class="p">[</span><span class="n">profile_direction</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">profile_direction</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">profile</span><span class="p">):</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">profile and profile_direction must be the same length, but len(profile)=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">profile</span><span class="p">)</span><span class="si">}</span><span class="s2"> and len(profile_direction)=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">profile_direction</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -429,13 +431,22 @@
             <span class="n">coords</span> <span class="o">=</span> <span class="n">yArray_filtered</span>
             <span class="n">coordLabel</span> <span class="o">=</span> <span class="n">yCoordLabel</span>
 
-        <span class="n">Y</span> <span class="o">=</span> <span class="n">layer_elevs_filtered</span>
+        <span class="c1"># Get Y values, have to be shifted up by 1/2 of layer thick to plot correctly</span>
+        <span class="n">Yfilter</span> <span class="o">=</span> <span class="n">layer_elevs_filtered</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="n">Yfilter</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">Yfilter</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">Yfilter</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;cmap&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">cMap</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;cmap&#39;</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="s1">&#39;colormap&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">cMap</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;colormap&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cMap</span> <span class="o">=</span> <span class="s1">&#39;Oranges&#39;</span>
 
         <span class="c1"># Plot data</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
                 <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
-                <span class="n">pcm</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="n">currSubP</span><span class="p">]</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">xSection_Data_filtered</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Oranges&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+                <span class="n">pcm</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="n">currSubP</span><span class="p">]</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">xSection_Data_filtered</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cMap</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
             <span class="c1">#fig.colorbar(pcm, ax=ax[&#39;MAP&#39;])</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;colormesh didnt work: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
