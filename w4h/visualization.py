@@ -118,6 +118,8 @@ def plot_cross_section(dataset, profile=None, profile_direction=None,
                     profile_direction.append("WE")
                 else:
                     profile_direction.append("EW")
+    elif type(profile_direction)==str:
+        profile_direction = [profile_direction]
 
     if len(profile_direction) != len(profile):
         print(f"\tprofile and profile_direction must be the same length, but len(profile)={len(profile)} and len(profile_direction)={len(profile_direction)}")
@@ -353,13 +355,20 @@ def plot_cross_section(dataset, profile=None, profile_direction=None,
 
         # Get Y values, have to be shifted up by 1/2 of layer thick to plot correctly
         Yfilter = layer_elevs_filtered
-        Y = np.add(Yfilter, np.tile(np.nanmedian(np.diff(Yfilter, axis=-1), axis=-1)/2, (Yfilter.shape[1], 1)).T)
+        Y = np.subtract(Yfilter, np.tile(np.nanmedian(np.diff(Yfilter, axis=-1), axis=-1)/2, (Yfilter.shape[1], 1)).T)
+
+        if 'cmap' in kwargs:
+            cMap = kwargs['cmap']
+        elif 'colormap' in kwargs:
+            cMap = kwargs['colormap']
+        else:
+            cMap = 'Oranges'
 
         # Plot data
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore')
-                pcm = ax[currSubP].pcolormesh(X, Y, xSection_Data_filtered, cmap='Oranges', alpha=0.8)
+                pcm = ax[currSubP].pcolormesh(X, Y, xSection_Data_filtered, cmap=cMap, alpha=0.8)
             #fig.colorbar(pcm, ax=ax['MAP'])
         except Exception as e:
             print(f'colormesh didnt work: {e}')
