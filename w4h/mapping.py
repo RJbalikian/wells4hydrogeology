@@ -783,11 +783,12 @@ def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service
         study_area = study_area.to_crs(output_crs)
         study_area_crs = study_area.crs
         
-    if grid_type=='model':
+    if grid_type == 'model':
         if 'read_grid' in list(kwargs.keys()):
             rgrid = kwargs['read_grid']
         else:
-            rgrid=True
+            rgrid = True
+            
         gridIN = read_model_grid(model_grid_path=grid_path, study_area=study_area,  no_data_val_grid=0, read_grid=rgrid, grid_crs=grid_crs, output_crs=output_crs, verbose=verbose)
     else:
         if str(use_service).lower() == 'wcs':
