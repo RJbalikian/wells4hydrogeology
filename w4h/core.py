@@ -211,14 +211,20 @@ def run(well_data,
     #Get surfaces and grid(s)
     read_grid_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.read_grid).parameters.keys()}
 
-    modelGridPath = model_grid
+
     surfaceElevPath = surf_elev_grid
     bedrockElevPath = bedrock_elev_grid
 
-    modelGrid = w4h.read_grid(grid_path=modelGridPath, grid_type='model', study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
     surfaceElevGridIN = w4h.read_grid(grid_path=surfaceElevPath, grid_type='surface', study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
     bedrockElevGridIN = w4h.read_grid(grid_path=bedrockElevPath, grid_type='bedrock', study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
 
+    if model_grid is not None:    
+       modelGrid = w4h.read_grid(grid_path=model_grid, grid_type='model', study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
+    else:
+        # If model grid is not defined, it is set equal to the bedrock grid, except that all data values are set to 1
+        modelGrid = bedrockElevGridIN.copy()
+        modelGrid.values[:] = 1
+    
     #UPDATE: MAKE SURE CRS's all align ***
     #Add control points
     add_control_points_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.add_control_points).parameters.keys()}
@@ -318,11 +324,18 @@ def run(well_data,
 
 
     layer_target_thick_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.layer_target_thick).parameters.keys()}
-    if 'return_all' in layer_target_thick_kwargs.keys():
-        del layer_target_thick_kwargs['return_all'] #This needs to be set to False, so we don't want it reading in twice
+    #if 'return_all' in layer_target_thick_kwargs.keys():
+    #    del layer_target_thick_kwargs['return_all'] #This needs to be set to False, so we don't want it reading in twice
 
-    resdf = w4h.layer_target_thick(df=well_data_xyz, layers=layers, return_all=False, export_dir=export_dir, depth_top_col=top_col, depth_bot_col=bottom_col, log=log, **layer_target_thick_kwargs)
+    resdf = w4h.layer_target_thick(df=well_data_xyz, layers=layers, export_dir=export_dir, depth_top_col=top_col, depth_bot_col=bottom_col, log=log, **layer_target_thick_kwargs)
     
+    if 'return_all' in layer_target_thick_kwargs.keys():
+        if layer_target_thick_kwargs['return_all'] is True:
+            returnALL = True
+            res_list, resdf = resdf
+    else:
+        returnALL = False
+        
     # bedrockGrid, surfaceGrid, driftThickGrid, layerThickGrid
     layer_interp_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.layer_interp).parameters.keys()}
     layers_data = w4h.layer_interp(points=resdf, model_grid=modelGrid, layers=layers, verbose=verbose, log=log, **layer_interp_kwargs)
@@ -349,8 +362,12 @@ def run(well_data,
 
     #THIS MAY BE REPEAT OF LAST LINES OF layer_interp()
     w4h.export_grids(grid_data=layers_data, out_path=export_dir, file_id=target_name,filetype='tif', variable_sep=True, date_stamp=True, verbose=verbose, log=log)
-
-    return resdf, layers_data
+    
+    if returnALL:
+        print('returning all')
+        return resdf, layers_data, res_list
+    else:
+        return resdf, layers_data
 
 
 # Function to update docstring for run function, used in __init__ file 
