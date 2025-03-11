@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>w4h.clean &mdash; w4h 0.0.22-dev documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
@@ -77,17 +77,17 @@
 <span></span><span class="sd">&quot;&quot;&quot;The Clean module contains functions for cleaning the data (i.e., removing data not to be used in further analysis)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
-<span class="kn">from</span> <span class="nn">w4h</span> <span class="kn">import</span> <span class="n">logger_function</span><span class="p">,</span> <span class="n">verbose_print</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">w4h</span><span class="w"> </span><span class="kn">import</span> <span class="n">logger_function</span><span class="p">,</span> <span class="n">verbose_print</span>
 
 <span class="c1"># This function removes all data from the downholeData table where there is no location information (in the headerData table). This includes elevation info too</span>
 <div class="viewcode-block" id="remove_nonlocated">
 <a class="viewcode-back" href="../../w4h.clean.html#w4h.remove_nonlocated">[docs]</a>
-<span class="k">def</span> <span class="nf">remove_nonlocated</span><span class="p">(</span><span class="n">df_with_locations</span><span class="p">,</span> <span class="n">xcol</span><span class="o">=</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="n">no_data_val_table</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">remove_nonlocated</span><span class="p">(</span><span class="n">df_with_locations</span><span class="p">,</span> <span class="n">xcol</span><span class="o">=</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="n">no_data_val_table</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to remove wells and well intervals where there is no location information</span>
 
 <span class="sd">    Parameters</span>
@@ -130,7 +130,7 @@
 <span class="c1"># THIS ASSUMES AND SHOULD ONLY BE RUN AFTER ALL DESIRED SURFACE TOPO DATASETS HAVE BEEN MERGED/ADDED</span>
 <div class="viewcode-block" id="remove_no_topo">
 <a class="viewcode-back" href="../../w4h.clean.html#w4h.remove_no_topo">[docs]</a>
-<span class="k">def</span> <span class="nf">remove_no_topo</span><span class="p">(</span><span class="n">df_with_topo</span><span class="p">,</span> <span class="n">zcol</span><span class="o">=</span><span class="s1">&#39;SURFACE_ELEV&#39;</span><span class="p">,</span> <span class="n">no_data_val_table</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">remove_no_topo</span><span class="p">(</span><span class="n">df_with_topo</span><span class="p">,</span> <span class="n">zcol</span><span class="o">=</span><span class="s1">&#39;SURFACE_ELEV&#39;</span><span class="p">,</span> <span class="n">no_data_val_table</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to remove wells that do not have topography data (needed for layer selection later).</span>
 
 <span class="sd">    This function is intended to be run on the metadata table after elevations have attempted to been added.</span>
@@ -177,7 +177,7 @@
 <span class="c1"># This function drops all records in the downholedata with no depth information (either top or bottom depth of well interval)</span>
 <div class="viewcode-block" id="remove_no_depth">
 <a class="viewcode-back" href="../../w4h.clean.html#w4h.remove_no_depth">[docs]</a>
-<span class="k">def</span> <span class="nf">remove_no_depth</span><span class="p">(</span><span class="n">df_with_depth</span><span class="p">,</span> <span class="n">top_col</span><span class="o">=</span><span class="s1">&#39;TOP&#39;</span><span class="p">,</span> <span class="n">bottom_col</span><span class="o">=</span><span class="s1">&#39;BOTTOM&#39;</span><span class="p">,</span> <span class="n">no_data_val_table</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">remove_no_depth</span><span class="p">(</span><span class="n">df_with_depth</span><span class="p">,</span> <span class="n">top_col</span><span class="o">=</span><span class="s1">&#39;TOP&#39;</span><span class="p">,</span> <span class="n">bottom_col</span><span class="o">=</span><span class="s1">&#39;BOTTOM&#39;</span><span class="p">,</span> <span class="n">no_data_val_table</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to remove well intervals with no depth information</span>
 
 <span class="sd">    Parameters</span>
@@ -230,7 +230,7 @@
 <span class="c1"># This function drops all records in downholeData with bad depth information (where the bottom of a record is nearer to the surface than the top)</span>
 <div class="viewcode-block" id="remove_bad_depth">
 <a class="viewcode-back" href="../../w4h.clean.html#w4h.remove_bad_depth">[docs]</a>
-<span class="k">def</span> <span class="nf">remove_bad_depth</span><span class="p">(</span><span class="n">df_with_depth</span><span class="p">,</span> <span class="n">top_col</span><span class="o">=</span><span class="s1">&#39;TOP&#39;</span><span class="p">,</span> <span class="n">bottom_col</span><span class="o">=</span><span class="s1">&#39;BOTTOM&#39;</span><span class="p">,</span> <span class="n">depth_type</span><span class="o">=</span><span class="s1">&#39;depth&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">remove_bad_depth</span><span class="p">(</span><span class="n">df_with_depth</span><span class="p">,</span> <span class="n">top_col</span><span class="o">=</span><span class="s1">&#39;TOP&#39;</span><span class="p">,</span> <span class="n">bottom_col</span><span class="o">=</span><span class="s1">&#39;BOTTOM&#39;</span><span class="p">,</span> <span class="n">depth_type</span><span class="o">=</span><span class="s1">&#39;depth&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to remove all records in the dataframe with well interpretations where the depth information is bad (i.e., where the bottom of the record is neerer to the surface than the top)</span>
 
 <span class="sd">    Parameters</span>
@@ -278,7 +278,7 @@
 <span class="c1"># This function drops all records in downholeData with no formation in formation in the description fiel</span>
 <div class="viewcode-block" id="remove_no_description">
 <a class="viewcode-back" href="../../w4h.clean.html#w4h.remove_no_description">[docs]</a>
-<span class="k">def</span> <span class="nf">remove_no_description</span><span class="p">(</span><span class="n">df_with_descriptions</span><span class="p">,</span> <span class="n">description_col</span><span class="o">=</span><span class="s1">&#39;FORMATION&#39;</span><span class="p">,</span> <span class="n">no_data_val_table</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">remove_no_description</span><span class="p">(</span><span class="n">df_with_descriptions</span><span class="p">,</span> <span class="n">description_col</span><span class="o">=</span><span class="s1">&#39;FORMATION&#39;</span><span class="p">,</span> <span class="n">no_data_val_table</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function that removes all records in the dataframe containing the well descriptions where no description is given.</span>
 
 <span class="sd">    Parameters</span>
