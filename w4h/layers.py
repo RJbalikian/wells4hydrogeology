@@ -223,7 +223,6 @@ def layer_target_thick(df, layers=9, well_id_col='API_NUMBER', return_all=False,
                     (df[wellIntBot_col] <= df[wellIntTop_col])].copy() #Bottom of well is below top of well
         records4['TARG_THICK'] = pd.DataFrame(np.round((records4.loc[: , modelLyrTop_Col]-records4.loc[: , modelLyrBot_col]) * records4['TARGET'],3)).copy()
 
-        doTruthCheck = True
         if 'truth_check' in kwargs:
             if kwargs['truth_check'] is False:
                 doTruthCheck = False
