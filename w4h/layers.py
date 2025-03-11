@@ -4,6 +4,7 @@ and for interpolating data within the layers
 
 import datetime
 import inspect
+import numbers
 import os
 import pathlib
 
@@ -19,7 +20,7 @@ import w4h
 from w4h import logger_function, verbose_print
 
 #Function to Merge tables
-def merge_metadata(data_df, header_df, data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, verbose=False, **kwargs):
+def merge_metadata(data_df, header_df, well_id_col='API_NUMBER', data_cols=None, header_cols=None, auto_pick_cols=False, drop_duplicate_cols=True, log=False, verbose=False, **kwargs):
     """Function to merge tables, intended for merging metadata table with data table
 
     Parameters
@@ -33,13 +34,13 @@ def merge_metadata(data_df, header_df, data_cols=None, header_cols=None, auto_pi
     header_cols : list, optional
         List of strings of columns names, for columns to be included in merged table after merge from "right" table (metadata). If None, all columns are kept, by default None
     auto_pick_cols : bool, default = False
-        Whether to autopick the columns from the metadata table. If True, the following column names are kept:['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'BEDROCK_ELEV', 'SURFACE_ELEV', 'BEDROCK_DEPTH', 'LAYER_THICK'], by default False
+        Whether to autopick the columns from the metadata table. If True, the following column names are kept:[`well_id_col`, 'LATITUDE', 'LONGITUDE', 'BEDROCK_ELEV', 'SURFACE_ELEV', 'BEDROCK_DEPTH', 'LAYER_THICK'], by default False
     drop_duplicate_cols : bool, optional
         If True, drops duplicate columns from the tables so that columns do not get renamed upon merge, by default True
     log : bool, default = False
         Whether to log inputs and outputs to log file.
     **kwargs
-        kwargs that are passed directly to pd.merge(). By default, the 'on' and 'how' parameters are defined as on='API_NUMBER' and how='inner'
+        kwargs that are passed directly to pd.merge(). By default, the 'on' and 'how' parameters are defined as on=`well_id_col` and how='inner'
 
     Returns
     -------
@@ -63,7 +64,7 @@ def merge_metadata(data_df, header_df, data_cols=None, header_cols=None, auto_pi
         mergedTable = data_df
     else:   
         if auto_pick_cols:
-            header_cols = ['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'BEDROCK_ELEV', 'SURFACE_ELEV', 'BEDROCK_DEPTH', 'LAYER_THICK']
+            header_cols = [well_id_col, 'LATITUDE', 'LONGITUDE', 'BEDROCK_ELEV', 'SURFACE_ELEV', 'BEDROCK_DEPTH', 'LAYER_THICK']
             for c in header_df.columns:
                 if c.startswith('ELEV_') or c.startswith('DEPTH'):
                     header_cols.append(c)
@@ -81,7 +82,7 @@ def merge_metadata(data_df, header_df, data_cols=None, header_cols=None, auto_pi
 
         #Defults for on and how
         if 'on' not in kwargs.keys():
-            kwargs['on']='API_NUMBER'
+            kwargs['on']=well_id_col
 
         if 'how' not in kwargs.keys():
             kwargs['how']='inner'
@@ -142,7 +143,7 @@ def get_layer_depths(df_with_depths, surface_elev_col='SURFACE_ELEV', layer_thic
     return df_with_depths
 
 #Function to export the result of thickness of target sediments in each layer
-def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_prefix=None, depth_top_col='TOP', depth_bot_col='BOTTOM', log=False):
+def layer_target_thick(df, layers=9, well_id_col='API_NUMBER', return_all=False, export_dir=None, outfile_prefix=None, depth_top_col='TOP', depth_bot_col='BOTTOM', log=False, **kwargs):
     """Function to calculate thickness of target material in each layer at each well point
 
     Parameters
@@ -185,82 +186,89 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
         wellIntBot_col = 'BOT_ELEV'
         modelLyrTop_Col = zStr+'_LAYER'+str(layer)
         if layer != 9: #For all layers except the bottom layer....
-            modelLyrBot_col = zStr+'_LAYER'+str(layer+1) #use the layer below it to 
+            modelLyrBot_col = zStr+'_LAYER'+str(layer+1)  # use the layer below
         else: #Otherwise, ...
-            modelLyrBot_col = "BEDROCK_"+zStr #Use the (corrected) bedrock depth
+            modelLyrBot_col = "BEDROCK_"+zStr  # Use (corrected) brock depth
 
-        #Divide records into 4 categories for ease of calculation, to be joined back together later  
-            #Category 1: Well interval starts above layer top, ends within model layer
-            #Category 2: Well interval is entirely contained withing model layer
-            #Category 3: Well interval starts within model layer, continues through bottom of model layer
-            #Category 4: well interval begins and ends on either side of model layer (model layer is contained within well layer)
-        df['API_NUMBER'] = df['API_NUMBER'].astype(int).astype(str)
-        #records1 = intervals that go through the top of the layer and bottom is within layer
-        records1 = df.loc[(df[wellIntTop_col] > df[modelLyrTop_Col]) & #Top of the well interval is above or equal to the top of the layer
-                        (df[wellIntBot_col] <= df[modelLyrTop_Col]) & # & #Bottom is below the top of the layer
-                        (df[wellIntBot_col] <= df[wellIntTop_col])].copy() #Bottom is deeper than top (should already be the case)
+        # Divide records into 4 categories for ease of calculation:
+            # 1: Well interval starts above layer top, ends within model layer
+            # 2: Well interval is entirely contained withing model layer
+            # 3: Well interval starts in layer, continues through bottom
+            # 4: well interval begins/ends above/below (respective) model layer
+        if isinstance(df[well_id_col], numbers.Number) or str(df[well_id_col]).isnumeric():
+            df[well_id_col] = df[well_id_col].astype(int).astype(str)
+
+        # records1 = intervals that go through the top of the layer and bottom is within layer
+        records1 = df.loc[(df[wellIntTop_col] >  df[modelLyrTop_Col]) & #Top of the well interval is above or equal to the top of the layer
+                          (df[wellIntBot_col] <= df[modelLyrTop_Col]) & # & #Bottom is below the top of the layer
+                          (df[wellIntBot_col] <= df[wellIntTop_col])].copy() #Bottom is deeper than top (should already be the case)
         records1['TARG_THICK'] = pd.DataFrame(np.round((records1.loc[:,modelLyrTop_Col]-records1.loc[: , wellIntBot_col]) * records1['TARGET'],3)).copy() #Multiply "target" (1 or 0) by length within layer            
-        
-        #records2 = entire interval is within layer
+
+        # records2 = entire interval is within layer
         records2 = df.loc[(df[wellIntTop_col] <= df[modelLyrTop_Col]) & #Top of the well is lower than top of the layer 
                     (df[wellIntBot_col] >= df[modelLyrBot_col]) & #Bottom of the well is above bottom of the layer 
                     (df[wellIntBot_col] <= df[wellIntTop_col])].copy() #Bottom ofthe well is deeper than or equal to top (should already be the case)
         records2['TARG_THICK'] = pd.DataFrame(np.round((records2.loc[: , wellIntTop_col] - records2.loc[: , wellIntBot_col]) * records2['TARGET'],3)).copy()
 
-        #records3 = intervals with top within layer and bottom of interval going through bottom of layer
+        # records3 = intervals with top within layer and bottom of interval going through bottom of layer
         records3 = df.loc[(df[wellIntTop_col] >= df[modelLyrBot_col]) & #Top of the well is above bottom of layer
                     (df[wellIntTop_col] <= df[modelLyrTop_Col]) & #Top of well is below top of layer
                     (df[wellIntBot_col] < df[modelLyrBot_col]) & #Bottom of the well is below bottom of layer
                     (df[wellIntBot_col] <= df[wellIntTop_col])].copy() #Bottom is deeper than top (should already be the case)
         records3['TARG_THICK'] = pd.DataFrame(np.round((records3.loc[: , wellIntTop_col] - (records3.loc[:,modelLyrBot_col]))*records3['TARGET'],3)).copy()
 
-        #records4 = interval goes through entire layer
+        # records4 = interval goes through entire layer
         records4 = df.loc[(df[wellIntTop_col] > df[modelLyrTop_Col]) & #Top of well is above top of layer
                     (df[wellIntBot_col] < df[modelLyrBot_col]) & #Bottom of well is below bottom of layer
                     (df[wellIntBot_col] <= df[wellIntTop_col])].copy() #Bottom of well is below top of well
         records4['TARG_THICK'] = pd.DataFrame(np.round((records4.loc[: , modelLyrTop_Col]-records4.loc[: , modelLyrBot_col]) * records4['TARGET'],3)).copy()
 
-        # Truth check
-        inputRecordList = [records1, records3, records4]
-        truthCheckedRecords = []
-        for i, recDF in enumerate(inputRecordList):
-            if recDF.shape[0]>1:
-                recDF = recDF.loc[recDF['TARG_THICK'].idxmax()]
-            
-            truthCheckedRecords.append(recDF)
+        doTruthCheck = True
+        if 'truth_check' in kwargs:
+            if kwargs['truth_check'] is False:
+                doTruthCheck = False
 
-        # Truth check records category 2, which may have multiples
-        rec2Sorted = records2.sort_values(by='TARG_THICK', ascending=False)
-        subS = ['API_NUMBER', 'TOP', "BOTTOM"]
-        records2 = rec2Sorted.drop_duplicates(subset=subS, 
-                                            keep='first')
+        if doTruthCheck:
+            # Truth check
+            inputRecordList = [records1, records3, records4]
+            truthCheckedRecords = []
+            for recDF in inputRecordList:
+                if recDF.shape[0] > 1:
+                    recDF = recDF.loc[recDF['TARG_THICK'].idxmax()]
 
-        truthCheckedRecords.insert(1, records2)
-        
-        #Put the four calculated record categories back together into single dataframe
-        res = pd.concat(truthCheckedRecords)
+                truthCheckedRecords.append(recDF)
 
-        #The sign may be reversed if using depth rather than elevation
+            # Truth check records category 2, which may have multiples
+            rec2Sorted = records2.sort_values(by='TARG_THICK', ascending=False)
+            subS = [well_id_col, 'TOP', "BOTTOM"]
+            records2 = rec2Sorted.drop_duplicates(subset=subS,
+                                                keep='first')
+
+            truthCheckedRecords.insert(1, records2)
+        else:
+            truthCheckedRecords = [records1, records2, records3, records4]
+        # Put the four calculated record categories back together into single dataframe
+        res = gpd.GeoDataFrame(pd.concat(truthCheckedRecords), geometry='geometry', crs=df.crs)
+
+        # The sign may be reversed if using depth rather than elevation
         if (res['TARG_THICK'] < 0).all():
             res['TARG_THICK'] = res['TARG_THICK'] * -1
         
-        #Cannot have negative thicknesses
+        # Cannot have negative thicknesses
         res['TARG_THICK'] = res['TARG_THICK'].clip(lower=0)
         res['LAYER_THICK'] = res['LAYER_THICK'].clip(lower=0)
 
-        #Get geometries for each unique API/well
+        # Get geometries for each unique API/well
         res.reset_index(drop=True, inplace=True)
-        #Calculate thickness for each well interval in the layer indicated (e.g., if there are two well intervals from same well in one model layer)
-        res_df = res.groupby(by=['API_NUMBER','LATITUDE','LONGITUDE'], as_index=False)['TARG_THICK'].sum()
+        # Calculate thickness for each well interval in the layer indicated (e.g., if there are two well intervals from same well in one model layer)
+        res_df = res.groupby(by=[well_id_col, 'LATITUDE', 'LONGITUDE'],
+                             as_index=False)['TARG_THICK'].sum()
 
         mergeRes = res.drop(['LATITUDE', "LONGITUDE", "TARG_THICK"], axis=1)
-        res_df = pd.merge(left=res_df, right=mergeRes, how='left', on='API_NUMBER')
+        res_df = pd.merge(left=res_df, right=mergeRes,
+                          how='left', on=well_id_col)
         
-        testDF = pd.DataFrame()
-        testDF['TARG_THICK'] = res_df['TARG_THICK'].clip(upper=res_df['LAYER_THICK'])
-
-        
-        uniqInd = pd.DataFrame([v.values[0] for k, v in res.groupby(by=['API_NUMBER','LATITUDE','LONGITUDE']).groups.items()]).loc[:,0]
+        uniqInd = pd.DataFrame([v.values[0] for k, v in res.groupby(by=[well_id_col, 'LATITUDE', 'LONGITUDE']).groups.items()]).loc[:, 0]
         geomCol = res.loc[uniqInd, 'geometry']
         geomCol = pd.DataFrame(geomCol[~geomCol.index.duplicated(keep='first')]).reset_index()
         
@@ -271,8 +279,10 @@ def layer_target_thick(df, layers=9, return_all=False, export_dir=None, outfile_
         res_df['TARG_THICK_PER'] = res_df['TARG_THICK_PER'].where(res_df['TARG_THICK_PER']!=np.nan, other=0)
 
         res_df["LAYER"] = layer #Just to have as part of the output file, include the present layer in the file itself as a separate column
-        res_df = res_df[['API_NUMBER', 'LATITUDE', 'LONGITUDE', 'LATITUDE_PROJ', 'LONGITUDE_PROJ','TOP', 'BOTTOM', 'TOP_ELEV', 'BOT_ELEV', 'SURFACE_ELEV', modelLyrTop_Col, modelLyrBot_col,'LAYER_THICK','TARG_THICK', 'TARG_THICK_PER', 'LAYER']].copy() #Format dataframe for output
-        res_df = gpd.GeoDataFrame(res_df, geometry=geomCol.loc[:,'geometry'])
+        res_df = res_df[[well_id_col, 'LATITUDE', 'LONGITUDE', 'LATITUDE_PROJ', 'LONGITUDE_PROJ', 'TOP', 'BOTTOM', 'TOP_ELEV', 'BOT_ELEV', 'SURFACE_ELEV', modelLyrTop_Col, modelLyrBot_col, 'LAYER_THICK','TARG_THICK', 'TARG_THICK_PER', 'LAYER', 'geometry']].copy()
+        res_df = gpd.GeoDataFrame(res_df,
+                                  geometry='geometry',
+                                  crs=df.crs)
 
         resdf_list.append(res_df)
         res_list.append(res)
@@ -362,11 +372,16 @@ def layer_interp(points, model_grid, layers=None, interp_kind='nearest', surface
     linList = ['linear', 'lin', 'l']
     ctList = ['clough tocher', 'clough', 'cloughtocher', 'ct', 'c']
     rbfList = ['rbf', 'radial basis', 'radial basis function', 'r', 'radial']
-    #k-nearest neighbors from scikit-learn?
-    #kriging? (from pykrige or maybe also from scikit-learn)
     
-    X = np.round(model_grid[xcoord].values, 5)  # Extract xcoords from model_grid
-    Y = np.round(model_grid[ycoord].values, 5)  # Extract ycoords from model_grid
+    # k-nearest neighbors from scikit-learn?
+    # kriging? (from pykrige or maybe also from scikit-learn)
+    
+    if not isinstance(model_grid, (xr.DataArray, xr.Dataset)):
+        if pathlib.Path(model_grid).exists():
+            model_grid = xr.open_dataarray(model_grid)
+    
+    X = np.round(model_grid[xcoord].values, 10)  # Extract xcoords from model_grid
+    Y = np.round(model_grid[ycoord].values, 10)  # Extract ycoords from model_grid
     
     if layers is None and (type(points) is list or type(points) is dict):
         layers = len(points)
@@ -389,7 +404,7 @@ def layer_interp(points, model_grid, layers=None, interp_kind='nearest', surface
             if 'geometry' in pts.columns:
                 dataX = pts['geometry'].x
             else:
-                print('xcol not specified and geometry column not detected (points is not/does not contain geopandas.GeoDataFrame)' )
+                print('xcol not specified and geometry column not detected (points is not/does not contain geopandas.GeoDataFrame)')
                 return
         else:
             dataX = pts[xcol]
@@ -398,7 +413,7 @@ def layer_interp(points, model_grid, layers=None, interp_kind='nearest', surface
             if 'geometry' in pts.columns:
                 dataY = pts['geometry'].y
             else:
-                print('ycol not specified and geometry column not detected (points is not/does not contain geopandas.GeoDataFrame)' )
+                print('ycol not specified and geometry column not detected (points is not/does not contain geopandas.GeoDataFrame)')
                 return
         else:
             dataY = pts[ycol]
