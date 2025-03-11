@@ -21,6 +21,13 @@ def test_run():
             verbose=True)
 
         test_passed=True
-    except Exception:
+    except Exception as e:
+        print('ERROR:', e)
         test_passed=False
+    
     assert test_passed
+
+
+if __name__ == "__main__":
+    test_run()
+
