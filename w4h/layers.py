@@ -223,29 +223,23 @@ def layer_target_thick(df, layers=9, well_id_col='API_NUMBER', return_all=False,
                     (df[wellIntBot_col] <= df[wellIntTop_col])].copy() #Bottom of well is below top of well
         records4['TARG_THICK'] = pd.DataFrame(np.round((records4.loc[: , modelLyrTop_Col]-records4.loc[: , modelLyrBot_col]) * records4['TARGET'],3)).copy()
 
-        if 'truth_check' in kwargs:
-            if kwargs['truth_check'] is False:
-                doTruthCheck = False
+        # Truth check
+        inputRecordList = [records1, records3, records4]
+        truthCheckedRecords = []
+        for recDF in inputRecordList:
+            if recDF.shape[0] > 1:
+                recDF = recDF.loc[recDF['TARG_THICK'].idxmax()]
 
-        if doTruthCheck:
-            # Truth check
-            inputRecordList = [records1, records3, records4]
-            truthCheckedRecords = []
-            for recDF in inputRecordList:
-                if recDF.shape[0] > 1:
-                    recDF = recDF.loc[recDF['TARG_THICK'].idxmax()]
+            truthCheckedRecords.append(recDF)
 
-                truthCheckedRecords.append(recDF)
+        # Truth check records category 2, which may have multiples
+        rec2Sorted = records2.sort_values(by='TARG_THICK', ascending=False)
+        subS = [well_id_col, 'TOP', "BOTTOM"]
+        records2 = rec2Sorted.drop_duplicates(subset=subS,
+                                            keep='first')
 
-            # Truth check records category 2, which may have multiples
-            rec2Sorted = records2.sort_values(by='TARG_THICK', ascending=False)
-            subS = [well_id_col, 'TOP', "BOTTOM"]
-            records2 = rec2Sorted.drop_duplicates(subset=subS,
-                                                keep='first')
+        truthCheckedRecords.insert(1, records2)
 
-            truthCheckedRecords.insert(1, records2)
-        else:
-            truthCheckedRecords = [records1, records2, records3, records4]
         # Put the four calculated record categories back together into single dataframe
         res = gpd.GeoDataFrame(pd.concat(truthCheckedRecords), geometry='geometry', crs=df.crs)
 
