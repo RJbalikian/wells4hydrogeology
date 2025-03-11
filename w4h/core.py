@@ -211,7 +211,6 @@ def run(well_data,
     #Get surfaces and grid(s)
     read_grid_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.read_grid).parameters.keys()}
 
-
     surfaceElevPath = surf_elev_grid
     bedrockElevPath = bedrock_elev_grid
 
@@ -305,7 +304,7 @@ def run(well_data,
     classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
     searchDF = w4h.depth_define(df=searchDF, thresh=550, verbose=verbose, log=log)
     well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***
-    
+
     #Fill unclassified data
     well_data_xyz = w4h.fill_unclassified(well_data_xyz, classification_col='CLASS_FLAG')
 
@@ -318,24 +317,22 @@ def run(well_data,
     #well_data_xyz = w4h.sort_dataframe(df=well_data_xyz, sort_cols=['API_NUMBER','TOP'], remove_nans=True)
     well_data_xyz = well_data_xyz.sort_values(by=[well_id_col, top_col])
     well_data_xyz = well_data_xyz.reset_index(drop=True)
-    
+
     # UPDATE: Option to remove nans?
     well_data_xyz = well_data_xyz[well_data_xyz["LITHOLOGY"].notnull()]
-
-
     layer_target_thick_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.layer_target_thick).parameters.keys()}
     #if 'return_all' in layer_target_thick_kwargs.keys():
     #    del layer_target_thick_kwargs['return_all'] #This needs to be set to False, so we don't want it reading in twice
 
-    resdf = w4h.layer_target_thick(df=well_data_xyz, layers=layers, export_dir=export_dir, depth_top_col=top_col, depth_bot_col=bottom_col, log=log, **layer_target_thick_kwargs)
-    
+    resdf = w4h.layer_target_thick(df=well_data_xyz, well_id_col=well_id_col, layers=layers, export_dir=export_dir, depth_top_col=top_col, depth_bot_col=bottom_col, log=log, **layer_target_thick_kwargs)
+
+    returnALL = False
     if 'return_all' in layer_target_thick_kwargs.keys():
         if layer_target_thick_kwargs['return_all'] is True:
             returnALL = True
             res_list, resdf = resdf
-    else:
-        returnALL = False
         
+    
     # bedrockGrid, surfaceGrid, driftThickGrid, layerThickGrid
     layer_interp_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.layer_interp).parameters.keys()}
     layers_data = w4h.layer_interp(points=resdf, model_grid=modelGrid, layers=layers, verbose=verbose, log=log, **layer_interp_kwargs)
