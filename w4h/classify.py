@@ -7,6 +7,7 @@ import inspect
 import dask
 import pandas as pd
 import numpy as np
+import spacy
 
 from w4h import logger_function, verbose_print
 #The following flags are used to mark the classification method:
@@ -18,6 +19,66 @@ from w4h import logger_function, verbose_print
 #- 5: Wildcard match (any substring) - more liberal
 #- Top of well?
 
+
+#Load Data
+#Preprocess Text
+#Tokenization
+#Lemmatization
+#POS Tagging
+#Named Entity Recognition (NER)
+#Text Complexity Analysis
+#Text Classification
+#Evaluate and Refine
+#Save Results
+
+try:
+    nlp = spacy.load("en_core_web_sm")
+except ImportError:
+    pass
+
+def preprocess_nlp(df, description_col="FORMATION",
+                   nlp_model_size='small',
+                   remove_puncuation=True, **kwargs):
+
+    nlpSmallList = ['small', 's']
+    nlpMedList = ['medium', 'med', 'md', 'm']
+    nlpLargeList = ['large', 'lg', 'l']
+    nlpTransList = ['transformer', 'trans', 'tr', 't']
+
+    replace_str = ""
+    if remove_puncuation:
+        replace_str = r"[^\w\s]"
+        
+    df[f"PREPROCESSED_{description_col}"] = df[description_col].str.lower().str.replace(replace_str, '')
+    
+
+    return df
+
+
+def tokenize():
+    return
+
+def lemmatize():
+    return
+
+def tag_parts_of_speech():
+    return
+
+
+def named_entity_recognition():
+    return
+
+
+def analyze_complexity():
+    return
+
+
+def classify_description_type():
+    return
+
+
+def evaluate_classification():
+    return
 
 #Define well intervals by depth
 def depth_define(df, top_col='TOP', thresh=550.0, parallel_processing=False, verbose=False, log=False):
@@ -142,6 +203,7 @@ def specific_define(df, terms_df, description_col='FORMATION', terms_col='DESCRI
 
     return df_Interps
 
+
 def split_defined(df, classification_col='CLASS_FLAG', verbose=False, log=False):
     """Function to split dataframe with well descriptions into two dataframes based on whether a row has been classified.
 
@@ -167,6 +229,7 @@ def split_defined(df, classification_col='CLASS_FLAG', verbose=False, log=False)
     classifedDF = df[df[classification_col].notnull()]  # Already-classifed data
 
     return classifedDF, searchDF
+
 
 #Classify downhole data by the initial substring
 def start_define(df, terms_df, description_col='FORMATION', terms_col='DESCRIPTION', parallel_processing=False, verbose=False, log=False):
@@ -223,6 +286,7 @@ def start_define(df, terms_df, description_col='FORMATION', terms_col='DESCRIPTI
         print('\t\t{} records remain unclassified ({}% of unclassified  data).'.format(recsRemainig, 100-percRecsClass))
     return df
 
+
 #Classify downhole data by any substring
 def wildcard_define(df, terms_df, description_col='FORMATION', terms_col='DESCRIPTION', verbose=False, log=False):
     """Function to classify descriptions according to any substring. 
@@ -274,6 +338,7 @@ def wildcard_define(df, terms_df, description_col='FORMATION', terms_col='DESCRI
         print(f'\t\t{recsRemainig} records remain unclassified ({100-percRecsClass}% of unclassified  data).')
     return df
 
+
 #Merge data back together
 def remerge_data(classifieddf, searchdf, parallel_processing=False):
     """Function to merge newly-classified (or not) and previously classified data
@@ -296,6 +361,7 @@ def remerge_data(classifieddf, searchdf, parallel_processing=False):
         remergeDF = pd.concat([classifieddf,searchdf], join='inner').sort_index()
 
     return remergeDF
+
 
 #Output data that still needs to be defined
 def export_undefined(df, outdir):
@@ -337,6 +403,7 @@ def export_undefined(df, outdir):
     stillNeededDF.to_csv(outdir+'Undefined_'+todayDateStr+'.csv')
     return stillNeededDF
 
+
 #Fill in unclassified rows' flags with 0
 def fill_unclassified(df, classification_col='CLASS_FLAG'):
     """Fills unclassified rows in 'CLASS_FLAG' column with np.nan
@@ -353,6 +420,7 @@ def fill_unclassified(df, classification_col='CLASS_FLAG'):
     """
     df[classification_col] = df[classification_col].fillna(0)
     return df
+
 
 #Merge lithologies to main df based on classifications
 def merge_lithologies(well_data_df, targinterps_df, interp_col='INTERPRETATION', target_col='TARGET', target_class='bool'):
@@ -422,6 +490,7 @@ def get_unique_wells(df, wellid_col='API_NUMBER', verbose=False, log=False):
     wellsDF.columns = ['UNIQUE_ID']
     
     return wellsDF
+
 
 #Quickly sort dataframe
 def sort_dataframe(df, sort_cols=['API_NUMBER', 'TOP'], remove_nans=True):

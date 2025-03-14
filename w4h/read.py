@@ -368,10 +368,12 @@ def define_dtypes(undefined_df, datatypes=None, verbose=False, log=False):
 
     return dfout
 
-#Define the search term filepaths
-def get_search_terms(spec_path=str(repoDir)+'/resources/', spec_glob_pattern='*SearchTerms-Specific*', 
-                     start_path=None, start_glob_pattern = '*SearchTerms-Start*', 
+# Define the search term filepaths
+def get_search_terms(spec_path=str(repoDir)+'/resources/',
+                     spec_glob_pattern='*SearchTerms-Specific*',
+                     start_path=None, start_glob_pattern='*SearchTerms-Start*',
                      wildcard_path=None, wildcard_glob_pattern='*SearchTerms-Wildcard',
+                     use_tokens=False,
                      verbose=False, log=False):
     """Read in dictionary files for downhole data
 
@@ -400,12 +402,12 @@ def get_search_terms(spec_path=str(repoDir)+'/resources/', spec_glob_pattern='*S
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
         verbose_print(get_search_terms, locals())    
-    #specTermsFile = "SearchTerms-Specific_BedrockOrNo_2022-09.csv" #Specific matches
-    #startTermsFile = "SearchTerms-Start_BedrockOrNo.csv" #Wildcard matches for the start of the description
+    # specTermsFile = "SearchTerms-Specific_BedrockOrNo_2022-09.csv" #Specific matches
+    # startTermsFile = "SearchTerms-Start_BedrockOrNo.csv" #Wildcard matches for the start of the description
 
-    #Exact match path
+    # Exact match path
     if spec_path is None:
-        specTermsPath = spec_path        
+        specTermsPath = spec_path
     else:
         spec_path = pathlib.Path(spec_path)
 
