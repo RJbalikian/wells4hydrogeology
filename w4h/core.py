@@ -21,6 +21,9 @@ from shapely.geometry import Point
 
 import w4h
 
+log_filename = None  # initialize so variable exists but is None
+
+
 # Main function to run model all at once
 def run(well_data,
         surf_elev_grid,
@@ -284,58 +287,61 @@ def run(well_data,
         print(f'\t\t {noStartTerms} starting match term/definition pairs')
         print(f'\t\t {noWildcardTerms} wildcard match term/definition pairs')
 
-    #CLASSIFICATIONS
-    #Exact match classifications
+    # CLASSIFICATIONS
+    # Exact match classifications
     well_data_xyz = w4h.specific_define(well_data_xyz, terms_df=specTerms, description_col=description_col, verbose=verbose, log=log)
     
-    #.startswith classifications
+    # .startswith classifications
     if lith_dict_start is not None:
         classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
         searchDF = w4h.start_define(df=searchDF, terms_df=startTerms, description_col=description_col, verbose=verbose, log=log)
         well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
 
-    #wildcard/any substring match classifications
+    # wildcard/any substring match classifications
     if lith_dict_wildcard is not None:
         classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
         searchDF = w4h.wildcard_define(df=searchDF, terms_df=wildcardTerms, description_col=description_col, verbose=verbose, log=log)
         well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***    
 
-    #Depth classification
+    # Depth classification
     classifedDF, searchDF = w4h.split_defined(well_data_xyz, verbose=verbose, log=log)
     searchDF = w4h.depth_define(df=searchDF, thresh=550, verbose=verbose, log=log)
     well_data_xyz = w4h.remerge_data(classifieddf=classifedDF, searchdf=searchDF) #UPDATE: Needed? ***
 
-    #Fill unclassified data
+    # Fill unclassified data
     well_data_xyz = w4h.fill_unclassified(well_data_xyz, classification_col='CLASS_FLAG')
 
-    #Add target interpratations
+    # Add target interpratations
     read_lithologies_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.read_lithologies).parameters.keys()}
     targetInterpDF = w4h.read_lithologies(lith_file=target_dict, log=log, **read_lithologies_kwargs)
     well_data_xyz = w4h.merge_lithologies(well_data_df=well_data_xyz, targinterps_df=targetInterpDF, target_col='TARGET', target_class='bool')
 
-    #Sort dataframe to prepare for next steps
-    #well_data_xyz = w4h.sort_dataframe(df=well_data_xyz, sort_cols=['API_NUMBER','TOP'], remove_nans=True)
+    # Sort dataframe to prepare for next steps
+    # well_data_xyz = w4h.sort_dataframe(df=well_data_xyz, sort_cols=['API_NUMBER','TOP'], remove_nans=True)
     well_data_xyz = well_data_xyz.sort_values(by=[well_id_col, top_col])
     well_data_xyz = well_data_xyz.reset_index(drop=True)
 
     # UPDATE: Option to remove nans?
     well_data_xyz = well_data_xyz[well_data_xyz["LITHOLOGY"].notnull()]
     layer_target_thick_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.layer_target_thick).parameters.keys()}
-    #if 'return_all' in layer_target_thick_kwargs.keys():
-    #    del layer_target_thick_kwargs['return_all'] #This needs to be set to False, so we don't want it reading in twice
 
-    resdf = w4h.layer_target_thick(df=well_data_xyz, well_id_col=well_id_col, layers=layers, export_dir=export_dir, depth_top_col=top_col, depth_bot_col=bottom_col, log=log, **layer_target_thick_kwargs)
+    resdf = w4h.layer_target_thick(gdf=well_data_xyz, well_id_col=well_id_col,
+                                   layers=layers, export_dir=export_dir,
+                                   depth_top_col=top_col,
+                                   depth_bot_col=bottom_col,
+                                   log=log, **layer_target_thick_kwargs)
 
     returnALL = False
     if 'return_all' in layer_target_thick_kwargs.keys():
         if layer_target_thick_kwargs['return_all'] is True:
             returnALL = True
             res_list, resdf = resdf
-        
-    
+
     # bedrockGrid, surfaceGrid, driftThickGrid, layerThickGrid
     layer_interp_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.layer_interp).parameters.keys()}
-    layers_data = w4h.layer_interp(points=resdf, model_grid=modelGrid, layers=layers, verbose=verbose, log=log, **layer_interp_kwargs)
+    layers_data = w4h.layer_interp(points=resdf, model_grid=modelGrid,
+                                   layers=layers, verbose=verbose, log=log,
+                                   **layer_interp_kwargs)
 
     if include_elevation_grids:
         # Add surface, bedrock, and derived grids
@@ -357,9 +363,12 @@ def run(well_data,
     nowTime = str(nowTime).replace(':', '-').replace(' ', '_').split('.')[0]
     nowTimeStr = '_'+str(nowTime)
 
-    #THIS MAY BE REPEAT OF LAST LINES OF layer_interp()
-    w4h.export_grids(grid_data=layers_data, out_path=export_dir, file_id=target_name,filetype='tif', variable_sep=True, date_stamp=True, verbose=verbose, log=log)
-    
+    # THIS MAY BE REPEAT OF LAST LINES OF layer_interp()
+    w4h.export_grids(grid_data=layers_data, out_path=export_dir,
+                     file_id=target_name, filetype='tif',
+                     variable_sep=True, date_stamp=True,
+                     verbose=verbose, log=log)
+
     if returnALL:
         print('returning all')
         return resdf, layers_data, res_list
@@ -367,7 +376,7 @@ def run(well_data,
         return resdf, layers_data
 
 
-# Function to update docstring for run function, used in __init__ file 
+# Function to update docstring for run function, used in __init__ file
 def _run_docstring():
     nl = '\n\t'
     functionList = [w4h.file_setup, w4h.read_raw_csv, w4h.define_dtypes, w4h.merge_metadata, w4h.coords2geometry,
@@ -428,9 +437,7 @@ def _run_docstring():
     """
     return run_docstring
 
-
 # Function for logging (experimental)
-log_filename = None  #initialize so variable exists but is None
 def logger_function(logtocommence, parameters, func_name):
     """Function to log other functions, to be called from within other functions
 
