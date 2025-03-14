@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>w4h.export &mdash; w4h 0.0.22-dev documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
@@ -77,19 +77,19 @@
 <span></span><span class="sd">&quot;&quot;&quot;The Export module contains functions for exporting processed data.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">pathlib</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">pathlib</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">w4h</span><span class="w"> </span><span class="kn">import</span> <span class="n">logger_function</span><span class="p">,</span> <span class="n">verbose_print</span>
+<span class="kn">from</span> <span class="nn">w4h</span> <span class="kn">import</span> <span class="n">logger_function</span><span class="p">,</span> <span class="n">verbose_print</span>
 
 <span class="c1">#Export data</span>
 <div class="viewcode-block" id="export_dataframe">
 <a class="viewcode-back" href="../../w4h.export.html#w4h.export_dataframe">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">export_dataframe</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">date_stamp</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">export_dataframe</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">date_stamp</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to export dataframes</span>
 
 <span class="sd">    Parameters</span>
@@ -138,7 +138,7 @@
 <span class="c1">#Export (rio)xarray dataarrays and datasets</span>
 <div class="viewcode-block" id="export_grids">
 <a class="viewcode-back" href="../../w4h.export.html#w4h.export_grids">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">export_grids</span><span class="p">(</span><span class="n">grid_data</span><span class="p">,</span> <span class="n">out_path</span><span class="p">,</span> <span class="n">file_id</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="n">filetype</span><span class="o">=</span><span class="s1">&#39;tif&#39;</span><span class="p">,</span> <span class="n">variable_sep</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">date_stamp</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">export_grids</span><span class="p">(</span><span class="n">grid_data</span><span class="p">,</span> <span class="n">out_path</span><span class="p">,</span> <span class="n">file_id</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="n">filetype</span><span class="o">=</span><span class="s1">&#39;tif&#39;</span><span class="p">,</span> <span class="n">variable_sep</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">date_stamp</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to export grids to files.</span>
 
 <span class="sd">    Parameters</span>
@@ -234,7 +234,7 @@
         
     <span class="c1">#Do export</span>
     <span class="k">if</span> <span class="n">filetype</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">pickleList</span><span class="p">:</span>
-        <span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>
+        <span class="kn">import</span> <span class="nn">pickle</span>
         <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">outPaths</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
@@ -244,7 +244,7 @@
                 <span class="nb">print</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="s1">&#39;could not be exported as a pickle object.&#39;</span><span class="p">)</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Try again using different parameters.&#39;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="kn">import</span><span class="w"> </span><span class="nn">rioxarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">rxr</span>
+        <span class="kn">import</span> <span class="nn">rioxarray</span> <span class="k">as</span> <span class="nn">rxr</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">grid_data</span><span class="p">,</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">variable_sep</span><span class="p">:</span>

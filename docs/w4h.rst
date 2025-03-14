@@ -3,8 +3,8 @@ w4h package
 
 .. automodule:: w4h
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 Submodules
 ----------

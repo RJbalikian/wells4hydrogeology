@@ -10,7 +10,7 @@ import sys
 
 import markdown
 
-RELEASE_VERSION = "0.1.1"
+RELEASE_VERSION = "0.1.2"
 
 VERBOSE = True
 
@@ -84,7 +84,6 @@ for cFile in confFilePaths:
         NEWVERTEXT = r'__version__ = "'+RELEASE_VERSION+'"'
         cFileText = re.sub(VERTEXT, NEWVERTEXT, cFileText, flags=re.DOTALL)
 
-
         with open(cFile.as_posix(), mode='w', encoding='utf-8') as f:
             f.write(cFileText)
 
@@ -99,7 +98,7 @@ if RTD_DOCS:
 
     if VERBOSE:
         print('Saving conf.py and index.rst so they do not get overwritten')
-    # It seems apidoc rewrites conf.py and index.rst file (don't want that), 
+    # It seems apidoc rewrites conf.py and index.rst file (don't want that),
     # so save it first and rewrite after
     confFilePath = docsDir.joinpath('conf.py')
     indFilePath = docsDir.joinpath('index.rst')
@@ -112,11 +111,12 @@ if RTD_DOCS:
     if VERBOSE:
         print('Running sphinx-apidoc')
     # Run apidoc to update api documentation from docstrings
-    subprocess.run(['sphinx-apidoc', '-F', '-M', '-e', '-f', '-o', docsDir.as_posix(), w4hDir.as_posix()])
+    subprocess.run(['sphinx-apidoc', '-F', '-M', '-e', '-f', '-o',
+                    docsDir.as_posix(), w4hDir.as_posix()])
 
     if VERBOSE:
         print('sphinx-apidoc complete')
-        print('Putting original conf.py and index.rst files back where I got them')
+        print('Putting original conf.py/index.rst files back where I got them')
     with open(confFilePath.as_posix(), mode='w', encoding='utf-8') as f:
         f.write(confFileText)
     with open(indFilePath.as_posix(), mode='w', encoding='utf-8') as f:
@@ -124,11 +124,11 @@ if RTD_DOCS:
 
     if VERBOSE:
         print('Cleaning make file and sources')
-    subprocess.run([docsDir.joinpath('make.bat').as_posix(), 'clean'], 
+    subprocess.run([docsDir.joinpath('make.bat').as_posix(), 'clean'],
                    check=False)
     if VERBOSE:
         print('Creating make file (for html)')
-    subprocess.run([docsDir.joinpath('make.bat').as_posix(), 'html'], 
+    subprocess.run([docsDir.joinpath('make.bat').as_posix(), 'html'],
                    check=False)
 
     if VERBOSE:
@@ -148,9 +148,11 @@ if RTD_DOCS:
                     if f2.stem in copyList:
                         shutil.copy(f2, docsDir.joinpath(f.name))
                     elif f2.stem == 'js':
-                        shutil.copy(f2.joinpath('theme.js'), docsDir.joinpath('theme.js'))
+                        shutil.copy(f2.joinpath('theme.js'),
+                                    docsDir.joinpath('theme.js'))
                     elif f2.stem == 'css':
-                        shutil.copy(f2.joinpath('theme.css'), docsDir.joinpath('theme.css'))
+                        shutil.copy(f2.joinpath('theme.css'),
+                                    docsDir.joinpath('theme.css'))
 
     for file in docsDir.iterdir():
         if file.suffix == '.html':
@@ -160,7 +162,7 @@ if RTD_DOCS:
             htmlFileText = htmlFileText.replace('src="js/', 'src="')
 
             htmlFileText = htmlFileText.replace('href="_static/', 'href="')
-            htmlFileText = htmlFileText.replace('href="css/', 'href="')            
+            htmlFileText = htmlFileText.replace('href="css/', 'href="')
             with open(file.as_posix(), mode='w', encoding='utf-8') as f:
                 f.write(htmlFileText)
 
@@ -263,8 +265,8 @@ if LINT_IT:
         if VERBOSE:
             print(f'\nLINTING {fileP.as_posix()}')
         ignoreList = ['E501']
-        STR_IGNORE_LIST = "--ignore="+str(str(ignoreList)[1:-1].replace(' ', '').replace("'",""))
-        result = subprocess.run(['flake8', STR_IGNORE_LIST, fileP.as_posix(),], 
+        STR_IGNORE_LIST = "--ignore="+str(str(ignoreList)[1:-1].replace(' ', '').replace("'", ""))
+        result = subprocess.run(['flake8', STR_IGNORE_LIST, fileP.as_posix(),],
                                 stdout=subprocess.PIPE, check=False)
         if VERBOSE:
             print(result.stdout.decode('utf-8'))
@@ -276,7 +278,7 @@ if RUN_TESTS:
     if sys.platform == 'linux':
         SHELL_TYPE = False
     try:
-        subprocess.run(["python", "-m", "pytest", repoDir.as_posix()], 
+        subprocess.run(["python", "-m", "pytest", repoDir.as_posix()],
                        shell=SHELL_TYPE, check=False)
     except Exception:
         subprocess.run(["pytest", repoDir.as_posix()], shell=SHELL_TYPE, check=False)

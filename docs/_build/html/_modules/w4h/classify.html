@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>w4h.classify &mdash; w4h 0.0.22-dev documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
@@ -77,14 +77,14 @@
 <span></span><span class="sd">&quot;&quot;&quot;The Classify module contains functions for defining geological intervals into a preset subset of geologic interpretations.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">dask</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">dask</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">w4h</span><span class="w"> </span><span class="kn">import</span> <span class="n">logger_function</span><span class="p">,</span> <span class="n">verbose_print</span>
+<span class="kn">from</span> <span class="nn">w4h</span> <span class="kn">import</span> <span class="n">logger_function</span><span class="p">,</span> <span class="n">verbose_print</span>
 <span class="c1">#The following flags are used to mark the classification method:</span>
 <span class="c1">#- 0: Not classified</span>
 <span class="c1">#- 1: Specific Search Term Match</span>
@@ -98,7 +98,7 @@
 <span class="c1">#Define well intervals by depth</span>
 <div class="viewcode-block" id="depth_define">
 <a class="viewcode-back" href="../../w4h.classify.html#w4h.depth_define">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">depth_define</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">top_col</span><span class="o">=</span><span class="s1">&#39;TOP&#39;</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="mf">550.0</span><span class="p">,</span> <span class="n">parallel_processing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">depth_define</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">top_col</span><span class="o">=</span><span class="s1">&#39;TOP&#39;</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="mf">550.0</span><span class="p">,</span> <span class="n">parallel_processing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to define all intervals lower than thresh as bedrock</span>
 
 <span class="sd">    Parameters</span>
@@ -161,7 +161,7 @@
 <span class="c1">#Define records with full search term</span>
 <div class="viewcode-block" id="specific_define">
 <a class="viewcode-back" href="../../w4h.classify.html#w4h.specific_define">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">specific_define</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">terms_df</span><span class="p">,</span> <span class="n">description_col</span><span class="o">=</span><span class="s1">&#39;FORMATION&#39;</span><span class="p">,</span> <span class="n">terms_col</span><span class="o">=</span><span class="s1">&#39;DESCRIPTION&#39;</span><span class="p">,</span> <span class="n">parallel_processing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">specific_define</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">terms_df</span><span class="p">,</span> <span class="n">description_col</span><span class="o">=</span><span class="s1">&#39;FORMATION&#39;</span><span class="p">,</span> <span class="n">terms_col</span><span class="o">=</span><span class="s1">&#39;DESCRIPTION&#39;</span><span class="p">,</span> <span class="n">parallel_processing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to classify terms that have been specifically defined in the terms_df.</span>
 
 <span class="sd">    Parameters</span>
@@ -226,7 +226,7 @@
 
 <div class="viewcode-block" id="split_defined">
 <a class="viewcode-back" href="../../w4h.classify.html#w4h.split_defined">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">split_defined</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">classification_col</span><span class="o">=</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">split_defined</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">classification_col</span><span class="o">=</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to split dataframe with well descriptions into two dataframes based on whether a row has been classified.</span>
 
 <span class="sd">    Parameters</span>
@@ -256,7 +256,7 @@
 <span class="c1">#Classify downhole data by the initial substring</span>
 <div class="viewcode-block" id="start_define">
 <a class="viewcode-back" href="../../w4h.classify.html#w4h.start_define">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">start_define</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">terms_df</span><span class="p">,</span> <span class="n">description_col</span><span class="o">=</span><span class="s1">&#39;FORMATION&#39;</span><span class="p">,</span> <span class="n">terms_col</span><span class="o">=</span><span class="s1">&#39;DESCRIPTION&#39;</span><span class="p">,</span> <span class="n">parallel_processing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">start_define</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">terms_df</span><span class="p">,</span> <span class="n">description_col</span><span class="o">=</span><span class="s1">&#39;FORMATION&#39;</span><span class="p">,</span> <span class="n">terms_col</span><span class="o">=</span><span class="s1">&#39;DESCRIPTION&#39;</span><span class="p">,</span> <span class="n">parallel_processing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to classify descriptions according to starting substring. </span>
 
 <span class="sd">    Parameters</span>
@@ -314,7 +314,7 @@
 <span class="c1">#Classify downhole data by any substring</span>
 <div class="viewcode-block" id="wildcard_define">
 <a class="viewcode-back" href="../../w4h.classify.html#w4h.wildcard_define">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">wildcard_define</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">terms_df</span><span class="p">,</span> <span class="n">description_col</span><span class="o">=</span><span class="s1">&#39;FORMATION&#39;</span><span class="p">,</span> <span class="n">terms_col</span><span class="o">=</span><span class="s1">&#39;DESCRIPTION&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">wildcard_define</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">terms_df</span><span class="p">,</span> <span class="n">description_col</span><span class="o">=</span><span class="s1">&#39;FORMATION&#39;</span><span class="p">,</span> <span class="n">terms_col</span><span class="o">=</span><span class="s1">&#39;DESCRIPTION&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to classify descriptions according to any substring. </span>
 
 <span class="sd">    Parameters</span>
@@ -368,7 +368,7 @@
 <span class="c1">#Merge data back together</span>
 <div class="viewcode-block" id="remerge_data">
 <a class="viewcode-back" href="../../w4h.classify.html#w4h.remerge_data">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">remerge_data</span><span class="p">(</span><span class="n">classifieddf</span><span class="p">,</span> <span class="n">searchdf</span><span class="p">,</span> <span class="n">parallel_processing</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">remerge_data</span><span class="p">(</span><span class="n">classifieddf</span><span class="p">,</span> <span class="n">searchdf</span><span class="p">,</span> <span class="n">parallel_processing</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to merge newly-classified (or not) and previously classified data</span>
 
 <span class="sd">    Parameters</span>
@@ -394,7 +394,7 @@
 <span class="c1">#Output data that still needs to be defined</span>
 <div class="viewcode-block" id="export_undefined">
 <a class="viewcode-back" href="../../w4h.classify.html#w4h.export_undefined">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">export_undefined</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">outdir</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">export_undefined</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">outdir</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to export terms that still need to be defined.</span>
 
 <span class="sd">    Parameters</span>
@@ -409,7 +409,7 @@
 <span class="sd">    stillNeededDF : pandas.DataFrame</span>
 <span class="sd">        Dataframe containing only unclassified terms, and the number of times they occur</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">pathlib</span>
+    <span class="kn">import</span> <span class="nn">pathlib</span>
     
     
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">PurePath</span><span class="p">):</span>
@@ -437,7 +437,7 @@
 <span class="c1">#Fill in unclassified rows&#39; flags with 0</span>
 <div class="viewcode-block" id="fill_unclassified">
 <a class="viewcode-back" href="../../w4h.classify.html#w4h.fill_unclassified">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">fill_unclassified</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">classification_col</span><span class="o">=</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">fill_unclassified</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">classification_col</span><span class="o">=</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Fills unclassified rows in &#39;CLASS_FLAG&#39; column with np.nan</span>
 
 <span class="sd">    Parameters</span>
@@ -457,7 +457,7 @@
 <span class="c1">#Merge lithologies to main df based on classifications</span>
 <div class="viewcode-block" id="merge_lithologies">
 <a class="viewcode-back" href="../../w4h.classify.html#w4h.merge_lithologies">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">merge_lithologies</span><span class="p">(</span><span class="n">well_data_df</span><span class="p">,</span> <span class="n">targinterps_df</span><span class="p">,</span> <span class="n">interp_col</span><span class="o">=</span><span class="s1">&#39;INTERPRETATION&#39;</span><span class="p">,</span> <span class="n">target_col</span><span class="o">=</span><span class="s1">&#39;TARGET&#39;</span><span class="p">,</span> <span class="n">target_class</span><span class="o">=</span><span class="s1">&#39;bool&#39;</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">merge_lithologies</span><span class="p">(</span><span class="n">well_data_df</span><span class="p">,</span> <span class="n">targinterps_df</span><span class="p">,</span> <span class="n">interp_col</span><span class="o">=</span><span class="s1">&#39;INTERPRETATION&#39;</span><span class="p">,</span> <span class="n">target_col</span><span class="o">=</span><span class="s1">&#39;TARGET&#39;</span><span class="p">,</span> <span class="n">target_class</span><span class="o">=</span><span class="s1">&#39;bool&#39;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to merge lithologies and target booleans based on classifications</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
@@ -497,7 +497,7 @@
 <span class="c1"># Function to get unique wells</span>
 <div class="viewcode-block" id="get_unique_wells">
 <a class="viewcode-back" href="../../w4h.classify.html#w4h.get_unique_wells">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">get_unique_wells</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">wellid_col</span><span class="o">=</span><span class="s1">&#39;API_NUMBER&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">get_unique_wells</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">wellid_col</span><span class="o">=</span><span class="s1">&#39;API_NUMBER&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Gets unique wells as a dataframe based on a given column name.</span>
 
 <span class="sd">    Parameters</span>
@@ -532,7 +532,7 @@
 <span class="c1">#Quickly sort dataframe</span>
 <div class="viewcode-block" id="sort_dataframe">
 <a class="viewcode-back" href="../../w4h.classify.html#w4h.sort_dataframe">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">sort_dataframe</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">sort_cols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;API_NUMBER&#39;</span><span class="p">,</span> <span class="s1">&#39;TOP&#39;</span><span class="p">],</span> <span class="n">remove_nans</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">sort_dataframe</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">sort_cols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;API_NUMBER&#39;</span><span class="p">,</span> <span class="s1">&#39;TOP&#39;</span><span class="p">],</span> <span class="n">remove_nans</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to sort dataframe by one or more columns.</span>
 
 <span class="sd">    Parameters</span>
