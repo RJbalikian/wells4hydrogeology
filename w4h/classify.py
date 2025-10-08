@@ -33,7 +33,7 @@ from w4h import logger_function, verbose_print
 
 try:
     nlp = spacy.load("en_core_web_sm")
-except ImportError:
+except Exception:
     pass
 
 def preprocess_nlp(df, description_col="FORMATION",
