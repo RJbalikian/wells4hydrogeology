@@ -13,6 +13,7 @@ import zipfile
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+import pyproj
 import rioxarray as rxr
 from shapely import wkt
 import xarray as xarray
@@ -34,7 +35,7 @@ def run(well_data,
         layers=9,
         description_col='FORMATION', top_col='TOP', bottom_col='BOTTOM', depth_type='depth',
         study_area=None, xcol='LONGITUDE', ycol='LATITUDE', zcol='SURFACE_ELEV', well_id_col='API_NUMBER',
-        lith_dict=None, lith_dict_start=None, lith_dict_wildcard=None, use_tokens=True,
+        lith_dict=None, lith_dict_start=None, lith_dict_wildcard=None, use_tokens=False,
         target_dict=None,
         target_name='',
         include_elevation_grids=True,
@@ -253,7 +254,7 @@ def run(well_data,
     # CLASSIFICATION
     # Read dictionary definitions and classify
     if use_tokens:
-        
+        # This will eventually parse out well data descriptions
         pass
     else:
         get_search_terms_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.get_search_terms).parameters.keys()}
@@ -268,6 +269,7 @@ def run(well_data,
         # Clean up dictionary terms
         specTerms = specTerms.drop_duplicates(subset='DESCRIPTION')
         specTerms = specTerms.reset_index(drop=True)
+        specTerms['CLASS_FLAG'] = 1
 
         startTerms = startTerms.drop_duplicates(subset='DESCRIPTION')
         startTerms = startTerms.reset_index(drop=True)
@@ -361,6 +363,12 @@ def run(well_data,
     nowTime = str(nowTime).replace(':', '-').replace(' ', '_').split('.')[0]
     nowTimeStr = '_'+str(nowTime)
 
+    # Ensure spatial dimensinos are set to improve export
+    layers_data.rio.set_spatial_dims(x_dim='x', y_dim='y', inplace=True)
+    layers_data.rio.write_grid_mapping(inplace=True)
+    layers_crs = pyproj.CRS.from_wkt(layers_data.spatial_ref.crs_wkt)
+    layers_data.rio.write_crs(layers_crs, inplace=True)
+
     # THIS MAY BE REPEAT OF LAST LINES OF layer_interp()
     w4h.export_grids(grid_data=layers_data, out_path=export_dir,
                      file_id=target_name, filetype='tif',
@@ -368,7 +376,7 @@ def run(well_data,
                      verbose=verbose, log=log)
 
     if returnALL:
-        print('returning all')
+        print('Returning all data [results dataframe, gridded layers, results list]')
         return resdf, layers_data, res_list
     else:
         return resdf, layers_data

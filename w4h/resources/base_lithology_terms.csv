@@ -1,0 +1,12 @@
+term,interpretation,category
+sand,sand,lithology
+dand,sand,lithology
+s,sand,lithology
+gvl,gravel,lithology
+gravel,gravel,lithology
+glv,gravel,lithology
+silty,silty,texture
+lime,limestone,lithology
+gray,gray,color
+grey,gray,color
+brown,brown,color

@@ -3,6 +3,8 @@
 
 import datetime
 import inspect
+import re
+import string
 
 import dask
 import pandas as pd
@@ -180,11 +182,17 @@ def specific_define(df, terms_df, description_col='FORMATION', terms_col='DESCRI
 
     terms_df = terms_df.drop_duplicates(subset=terms_col, keep='last')
     terms_df = terms_df.reset_index(drop=True)
-    
+    terms_df['CLASS_FLAG'] = 1  # Preset column to equal 1
+        
     df_Interps = df.merge(right=terms_df.set_index(terms_col), left_on=description_col, right_on=terms_col, how='inner')
     #df_Interps = pd.merge(left=df, right=terms_df.set_index(terms_col), on=description_col, how='left')
     df_Interps = df_Interps.rename(columns={description_col:'FORMATION'})
     df_Interps['BEDROCK_FLAG'] = df_Interps['LITHOLOGY'] == 'BEDROCK'
+    
+    print("PRINGINT YAYAYAYAY")
+    print('dfinterp', df_Interps.columns)
+    print('df', df.columns)
+    print('termsdf', terms_df.columns)
     
     if verbose:
         totRecords = df_Interps.shape[0]
