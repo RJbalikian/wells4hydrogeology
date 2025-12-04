@@ -9,7 +9,6 @@ import string
 import dask
 import pandas as pd
 import numpy as np
-import spacy
 
 from w4h import logger_function, verbose_print
 #The following flags are used to mark the classification method:

@@ -13,6 +13,7 @@ import geopandas as gpd
 import pandas as pd
 import numpy as np
 from scipy import interpolate
+from scipy.spatial import Voronoi
 
 import w4h
 from w4h import logger_function, verbose_print
@@ -623,6 +624,7 @@ def layer_interp(points, model_grid, layers=None, interp_kind='nearest',
         interp_grid = interp_grid.expand_dims(dim='Layer')
         interp_grid = interp_grid.assign_coords(Layer=[lyr])
 
+        # Delete to reduce memory usage (?)
         del Z
         del dataX
         del dataY
@@ -674,6 +676,8 @@ def layer_interp(points, model_grid, layers=None, interp_kind='nearest',
 
     return interp_data
 
+def natural_neighbor_interp(points, model_grid, layers=None, ):
+    return Voronoi(points=points)
 
 # Optional, combine dataset
 def combine_dataset(layer_dataset, surface_elev, bedrock_elev, layer_thick, log=False):
