@@ -16,7 +16,7 @@ import pandas as pd
 import pyproj
 import rioxarray as rxr
 from shapely import wkt
-import xarray as xarray
+import xarray as xr
 
 from shapely.geometry import Point
 
@@ -218,7 +218,11 @@ def run(well_data,
     surfaceElevGridIN = w4h.read_grid(grid_path=surfaceElevPath, grid_type='surface', study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
     bedrockElevGridIN = w4h.read_grid(grid_path=bedrockElevPath, grid_type='bedrock', study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
 
-    if model_grid is not None:    
+    if isinstance(model_grid, xr.DataArray):
+        modelGrid = model_grid
+        if verbose:
+            print("Input model_grid specified is already xarray DataArray. Will use this directly.")
+    elif model_grid is not None:
         modelGrid = w4h.read_grid(grid_path=model_grid, grid_type='model', study_area=studyAreaIN, verbose=verbose, log=log, **read_grid_kwargs)
     else:
         # If model grid is not defined, it is set equal to the bedrock grid, except that all data values are set to 1
@@ -227,7 +231,8 @@ def run(well_data,
 
     # Add control points
     add_control_points_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.add_control_points).parameters.keys()}
-    well_data_xyz = w4h.add_control_points(df_without_control=well_data_xyz, xcol=xcol, ycol=ycol, zcol=zcol, top_col=top_col, bottom_col=bottom_col, description_col=description_col, verbose=verbose, log=log, **add_control_points_kwargs)
+    if add_control_points_kwargs != {}:
+        well_data_xyz = w4h.add_control_points(df_without_control=well_data_xyz, xcol=xcol, ycol=ycol, zcol=zcol, top_col=top_col, bottom_col=bottom_col, description_col=description_col, verbose=verbose, log=log, **add_control_points_kwargs)
 
     # Analyze Surface(s) and grid(s)
     bedrockGrid, surfaceGrid = w4h.align_rasters(grids_unaligned=[bedrockElevGridIN, surfaceElevGridIN], model_grid=modelGrid, no_data_val_grid=0, log=log)

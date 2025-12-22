@@ -61,6 +61,7 @@ def align_rasters(grids_unaligned=None, model_grid=None,
     if isinstance(grids_unaligned, (tuple, list)):
         alignedGrids = []
         for g in grids_unaligned:
+
             alignedGrid = g.rio.reproject_match(model_grid)
 
             try:
@@ -78,9 +79,8 @@ def align_rasters(grids_unaligned=None, model_grid=None,
             pass
 
         alignedGrids = alignedGrid.where(alignedGrid != noDataVal, other=np.nan)  #Replace no data values with NaNs
-        
+    
     return alignedGrids
-
 
 # Convert coords in columns to geometry in geopandas dataframe
 def coords2geometry(df_no_geometry, xcol='LONGITUDE', ycol='LATITUDE', zcol='ELEV_FT', input_coords_crs='EPSG:4269', output_crs='EPSG:5070', use_z=False, wkt_col='WKT', geometry_source='coords', verbose=False, log=False):
@@ -299,7 +299,7 @@ def grid2study_area(study_area, grid, output_crs='EPSG:5070',verbose=False, log=
     # "Clip" it
     grid = grid.sel(x=slice(minx, maxx), y=slice(miny, maxy))
     if 'band' in grid.dims:
-        grid = grid.sel(band=1)
+        grid = grid.isel(band=0)
 
     return grid
 
@@ -381,14 +381,16 @@ def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service
             gridIN = gridIN.rio.reproject(output_crs)
             if 'band' in gridIN.dims:
                 gridIN = gridIN.sel(band=1)
-
     elif grid_type == 'model':
         if 'read_grid' in list(kwargs.keys()):
             rgrid = kwargs['read_grid']
         else:
             rgrid = True
-            
-        gridIN = read_model_grid(model_grid_path=grid_path, study_area=study_area,  no_data_val_grid=0, read_grid=rgrid, grid_crs=grid_crs, output_crs=output_crs, verbose=verbose)
+        try:
+            gridIN = read_model_grid(model_grid_path=grid_path, study_area=study_area,  no_data_val_grid=0, read_grid=rgrid, grid_crs=grid_crs, output_crs=output_crs, verbose=verbose)
+        except Exception as e:
+            print("ERROR reading in model grid")
+            print(e)
     else:
         if str(use_service).lower() == 'wcs':
             gridIN = read_wcs(study_area, wcs_url=lidarURL, **kwargs)
