@@ -303,6 +303,7 @@ def grid2study_area(study_area, grid, output_crs='EPSG:5070',verbose=False, log=
 
     return grid
 
+
 # Read a grid from a file in using rioxarray
 def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service=False, study_area=None,  grid_crs=None, output_crs='EPSG:5070', verbose=False, log=False, **kwargs):
     """Reads in grid

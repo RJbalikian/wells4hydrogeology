@@ -13,12 +13,56 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import rioxarray as rxr
 from scipy import interpolate
 from scipy.spatial import Voronoi, voronoi_plot_2d
 from shapely import Point, Polygon, wkt
 
 import w4h
 from w4h import logger_function, verbose_print
+
+
+
+# Get layer depths of each layer, based on precalculated layer thickness
+def get_layer_depths(df_with_depths, surface_elev_col='SURFACE_ELEV',
+                     layer_thick_col='LAYER_THICK', layers=9, log=False):
+
+    """Function to calculate depths and elevations of each model layer
+    at each well based on surface elevation, bedrock elevation,
+    and number of layers/layer thickness
+
+    Parameters
+    ----------
+    df_with_depths : pandas.DataFrame
+        DataFrame containing well metdata
+    layers : int, default=9
+        Number of layers. This should correlate with
+        get_drift_thick() input parameter, if drift thickness was calculated
+        using that function, by default 9.
+    log : bool, default = False
+        Whether to log inputs and outputs to log file.
+
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame containing new columns for depth to/elevation of layers.
+    """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
+    for layer in range(0, layers):  # For each layer
+        # Make column names
+        depthColName = 'DEPTH_LAYER'+str(layer+1)
+
+        # Calculate depth to each layer at each well, in feet and meters
+        df_with_depths[depthColName] = df_with_depths[layer_thick_col] * layer
+
+    for layer in range(0, layers):  # For each layer
+        elevColName = 'ELEV_LAYER'+str(layer+1)
+        # elevMColName = 'ELEV_M_LAYER'+str(layer)
+
+        df_with_depths[elevColName] = df_with_depths[surface_elev_col] - df_with_depths[layer_thick_col] * layer
+
+    return df_with_depths
 
 
 # Function to Merge tables
@@ -129,46 +173,279 @@ def merge_metadata(data_df, header_df,
     return mergedTable
 
 
-# Get layer depths of each layer, based on precalculated layer thickness
-def get_layer_depths(df_with_depths, surface_elev_col='SURFACE_ELEV',
-                     layer_thick_col='LAYER_THICK', layers=9, log=False):
+# Interpolate layers to model model_grid
+def layer_interp(points, model_grid, layers=None, interp_kind='nearest',
+                 surface_grid=None, bedrock_grid=None,
+                 layer_thick_grid=None, drift_thick_grid=None,
+                 return_type='dataset', export_dir=None,
+                 target_col='TARG_THICK_PER', layer_col='LAYER',
+                 xcol=None, ycol=None, xcoord='x', ycoord='y',
+                 log=False, verbose=False, **kwargs):
 
-    """Function to calculate depths and elevations of each model layer
-    at each well based on surface elevation, bedrock elevation,
-    and number of layers/layer thickness
+    """Function to interpolate results (by default TARG_THICK_PER,
+    or Target thickness percent per layer).
+    Converts dataframe points to gridded data.
+    Results are saved to Model_Layer variable
+    in output xarray.Dataset, by default
+    
+    This function uses the scipy.interpolate module for interpolation.
+
+     Different interpolation methods may be used by specifying `interp_kind=`:
+     * `'Nearest'`: Nearest neighbor (fastest).
+     Uses scipy.interpolate.NearestNDInterpolator()
+     * `'Linear'`: Linear interpolation
+     Uses scipy.interpolate.LinearNDInterpolator()
+     * `'Inter2d'`: Spline interpolation
+     Uses scipy.interpolate.bisplrep()
+     * `'CloughTocher`': Cubic interpolation using clough-tocher method
+     Uses scipy.interpolate.CloughTocher2DInterpolator()
+     * `'Radial basis function'`: Radial basis function
+     Uses scipy.interpolate.RBFInterpolator()
 
     Parameters
     ----------
-    df_with_depths : pandas.DataFrame
-        DataFrame containing well metdata
-    layers : int, default=9
-        Number of layers. This should correlate with
-        get_drift_thick() input parameter, if drift thickness was calculated
-        using that function, by default 9.
-    log : bool, default = False
+    points : list
+        List containing pandas dataframes or geopandas geoadataframes containing the point data. Should be resDF_list output from layer_target_thick().
+    model_grid : xr.DataArray or xr.Dataset
+        Xarray DataArray or DataSet with the coordinates/spatial reference of the output model_grid to interpolate to
+    layers : int, default=None
+        Number of layers for interpolation. If None, uses the length ofthe points list to determine number of layers. By default None.
+    interp_kind : str, {'nearest', 'interp2d','linear', 'cloughtocher', 'radial basis function'}
+        Type of interpolation to use. See scipy.interpolate N-D scattered. Values can be any of the following (also shown in "kind" column of N-D scattered section of table here: https://docs.scipy.org/doc/scipy/tutorial/interpolate.html). By default 'nearest'
+    return_type : str, {'dataset', 'dataarray'}
+        Type of xarray object to return, either xr.DataArray or xr.Dataset, by default 'dataset.'
+    export_dir : str or pathlib.Path, default=None
+        Export directory for interpolated grids, using w4h.export_grids(). If None, does not export, by default None.
+    target_col : str, default = 'TARG_THICK_PER'
+        Name of column in points containing data to be interpolated, by default 'TARG_THICK_PER'.
+    layer_col : str, default = 'Layer'
+        Name of column containing layer number. Not currently used, by default 'LAYER'
+    xcol : str, default = 'None'
+        Name of column containing x coordinates. If None, will look for 'geometry' column, as in a geopandas.GeoDataframe. By default None
+    ycol : str, default = 'None'
+        Name of column containing y coordinates. If None, will look for 'geometry' column, as in a geopandas.GeoDataframe. By default None
+    xcoord : str, default='x'
+        Name of x coordinate in model_grid, used to extract x values of model_grid, by default 'x'
+    ycoord : str, default='y'
+        Name of y coordinate in model_grid, used to extract x values of model_grid, by default 'y'
+    log : bool, default = True
         Whether to log inputs and outputs to log file.
+    **kwargs
+        Keyword arguments to be read directly into whichever scipy.interpolate function is designated by the interp_kind parameter.
 
     Returns
     -------
-    pandas.DataFrame
-        DataFrame containing new columns for depth to/elevation of layers.
+    interp_data : xr.DataArray or xr.Dataset, depending on return_type
+        By default, returns an xr.DataArray object with the layers added as a new dimension called Layer. Can also specify return_type='dataset' to return an xr.Dataset with each layer as a separate variable.
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
 
-    for layer in range(0, layers):  # For each layer
-        # Make column names
-        depthColName = 'DEPTH_LAYER'+str(layer+1)
+    if verbose:
+        verbose_print(layer_interp, locals(), exclude_params=['points', 'model_grid'])
 
-        # Calculate depth to each layer at each well, in feet and meters
-        df_with_depths[depthColName] = df_with_depths[layer_thick_col] * layer
+    # Possible inputs (casefolded) for different interp methods
+    nnList = ['nearest', 'nearest neighbor', 'nearestneighbor', 'near', 'n']
+    splineList = ['interp2d', 'interp2', 'interp', 'spline', 'spl', 'sp', 's']
+    linList = ['linear', 'lin', 'l']
+    ctList = ['clough tocher', 'clough', 'cloughtocher', 'ct', 'c']
+    rbfList = ['rbf', 'radial basis', 'radial basis function', 'r', 'radial']
+    natneighborList = ['natural', 'natural neighbor', 'naturalneighbor', 'nat', 'natn']
+    # Potential future additions:
+    #   k-nearest neighbors from scikit-learn?
+    #   kriging? (from pykrige or maybe also from scikit-learn)
 
-    for layer in range(0, layers):  # For each layer
-        elevColName = 'ELEV_LAYER'+str(layer+1)
-        # elevMColName = 'ELEV_M_LAYER'+str(layer)
+    # Check and format input model grid
+    if not isinstance(model_grid, (xr.DataArray, xr.Dataset)):
+        if pathlib.Path(model_grid).exists():
+            model_grid = xr.open_dataarray(model_grid)
 
-        df_with_depths[elevColName] = df_with_depths[surface_elev_col] - df_with_depths[layer_thick_col] * layer
+    # Extract model grid coordinates
+    X = np.round(model_grid[xcoord].values, 10)
+    Y = np.round(model_grid[ycoord].values, 10)
 
-    return df_with_depths
+    # Get number of layers
+    # If layers is not specified, use the length of the points list
+    if layers is None and (type(points) is list or type(points) is dict):
+        layers = len(points)
+
+    if len(points) != layers:
+        print('You have specified a different number of layers than what is iterable in the points argument. This may not work properly.')
+
+    if verbose:
+        print('\tInterpolating target lithology at each layer:')
+
+    # Loop through each layer and interpolate (2d interpolation within layer)
+    daDict = {}
+    for lyr in range(1, layers+1):
+
+        # Get points for each layer
+        if type(points) is list or type(points) is dict:
+            pts = points[lyr-1]
+        else:
+            pts = points
+
+        # Get x coordinates for each well point
+        if xcol is None:
+            if 'geometry' in pts.columns:
+                dataX = pts['geometry'].x
+            else:
+                print('xcol not specified and geometry column not detected (points is not/does not contain geopandas.GeoDataFrame)')
+                return
+        else:
+            dataX = pts[xcol]
+        
+        # Get x coordinates for each well point
+        if ycol is None:
+            if 'geometry' in pts.columns:
+                dataY = pts['geometry'].y
+            else:
+                print('ycol not specified and geometry column not detected (points is not/does not contain geopandas.GeoDataFrame)')
+                return
+        else:
+            dataY = pts[ycol]
+
+        # Get 'z' coordinates (interpolated value) for each well point
+        interpVal = pts[target_col]
+
+        # Drop points without x, y, or z data (and maintain consistency)
+        dataX = dataX.dropna()
+        dataY = dataY.loc[dataX.index]
+        dataY = dataY.dropna()
+        interpVal = interpVal.loc[dataY.index]
+        interpVal = interpVal.dropna()
+
+        dataX = dataX.loc[interpVal.index]
+        dataY = dataY.loc[interpVal.index]
+
+        dataX = dataX.reset_index(drop=True)
+        dataY = dataY.reset_index(drop=True)
+        interpVal = interpVal.reset_index(drop=True)
+
+        # Carry out interpolation
+        # Nearest neighbor
+        if interp_kind.lower() in nnList:
+            interpType = 'Nearest Neighbor'
+            X, Y = np.meshgrid(X, Y, sparse=True)  # 2D Grid for interpolation
+            dataPoints = np.array(list(zip(dataX, dataY)))
+            interp = interpolate.NearestNDInterpolator(dataPoints, interpVal,
+                                                       **kwargs)
+            Z = interp(X, Y)
+
+        # Linear
+        elif interp_kind.lower() in linList:
+            interpType = 'Linear'
+            dataPoints = np.array(list(zip(dataX, dataY)))
+            interp = interpolate.LinearNDInterpolator(dataPoints, interpVal,
+                                                      **kwargs)
+            X, Y = np.meshgrid(X, Y, sparse=True)  # 2D Grid for interpolation
+            Z = interp(X, Y)
+
+        # Clough-toucher (cubic)
+        elif interp_kind.lower() in ctList:
+            interpType = 'Clough-Toucher'
+            X, Y = np.meshgrid(X, Y, sparse=True)  # 2D Grid for interpolation
+            if 'tol' not in kwargs:
+                kwargs['tol'] = 1e10
+            interp = interpolate.CloughTocher2DInterpolator(list(zip(dataX, dataY)), interpVal, **kwargs)
+            Z = interp(X, Y)
+
+        # Radial basis function
+        elif interp_kind.lower() in rbfList:
+            interpType = 'Radial Basis'
+            dataXY = np.column_stack((dataX, dataY))
+            interp = interpolate.RBFInterpolator(dataXY, interpVal, **kwargs)
+            print("Radial Basis Function does not work well with many well-based datasets. Consider instead specifying 'nearest', 'linear', 'spline', or 'clough tocher' for interpolation interp_kind.")
+            Z = interp(np.column_stack((X.ravel(), Y.ravel()))).reshape(X.shape)
+
+        # Spline
+        elif interp_kind.lower() in splineList:
+            interpType = 'Spline Interpolation'
+            Z = interpolate.bisplrep(dataX, dataY, interpVal, **kwargs)
+
+        elif interp_kind.lower() in natneighborList:
+            interpType = 'Natural Neighbor'
+            Z = natural_neighbor_interp(points, model_grid=model_grid)
+        # Nearest neighbor by default if otherwise not specified
+        else:
+            if verbose:
+                print(f'Specified interpolation (interp_kind={interp_kind}) not recognized, using nearest neighbor.')
+                print("\tinterp_kind should be one of: 'nearest', 'linear', 'interp2d', 'cloughtocher', or 'spline'")
+
+            interpType = 'Nearest Neighbor'
+            X, Y = np.meshgrid(X, Y, sparse=True)  # 2D Grid for interpolation
+            interp = interpolate.NearestNDInterpolator(list(zip(dataX, dataY)),
+                                                       interpVal, **kwargs)
+            Z = interp(X, Y)
+
+        # Create new datarray with new data values, else same as model_grid
+        interp_grid = xr.DataArray(
+                    data=Z,
+                    dims=model_grid.dims,
+                    coords=model_grid.coords)
+
+        # Drop if only a single coordinate in "band" dimension
+        if 'band' in interp_grid.coords:
+            interp_grid = interp_grid.drop_vars('band')
+
+        # Clip to 0-1 if percentage
+        if target_col == 'TARG_THICK_PER':
+            interp_grid = interp_grid.clip(min=0, max=1, keep_attrs=True)
+
+        # Add coordinate in layer dimension for current layer
+        interp_grid = interp_grid.expand_dims(dim='Layer')
+        interp_grid = interp_grid.assign_coords(Layer=[lyr])
+
+        # Delete to reduce memory usage (?)
+        del Z
+        del dataX
+        del dataY
+        del interpVal
+        del interp
+
+        zFillDigs = len(str(layers))
+        daDict['Layer'+str(lyr).zfill(zFillDigs)] = interp_grid
+        del interp_grid
+        if verbose:
+            print('\t\tCompleted {} interpolation for Layer {}'.format(str(interpType).lower(), str(lyr).zfill(zFillDigs)))
+
+    # Determine whether to export xarray DataArray or Dataset
+    dataArrayList = ['dataarray', 'da', 'a', 'array']
+    dataSetList = ['dataset', 'ds', 'set']
+
+    interp_data = xr.concat(daDict.values(), dim='Layer')
+    interp_data = interp_data.assign_coords(Layer=np.arange(1, layers+1))
+
+    if return_type.lower() in dataArrayList:
+        pass
+    else:
+        if return_type.lower() not in dataSetList and verbose:
+            print(f"{return_type} is not a valid input for return_type. Please set return_type to either 'dataarray' or 'dataset'")
+            print("Using dataset by default")            
+        interp_data = xr.Dataset(data_vars={'Model_Layers': interp_data})
+        if verbose:
+            print('Done with interpolation, getting additional layers and attributes')
+
+        # Get common attributes from all layers to use as "global" attributes
+        common_attrs = {}
+        for i, (var_name, data_array) in enumerate(interp_data.data_vars.items()):
+            if i == 0:
+                common_attrs = data_array.attrs
+            else:
+                common_attrs = {k: v for k, v in common_attrs.items() if k in data_array.attrs and data_array.attrs[k] == v}
+        interp_data.attrs.update(common_attrs)
+
+    if verbose:
+        for i, layer_data in enumerate(interp_data):
+            pts = points[i]
+            pts.plot(c=pts[target_col])
+
+    if export_dir is None:
+        pass
+    else:
+        w4h.export_grids(grid_data=interp_data, out_path=export_dir, file_id='', filetype='tif', variable_sep=True, date_stamp=True)
+        print('Exported to {}'.format(export_dir))
+
+    return interp_data
 
 
 # Function to export the result of thickness of target sediments in each layer
@@ -406,285 +683,55 @@ def layer_target_thick(gdf, layers=9, well_id_col='API_NUMBER',
         return resdf_list
 
 
-# Interpolate layers to model model_grid
-def layer_interp(points, model_grid, layers=None, interp_kind='nearest',
-                 surface_grid=None, bedrock_grid=None,
-                 layer_thick_grid=None, drift_thick_grid=None,
-                 return_type='dataset', export_dir=None,
-                 target_col='TARG_THICK_PER', layer_col='LAYER',
-                 xcol=None, ycol=None, xcoord='x', ycoord='y',
-                 log=False, verbose=False, **kwargs):
-
-    """Function to interpolate results (by default TARG_THICK_PER,
-    or Target thickness percent per layer).
-    Converts dataframe points to gridded data.
-    Results are saved to Model_Layer variable
-    in output xarray.Dataset, by default
-    
-    This function uses the scipy.interpolate module for interpolation.
-
-     Different interpolation methods may be used by specifying `interp_kind=`:
-     * `'Nearest'`: Nearest neighbor (fastest).
-     Uses scipy.interpolate.NearestNDInterpolator()
-     * `'Linear'`: Linear interpolation
-     Uses scipy.interpolate.LinearNDInterpolator()
-     * `'Inter2d'`: Spline interpolation
-     Uses scipy.interpolate.bisplrep()
-     * `'CloughTocher`': Cubic interpolation using clough-tocher method
-     Uses scipy.interpolate.CloughTocher2DInterpolator()
-     * `'Radial basis function'`: Radial basis function
-     Uses scipy.interpolate.RBFInterpolator()
-
-    Parameters
-    ----------
-    points : list
-        List containing pandas dataframes or geopandas geoadataframes containing the point data. Should be resDF_list output from layer_target_thick().
-    model_grid : xr.DataArray or xr.Dataset
-        Xarray DataArray or DataSet with the coordinates/spatial reference of the output model_grid to interpolate to
-    layers : int, default=None
-        Number of layers for interpolation. If None, uses the length ofthe points list to determine number of layers. By default None.
-    interp_kind : str, {'nearest', 'interp2d','linear', 'cloughtocher', 'radial basis function'}
-        Type of interpolation to use. See scipy.interpolate N-D scattered. Values can be any of the following (also shown in "kind" column of N-D scattered section of table here: https://docs.scipy.org/doc/scipy/tutorial/interpolate.html). By default 'nearest'
-    return_type : str, {'dataset', 'dataarray'}
-        Type of xarray object to return, either xr.DataArray or xr.Dataset, by default 'dataset.'
-    export_dir : str or pathlib.Path, default=None
-        Export directory for interpolated grids, using w4h.export_grids(). If None, does not export, by default None.
-    target_col : str, default = 'TARG_THICK_PER'
-        Name of column in points containing data to be interpolated, by default 'TARG_THICK_PER'.
-    layer_col : str, default = 'Layer'
-        Name of column containing layer number. Not currently used, by default 'LAYER'
-    xcol : str, default = 'None'
-        Name of column containing x coordinates. If None, will look for 'geometry' column, as in a geopandas.GeoDataframe. By default None
-    ycol : str, default = 'None'
-        Name of column containing y coordinates. If None, will look for 'geometry' column, as in a geopandas.GeoDataframe. By default None
-    xcoord : str, default='x'
-        Name of x coordinate in model_grid, used to extract x values of model_grid, by default 'x'
-    ycoord : str, default='y'
-        Name of y coordinate in model_grid, used to extract x values of model_grid, by default 'y'
-    log : bool, default = True
-        Whether to log inputs and outputs to log file.
-    **kwargs
-        Keyword arguments to be read directly into whichever scipy.interpolate function is designated by the interp_kind parameter.
-
-    Returns
-    -------
-    interp_data : xr.DataArray or xr.Dataset, depending on return_type
-        By default, returns an xr.DataArray object with the layers added as a new dimension called Layer. Can also specify return_type='dataset' to return an xr.Dataset with each layer as a separate variable.
-    """
-    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
-    if verbose:
-        verbose_print(layer_interp, locals(), exclude_params=['points', 'model_grid'])
-
-    # Possible inputs (casefolded) for different interp methods
-    nnList = ['nearest', 'nearest neighbor', 'nearestneighbor',
-              'neighbor', 'nn', 'n']
-    splineList = ['interp2d', 'interp2', 'interp', 'spline', 'spl', 'sp', 's']
-    linList = ['linear', 'lin', 'l']
-    ctList = ['clough tocher', 'clough', 'cloughtocher', 'ct', 'c']
-    rbfList = ['rbf', 'radial basis', 'radial basis function', 'r', 'radial']
-
-    # Potential future additions:
-    #   k-nearest neighbors from scikit-learn?
-    #   kriging? (from pykrige or maybe also from scikit-learn)
-
-    # Check and format input model grid
-    if not isinstance(model_grid, (xr.DataArray, xr.Dataset)):
-        if pathlib.Path(model_grid).exists():
-            model_grid = xr.open_dataarray(model_grid)
-
-    # Extract model grid coordinates
-    X = np.round(model_grid[xcoord].values, 10)
-    Y = np.round(model_grid[ycoord].values, 10)
-
-    # Get number of layers
-    # If layers is not specified, use the length of the points list
-    if layers is None and (type(points) is list or type(points) is dict):
-        layers = len(points)
-
-    if len(points) != layers:
-        print('You have specified a different number of layers than what is iterable in the points argument. This may not work properly.')
-
-    if verbose:
-        print('\tInterpolating target lithology at each layer:')
-
-    # Loop through each layer and interpolate (2d interpolation within layer)
-    daDict = {}
-    for lyr in range(1, layers+1):
-
-        # Get points for each layer
-        if type(points) is list or type(points) is dict:
-            pts = points[lyr-1]
-        else:
-            pts = points
-
-        # Get x coordinates for each well point
-        if xcol is None:
-            if 'geometry' in pts.columns:
-                dataX = pts['geometry'].x
-            else:
-                print('xcol not specified and geometry column not detected (points is not/does not contain geopandas.GeoDataFrame)')
-                return
-        else:
-            dataX = pts[xcol]
-        
-        # Get x coordinates for each well point
-        if ycol is None:
-            if 'geometry' in pts.columns:
-                dataY = pts['geometry'].y
-            else:
-                print('ycol not specified and geometry column not detected (points is not/does not contain geopandas.GeoDataFrame)')
-                return
-        else:
-            dataY = pts[ycol]
-
-        # Get 'z' coordinates (interpolated value) for each well point
-        interpVal = pts[target_col]
-
-        # Drop points without x, y, or z data (and maintain consistency)
-        dataX = dataX.dropna()
-        dataY = dataY.loc[dataX.index]
-        dataY = dataY.dropna()
-        interpVal = interpVal.loc[dataY.index]
-        interpVal = interpVal.dropna()
-
-        dataX = dataX.loc[interpVal.index]
-        dataY = dataY.loc[interpVal.index]
-
-        dataX = dataX.reset_index(drop=True)
-        dataY = dataY.reset_index(drop=True)
-        interpVal = interpVal.reset_index(drop=True)
-
-        # Carry out interpolation
-        # Nearest neighbor
-        if interp_kind.lower() in nnList:
-            interpType = 'Nearest Neighbor'
-            X, Y = np.meshgrid(X, Y, sparse=True)  # 2D Grid for interpolation
-            dataPoints = np.array(list(zip(dataX, dataY)))
-            interp = interpolate.NearestNDInterpolator(dataPoints, interpVal,
-                                                       **kwargs)
-            Z = interp(X, Y)
-
-        # Linear
-        elif interp_kind.lower() in linList:
-            interpType = 'Linear'
-            dataPoints = np.array(list(zip(dataX, dataY)))
-            interp = interpolate.LinearNDInterpolator(dataPoints, interpVal,
-                                                      **kwargs)
-            X, Y = np.meshgrid(X, Y, sparse=True)  # 2D Grid for interpolation
-            Z = interp(X, Y)
-
-        # Clough-toucher (cubic)
-        elif interp_kind.lower() in ctList:
-            interpType = 'Clough-Toucher'
-            X, Y = np.meshgrid(X, Y, sparse=True)  # 2D Grid for interpolation
-            if 'tol' not in kwargs:
-                kwargs['tol'] = 1e10
-            interp = interpolate.CloughTocher2DInterpolator(list(zip(dataX, dataY)), interpVal, **kwargs)
-            Z = interp(X, Y)
-
-        # Radial basis function
-        elif interp_kind.lower() in rbfList:
-            interpType = 'Radial Basis'
-            dataXY = np.column_stack((dataX, dataY))
-            interp = interpolate.RBFInterpolator(dataXY, interpVal, **kwargs)
-            print("Radial Basis Function does not work well with many well-based datasets. Consider instead specifying 'nearest', 'linear', 'spline', or 'clough tocher' for interpolation interp_kind.")
-            Z = interp(np.column_stack((X.ravel(), Y.ravel()))).reshape(X.shape)
-
-        # Spline
-        elif interp_kind.lower() in splineList:
-            interpType = 'Spline Interpolation'
-            Z = interpolate.bisplrep(dataX, dataY, interpVal, **kwargs)
-
-        # Nearest neighbor by default if otherwise not specified
-        else:
-            if verbose:
-                print(f'Specified interpolation (interp_kind={interp_kind}) not recognized, using nearest neighbor.')
-                print("\tinterp_kind should be one of: 'nearest', 'linear', 'interp2d', 'cloughtocher', or 'spline'")
-
-            interpType = 'Nearest Neighbor'
-            X, Y = np.meshgrid(X, Y, sparse=True)  # 2D Grid for interpolation
-            interp = interpolate.NearestNDInterpolator(list(zip(dataX, dataY)),
-                                                       interpVal, **kwargs)
-            Z = interp(X, Y)
-
-        # Create new datarray with new data values, else same as model_grid
-        interp_grid = xr.DataArray(
-                    data=Z,
-                    dims=model_grid.dims,
-                    coords=model_grid.coords)
-
-        # Drop if only a single coordinate in "band" dimension
-        if 'band' in interp_grid.coords:
-            interp_grid = interp_grid.drop_vars('band')
-
-        # Clip to 0-1 if percentage
-        if target_col == 'TARG_THICK_PER':
-            interp_grid = interp_grid.clip(min=0, max=1, keep_attrs=True)
-
-        # Add coordinate in layer dimension for current layer
-        interp_grid = interp_grid.expand_dims(dim='Layer')
-        interp_grid = interp_grid.assign_coords(Layer=[lyr])
-
-        # Delete to reduce memory usage (?)
-        del Z
-        del dataX
-        del dataY
-        del interpVal
-        del interp
-
-        zFillDigs = len(str(layers))
-        daDict['Layer'+str(lyr).zfill(zFillDigs)] = interp_grid
-        del interp_grid
-        if verbose:
-            print('\t\tCompleted {} interpolation for Layer {}'.format(str(interpType).lower(), str(lyr).zfill(zFillDigs)))
-
-    # Determine whether to export xarray DataArray or Dataset
-    dataArrayList = ['dataarray', 'da', 'a', 'array']
-    dataSetList = ['dataset', 'ds', 'set']
-
-    interp_data = xr.concat(daDict.values(), dim='Layer')
-    interp_data = interp_data.assign_coords(Layer=np.arange(1, layers+1))
-
-    if return_type.lower() in dataArrayList:
-        pass
-    else:
-        if return_type.lower() not in dataSetList and verbose:
-            print(f"{return_type} is not a valid input for return_type. Please set return_type to either 'dataarray' or 'dataset'")
-            print("Using dataset by default")            
-        interp_data = xr.Dataset(data_vars={'Model_Layers': interp_data})
-        if verbose:
-            print('Done with interpolation, getting additional layers and attributes')
-
-        # Get common attributes from all layers to use as "global" attributes
-        common_attrs = {}
-        for i, (var_name, data_array) in enumerate(interp_data.data_vars.items()):
-            if i == 0:
-                common_attrs = data_array.attrs
-            else:
-                common_attrs = {k: v for k, v in common_attrs.items() if k in data_array.attrs and data_array.attrs[k] == v}
-        interp_data.attrs.update(common_attrs)
-
-    if verbose:
-        for i, layer_data in enumerate(interp_data):
-            pts = points[i]
-            pts.plot(c=pts[target_col])
-
-    if export_dir is None:
-        pass
-    else:
-        w4h.export_grids(grid_data=interp_data, out_path=export_dir, file_id='', filetype='tif', variable_sep=True, date_stamp=True)
-        print('Exported to {}'.format(export_dir))
-
-    return interp_data
-
-
+# Implementatino of natural neighbor interpolation
 def natural_neighbor_interp(points, model_grid=None, parallelize=False,
                             well_id='API_NUMBER', interp_value='ELEVATION',
                             xcoord='LONGITUDE', ycoord='LATITUDE', elev="ELEVATION",
                             show_points=False, sparsity_factor=10,
                             show_plot=False, show_adjacent_regions=False, show_voronoi=False,
-                            time_segments=False, layers=None, ):
+                            time_segments=False):
+    """Implementation of natural neighbor algorithm, with sparse interpolation.
+    This interpolation algorithm takes a very long time.
+
+    Parameters
+    ----------
+    points : {pd.DataFrame, gpd.GeoDataFrame}
+        DataFrame with point data
+    model_grid : {xr.DataArray, xr.Dataset}, optional
+        xarray object with coordinates at grid for interpolation, by default None
+    parallelize : bool, optional
+        Whether to use parallelization. Currently in beta/not supported, by default False
+    well_id : str, optional
+        String with column name of Well ID, by default 'API_NUMBER'
+    interp_value : str, optional
+        Column name in points df to use for interpolation, by default 'ELEVATION'
+    xcoord : str, optional
+        X coordinate column name, by default 'LONGITUDE'
+    ycoord : str, optional
+        Y coordinate column name, by default 'LATITUDE'
+    elev : str, optional
+        Elevation column name, by default "ELEVATION"
+    show_points : bool, optional
+        Whether to show well points, by default False
+    sparsity_factor : int, optional
+        Factor by which to "decimate" the coordinates for Natural Neighbor analysis.
+        These points are then interpolated linearly to the model grid.
+        Using sparse coordinates saves computation time, by default 10
+    show_plot : bool, optional
+        Whether to show a plot of nearby points of interest for each point, 
+        and overlap of new Voronoi and old, by default False
+    show_adjacent_regions : bool, optional
+        Whether to show the plot of the adjacent regions for each point, by default False
+    show_voronoi : bool, optional
+        Whether to show the voronoi polygons, by default False
+    time_segments : bool, optional
+        Whether to time each segment of the analysis, by default False
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     time0 = datetime.datetime.now()
     model_grid_IN = rxr.open_rasterio(model_grid)
     
