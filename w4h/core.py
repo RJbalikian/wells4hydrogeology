@@ -7,7 +7,10 @@ import importlib
 import inspect
 import json
 import logging
+import os
 import pathlib
+import subprocess
+
 import zipfile
 
 import geopandas as gpd
@@ -388,6 +391,53 @@ def run(well_data,
     else:
         return resdf, layers_data
 
+
+def gui():
+    streamlitPath = pathlib.Path(__file__).with_name("w4h_gui.py")
+    cmd = ['streamlit', 'run', streamlitPath.as_posix()]
+    import sys
+
+    from streamlit.web import cli as stcli
+    import streamlit
+    import sys
+
+    import subprocess
+    import tempfile
+
+    temp_dir = tempfile.TemporaryDirectory()
+    def run_streamlit_app(path_dir):
+        temp_dir = tempfile.TemporaryDirectory()
+        # create a temporary directory
+        fpathList = ['classify.py', 'clean.py', 'core.py', 'export.py', 'layers.py', '__init__.py', 'mapping.py',
+                     'read.py', 'visualization.py']
+        currDir = streamlitPath.parent.as_posix()
+        for fpath in fpathList:
+            temp_file_path = os.path.join(temp_dir.name, fpath)
+            with open(pathlib.Path(currDir).joinpath(fpath), 'r') as cf:
+                scriptText = cf.read()
+            # write the streamlit app code to a Python script in the temporary directory
+            with open(temp_file_path, 'w') as f:
+                f.write(scriptText)
+        
+        # execute the streamlit app
+        try:
+            # execute the streamlit app
+            subprocess.run(
+                ['streamlit', "run", temp_file_path],
+                stderr=subprocess.DEVNULL
+                )
+            
+        except KeyboardInterrupt:
+            pass
+        # clean up the temporary directory when done
+        temp_dir.cleanup()
+    
+    #with open(streamlitPath.parent.as_posix(), 'r') as file:
+    #    appText = file.read()
+
+    run_streamlit_app(pathlib.Path(__name__).parent)
+
+    #streamlit.web.bootstrap.run(streamlitPath.as_posix(), '', [],
 
 # Function to update docstring for run function, used in __init__ file
 def _run_docstring():

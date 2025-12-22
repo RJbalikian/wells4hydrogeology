@@ -11,6 +11,7 @@ __version__ = "0.2.1"
 from w4h.core import (logger_function,
                       verbose_print,
                       run,
+                      gui,
                       get_resources)
 
 from w4h.classify import (specific_define,
@@ -70,7 +71,7 @@ from w4h.visualization import(
                             plot_cross_section
                              )
 
-__all__ = ('logger_function', 'verbose_print', 'run', 'get_resources',
+__all__ = ('logger_function', 'verbose_print', 'run', 'get_resources','gui',
            # Classify
            'specific_define',
            'split_defined',
