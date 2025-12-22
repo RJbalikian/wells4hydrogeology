@@ -7,7 +7,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>w4h.layers module &mdash; w4h 0.0.22-dev documentation</title>
-      <link rel="stylesheet" type="text/css" href="pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="theme.css?v=e59714d7" />
 
   
@@ -68,6 +68,7 @@
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.logger_function"><code class="docutils literal notranslate"><span class="pre">logger_function()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.merge_lithologies"><code class="docutils literal notranslate"><span class="pre">merge_lithologies()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.merge_metadata"><code class="docutils literal notranslate"><span class="pre">merge_metadata()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.natural_neighbor_interp"><code class="docutils literal notranslate"><span class="pre">natural_neighbor_interp()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.plot_cross_section"><code class="docutils literal notranslate"><span class="pre">plot_cross_section()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_dict"><code class="docutils literal notranslate"><span class="pre">read_dict()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_dictionary_terms"><code class="docutils literal notranslate"><span class="pre">read_dictionary_terms()</span></code></a></li>
@@ -105,6 +106,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#w4h.layers.layer_interp"><code class="docutils literal notranslate"><span class="pre">layer_interp()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#w4h.layers.layer_target_thick"><code class="docutils literal notranslate"><span class="pre">layer_target_thick()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#w4h.layers.merge_metadata"><code class="docutils literal notranslate"><span class="pre">merge_metadata()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#w4h.layers.natural_neighbor_interp"><code class="docutils literal notranslate"><span class="pre">natural_neighbor_interp()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="w4h.mapping.html">w4h.mapping module</a></li>
@@ -124,6 +126,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#w4h.layers.layer_interp"><code class="docutils literal notranslate"><span class="pre">layer_interp()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#w4h.layers.layer_target_thick"><code class="docutils literal notranslate"><span class="pre">layer_target_thick()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#w4h.layers.merge_metadata"><code class="docutils literal notranslate"><span class="pre">merge_metadata()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#w4h.layers.natural_neighbor_interp"><code class="docutils literal notranslate"><span class="pre">natural_neighbor_interp()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="w4h.mapping.html">w4h.mapping module</a></li>
@@ -384,6 +387,56 @@ on=`well_id_col` and how=’inner’.</p>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
 <dt><strong>mergedTable</strong><span class="classifier">pandas.DataFrame</span></dt><dd><p>Merged dataframe</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="w4h.layers.natural_neighbor_interp">
+<span class="sig-prename descclassname"><span class="pre">w4h.layers.</span></span><span class="sig-name descname"><span class="pre">natural_neighbor_interp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallelize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">well_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'API_NUMBER'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interp_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ELEVATION'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xcoord</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'LONGITUDE'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ycoord</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'LATITUDE'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ELEVATION'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sparsity_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_adjacent_regions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_voronoi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_segments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/layers.html#natural_neighbor_interp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.layers.natural_neighbor_interp" title="Link to this definition">¶</a></dt>
+<dd><p>Implementation of natural neighbor algorithm, with sparse interpolation.
+This interpolation algorithm takes a very long time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>points</strong><span class="classifier">{pd.DataFrame, gpd.GeoDataFrame}</span></dt><dd><p>DataFrame with point data</p>
+</dd>
+<dt><strong>model_grid</strong><span class="classifier">{xr.DataArray, xr.Dataset}, optional</span></dt><dd><p>xarray object with coordinates at grid for interpolation, by default None</p>
+</dd>
+<dt><strong>parallelize</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to use parallelization. Currently in beta/not supported, by default False</p>
+</dd>
+<dt><strong>well_id</strong><span class="classifier">str, optional</span></dt><dd><p>String with column name of Well ID, by default ‘API_NUMBER’</p>
+</dd>
+<dt><strong>interp_value</strong><span class="classifier">str, optional</span></dt><dd><p>Column name in points df to use for interpolation, by default ‘ELEVATION’</p>
+</dd>
+<dt><strong>xcoord</strong><span class="classifier">str, optional</span></dt><dd><p>X coordinate column name, by default ‘LONGITUDE’</p>
+</dd>
+<dt><strong>ycoord</strong><span class="classifier">str, optional</span></dt><dd><p>Y coordinate column name, by default ‘LATITUDE’</p>
+</dd>
+<dt><strong>elev</strong><span class="classifier">str, optional</span></dt><dd><p>Elevation column name, by default “ELEVATION”</p>
+</dd>
+<dt><strong>show_points</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to show well points, by default False</p>
+</dd>
+<dt><strong>sparsity_factor</strong><span class="classifier">int, optional</span></dt><dd><p>Factor by which to “decimate” the coordinates for Natural Neighbor analysis.
+These points are then interpolated linearly to the model grid.
+Using sparse coordinates saves computation time, by default 10</p>
+</dd>
+<dt><strong>show_plot</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to show a plot of nearby points of interest for each point, 
+and overlap of new Voronoi and old, by default False</p>
+</dd>
+<dt><strong>show_adjacent_regions</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to show the plot of the adjacent regions for each point, by default False</p>
+</dd>
+<dt><strong>show_voronoi</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to show the voronoi polygons, by default False</p>
+</dd>
+<dt><strong>time_segments</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to time each segment of the analysis, by default False</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>_type_</dt><dd><p>_description_</p>
 </dd>
 </dl>
 </dd>

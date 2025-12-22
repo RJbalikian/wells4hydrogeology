@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>w4h.read &mdash; w4h 0.0.22-dev documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
@@ -78,99 +78,171 @@
 <span class="sd">as well as support functions to carry out this task</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">datetime</span>
-<span class="kn">import</span> <span class="nn">inspect</span>
-<span class="kn">import</span> <span class="nn">json</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">pkg_resources</span>
-<span class="kn">import</span> <span class="nn">pathlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pathlib</span>
 
-<span class="kn">import</span> <span class="nn">geopandas</span> <span class="k">as</span> <span class="nn">gpd</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">geopandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gpd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">w4h</span> <span class="kn">import</span> <span class="n">logger_function</span><span class="p">,</span> <span class="n">verbose_print</span>
-<span class="kn">import</span> <span class="nn">w4h</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">w4h</span><span class="w"> </span><span class="kn">import</span> <span class="n">logger_function</span><span class="p">,</span> <span class="n">verbose_print</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">w4h</span>
 
 <span class="n">repoDir</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">())</span>
-
-<span class="n">resource_dir</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">pkg_resources</span><span class="o">.</span><span class="n">resource_filename</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="s1">&#39;resources/resources_home.txt&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">parent</span>
-
-<span class="c1"># Gets the current date for use with in code</span>
-<div class="viewcode-block" id="get_current_date">
-<a class="viewcode-back" href="../../w4h.read.html#w4h.get_current_date">[docs]</a>
-<span class="k">def</span> <span class="nf">get_current_date</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Gets the current date to help with finding the most recent file</span>
-<span class="sd">        ---------------------</span>
-<span class="sd">        Parameters:</span>
-<span class="sd">            None</span>
-
-<span class="sd">        ---------------------</span>
-<span class="sd">        Returns:</span>
-<span class="sd">            todayDate   : datetime object with today&#39;s date</span>
-<span class="sd">            dateSuffix  : str to use for naming output files</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">todayDate</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
-    <span class="n">todayDateStr</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">todayDate</span><span class="p">)</span>
-    <span class="n">dateSuffix</span> <span class="o">=</span> <span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">todayDateStr</span>
-    <span class="k">return</span> <span class="n">todayDate</span><span class="p">,</span> <span class="n">dateSuffix</span></div>
+<span class="n">RESOURCE_DIR</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">importlib</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">files</span><span class="p">(</span><span class="s1">&#39;w4h&#39;</span><span class="p">)))</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s1">&#39;resources&#39;</span><span class="p">)</span>
 
 
-<span class="c1">#Function to get most recent file </span>
-<div class="viewcode-block" id="get_most_recent">
-<a class="viewcode-back" href="../../w4h.read.html#w4h.get_most_recent">[docs]</a>
-<span class="k">def</span> <span class="nf">get_most_recent</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="n">resource_dir</span><span class="p">,</span> <span class="n">glob_pattern</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to find the most recent file with the indicated pattern, using pathlib.glob function.</span>
+<span class="c1"># Read and concatenate control points into main database/dataframe</span>
+<div class="viewcode-block" id="add_control_points">
+<a class="viewcode-back" href="../../w4h.read.html#w4h.add_control_points">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_control_points</span><span class="p">(</span><span class="n">df_without_control</span><span class="p">,</span> <span class="n">df_control</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="n">xcol</span><span class="o">=</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="n">zcol</span><span class="o">=</span><span class="s1">&#39;ELEV_FT&#39;</span><span class="p">,</span> <span class="n">controlpoints_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:4269&#39;</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:5070&#39;</span><span class="p">,</span> <span class="n">description_col</span><span class="o">=</span><span class="s1">&#39;FORMATION&#39;</span><span class="p">,</span> <span class="n">interp_col</span><span class="o">=</span><span class="s1">&#39;INTERPRETATION&#39;</span><span class="p">,</span> <span class="n">target_col</span><span class="o">=</span><span class="s1">&#39;TARGET&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to add control points, primarily to aid in interpolation. This may be useful when conditions are known but do not exist in input well database</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    dir : str or pathlib.Path object, optional</span>
-<span class="sd">        Directory in which to find the most recent file, by default str(repoDir)+&#39;/resources&#39;</span>
-<span class="sd">    glob_pattern : str, optional</span>
-<span class="sd">        String used by the pathlib.glob() function/method for searching, by default &#39;*&#39;</span>
+<span class="sd">    df_without_control : pandas.DataFrame</span>
+<span class="sd">        Dataframe with current working data</span>
+<span class="sd">    df_control : str, pathlib.Purepath, or pandas.DataFrame</span>
+<span class="sd">        Pandas dataframe with control points</span>
+<span class="sd">    well_key : str, optional</span>
+<span class="sd">        The column containing the &quot;key&quot; (unique identifier) for each well, by default &#39;API_NUMBER&#39;</span>
+<span class="sd">    xcol : str, optional</span>
+<span class="sd">        The column in df_control containing the x coordinates for each control point, by default &#39;LONGITUDE&#39;</span>
+<span class="sd">    ycol : str, optional</span>
+<span class="sd">        The column in df_control containing the y coordinates for each control point, by default &#39;LATITUDE&#39;</span>
+<span class="sd">    zcol : str, optional</span>
+<span class="sd">        The column in df_control containing the z coordinates for each control point, by default &#39;ELEV_FT&#39;</span>
+<span class="sd">    controlpoints_crs : str, optional</span>
+<span class="sd">        The column in df_control containing the crs of points, by default &#39;EPSG:4269&#39;</span>
+<span class="sd">    output_crs : str, optional</span>
+<span class="sd">        The output coordinate system, by default &#39;EPSG:5070&#39;</span>
+<span class="sd">    description_col : str, optional</span>
+<span class="sd">        The column in df_control with the description (if this is used), by default &#39;FORMATION&#39;</span>
+<span class="sd">    interp_col : str, optional</span>
+<span class="sd">        The column in df_control with the interpretation (if this is used), by default &#39;INTERPRETATION&#39;</span>
+<span class="sd">    target_col : str, optional</span>
+<span class="sd">        The column in df_control with the target code (if this is used), by default &#39;TARGET&#39;</span>
+<span class="sd">    verbose : bool, optional</span>
+<span class="sd">        Whether to print information to terminal, by default False</span>
+<span class="sd">    log : bool, optional</span>
+<span class="sd">        Whether to log information in log file, by default False</span>
+<span class="sd">    **kwargs</span>
+<span class="sd">        Keyword arguments of pandas.concat() or pandas.read_csv that will be passed to that function, except for objs, which are df and df_control</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    pathlib.Path object</span>
-<span class="sd">        Pathlib Path object of the most recent file fitting the glob pattern indicated in the glob_pattern parameter.</span>
+<span class="sd">    pandas.DataFrame</span>
+<span class="sd">        Pandas DataFrame with original data and control points formatted the same way and concatenated together</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="n">verbose_print</span><span class="p">(</span><span class="n">get_most_recent</span><span class="p">,</span> <span class="nb">locals</span><span class="p">())</span>
+        <span class="n">verbose_print</span><span class="p">(</span><span class="n">add_control_points</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;df_without_control&#39;</span><span class="p">,</span> <span class="s1">&#39;df_control&#39;</span><span class="p">])</span>
 
-    <span class="n">todayDate</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
-    <span class="n">todayDateStr</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">todayDate</span><span class="p">)</span>
-
-    <span class="n">files</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="nb">dir</span><span class="p">)</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="n">glob_pattern</span><span class="p">)</span> <span class="c1">#Get all the files that fit the pattern</span>
-    <span class="n">fileDates</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span> <span class="c1">#Get the file dates from their file modification times</span>
-        <span class="n">fileDates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">datetime64</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">f</span><span class="p">))))</span>
-    
-    <span class="k">if</span> <span class="n">fileDates</span> <span class="o">==</span> <span class="p">[]:</span>
-        <span class="c1">#If no files found that match pattern, return an empty pathlib.Path()</span>
-        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No file found in </span><span class="si">{}</span><span class="s1"> matching </span><span class="si">{}</span><span class="s1"> pattern&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="n">glob_pattern</span><span class="p">))</span>
-        <span class="n">mostRecentFile</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">mostRecentFile</span>
+    <span class="k">if</span> <span class="n">df_control</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">df_without_control</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">df_control</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">df_control</span><span class="p">,</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">):</span>
+        <span class="k">pass</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">globInd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">datetime64</span><span class="p">(</span><span class="n">todayDateStr</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">fileDates</span><span class="p">))</span> <span class="c1">#Find the index of the most recent file</span>
-
-    <span class="c1">#Iterate through glob/files again (need to recreate glob)</span>
-    <span class="n">files</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="nb">dir</span><span class="p">)</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="n">glob_pattern</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">files</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">j</span> <span class="o">==</span> <span class="n">globInd</span><span class="p">:</span>
-            <span class="n">mostRecentFile</span><span class="o">=</span><span class="n">f</span>
-            <span class="k">break</span>
+        <span class="n">read_csv_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">locals</span><span class="p">()[</span><span class="s1">&#39;kwargs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
+        <span class="n">df_control</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">df_control</span><span class="p">,</span> <span class="o">**</span><span class="n">read_csv_kwargs</span><span class="p">)</span>
     
-    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Most Recent version of file fitting </span><span class="si">{}</span><span class="s1"> pattern is: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">glob_pattern</span><span class="p">,</span> <span class="n">mostRecentFile</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+    <span class="c1">#Drop unnecessary columns, if needed</span>
+    <span class="k">if</span> <span class="n">target_col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df_without_control</span><span class="o">.</span><span class="n">columns</span> <span class="ow">and</span> <span class="n">target_col</span> <span class="ow">in</span> <span class="n">df_control</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="n">df_control</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="n">target_col</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        
+    <span class="k">if</span> <span class="n">interp_col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df_without_control</span><span class="o">.</span><span class="n">columns</span> <span class="ow">and</span> <span class="n">interp_col</span> <span class="ow">in</span> <span class="n">df_control</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="n">df_control</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="n">interp_col</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        
+    <span class="k">if</span> <span class="n">description_col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df_without_control</span><span class="o">.</span><span class="n">columns</span> <span class="ow">and</span> <span class="n">description_col</span> <span class="ow">in</span> <span class="n">df_control</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="n">df_control</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="n">description_col</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>            
+        
+    <span class="c1">#If our main df is already a geodataframe, make df_control one too</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">df_without_control</span><span class="p">,</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">w4h</span><span class="w"> </span><span class="kn">import</span> <span class="n">coords2geometry</span>
+        <span class="n">gdf_control</span> <span class="o">=</span> <span class="n">coords2geometry</span><span class="p">(</span><span class="n">df_no_geometry</span><span class="o">=</span><span class="n">df_control</span><span class="p">,</span> <span class="n">xcol</span><span class="o">=</span><span class="n">xcol</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="n">ycol</span><span class="p">,</span> <span class="n">zcol</span><span class="o">=</span><span class="n">zcol</span><span class="p">,</span> <span class="n">input_coords_crs</span><span class="o">=</span><span class="n">controlpoints_crs</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">mostRecentFile</span></div>
+    <span class="c1">#Get kwargs passed to pd.concat, and set defaults for ignore_index and join</span>
+    <span class="n">concat_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">locals</span><span class="p">()[</span><span class="s1">&#39;kwargs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
+    <span class="k">if</span> <span class="s1">&#39;ignore_index&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">concat_kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">concat_kwargs</span><span class="p">[</span><span class="s1">&#39;ignore_index&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">if</span> <span class="s1">&#39;join&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">concat_kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">concat_kwargs</span><span class="p">[</span><span class="s1">&#39;join&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;outer&#39;</span>
+        
+    <span class="n">gdf</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df_without_control</span><span class="p">,</span> <span class="n">gdf_control</span><span class="p">],</span> <span class="o">**</span><span class="n">concat_kwargs</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">controlpoints_crs</span> <span class="o">!=</span> <span class="n">output_crs</span><span class="p">:</span>
+        <span class="n">gdf</span> <span class="o">=</span> <span class="n">gdf</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">output_crs</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">gdf</span></div>
+
+
+
+<span class="c1">#Define the datatypes for a dataframe</span>
+<div class="viewcode-block" id="define_dtypes">
+<a class="viewcode-back" href="../../w4h.read.html#w4h.define_dtypes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">define_dtypes</span><span class="p">(</span><span class="n">undefined_df</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to define datatypes of a dataframe, especially with file-indicated dyptes</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    undefined_df : pd.DataFrame</span>
+<span class="sd">        Pandas dataframe with columns whose datatypes need to be (re)defined</span>
+<span class="sd">    datatypes : dict, str, pathlib.PurePath() object, or None, default = None</span>
+<span class="sd">        Dictionary containing datatypes, to be used in pandas.DataFrame.astype() function. If None, will read from file indicated by dtype_file (which must be defined, along with dtype_dir), by default None</span>
+<span class="sd">    log : bool, default = False</span>
+<span class="sd">        Whether to log inputs and outputs to log file.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dfout : pandas.DataFrame</span>
+<span class="sd">        Pandas dataframe containing redefined columns</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="n">verbose_print</span><span class="p">(</span><span class="n">define_dtypes</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;undefined_df&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">undefined_df</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">dfout</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
+
+        <span class="n">dfout</span> <span class="o">=</span> <span class="n">undefined_df</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">datatypes</span><span class="p">,</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">PurePath</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">datatypes</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">datatypes</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">datatypes</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">ERROR: datatypes file &#39;</span><span class="si">{}</span><span class="s2">&#39; does not exist, using inferred datatypes.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">datatypes</span><span class="p">),)</span>
+                <span class="k">return</span> <span class="n">dfout</span>
+            <span class="k">elif</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;ERROR: datatypes must be either dict or filepath (path to directories not allowed)&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">dfout</span>
+
+            <span class="n">datatypes</span> <span class="o">=</span> <span class="n">read_dict</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">datatypes</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">dfout</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                    <span class="n">dfout</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">dfout</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">datatypes</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">datatypes</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;datatypes is None, not updating datatypes&#39;</span><span class="p">)</span>
+            <span class="n">dfout</span> <span class="o">=</span> <span class="n">dfout</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">datatypes</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;ERROR: datatypes must be either dict or a filepath, not </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">datatypes</span><span class="p">)))</span>
+            <span class="k">return</span> <span class="n">dfout</span>
+
+    <span class="k">return</span> <span class="n">dfout</span></div>
+
 
 
 <span class="c1">#Function to setup files of interest</span>
 <div class="viewcode-block" id="file_setup">
 <a class="viewcode-back" href="../../w4h.read.html#w4h.file_setup">[docs]</a>
-<span class="k">def</span> <span class="nf">file_setup</span><span class="p">(</span><span class="n">well_data</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_filename</span><span class="o">=</span><span class="s1">&#39;*ISGS_DOWNHOLE_DATA*.txt&#39;</span><span class="p">,</span> <span class="n">metadata_filename</span><span class="o">=</span><span class="s1">&#39;*ISGS_HEADER*.txt&#39;</span><span class="p">,</span> <span class="n">log_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">file_setup</span><span class="p">(</span><span class="n">well_data</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_filename</span><span class="o">=</span><span class="s1">&#39;*ISGS_DOWNHOLE_DATA*.txt&#39;</span><span class="p">,</span> <span class="n">metadata_filename</span><span class="o">=</span><span class="s1">&#39;*ISGS_HEADER*.txt&#39;</span><span class="p">,</span> <span class="n">log_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to setup files, assuming data, metadata, and elevation/location are in separate files (there should be one &quot;key&quot;/identifying column consistent across all files to join/merge them later)</span>
 
 <span class="sd">    This function may not be useful if files are organized differently than this structure. </span>
@@ -241,236 +313,89 @@
     <span class="c1">#headerDataDTYPES = {&#39;ID&#39;:np.uint32,&#39;API_NUMBER&#39;:np.uint64,&quot;TDFORMATION&quot;:str,&quot;PRODFORM&quot;:str,&quot;TOTAL_DEPTH&quot;:np.float64,&quot;SECTION&quot;:np.float64,&quot;TWP&quot;:np.float64,&quot;TDIR&quot;:str,&quot;RNG&quot;:np.float64,&quot;RDIR&quot;:str,&quot;MERIDIAN&quot;:np.float64,&quot;FARM_NAME&quot;:str,&quot;NSFOOT&quot;:np.float64,&quot;NSDIR&quot;:str,&quot;EWFOOT&quot;:np.float64,&quot;EWDIR&quot;:str,&quot;QUARTERS&quot;:str,&quot;ELEVATION&quot;:np.float64,&quot;ELEVREF&quot;:str,&quot;COMP_DATE&quot;:str,&quot;STATUS&quot;:str,&quot;FARM_NUM&quot;:str,&quot;COUNTY_CODE&quot;:np.float64,&quot;PERMIT_NUMBER&quot;:str,&quot;COMPANY_NAME&quot;:str,&quot;COMPANY_CODE&quot;:str,&quot;PERMIT_DATE&quot;:str,&quot;CORNER&quot;:str,&quot;LATITUDE&quot;:np.float64,&quot;LONGITUDE&quot;:np.float64,&quot;ENTERED_BY&quot;:str,&quot;UPDDATE&quot;:str,&quot;ELEVSOURCE&quot;:str, &quot;ELEV_FT&quot;:np.float64}</span>
     <span class="k">return</span> <span class="n">downholeDataPATH</span><span class="p">,</span> <span class="n">headerDataPATH</span></div>
 
-    
-<span class="c1">#Read raw data by text</span>
-<div class="viewcode-block" id="read_raw_csv">
-<a class="viewcode-back" href="../../w4h.read.html#w4h.read_raw_csv">[docs]</a>
-<span class="k">def</span> <span class="nf">read_raw_csv</span><span class="p">(</span><span class="n">data_filepath</span><span class="p">,</span> <span class="n">metadata_filepath</span><span class="p">,</span> <span class="n">data_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metadata_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xcol</span><span class="o">=</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="n">well_key</span><span class="o">=</span><span class="s1">&#39;API_NUMBER&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;latin-1&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">read_csv_kwargs</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Easy function to read raw .txt files output from (for example), an Access database</span>
+  
+
+<span class="c1"># Gets the current date for use with in code</span>
+<div class="viewcode-block" id="get_current_date">
+<a class="viewcode-back" href="../../w4h.read.html#w4h.get_current_date">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_current_date</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Gets the current date to help with finding the most recent file</span>
+<span class="sd">        ---------------------</span>
+<span class="sd">        Parameters:</span>
+<span class="sd">            None</span>
+
+<span class="sd">        ---------------------</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            todayDate   : datetime object with today&#39;s date</span>
+<span class="sd">            dateSuffix  : str to use for naming output files</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">todayDate</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+    <span class="n">todayDateStr</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">todayDate</span><span class="p">)</span>
+    <span class="n">dateSuffix</span> <span class="o">=</span> <span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">todayDateStr</span>
+    <span class="k">return</span> <span class="n">todayDate</span><span class="p">,</span> <span class="n">dateSuffix</span></div>
+
+
+
+<span class="c1">#Function to get most recent file </span>
+<div class="viewcode-block" id="get_most_recent">
+<a class="viewcode-back" href="../../w4h.read.html#w4h.get_most_recent">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_most_recent</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="n">RESOURCE_DIR</span><span class="p">,</span> <span class="n">glob_pattern</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to find the most recent file with the indicated pattern, using pathlib.glob function.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    data_filepath : str</span>
-<span class="sd">        Filename of the file containing data, including the extension.</span>
-<span class="sd">    metadata_filepath : str</span>
-<span class="sd">        Filename of the file containing metadata, including the extension.</span>
-<span class="sd">    data_cols : list, default = None</span>
-<span class="sd">        List with strings with names of columns from txt file to keep after reading. If None, [&quot;API_NUMBER&quot;,&quot;TABLE_NAME&quot;,&quot;FORMATION&quot;,&quot;THICKNESS&quot;,&quot;TOP&quot;,&quot;BOTTOM&quot;], by default None.</span>
-<span class="sd">    metadata_cols : list, default = None</span>
-<span class="sd">        List with strings with names of columns from txt file to keep after reading. If None, [&#39;API_NUMBER&#39;,&quot;TOTAL_DEPTH&quot;,&quot;SECTION&quot;,&quot;TWP&quot;,&quot;TDIR&quot;,&quot;RNG&quot;,&quot;RDIR&quot;,&quot;MERIDIAN&quot;,&quot;QUARTERS&quot;,&quot;ELEVATION&quot;,&quot;ELEVREF&quot;,&quot;COUNTY_CODE&quot;,&quot;LATITUDE&quot;,&quot;LONGITUDE&quot;,&quot;ELEVSOURCE&quot;], by default None</span>
-<span class="sd">    x_col : str, default = &#39;LONGITUDE&#39;</span>
-<span class="sd">        Name of column in metadata file indicating the x-location of the well, by default &#39;LONGITUDE&#39;</span>
-<span class="sd">    ycol : str, default = &#39;LATITUDE&#39;</span>
-<span class="sd">        Name of the column in metadata file indicating the y-location of the well, by default &#39;LATITUDE&#39;</span>
-<span class="sd">    well_key : str, default = &#39;API_NUMBER&#39;</span>
-<span class="sd">        Name of the column with the key/identifier that will be used to merge data later, by default &#39;API_NUMBER&#39;</span>
-<span class="sd">    encoding : str, default = &#39;latin-1&#39;</span>
-<span class="sd">        Encoding of the data in the input files, by default &#39;latin-1&#39;</span>
-<span class="sd">    verbose : bool, default = False</span>
-<span class="sd">        Whether to print the number of rows in the input columns, by default False</span>
-<span class="sd">    log : bool, default = False</span>
-<span class="sd">        Whether to log inputs and outputs to log file.</span>
-<span class="sd">    **read_csv_kwargs</span>
-<span class="sd">        **kwargs that get passed to pd.read_csv()</span>
+<span class="sd">    dir : str or pathlib.Path object, optional</span>
+<span class="sd">        Directory in which to find the most recent file, by default str(repoDir)+&#39;/resources&#39;</span>
+<span class="sd">    glob_pattern : str, optional</span>
+<span class="sd">        String used by the pathlib.glob() function/method for searching, by default &#39;*&#39;</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    (pandas.DataFrame, pandas.DataFrame/None)</span>
-<span class="sd">        Tuple/list with two pandas dataframes: (well_data, metadata) metadata is None if only well_data is used</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="n">verbose_print</span><span class="p">(</span><span class="n">read_raw_csv</span><span class="p">,</span> <span class="nb">locals</span><span class="p">())</span>
-    <span class="c1">#Check if input data is already dataframe, otherwise, read it in as dataframe</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data_filepath</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data_filepath</span><span class="p">,</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">):</span>
-        <span class="n">downholeDataIN</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">data_filepath</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="s1">&#39;infer&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">,</span> <span class="o">**</span><span class="n">read_csv_kwargs</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">data_cols</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">data_useCols</span> <span class="o">=</span> <span class="n">downholeDataIN</span><span class="o">.</span><span class="n">columns</span>
-    <span class="k">elif</span> <span class="n">data_cols</span> <span class="o">==</span> <span class="s1">&#39;auto&#39;</span><span class="p">:</span>
-        <span class="n">data_useCols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;API_NUMBER&quot;</span><span class="p">,</span><span class="s2">&quot;TABLE_NAME&quot;</span><span class="p">,</span><span class="s2">&quot;FORMATION&quot;</span><span class="p">,</span><span class="s2">&quot;THICKNESS&quot;</span><span class="p">,</span><span class="s2">&quot;TOP&quot;</span><span class="p">,</span><span class="s2">&quot;BOTTOM&quot;</span><span class="p">]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">data_useCols</span><span class="o">=</span> <span class="n">data_cols</span>
-    <span class="n">downholeDataIN</span> <span class="o">=</span> <span class="n">downholeDataIN</span><span class="p">[</span><span class="n">data_useCols</span><span class="p">]</span>
-
-    <span class="k">if</span> <span class="n">metadata_filepath</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">headerDataIN</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metadata_filepath</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metadata_filepath</span><span class="p">,</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">):</span>
-        <span class="n">headerDataIN</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">metadata_filepath</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="s1">&#39;infer&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">,</span> <span class="o">**</span><span class="n">read_csv_kwargs</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">headerDataIN</span> <span class="o">=</span> <span class="kc">None</span>
-
-    <span class="k">if</span> <span class="n">metadata_cols</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">headerDataIN</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">metadata_useCols</span> <span class="o">=</span> <span class="n">headerDataIN</span><span class="o">.</span><span class="n">columns</span>
-    <span class="k">elif</span> <span class="n">metadata_cols</span> <span class="o">==</span> <span class="s1">&#39;auto&#39;</span><span class="p">:</span>
-        <span class="n">metadata_useCols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;API_NUMBER&#39;</span><span class="p">,</span><span class="s2">&quot;TOTAL_DEPTH&quot;</span><span class="p">,</span><span class="s2">&quot;SECTION&quot;</span><span class="p">,</span><span class="s2">&quot;TWP&quot;</span><span class="p">,</span><span class="s2">&quot;TDIR&quot;</span><span class="p">,</span><span class="s2">&quot;RNG&quot;</span><span class="p">,</span><span class="s2">&quot;RDIR&quot;</span><span class="p">,</span><span class="s2">&quot;MERIDIAN&quot;</span><span class="p">,</span><span class="s2">&quot;QUARTERS&quot;</span><span class="p">,</span><span class="s2">&quot;ELEVATION&quot;</span><span class="p">,</span><span class="s2">&quot;ELEVREF&quot;</span><span class="p">,</span><span class="s2">&quot;COUNTY_CODE&quot;</span><span class="p">,</span><span class="s2">&quot;LATITUDE&quot;</span><span class="p">,</span><span class="s2">&quot;LONGITUDE&quot;</span><span class="p">,</span><span class="s2">&quot;ELEVSOURCE&quot;</span><span class="p">]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">metadata_useCols</span><span class="o">=</span> <span class="n">metadata_cols</span>
-
-    <span class="k">if</span> <span class="n">headerDataIN</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">headerDataIN</span> <span class="o">=</span> <span class="n">headerDataIN</span><span class="p">[</span><span class="n">metadata_useCols</span><span class="p">]</span>
-        
-    <span class="c1">#Drop data with no API        </span>
-    <span class="n">downholeDataIN</span> <span class="o">=</span> <span class="n">downholeDataIN</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="n">well_key</span><span class="p">])</span> <span class="c1">#Drop data with no API</span>
-    <span class="k">if</span> <span class="n">headerDataIN</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">headerDataIN</span> <span class="o">=</span> <span class="n">headerDataIN</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="n">well_key</span><span class="p">])</span> <span class="c1">#Drop metadata with no API</span>
-
-        <span class="c1">#Drop data with no or missing location information</span>
-        <span class="n">headerDataIN</span> <span class="o">=</span> <span class="n">headerDataIN</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="n">ycol</span><span class="p">])</span> 
-        <span class="n">headerDataIN</span> <span class="o">=</span> <span class="n">headerDataIN</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="n">xcol</span><span class="p">])</span>
-
-        <span class="c1">#Reset index so index goes from 0 in numerical/integer order</span>
-        <span class="n">headerDataIN</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="c1">#***UPDATE: Need to make sure these columns exist in this case***</span>
-        <span class="c1">#Drop data with no or missing location information</span>
-        <span class="n">downholeDataIN</span> <span class="o">=</span> <span class="n">downholeDataIN</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="n">ycol</span><span class="p">])</span> 
-        <span class="n">downholeDataIN</span> <span class="o">=</span> <span class="n">downholeDataIN</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="n">xcol</span><span class="p">])</span>        
-    <span class="n">downholeDataIN</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    
-    <span class="c1">#Print outputs to terminal, if designated</span>
-    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">Data file has &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">downholeDataIN</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">+</span><span class="s1">&#39; valid well records.&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">headerDataIN</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Metadata file has &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">headerDataIN</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">+</span><span class="s2">&quot; unique wells with valid location information.&quot;</span><span class="p">)</span>
-    
-    <span class="k">return</span> <span class="n">downholeDataIN</span><span class="p">,</span> <span class="n">headerDataIN</span></div>
-
-
-<span class="c1">#Read file with xyz data</span>
-<div class="viewcode-block" id="read_xyz">
-<a class="viewcode-back" href="../../w4h.read.html#w4h.read_xyz">[docs]</a>
-<span class="k">def</span> <span class="nf">read_xyz</span><span class="p">(</span><span class="n">xyzpath</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to read file containing xyz data (elevation/location)</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    xyzpath : str or pathlib.Path</span>
-<span class="sd">        Filepath of the xyz file, including extension</span>
-<span class="sd">    datatypes : dict, default = None</span>
-<span class="sd">        Dictionary containing the datatypes for the columns int he xyz file. If None, {&#39;ID&#39;:np.uint32,&#39;API_NUMBER&#39;:np.uint64,&#39;LATITUDE&#39;:np.float64,&#39;LONGITUDE&#39;:np.float64,&#39;ELEV_FT&#39;:np.float64}, by default None</span>
-<span class="sd">    verbose : bool, default = False</span>
-<span class="sd">        Whether to print the number of xyz records to the terminal, by default False</span>
-<span class="sd">    log : bool, default = False</span>
-<span class="sd">        Whether to log inputs and outputs to log file.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    pandas.DataFrame</span>
-<span class="sd">        Pandas dataframe containing the elevation and location data</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="n">verbose_print</span><span class="p">(</span><span class="n">read_xyz</span><span class="p">,</span> <span class="nb">locals</span><span class="p">())</span>
-    <span class="k">if</span> <span class="n">datatypes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">xyzDTypes</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;ID&#39;</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">,</span><span class="s1">&#39;API_NUMBER&#39;</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">,</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span><span class="s1">&#39;ELEV_FT&#39;</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">}</span>
-
-    <span class="n">xyzDataIN</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">xyzpath</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="s1">&#39;infer&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">xyzDTypes</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="s1">&#39;ID&#39;</span><span class="p">)</span>
-    
-    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;XYZ file has &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">xyzDataIN</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">+</span><span class="s1">&#39; records with elevation and location.&#39;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">xyzDataIN</span></div>
-
-
-<span class="c1">#Read dictionary file into dictionary variable</span>
-<div class="viewcode-block" id="read_dict">
-<a class="viewcode-back" href="../../w4h.read.html#w4h.read_dict">[docs]</a>
-<span class="k">def</span> <span class="nf">read_dict</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">keytype</span><span class="o">=</span><span class="s1">&#39;np&#39;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to read a text file with a dictionary in it into a python dictionary</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    file : str or pathlib.Path object</span>
-<span class="sd">        Filepath to the file of interest containing the dictionary text</span>
-<span class="sd">    keytype : str, optional</span>
-<span class="sd">        String indicating the datatypes used in the text, currently only &#39;np&#39; is implemented, by default &#39;np&#39;</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    dict</span>
-<span class="sd">        Dictionary translated from text file.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">if</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">file</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s1">&#39;.json&#39;</span><span class="p">:</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">jsDict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">jsDict</span>
-
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="n">data</span><span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-
-    <span class="n">jsDict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">keytype</span><span class="o">==</span><span class="s1">&#39;np&#39;</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">jsDict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">jsDict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">np</span><span class="p">,</span> <span class="n">jsDict</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
-    
-    <span class="k">return</span> <span class="n">jsDict</span></div>
-
-
-<span class="c1">#Define the datatypes for a dataframe</span>
-<div class="viewcode-block" id="define_dtypes">
-<a class="viewcode-back" href="../../w4h.read.html#w4h.define_dtypes">[docs]</a>
-<span class="k">def</span> <span class="nf">define_dtypes</span><span class="p">(</span><span class="n">undefined_df</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to define datatypes of a dataframe, especially with file-indicated dyptes</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    undefined_df : pd.DataFrame</span>
-<span class="sd">        Pandas dataframe with columns whose datatypes need to be (re)defined</span>
-<span class="sd">    datatypes : dict, str, pathlib.PurePath() object, or None, default = None</span>
-<span class="sd">        Dictionary containing datatypes, to be used in pandas.DataFrame.astype() function. If None, will read from file indicated by dtype_file (which must be defined, along with dtype_dir), by default None</span>
-<span class="sd">    log : bool, default = False</span>
-<span class="sd">        Whether to log inputs and outputs to log file.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    dfout : pandas.DataFrame</span>
-<span class="sd">        Pandas dataframe containing redefined columns</span>
+<span class="sd">    pathlib.Path object</span>
+<span class="sd">        Pathlib Path object of the most recent file fitting the glob pattern indicated in the glob_pattern parameter.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="n">verbose_print</span><span class="p">(</span><span class="n">define_dtypes</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;undefined_df&#39;</span><span class="p">])</span>
-    <span class="k">if</span> <span class="n">undefined_df</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">dfout</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">verbose_print</span><span class="p">(</span><span class="n">get_most_recent</span><span class="p">,</span> <span class="nb">locals</span><span class="p">())</span>
+
+    <span class="n">todayDate</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+    <span class="n">todayDateStr</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">todayDate</span><span class="p">)</span>
+
+    <span class="n">files</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="nb">dir</span><span class="p">)</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="n">glob_pattern</span><span class="p">)</span> <span class="c1">#Get all the files that fit the pattern</span>
+    <span class="n">fileDates</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span> <span class="c1">#Get the file dates from their file modification times</span>
+        <span class="n">fileDates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">datetime64</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">f</span><span class="p">))))</span>
+    
+    <span class="k">if</span> <span class="n">fileDates</span> <span class="o">==</span> <span class="p">[]:</span>
+        <span class="c1">#If no files found that match pattern, return an empty pathlib.Path()</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No file found in </span><span class="si">{}</span><span class="s1"> matching </span><span class="si">{}</span><span class="s1"> pattern&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="n">glob_pattern</span><span class="p">))</span>
+        <span class="n">mostRecentFile</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">mostRecentFile</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
+        <span class="n">globInd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">datetime64</span><span class="p">(</span><span class="n">todayDateStr</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">fileDates</span><span class="p">))</span> <span class="c1">#Find the index of the most recent file</span>
 
-        <span class="n">dfout</span> <span class="o">=</span> <span class="n">undefined_df</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">datatypes</span><span class="p">,</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">PurePath</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">datatypes</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="n">datatypes</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">datatypes</span><span class="p">)</span>
+    <span class="c1">#Iterate through glob/files again (need to recreate glob)</span>
+    <span class="n">files</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="nb">dir</span><span class="p">)</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="n">glob_pattern</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">files</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">j</span> <span class="o">==</span> <span class="n">globInd</span><span class="p">:</span>
+            <span class="n">mostRecentFile</span><span class="o">=</span><span class="n">f</span>
+            <span class="k">break</span>
+    
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Most Recent version of file fitting </span><span class="si">{}</span><span class="s1"> pattern is: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">glob_pattern</span><span class="p">,</span> <span class="n">mostRecentFile</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
 
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">ERROR: datatypes file &#39;</span><span class="si">{}</span><span class="s2">&#39; does not exist, using inferred datatypes.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">datatypes</span><span class="p">),)</span>
-                <span class="k">return</span> <span class="n">dfout</span>
-            <span class="k">elif</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
-                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;ERROR: datatypes must be either dict or filepath (path to directories not allowed)&#39;</span><span class="p">)</span>
-                <span class="k">return</span> <span class="n">dfout</span>
-
-            <span class="n">datatypes</span> <span class="o">=</span> <span class="n">read_dict</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">datatypes</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">dfout</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-                    <span class="n">dfout</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">dfout</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">datatypes</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
-
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">datatypes</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;datatypes is None, not updating datatypes&#39;</span><span class="p">)</span>
-            <span class="n">dfout</span> <span class="o">=</span> <span class="n">dfout</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">datatypes</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;ERROR: datatypes must be either dict or a filepath, not </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">datatypes</span><span class="p">)))</span>
-            <span class="k">return</span> <span class="n">dfout</span>
-
-    <span class="k">return</span> <span class="n">dfout</span></div>
+    <span class="k">return</span> <span class="n">mostRecentFile</span></div>
 
 
-<span class="c1">#Define the search term filepaths</span>
+
+<span class="c1"># Define the search term filepaths</span>
 <div class="viewcode-block" id="get_search_terms">
 <a class="viewcode-back" href="../../w4h.read.html#w4h.get_search_terms">[docs]</a>
-<span class="k">def</span> <span class="nf">get_search_terms</span><span class="p">(</span><span class="n">spec_path</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">repoDir</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;/resources/&#39;</span><span class="p">,</span> <span class="n">spec_glob_pattern</span><span class="o">=</span><span class="s1">&#39;*SearchTerms-Specific*&#39;</span><span class="p">,</span> 
-                     <span class="n">start_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">start_glob_pattern</span> <span class="o">=</span> <span class="s1">&#39;*SearchTerms-Start*&#39;</span><span class="p">,</span> 
+<span class="k">def</span><span class="w"> </span><span class="nf">get_search_terms</span><span class="p">(</span><span class="n">spec_path</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">repoDir</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;/resources/&#39;</span><span class="p">,</span>
+                     <span class="n">spec_glob_pattern</span><span class="o">=</span><span class="s1">&#39;*SearchTerms-Specific*&#39;</span><span class="p">,</span>
+                     <span class="n">start_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">start_glob_pattern</span><span class="o">=</span><span class="s1">&#39;*SearchTerms-Start*&#39;</span><span class="p">,</span>
                      <span class="n">wildcard_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wildcard_glob_pattern</span><span class="o">=</span><span class="s1">&#39;*SearchTerms-Wildcard&#39;</span><span class="p">,</span>
+                     <span class="n">use_tokens</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                      <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Read in dictionary files for downhole data</span>
 
@@ -499,12 +424,12 @@
     <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="n">verbose_print</span><span class="p">(</span><span class="n">get_search_terms</span><span class="p">,</span> <span class="nb">locals</span><span class="p">())</span>    
-    <span class="c1">#specTermsFile = &quot;SearchTerms-Specific_BedrockOrNo_2022-09.csv&quot; #Specific matches</span>
-    <span class="c1">#startTermsFile = &quot;SearchTerms-Start_BedrockOrNo.csv&quot; #Wildcard matches for the start of the description</span>
+    <span class="c1"># specTermsFile = &quot;SearchTerms-Specific_BedrockOrNo_2022-09.csv&quot; #Specific matches</span>
+    <span class="c1"># startTermsFile = &quot;SearchTerms-Start_BedrockOrNo.csv&quot; #Wildcard matches for the start of the description</span>
 
-    <span class="c1">#Exact match path</span>
+    <span class="c1"># Exact match path</span>
     <span class="k">if</span> <span class="n">spec_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">specTermsPath</span> <span class="o">=</span> <span class="n">spec_path</span>        
+        <span class="n">specTermsPath</span> <span class="o">=</span> <span class="n">spec_path</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">spec_path</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">spec_path</span><span class="p">)</span>
 
@@ -538,10 +463,47 @@
     <span class="k">return</span> <span class="n">specTermsPath</span><span class="p">,</span> <span class="n">startTermsPath</span><span class="p">,</span> <span class="n">wilcardTermsPath</span></div>
 
 
+
+<span class="c1">#Read dictionary file into dictionary variable</span>
+<div class="viewcode-block" id="read_dict">
+<a class="viewcode-back" href="../../w4h.read.html#w4h.read_dict">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_dict</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">keytype</span><span class="o">=</span><span class="s1">&#39;np&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to read a text file with a dictionary in it into a python dictionary</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file : str or pathlib.Path object</span>
+<span class="sd">        Filepath to the file of interest containing the dictionary text</span>
+<span class="sd">    keytype : str, optional</span>
+<span class="sd">        String indicating the datatypes used in the text, currently only &#39;np&#39; is implemented, by default &#39;np&#39;</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary translated from text file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">file</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s1">&#39;.json&#39;</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">jsDict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">jsDict</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">data</span><span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+    <span class="n">jsDict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">keytype</span><span class="o">==</span><span class="s1">&#39;np&#39;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">jsDict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">jsDict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">np</span><span class="p">,</span> <span class="n">jsDict</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+    
+    <span class="k">return</span> <span class="n">jsDict</span></div>
+
+
+
 <span class="c1">#Read files into pandas dataframes</span>
 <div class="viewcode-block" id="read_dictionary_terms">
 <a class="viewcode-back" href="../../w4h.read.html#w4h.read_dictionary_terms">[docs]</a>
-<span class="k">def</span> <span class="nf">read_dictionary_terms</span><span class="p">(</span><span class="n">dict_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">id_col</span><span class="o">=</span><span class="s1">&#39;ID&#39;</span><span class="p">,</span> <span class="n">search_col</span><span class="o">=</span><span class="s1">&#39;DESCRIPTION&#39;</span><span class="p">,</span> <span class="n">definition_col</span><span class="o">=</span><span class="s1">&#39;LITHOLOGY&#39;</span><span class="p">,</span> <span class="n">class_flag_col</span><span class="o">=</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">,</span> <span class="n">dictionary_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">class_flag</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">rem_extra_cols</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_dictionary_terms</span><span class="p">(</span><span class="n">dict_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">id_col</span><span class="o">=</span><span class="s1">&#39;ID&#39;</span><span class="p">,</span> <span class="n">search_col</span><span class="o">=</span><span class="s1">&#39;DESCRIPTION&#39;</span><span class="p">,</span> <span class="n">definition_col</span><span class="o">=</span><span class="s1">&#39;LITHOLOGY&#39;</span><span class="p">,</span> <span class="n">class_flag_col</span><span class="o">=</span><span class="s1">&#39;CLASS_FLAG&#39;</span><span class="p">,</span> <span class="n">dictionary_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">class_flag</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">rem_extra_cols</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to read dictionary terms from file into pandas dataframe</span>
 
 <span class="sd">    Parameters</span>
@@ -662,10 +624,11 @@
     <span class="k">return</span> <span class="n">dict_terms</span></div>
 
 
+
 <span class="c1">#Function to read lithology file into pandas dataframe</span>
 <div class="viewcode-block" id="read_lithologies">
 <a class="viewcode-back" href="../../w4h.read.html#w4h.read_lithologies">[docs]</a>
-<span class="k">def</span> <span class="nf">read_lithologies</span><span class="p">(</span><span class="n">lith_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interp_col</span><span class="o">=</span><span class="s1">&#39;LITHOLOGY&#39;</span><span class="p">,</span> <span class="n">target_col</span><span class="o">=</span><span class="s1">&#39;CODE&#39;</span><span class="p">,</span> <span class="n">use_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_lithologies</span><span class="p">(</span><span class="n">lith_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interp_col</span><span class="o">=</span><span class="s1">&#39;LITHOLOGY&#39;</span><span class="p">,</span> <span class="n">target_col</span><span class="o">=</span><span class="s1">&#39;CODE&#39;</span><span class="p">,</span> <span class="n">use_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to read lithology file into pandas dataframe</span>
 
 <span class="sd">    Parameters</span>
@@ -691,7 +654,7 @@
         <span class="n">verbose_print</span><span class="p">(</span><span class="n">read_lithologies</span><span class="p">,</span> <span class="nb">locals</span><span class="p">())</span>   
     <span class="k">if</span> <span class="n">lith_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1">#Find resources</span>
-        <span class="kn">import</span> <span class="nn">w4h</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">w4h</span>
         <span class="n">lith_file</span><span class="o">=</span> <span class="n">w4h</span><span class="o">.</span><span class="n">get_resources</span><span class="p">()[</span><span class="s1">&#39;LithInterps_FineCoarse&#39;</span><span class="p">]</span>
     
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lith_file</span><span class="p">,</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">PurePath</span><span class="p">):</span>
@@ -707,87 +670,136 @@
     <span class="k">return</span> <span class="n">lithoDF</span></div>
 
 
-<span class="c1"># Read and concatenate control points into main database/dataframe</span>
-<div class="viewcode-block" id="add_control_points">
-<a class="viewcode-back" href="../../w4h.read.html#w4h.add_control_points">[docs]</a>
-<span class="k">def</span> <span class="nf">add_control_points</span><span class="p">(</span><span class="n">df_without_control</span><span class="p">,</span> <span class="n">df_control</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="n">xcol</span><span class="o">=</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="n">zcol</span><span class="o">=</span><span class="s1">&#39;ELEV_FT&#39;</span><span class="p">,</span> <span class="n">controlpoints_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:4269&#39;</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:5070&#39;</span><span class="p">,</span> <span class="n">description_col</span><span class="o">=</span><span class="s1">&#39;FORMATION&#39;</span><span class="p">,</span> <span class="n">interp_col</span><span class="o">=</span><span class="s1">&#39;INTERPRETATION&#39;</span><span class="p">,</span> <span class="n">target_col</span><span class="o">=</span><span class="s1">&#39;TARGET&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to add control points, primarily to aid in interpolation. This may be useful when conditions are known but do not exist in input well database</span>
+
+<span class="c1">#Read raw data by text</span>
+<div class="viewcode-block" id="read_raw_csv">
+<a class="viewcode-back" href="../../w4h.read.html#w4h.read_raw_csv">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_raw_csv</span><span class="p">(</span><span class="n">data_filepath</span><span class="p">,</span> <span class="n">metadata_filepath</span><span class="p">,</span> <span class="n">data_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metadata_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xcol</span><span class="o">=</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="n">well_key</span><span class="o">=</span><span class="s1">&#39;API_NUMBER&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;latin-1&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">read_csv_kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Easy function to read raw .txt files output from (for example), an Access database</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    df_without_control : pandas.DataFrame</span>
-<span class="sd">        Dataframe with current working data</span>
-<span class="sd">    df_control : str, pathlib.Purepath, or pandas.DataFrame</span>
-<span class="sd">        Pandas dataframe with control points</span>
-<span class="sd">    well_key : str, optional</span>
-<span class="sd">        The column containing the &quot;key&quot; (unique identifier) for each well, by default &#39;API_NUMBER&#39;</span>
-<span class="sd">    xcol : str, optional</span>
-<span class="sd">        The column in df_control containing the x coordinates for each control point, by default &#39;LONGITUDE&#39;</span>
-<span class="sd">    ycol : str, optional</span>
-<span class="sd">        The column in df_control containing the y coordinates for each control point, by default &#39;LATITUDE&#39;</span>
-<span class="sd">    zcol : str, optional</span>
-<span class="sd">        The column in df_control containing the z coordinates for each control point, by default &#39;ELEV_FT&#39;</span>
-<span class="sd">    controlpoints_crs : str, optional</span>
-<span class="sd">        The column in df_control containing the crs of points, by default &#39;EPSG:4269&#39;</span>
-<span class="sd">    output_crs : str, optional</span>
-<span class="sd">        The output coordinate system, by default &#39;EPSG:5070&#39;</span>
-<span class="sd">    description_col : str, optional</span>
-<span class="sd">        The column in df_control with the description (if this is used), by default &#39;FORMATION&#39;</span>
-<span class="sd">    interp_col : str, optional</span>
-<span class="sd">        The column in df_control with the interpretation (if this is used), by default &#39;INTERPRETATION&#39;</span>
-<span class="sd">    target_col : str, optional</span>
-<span class="sd">        The column in df_control with the target code (if this is used), by default &#39;TARGET&#39;</span>
-<span class="sd">    verbose : bool, optional</span>
-<span class="sd">        Whether to print information to terminal, by default False</span>
-<span class="sd">    log : bool, optional</span>
-<span class="sd">        Whether to log information in log file, by default False</span>
-<span class="sd">    **kwargs</span>
-<span class="sd">        Keyword arguments of pandas.concat() or pandas.read_csv that will be passed to that function, except for objs, which are df and df_control</span>
+<span class="sd">    data_filepath : str</span>
+<span class="sd">        Filename of the file containing data, including the extension.</span>
+<span class="sd">    metadata_filepath : str</span>
+<span class="sd">        Filename of the file containing metadata, including the extension.</span>
+<span class="sd">    data_cols : list, default = None</span>
+<span class="sd">        List with strings with names of columns from txt file to keep after reading. If None, [&quot;API_NUMBER&quot;,&quot;TABLE_NAME&quot;,&quot;FORMATION&quot;,&quot;THICKNESS&quot;,&quot;TOP&quot;,&quot;BOTTOM&quot;], by default None.</span>
+<span class="sd">    metadata_cols : list, default = None</span>
+<span class="sd">        List with strings with names of columns from txt file to keep after reading. If None, [&#39;API_NUMBER&#39;,&quot;TOTAL_DEPTH&quot;,&quot;SECTION&quot;,&quot;TWP&quot;,&quot;TDIR&quot;,&quot;RNG&quot;,&quot;RDIR&quot;,&quot;MERIDIAN&quot;,&quot;QUARTERS&quot;,&quot;ELEVATION&quot;,&quot;ELEVREF&quot;,&quot;COUNTY_CODE&quot;,&quot;LATITUDE&quot;,&quot;LONGITUDE&quot;,&quot;ELEVSOURCE&quot;], by default None</span>
+<span class="sd">    x_col : str, default = &#39;LONGITUDE&#39;</span>
+<span class="sd">        Name of column in metadata file indicating the x-location of the well, by default &#39;LONGITUDE&#39;</span>
+<span class="sd">    ycol : str, default = &#39;LATITUDE&#39;</span>
+<span class="sd">        Name of the column in metadata file indicating the y-location of the well, by default &#39;LATITUDE&#39;</span>
+<span class="sd">    well_key : str, default = &#39;API_NUMBER&#39;</span>
+<span class="sd">        Name of the column with the key/identifier that will be used to merge data later, by default &#39;API_NUMBER&#39;</span>
+<span class="sd">    encoding : str, default = &#39;latin-1&#39;</span>
+<span class="sd">        Encoding of the data in the input files, by default &#39;latin-1&#39;</span>
+<span class="sd">    verbose : bool, default = False</span>
+<span class="sd">        Whether to print the number of rows in the input columns, by default False</span>
+<span class="sd">    log : bool, default = False</span>
+<span class="sd">        Whether to log inputs and outputs to log file.</span>
+<span class="sd">    **read_csv_kwargs</span>
+<span class="sd">        **kwargs that get passed to pd.read_csv()</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (pandas.DataFrame, pandas.DataFrame/None)</span>
+<span class="sd">        Tuple/list with two pandas dataframes: (well_data, metadata) metadata is None if only well_data is used</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="n">verbose_print</span><span class="p">(</span><span class="n">read_raw_csv</span><span class="p">,</span> <span class="nb">locals</span><span class="p">())</span>
+    <span class="c1">#Check if input data is already dataframe, otherwise, read it in as dataframe</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data_filepath</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data_filepath</span><span class="p">,</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">):</span>
+        <span class="n">downholeDataIN</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">data_filepath</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="s1">&#39;infer&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">,</span> <span class="o">**</span><span class="n">read_csv_kwargs</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">data_cols</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">data_useCols</span> <span class="o">=</span> <span class="n">downholeDataIN</span><span class="o">.</span><span class="n">columns</span>
+    <span class="k">elif</span> <span class="n">data_cols</span> <span class="o">==</span> <span class="s1">&#39;auto&#39;</span><span class="p">:</span>
+        <span class="n">data_useCols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;API_NUMBER&quot;</span><span class="p">,</span><span class="s2">&quot;TABLE_NAME&quot;</span><span class="p">,</span><span class="s2">&quot;FORMATION&quot;</span><span class="p">,</span><span class="s2">&quot;THICKNESS&quot;</span><span class="p">,</span><span class="s2">&quot;TOP&quot;</span><span class="p">,</span><span class="s2">&quot;BOTTOM&quot;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">data_useCols</span><span class="o">=</span> <span class="n">data_cols</span>
+    <span class="n">downholeDataIN</span> <span class="o">=</span> <span class="n">downholeDataIN</span><span class="p">[</span><span class="n">data_useCols</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">metadata_filepath</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">headerDataIN</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metadata_filepath</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metadata_filepath</span><span class="p">,</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">):</span>
+        <span class="n">headerDataIN</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">metadata_filepath</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="s1">&#39;infer&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">,</span> <span class="o">**</span><span class="n">read_csv_kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">headerDataIN</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">metadata_cols</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">headerDataIN</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">metadata_useCols</span> <span class="o">=</span> <span class="n">headerDataIN</span><span class="o">.</span><span class="n">columns</span>
+    <span class="k">elif</span> <span class="n">metadata_cols</span> <span class="o">==</span> <span class="s1">&#39;auto&#39;</span><span class="p">:</span>
+        <span class="n">metadata_useCols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;API_NUMBER&#39;</span><span class="p">,</span><span class="s2">&quot;TOTAL_DEPTH&quot;</span><span class="p">,</span><span class="s2">&quot;SECTION&quot;</span><span class="p">,</span><span class="s2">&quot;TWP&quot;</span><span class="p">,</span><span class="s2">&quot;TDIR&quot;</span><span class="p">,</span><span class="s2">&quot;RNG&quot;</span><span class="p">,</span><span class="s2">&quot;RDIR&quot;</span><span class="p">,</span><span class="s2">&quot;MERIDIAN&quot;</span><span class="p">,</span><span class="s2">&quot;QUARTERS&quot;</span><span class="p">,</span><span class="s2">&quot;ELEVATION&quot;</span><span class="p">,</span><span class="s2">&quot;ELEVREF&quot;</span><span class="p">,</span><span class="s2">&quot;COUNTY_CODE&quot;</span><span class="p">,</span><span class="s2">&quot;LATITUDE&quot;</span><span class="p">,</span><span class="s2">&quot;LONGITUDE&quot;</span><span class="p">,</span><span class="s2">&quot;ELEVSOURCE&quot;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">metadata_useCols</span><span class="o">=</span> <span class="n">metadata_cols</span>
+
+    <span class="k">if</span> <span class="n">headerDataIN</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">headerDataIN</span> <span class="o">=</span> <span class="n">headerDataIN</span><span class="p">[</span><span class="n">metadata_useCols</span><span class="p">]</span>
+        
+    <span class="c1">#Drop data with no API        </span>
+    <span class="n">downholeDataIN</span> <span class="o">=</span> <span class="n">downholeDataIN</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="n">well_key</span><span class="p">])</span> <span class="c1">#Drop data with no API</span>
+    <span class="k">if</span> <span class="n">headerDataIN</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">headerDataIN</span> <span class="o">=</span> <span class="n">headerDataIN</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="n">well_key</span><span class="p">])</span> <span class="c1">#Drop metadata with no API</span>
+
+        <span class="c1">#Drop data with no or missing location information</span>
+        <span class="n">headerDataIN</span> <span class="o">=</span> <span class="n">headerDataIN</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="n">ycol</span><span class="p">])</span> 
+        <span class="n">headerDataIN</span> <span class="o">=</span> <span class="n">headerDataIN</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="n">xcol</span><span class="p">])</span>
+
+        <span class="c1">#Reset index so index goes from 0 in numerical/integer order</span>
+        <span class="n">headerDataIN</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1">#***UPDATE: Need to make sure these columns exist in this case***</span>
+        <span class="c1">#Drop data with no or missing location information</span>
+        <span class="n">downholeDataIN</span> <span class="o">=</span> <span class="n">downholeDataIN</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="n">ycol</span><span class="p">])</span> 
+        <span class="n">downholeDataIN</span> <span class="o">=</span> <span class="n">downholeDataIN</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="n">xcol</span><span class="p">])</span>        
+    <span class="n">downholeDataIN</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="c1">#Print outputs to terminal, if designated</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">Data file has &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">downholeDataIN</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">+</span><span class="s1">&#39; valid well records.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">headerDataIN</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Metadata file has &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">headerDataIN</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">+</span><span class="s2">&quot; unique wells with valid location information.&quot;</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">downholeDataIN</span><span class="p">,</span> <span class="n">headerDataIN</span></div>
+
+
+
+<span class="c1">#Read file with xyz data</span>
+<div class="viewcode-block" id="read_xyz">
+<a class="viewcode-back" href="../../w4h.read.html#w4h.read_xyz">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_xyz</span><span class="p">(</span><span class="n">xyzpath</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to read file containing xyz data (elevation/location)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    xyzpath : str or pathlib.Path</span>
+<span class="sd">        Filepath of the xyz file, including extension</span>
+<span class="sd">    datatypes : dict, default = None</span>
+<span class="sd">        Dictionary containing the datatypes for the columns int he xyz file. If None, {&#39;ID&#39;:np.uint32,&#39;API_NUMBER&#39;:np.uint64,&#39;LATITUDE&#39;:np.float64,&#39;LONGITUDE&#39;:np.float64,&#39;ELEV_FT&#39;:np.float64}, by default None</span>
+<span class="sd">    verbose : bool, default = False</span>
+<span class="sd">        Whether to print the number of xyz records to the terminal, by default False</span>
+<span class="sd">    log : bool, default = False</span>
+<span class="sd">        Whether to log inputs and outputs to log file.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    pandas.DataFrame</span>
-<span class="sd">        Pandas DataFrame with original data and control points formatted the same way and concatenated together</span>
+<span class="sd">        Pandas dataframe containing the elevation and location data</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="n">verbose_print</span><span class="p">(</span><span class="n">add_control_points</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;df_without_control&#39;</span><span class="p">,</span> <span class="s1">&#39;df_control&#39;</span><span class="p">])</span>
+        <span class="n">verbose_print</span><span class="p">(</span><span class="n">read_xyz</span><span class="p">,</span> <span class="nb">locals</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">datatypes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">xyzDTypes</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;ID&#39;</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">,</span><span class="s1">&#39;API_NUMBER&#39;</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">,</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span><span class="s1">&#39;ELEV_FT&#39;</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">}</span>
 
-    <span class="k">if</span> <span class="n">df_control</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">df_without_control</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">df_control</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">df_control</span><span class="p">,</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">):</span>
-        <span class="k">pass</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">read_csv_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">locals</span><span class="p">()[</span><span class="s1">&#39;kwargs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
-        <span class="n">df_control</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">df_control</span><span class="p">,</span> <span class="o">**</span><span class="n">read_csv_kwargs</span><span class="p">)</span>
+    <span class="n">xyzDataIN</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">xyzpath</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="s1">&#39;infer&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">xyzDTypes</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="s1">&#39;ID&#39;</span><span class="p">)</span>
     
-    <span class="c1">#Drop unnecessary columns, if needed</span>
-    <span class="k">if</span> <span class="n">target_col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df_without_control</span><span class="o">.</span><span class="n">columns</span> <span class="ow">and</span> <span class="n">target_col</span> <span class="ow">in</span> <span class="n">df_control</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-        <span class="n">df_control</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="n">target_col</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        
-    <span class="k">if</span> <span class="n">interp_col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df_without_control</span><span class="o">.</span><span class="n">columns</span> <span class="ow">and</span> <span class="n">interp_col</span> <span class="ow">in</span> <span class="n">df_control</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-        <span class="n">df_control</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="n">interp_col</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        
-    <span class="k">if</span> <span class="n">description_col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df_without_control</span><span class="o">.</span><span class="n">columns</span> <span class="ow">and</span> <span class="n">description_col</span> <span class="ow">in</span> <span class="n">df_control</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-        <span class="n">df_control</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="n">description_col</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>            
-        
-    <span class="c1">#If our main df is already a geodataframe, make df_control one too</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">df_without_control</span><span class="p">,</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">w4h</span> <span class="kn">import</span> <span class="n">coords2geometry</span>
-        <span class="n">gdf_control</span> <span class="o">=</span> <span class="n">coords2geometry</span><span class="p">(</span><span class="n">df_no_geometry</span><span class="o">=</span><span class="n">df_control</span><span class="p">,</span> <span class="n">xcol</span><span class="o">=</span><span class="n">xcol</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="n">ycol</span><span class="p">,</span> <span class="n">zcol</span><span class="o">=</span><span class="n">zcol</span><span class="p">,</span> <span class="n">input_coords_crs</span><span class="o">=</span><span class="n">controlpoints_crs</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
-
-    <span class="c1">#Get kwargs passed to pd.concat, and set defaults for ignore_index and join</span>
-    <span class="n">concat_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">locals</span><span class="p">()[</span><span class="s1">&#39;kwargs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
-    <span class="k">if</span> <span class="s1">&#39;ignore_index&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">concat_kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="n">concat_kwargs</span><span class="p">[</span><span class="s1">&#39;ignore_index&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="k">if</span> <span class="s1">&#39;join&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">concat_kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="n">concat_kwargs</span><span class="p">[</span><span class="s1">&#39;join&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;outer&#39;</span>
-        
-    <span class="n">gdf</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df_without_control</span><span class="p">,</span> <span class="n">gdf_control</span><span class="p">],</span> <span class="o">**</span><span class="n">concat_kwargs</span><span class="p">)</span>
-    
-    <span class="k">if</span> <span class="n">controlpoints_crs</span> <span class="o">!=</span> <span class="n">output_crs</span><span class="p">:</span>
-        <span class="n">gdf</span> <span class="o">=</span> <span class="n">gdf</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">output_crs</span><span class="p">)</span>
-    
-    <span class="k">return</span> <span class="n">gdf</span></div>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;XYZ file has &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">xyzDataIN</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">+</span><span class="s1">&#39; records with elevation and location.&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">xyzDataIN</span></div>
 
 </pre></div>
 
