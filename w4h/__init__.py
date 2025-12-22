@@ -38,6 +38,7 @@ from w4h.layers import (get_layer_depths,
                         merge_metadata,
                         layer_target_thick,
                         layer_interp,
+                        natural_neighbor_interp,
                         combine_dataset)
 
 from w4h.mapping import (read_study_area,
@@ -96,6 +97,7 @@ __all__ = ('logger_function', 'verbose_print', 'run', 'get_resources',
            'merge_metadata',
            'layer_target_thick',
            'layer_interp',
+           "natural_neighbor_interp",
            'combine_dataset',
            # Mapping
            'read_study_area',

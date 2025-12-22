@@ -10,10 +10,12 @@ import pathlib
 
 import xarray as xr
 import geopandas as gpd
-import pandas as pd
+import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from scipy import interpolate
-from scipy.spatial import Voronoi
+from scipy.spatial import Voronoi, voronoi_plot_2d
+from shapely import Point, Polygon, wkt
 
 import w4h
 from w4h import logger_function, verbose_print
@@ -677,9 +679,267 @@ def layer_interp(points, model_grid, layers=None, interp_kind='nearest',
     return interp_data
 
 
-# Implementation of natural neighbor interpolation algorithm
-def natural_neighbor_interp(points, model_grid, layers=None, ):
-    return Voronoi(points=points)
+def natural_neighbor_interp(points, model_grid=None, parallelize=False,
+                            well_id='API_NUMBER', interp_value='ELEVATION',
+                            xcoord='LONGITUDE', ycoord='LATITUDE', elev="ELEVATION",
+                            show_points=False, sparsity_factor=10,
+                            show_plot=False, show_adjacent_regions=False, show_voronoi=False,
+                            time_segments=False, layers=None, ):
+    time0 = datetime.datetime.now()
+    model_grid_IN = rxr.open_rasterio(model_grid)
+    
+    interp_grid = model_grid_IN[:, ::sparsity_factor, ::sparsity_factor]
+    interp_grid = interp_grid.rio.reproject(4326)
+
+    uniqueWellDF = points.drop_duplicates(subset=well_id)[[well_id, xcoord, ycoord, elev, 'geometry']].reset_index(drop=True)
+    
+    uniqueWellDF['geometry'] = uniqueWellDF['geometry'].apply(wkt.loads)
+    uniqueWellDF = gpd.GeoDataFrame(uniqueWellDF, geometry='geometry', crs=4326)
+    
+    minx, miny, maxx, maxy = uniqueWellDF.total_bounds
+    interp_grid = interp_grid.rio.clip_box(minx=minx, miny=miny, maxx=maxx, maxy=maxy)
+    
+    wellPtList = []
+    wellValueList = []
+    valueField = 'ELEVATION'
+    for i, well in uniqueWellDF.iterrows():
+        wellPtList.append([well['LONGITUDE'], well["LATITUDE"]])
+        wellValueList.append(float(well[valueField]))
+    wellPtArr = np.array(wellPtList)
+
+    if show_points:
+        uniqueWellDF.plot(c=uniqueWellDF[interp_value], vmin=400, vmax=600)#xcoord, ycoord, kind='scatter')
+        plt.show()
+
+    wellPtList = []
+    wellValueList = []
+    for i, well in uniqueWellDF.iterrows():
+        wellPtList.append([well[xcoord], well[ycoord]])
+        wellValueList.append(float(well[interp_value]))
+
+    vClass = Voronoi(points=wellPtArr)
+    if time_segments:
+        thisTime = lastTime = datetime.datetime.now()
+        print(f"Voronoi time:  {thisTime-time0}")
+
+    if show_voronoi:
+        voronoi_plot_2d(vClass)
+        plt.show()
+
+    # Get vertices as variable
+    verts = vClass.vertices
+
+    # Iterate through all coordinates for interpolation
+    # CODE HERE FOR ITERATING THROUGH COORDS?
+    #newPoint = Point([-90.1, 38.7])
+    
+    def _vectorized_nat_neighbor(x, y, time_segments=time_segments):
+        newPoint = Point([x, y])
+        lastTime = datetime.datetime.now()
+        
+        # Find region containing the "newPoint" (point for interpolation)
+        polygonList = []
+        polyRegInd = []
+        containingRegion = None
+        for i, region in enumerate(vClass.regions):
+            # Create (valid) shapely polygon for each region using vertices
+            vertList = [verts[v].tolist() for v in region if v != -1]
+            if len(vertList) > 0 and vertList[0] != vertList[-1]:
+                vertList.append(vertList[0])
+
+            if len(vertList) == 0:
+                continue
+            currPoly = Polygon(vertList)
+
+            # If polygon contains the point, record and break loop
+            if currPoly.is_valid and currPoly.contains(newPoint) and containingRegion is None:
+                containingRegion = currPoly
+                containingRegionIndex = i
+                break
+            polygonList.append(currPoly)
+            polyRegInd.append(i)
+
+        if containingRegion is None:
+            #print("Polygon is invalid or no overlapping polygons with point")
+            return np.nan
+
+        if time_segments:
+            thisTime = datetime.datetime.now()
+            print(f"Make Initial Polygons time:  {thisTime-lastTime}")
+            lastTime = datetime.datetime.now()
+
+        # Get all regions that touch containing region
+        # UPDATE THIS WITH GEOPANDAS FOR EFFICIENCY!!!!!!
+        regionAndAdjacents = [containingRegion]
+        regionIndices = [containingRegionIndex]
+        for i, region in enumerate(polygonList):
+            touchCondition = containingRegion.touches(region)
+
+            if touchCondition:
+                regionAndAdjacents.append(region)
+                regionIndices.append(polyRegInd[i])
+
+        # Now, get second layer of regions
+        # UPDATE THIS WITH GEOPANDAS FOR EFFICIENCY!!!!!!
+        regionAndAdjacents2 = regionAndAdjacents.copy()
+        for i, region in enumerate(regionAndAdjacents2):
+            for j, regInd in enumerate(vClass.point_region):
+                regionVerts = [verts[v].tolist() for v in vClass.regions[regInd]]
+                currPoly = Polygon(regionVerts)
+                if region.touches(currPoly) and currPoly.is_valid and regInd not in regionIndices:
+                    regionAndAdjacents.append(currPoly)
+                    regionIndices.append(int(regInd))
+
+        if time_segments:
+            thisTime = datetime.datetime.now()
+            print(f"Get all adjacent and semi-adjacent Polygons:  {thisTime-lastTime}")
+            lastTime = datetime.datetime.now()
+
+        # Get points and values for interpolation
+        nearPoints = [newPoint.coords[0]]
+        nearValues = [None]
+        vPR = list(vClass.point_region)
+        for ind in regionIndices:
+            nearValues.append(wellValueList[vPR.index(ind)])
+            nearPoints.append(vClass.points[vPR.index(ind)].tolist())
+        regGS = gpd.GeoDataFrame(zip(regionIndices, regionAndAdjacents), columns=['RegionIndices', 'geometry'], crs=4326)
+
+        if time_segments:
+            thisTime = datetime.datetime.now()
+            print(f"Extract points for interpolation:  {thisTime-lastTime}")
+            lastTime = datetime.datetime.now()
+
+        # Plot regions and points
+        if show_adjacent_regions:
+            x, y = zip(*nearPoints)
+            fig, ax = plt.subplots(figsize=(10,10))
+            ax.scatter(x, y, c=nearValues)
+
+            regGS.plot(ax=ax, facecolor='#00000000', edgecolor='k')
+            ax.scatter(x=newPoint.xy[0], y=newPoint.xy[1], c='k', marker='+')
+            [ax.text(x=x[i], y=y[i], s=f"{nv:.0f}") for i, nv in enumerate(nearValues) if i!=0]
+            plt.show()
+            if time_segments:
+                thisTime = datetime.datetime.now()
+                print(f"Plot adjacent regions:  {thisTime-lastTime}")
+                lastTime = datetime.datetime.now()
+
+        # Create new voronoi only with points with regions nearby to new point (to reduce computational cost)
+        nearbyVor = Voronoi(points=nearPoints)
+        if time_segments:
+            thisTime = datetime.datetime.now()
+            print(f"Generate near voronoi:  {thisTime-lastTime}")
+            lastTime = datetime.datetime.now()
+
+        # Go through just the nearby regions, check validitiy, and get info
+        # (Might be able to just access with indices and save time?)
+        polygons = []
+        for i, region in enumerate(nearbyVor.regions):
+            # Create (valid) shapely polygon for each region using vertices
+            vertList = [verts[v].tolist() for v in region]
+
+            if len(vertList)>0 and vertList[0] != vertList[-1]:
+                vertList.append(vertList[0])
+
+            if len(vertList) < 4:
+                continue
+            
+            currPoly = Polygon(vertList)
+
+            # If polygon contains the point, record and break loop
+            if currPoly.is_valid and currPoly.contains(newPoint) and containingRegion is False:
+                containingRegion = currPoly
+                containingRegionIndex = i
+            polygons.append(currPoly)
+            polyRegInd.append(i)
+
+        if time_segments:
+            thisTime = datetime.datetime.now()
+            print(f"Get nearby polygons:  {thisTime-lastTime}")
+            lastTime = datetime.datetime.now()
+
+        # Get the "New" polygon (the one created for the interpolation point of interest)
+        try:
+            polyOfInterest = Polygon([nearbyVor.vertices[v] for v in nearbyVor.regions[nearbyVor.point_region[0]]])
+        except:
+            return np.nan
+        
+        if not polyOfInterest.is_valid:
+            #print('Polygon of interest is not valid')
+            return np.nan
+
+        # Plot regions nearby point of interest, and overlap of new Voronoi and old
+        if show_plot:
+            fig3, ax3 = plt.subplots()
+            regGS.plot(facecolor="#00000000", edgecolor='k', ax=ax3)
+            x, y = zip(*nearPoints)
+            ax3.scatter(x, y)
+            gpd.GeoSeries([polyOfInterest], crs=4326).plot(facecolor="#00000000", 
+                                                        edgecolor='r', linewidths=5, ax=ax3)
+            if time_segments:
+                thisTime = datetime.datetime.now()
+                print(f"Plot nearby polys and overlap:  {thisTime-lastTime}")
+                lastTime = datetime.datetime.now()
+            plt.show()
+            
+        # Check which regions overlap and their areas
+        intersectionAreas = []
+        intersectionValues = []
+        for row, reg in regGS.iterrows():
+            if reg['geometry'].intersects(polyOfInterest):
+                intersectionAreas.append(polyOfInterest.intersection(reg['geometry']).area)
+                intersectionValues.append(float(wellValueList[vPR.index(reg['RegionIndices'])]))            
+
+        # Calculate weights
+        weights = np.array(intersectionAreas)/np.nansum(intersectionAreas)
+        if time_segments:
+            thisTime = datetime.datetime.now()
+            print(f"Calculate weights:  {thisTime-lastTime}")
+            lastTime = datetime.datetime.now()
+
+        res = float(np.nansum(weights * intersectionValues))
+        # Calculate and return natural neighbor interpolated value
+        return res
+
+    if parallelize: 
+        x = interp_grid["x"].values
+        y = interp_grid["y"].values
+
+        da_x = xr.DataArray(x, dims="x", coords={"x": x})
+        da_y = xr.DataArray(y, dims="y", coords={"y": y})
+
+        # Broadcast to full grid
+        X, Y = xr.broadcast(da_x, da_y)
+
+        # Apply function vectorized over coordinates
+        result_vec = xr.apply_ufunc(
+            _vectorized_nat_neighbor, X, Y,
+            vectorize=True,
+            #dask="parallelized", # optional if using dask
+            output_dtypes=[float]        
+            )
+
+        print(interp_grid)
+        print(result_vec)
+
+        return xr.DataArray(result_vec.T,
+                            coords={"y": interp_grid.y, "x": interp_grid.x},
+                            dims=("y", "x"))
+    else:
+        print("Starting interpolation at all grid points: ", len(interp_grid['x'].values), 'x', len(interp_grid['y'].values), len(interp_grid['y'].values)*len(interp_grid['x'].values))
+        resultList = []
+        for x in interp_grid['x'].values:
+            innerList = []
+            for y in interp_grid['y'].values:
+                interpVal = _vectorized_nat_neighbor(x, y, time_segments=time_segments)
+                innerList.append(interpVal)
+            resultList.append(innerList)
+    
+    
+        print("Final Size:", np.array(resultList).shape)
+        return xr.DataArray(np.array(resultList).T,
+                            coords={"y": interp_grid.y, "x": interp_grid.x},
+                            dims=("y", "x"))
 
 # Optional, combine dataset
 def combine_dataset(layer_dataset, surface_elev, bedrock_elev, layer_thick, log=False):
