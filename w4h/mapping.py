@@ -28,67 +28,58 @@ from w4h import logger_function, verbose_print
 lidarURL = r'https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WCSServer?request=GetCapabilities&service=WCS'
 
 
-# Read study area shapefile (or other file) into geopandas
-def read_study_area(study_area=None, study_area_crs=None, output_crs='EPSG:5070', buffer=None, return_original=False, log=False, verbose=False, **read_file_kwargs):
-    """Read study area geospatial file into geopandas
+# Align and coregister rasters
+def align_rasters(grids_unaligned=None, model_grid=None,
+                  no_data_val_grid=0, verbose=False, log=False):
+    """Reprojects two rasters and aligns their pixels
 
     Parameters
     ----------
-    study_area : str, pathlib.Path, geopandas.GeoDataFrame, or shapely.Geometry
-        Filepath to any geospatial file readable by geopandas. 
-        Polygon is best, but may work with other types if extent is correct.
-        If shapely.Geometry, the crs should also be specified using a valid input to gpd.GeoDataFrame(crs=<crs>).
-    study_area_crs : str, tuple, dict, optional
-        Not needed unless CRS must be read in manually (e.g, with a shapely.Geometry). CRS designation readable by geopandas/pyproj.
-    output_crs : str, tuple, dict, optional
-        CRS to transform study_area to before returning. CRS designation should be readable by geopandas/pyproj. By default, 'EPSG:5070'.
-    buffer : None or numeric, default=None
-        If None, no buffer created. If a numeric value is given (float or int, for example), a buffer will be created at that distance in the unit of the study_area_crs.
-    return_original : bool, default=False
-        Whether to return the (reprojected) study area as well as the (reprojected) buffered study area. Study area is only used for clipping data, so usually return_original=False is sufficient.
+    grids_unaligned : list or xarray.DataArray
+        Contains a list of grids or one unaligned grid
+    model_grid : xarray.DataArray
+        Contains model grid
+    no_data_val_grid : int, default=0
+        Sets value of no data pixels
     log : bool, default = False
         Whether to log results to log file, by default False
-    verbose : bool, default=False
-        Whether to print status and results to terminal
 
     Returns
     -------
-    studyAreaIN : geopandas dataframe
-        Geopandas dataframe with polygon geometry.
+    alignedGrids : list or xarray.DataArray
+        Contains aligned grids
     """
     
-    if study_area is None:
-        if verbose:
-            print("\tNo study_area specified, using the study area in the included sample data.")
-        study_area = w4h.get_resources()['study_area']
+    if grids_unaligned is None:
+        grids_unaligned = [w4h.get_resources()['surf_elev'], w4h.get_resources()['bedrock_elev']]
+    if model_grid is None:
+        model_grid = w4h.get_resources()['model_grid']
 
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
-        verbose_print(read_study_area, locals())
-    
-    if isinstance(study_area, (gpd.GeoDataFrame, gpd.GeoSeries)):
-        studyAreaIN = study_area
-    elif isinstance(study_area, shapely.Geometry):
-        studyAreaIN = gpd.GeoDataFrame(index=[0], crs=study_area_crs, geometry=[study_area])
+        verbose_print(align_rasters, locals(), exclude_params=['grids_unaligned', 'model_grid'])
+    if isinstance(grids_unaligned, (tuple, list)):
+        alignedGrids = []
+        for g in grids_unaligned:
+            alignedGrid = g.rio.reproject_match(model_grid)
+
+            try:
+                no_data_val_grid = alignedGrid.attrs['_FillValue'] #Extract from dataset itself
+            except:
+                pass
+            alignedGrid = alignedGrid.where(alignedGrid != no_data_val_grid)  #Replace no data values with NaNs
+            alignedGrids.append(alignedGrid)
     else:
-        studyAreaIN = gpd.read_file(study_area, **read_file_kwargs)
-    studyAreaIN.to_crs(output_crs, inplace=True)
+        alignedGrid = grids_unaligned.rio.reproject_match(model_grid)
 
-    # Create a buffered study area for clipping
-    if buffer is not None:
-        if return_original:
-            studyAreaNoBuffer = studyAreaIN
-        studyAreaIN = studyAreaIN.buffer(distance=buffer)
+        try:
+            noDataVal = alignedGrid.attrs['_FillValue'] #Extract from dataset itself
+        except:
+            pass
+
+        alignedGrids = alignedGrid.where(alignedGrid != noDataVal, other=np.nan)  #Replace no data values with NaNs
         
-        if verbose:
-            print('\tBuffer applied.')
-    
-    if verbose:
-        print("\tStudy area read.")
-
-    if return_original:
-        return studyAreaIN, studyAreaNoBuffer
-    return studyAreaIN
+    return alignedGrids
 
 
 # Convert coords in columns to geometry in geopandas dataframe
@@ -189,118 +180,443 @@ def clip_gdf2study_area(study_area, gdf, log=False, verbose=False):
     return gdfClip
 
 
-# Function to sample raster points to points specified in geodataframe
-def sample_raster_points(raster=None, points_df=None, 
-            well_id_col='API_NUMBER', xcol='LONGITUDE', ycol='LATITUDE', new_col='SAMPLED', 
-            verbose=False, log=False):  
-    """Sample raster values to points from geopandas geodataframe.
+# Get drift and layer thickness, given a surface and bedrock grid
+def get_drift_thick(surface_elev=None, bedrock_elev=None, layers=9, plot=False, verbose=False, log=False):
+    """Finds the distance from surface_elev to bedrock_elev and then divides by number of layers to get layer thickness.
 
     Parameters
     ----------
-    raster : rioxarray data array
-        Raster containing values to be sampled.
-    points_df : geopandas.geodataframe
-        Geopandas dataframe with geometry column containing point values to sample.
-    well_id_col : str, default="API_NUMBER"
-        Column that uniquely identifies each well so multiple sampling points are not taken per well
-    xcol : str, default='LONGITUDE'
-        Column containing name for x-column, by default 'LONGITUDE.'
-        This is used to output (potentially) reprojected point coordinates so as not to overwrite the original.
-    ycol : str, default='LATITUDE'
-        Column containing name for y-column, by default 'LATITUDE.'
-        This is used to output (potentially) reprojected point coordinates so as not to overwrite the original.    new_col : str, optional
-    new_col : str, default='SAMPLED'
-        Name for name of new column containing points sampled from the raster, by default 'SAMPLED'.
-    verbose : bool, default=True
-        Whether to send to print() information about progress of function, by default True.
+    surface_elev : rioxarray.DataArray
+        array holding surface elevation
+    bedrock_elev : rioxarray.DataArray
+        array holding bedrock elevation
+    layers : int, default=9
+        number of layers needed to calculate thickness for
+    plot : bool, default=False
+        tells function to either plot the data or not
+
+    Returns
+    -------
+    driftThick : rioxarray.DataArray
+        Contains data array containing depth to bedrock at each point
+    layerThick : rioxarray.DataArray
+        Contains data array with layer thickness at each point
+
+    """
+    
+    if surface_elev is None:
+        surface_elev = w4h.get_resources()['surf_elev']
+    if bedrock_elev is None:
+        bedrock_elev = w4h.get_resources()['bedrock_elev']
+    
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+    if verbose:
+        verbose_print(get_drift_thick, locals(), exclude_params=['surface_elev', 'bedrock_elev'])
+    xr.set_options(keep_attrs=True)
+
+    driftThick = surface_elev - bedrock_elev
+    driftThick = driftThick.clip(0,max=5000,keep_attrs=True)
+    if plot:
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+        maxThick = np.nanmax(driftThick)
+        if maxThick > 550:
+            maxThick = 550
+        dtPlot = driftThick.plot(vmin=0, vmax=maxThick, ax=ax)
+        ax.set_title("Drift Thickness")
+    try:
+        noDataVal = driftThick.attrs['_FillValue'] #Extract from dataset itself
+    except:
+        noDataVal = 100001
+    
+    driftThick = driftThick.where(driftThick <100000, other=np.nan)  #Replace no data values with NaNs
+    driftThick = driftThick.where(driftThick >-100000, other=np.nan)  #Replace no data values with NaNs
+
+    layerThick = driftThick/layers
+    
+    xr.set_options(keep_attrs='default')
+
+    return driftThick, layerThick
+
+
+# Clip a grid to a study area
+def grid2study_area(study_area, grid, output_crs='EPSG:5070',verbose=False, log=False):
+    """Clips grid to study area.
+
+    Parameters
+    ----------
+    study_area : geopandas.GeoDataFrame
+        inputs study area polygon
+    grid : xarray.DataArray
+        inputs grid array
+    output_crs : str, default='EPSG:5070'
+        inputs the coordinate reference system for the study area
     log : bool, default = False
         Whether to log results to log file, by default False
 
     Returns
     -------
-    points_df : geopandas.geodataframe
-        Same as points_df, but with sampled values and potentially with reprojected coordinates.
+    grid : xarray.DataArray
+        returns xarray containing grid clipped only to area within study area
+
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-
-    if raster is None:
-        raster = w4h.get_resources()['surf_elev']
-    if points_df is None:
-        points_df = w4h.get_resources()['well_data']
-
     if verbose:
-        verbose_print(sample_raster_points, locals(), exclude_params=['raster', 'points_df'])
-        print(f"\tSampling {new_col} grid for at all well locations.")
+        verbose_print(grid2study_area, locals(), exclude_params=['study_area', 'grid'])
+    
+    if output_crs=='':
+        output_crs=study_area.crs
 
-    #Project points to raster CRS
-    rastercrsWKT=raster.spatial_ref.crs_wkt
-    if rastercrsWKT != points_df.crs:
+    #Get input CRS's
+    grid_crs = pyproj.CRS.from_wkt(grid.rio.crs.to_wkt())
+    study_area_crs = study_area.crs
+    
+    # Reproject if needed
+    if output_crs != grid_crs:
+        grid = grid.rio.reproject(output_crs)
+    grid_crs = pyproj.CRS.from_wkt(grid.rio.crs.to_wkt())
+
+    if grid_crs != study_area_crs:
+        study_area = study_area.to_crs(grid_crs)   
+
+    # We'll just clip to outer bounds of study area
+    saExtent = study_area.total_bounds
+
+    if grid['y'][-1].values - grid['y'][0].values > 0:
+        miny=saExtent[1]
+        maxy=saExtent[3]
+    else:
+        miny=saExtent[3]
+        maxy=saExtent[1]        
+        
+    if grid['x'][-1].values - grid['x'][0].values > 0:
+        minx=saExtent[0]
+        maxx=saExtent[2]
+    else:
+        minx=saExtent[2]
+        maxx=saExtent[0]
+    
+    # "Clip" it
+    grid = grid.sel(x=slice(minx, maxx), y=slice(miny, maxy))
+    if 'band' in grid.dims:
+        grid = grid.sel(band=1)
+
+    return grid
+
+
+# Read a grid from a file in using rioxarray
+def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service=False, study_area=None,  grid_crs=None, output_crs='EPSG:5070', verbose=False, log=False, **kwargs):
+    """Reads in grid
+
+    Parameters
+    ----------
+    grid_path : str or pathlib.Path, default=None
+        Path to a grid file
+    grid_type : str, default='model'
+        Sets what type of grid to load in
+    no_data_val_grid : int, default=0
+        Sets the no data value of the grid
+    use_service : str, default=False
+        Sets which service the function uses
+    study_area : geopandas.GeoDataFrame, default=None
+        Dataframe containing study area polygon
+    grid_crs : str, default=None
+        Sets crs to use if clipping to study area
+    log : bool, default = False
+        Whether to log results to log file, by default False
+
+    Returns
+    -------
+    gridIN : xarray.DataArray
+        Returns grid
+    
+    """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+    if verbose:
+        verbose_print(read_grid, locals(), exclude_params=['study_area'])
+
+    # Get study area and study_areaa_crs situated first
+    if study_area is not None:
+        if not isinstance(study_area, gpd.GeoDataFrame):
+            if isinstance(study_area, (str, pathlib.Path)) or pathlib.Path(study_area).exists():
+                if verbose:
+                    print(f"\tThe study_area parameter is not a geopandas.GeoDataframe object. Attempting to read now.")
+                    
+                study_area_kwargs = {k: v for k, v in kwargs.items() if k in inspect.signature(read_study_area).parameters.keys()}
+                study_area = read_study_area(study_area=study_area, output_crs=output_crs, verbose=verbose, log=log, **study_area_kwargs)
+            else:
+                raise RuntimeError(f'\tstudy_area={study_area} was specified, but this is not a geopandas.GeoDataFrame and cannot be read by w4h.read_study_area()')
+        
+        study_area_crs = study_area.crs
+    
+        if study_area_crs is None:
+            study_area_crs = study_area.crs
+        study_area = study_area.to_crs(output_crs)
+        study_area_crs = study_area.crs
+
+    if isinstance(grid_path, (xr.DataArray, xr.Dataset)):
+        gridIN = grid_path
+
+        if study_area is not None:
+            if grid_crs is None:
+                try:
+                    grid_crs = pyproj.CRS.from_wkt(gridIN.rio.crs.to_wkt())
+                except Exception:
+                    if verbose:
+                        print(f"\t CRS could not be extracted from grid itself. Assuming sample CRS:\n\t {w4h.get_resources()['ISWS_CRS']}")
+                    iswsCRS = pyproj.CRS.from_json_dict(w4h.read_dict(w4h.get_resources()['ISWS_CRS']))
+                    gridIN.rio.write_crs(iswsCRS)
+            elif grid_crs.lower() == 'isws':
+                iswsCRS = pyproj.CRS.from_json_dict(w4h.read_dict(w4h.get_resources()['ISWS_CRS']))
+                gridIN.rio.write_crs(iswsCRS)
+            else:
+                try:
+                    gridIN.rio.write_crs(grid_crs)
+                except Exception as e:
+                    raise RuntimeError(e)
+
+            gridIN = gridIN.rio.reproject(output_crs)
+            gridIN = grid2study_area(study_area=study_area, grid=gridIN, output_crs=output_crs,)
+        else:
+            gridIN = gridIN.rio.reproject(output_crs)
+            if 'band' in gridIN.dims:
+                gridIN = gridIN.sel(band=1)
+
+    elif grid_type == 'model':
+        if 'read_grid' in list(kwargs.keys()):
+            rgrid = kwargs['read_grid']
+        else:
+            rgrid = True
+            
+        gridIN = read_model_grid(model_grid_path=grid_path, study_area=study_area,  no_data_val_grid=0, read_grid=rgrid, grid_crs=grid_crs, output_crs=output_crs, verbose=verbose)
+    else:
+        if str(use_service).lower() == 'wcs':
+            gridIN = read_wcs(study_area, wcs_url=lidarURL, **kwargs)
+        elif str(use_service).lower() == 'wms':
+            gridIN = read_wms(study_area, wcs_url=lidarURL, **kwargs)
+        elif use_service is True:
+            #Deafults to wms
+            gridIN = read_wms(study_area, wcs_url=lidarURL, **kwargs)
+        else:
+            gridIN = rxr.open_rasterio(grid_path)
+
+        if study_area is not None:
+            if grid_crs is None:
+                try:
+                    grid_crs = pyproj.CRS.from_wkt(gridIN.rio.crs.to_wkt())
+                except Exception:
+                    if verbose:
+                        print(f"\t CRS could not be extracted from grid itself. Assuming sample CRS:\n\t {w4h.get_resources()['ISWS_CRS']}")
+                    iswsCRS = pyproj.CRS.from_json_dict(w4h.read_dict(w4h.get_resources()['ISWS_CRS']))
+                    gridIN.rio.write_crs(iswsCRS)
+            elif grid_crs.lower() == 'isws':
+                iswsCRS = pyproj.CRS.from_json_dict(w4h.read_dict(w4h.get_resources()['ISWS_CRS']))
+                gridIN.rio.write_crs(iswsCRS)
+                
+            gridIN = gridIN.rio.reproject(output_crs)
+            gridIN = grid2study_area(study_area=study_area, grid=gridIN, output_crs=output_crs,)
+        else:
+            gridIN = gridIN.rio.reproject(output_crs)
+            if 'band' in gridIN.dims:
+                gridIN = gridIN.sel(band=1)
+
+        try:
+            no_data_val_grid = gridIN.attrs['_FillValue'] #Extract from dataset itself
+        except:
+            pass
+                
+        gridIN = gridIN.where(gridIN != no_data_val_grid, other=np.nan)  #Replace no data values with NaNs
+    
+    # Remove extra "band" dimension if only a single band
+    if 'band' in gridIN.sizes.keys() and gridIN.sizes['band'] == 1:
+        gridIN = gridIN.isel(band=0)
+
+    if 'band' in gridIN.coords and gridIN.coords['band'].shape == ():
+        gridIN = gridIN.drop_vars('band')
+    
+    return gridIN
+
+
+# Read the model grid into (rio)xarray
+def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_grid=True, node_byspace=True, grid_crs=None, output_crs='EPSG:5070', verbose=False, log=False):
+    """Reads in model grid to xarray data array
+
+    Parameters
+    ----------
+    grid_path : str
+        Path to model grid file
+    study_area : geopandas.GeoDataFrame, default=None
+        Dataframe containing study area polygon
+    no_data_val_grid : int, default=0
+        value assigned to areas with no data
+    readGrid : bool, default=True
+        Whether function to either read grid or create grid
+    node_byspace : bool, default=False
+        Denotes how to create grid
+    output_crs : str, default='EPSG:5070'
+        Inputs study area crs
+    grid_crs : str, default=None
+        Inputs grid crs
+    log : bool, default = False
+        Whether to log results to log file, by default False
+
+    Returns
+    -------
+    modelGrid : xarray.DataArray
+        Data array containing model grid
+    """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+    if verbose:
+        verbose_print(read_model_grid, locals(), exclude_params='study_area')
+    
+    if read_grid and model_grid_path is not None:
+        modelGridIN = rxr.open_rasterio(model_grid_path)
+
+        if grid_crs is None:
+            try:
+                grid_crs=modelGridIN.spatial_ref.crs_wkt
+            except Exception:
+                iswsCRSPath = w4h.get_resources()['ISWS_CRS']
+                iswsCRS = w4h.read_dict(iswsCRSPath, keytype=None)
+                grid_crs = iswsCRS              
+                modelGridIN.rio.write_crs(grid_crs)
+        elif isinstance(grid_crs, str) and grid_crs.lower()=='isws':
+            iswsCRSPath = w4h.get_resources()['ISWS_CRS']
+            iswsCRS = w4h.read_dict(iswsCRSPath, keytype=None)            
+            grid_crs = iswsCRS              
+            modelGridIN.rio.write_crs(grid_crs)
+        elif isinstance(grid_crs, pathlib.PurePath) or (isinstance(grid_crs, str) and pathlib.Path(grid_crs).exists()):
+            iswsCRSPath = w4h.get_resources()['ISWS_CRS']
+            grid_crs = w4h.read_dict(iswsCRSPath, keytype=None)            
+            modelGridIN.rio.write_crs(grid_crs)
+        else:
+            warnings.warn(f'CRS Specification for grid is {grid_crs}, but this cannot be written to the grid')
+        
+        modelGridIN = modelGridIN.rio.reproject(output_crs) 
+           
+        if study_area is not None:                
+            study_area = study_area.to_crs(output_crs)
+            modelGrid = grid2study_area(study_area=study_area, grid=modelGridIN, output_crs=output_crs)
+        else:
+            modelGrid = modelGridIN
+
+        try:
+            noDataVal = float(modelGrid.attrs['_FillValue']) #Extract from dataset itsel
+        except:
+            noDataVal = no_data_val_grid
+
+        modelGrid = modelGrid.where(modelGrid != noDataVal, other=np.nan)   #Replace no data values with NaNs
+        modelGrid = modelGrid.where(modelGrid == np.nan, other=1) #Replace all other values with 1
+        modelGrid.rio.reproject(grid_crs, inplace=True)     
+    elif model_grid_path is None and study_area is None:
         if verbose:
-            print("\tTemporarily reprojecting raster data to point data's CRS.")
-        pointCRS = points_df.crs.to_epsg()
-        if pointCRS is None:
-            pointCRS = points_df.crs.to_wkt()
+            print("ERROR: Either model_grid_path or study_area must be defined.")
+    else:
+        spatRefDict = w4h.read_dict(iswsCRSPath, keytype=None)            
 
-        raster = raster.rio.reproject(pointCRS)
-        #points_df = points_df.to_crs(rastercrsWKT)
+        saExtent = study_area.total_bounds
 
-    xCOLOUT = xcol+'_PROJ'
-    yCOLOUT = ycol+'_PROJ'
-    points_df[xCOLOUT] = points_df['geometry'].x
-    points_df[yCOLOUT] = points_df['geometry'].y
-    #xData = np.array(points_df[xCOLOUT].values)
-    #yData = np.array(points_df[yCOLOUT].values)
-    zData = []
-    zID = []
-    zInd = []
+        startX = saExtent[0] #Starting X Coordinate
+        startY = saExtent[1] #starting Y Coordinate
+        
+        endX = saExtent[2]
+        endY = saExtent[3]
+        
+        if node_byspace:
+            xSpacing = 625 #X Node spacing 
+            ySpacing = xSpacing #Y Node spacing  
+            
+            x = np.arange(startX, endX, xSpacing)
+            y = np.arange(startY, endY, ySpacing)
+        else:
+            xNodes = 100 #Number of X Nodes
+            yNodes = 100 #Number of Y Nodes
 
-    # Get unique well values to reduce sampling time
-    uniqueWells = points_df.drop_duplicates(subset=[well_id_col])
-    if verbose:
-        print(f"\t{uniqueWells.shape[0]} unique wells idenfied using {well_id_col} column")
+            x = np.linspace(startX, endX, num=xNodes)
+            y = np.linspace(startY, endY, num=yNodes)        
+        
+        xx, yy = np.meshgrid(x, y)
+        zz = np.ones_like(xx).transpose()
+
+        yIn = np.flipud(y)
+
+        coords = {'x':x,'y':yIn, 'spatial_ref':0}
+        dims = {'x':x,'y':yIn}
+        
+        modelGrid = xr.DataArray(data=zz,coords=coords,attrs={'_FillValue':no_data_val_grid}, dims=dims)
+        modelGrid.spatial_ref.attrs['spatial_ref'] = {}
+        if grid_crs is None or grid_crs=='isws' or grid_crs=='ISWS':
+            for k in spatRefDict:
+                modelGrid.spatial_ref.attrs[k] = spatRefDict[k]
     
-    # Loop over DataFrame rows
-    for i, row in uniqueWells.iterrows():
-        # Select data from DataArray at current coordinates and append to list
-        zInd.append(i)
-        zData.append([row[well_id_col], raster.sel(x=row[xCOLOUT], y=row[yCOLOUT], method='nearest').item()])
+    # Remove extra "band" dimension if only a single band
+    if 'band' in modelGrid.sizes.keys() and modelGrid.sizes['band'] == 1:
+        modelGrid = modelGrid.isel(band=0)
     
-    inputtype = points_df.dtypes[well_id_col]
-    wellZDF = pd.DataFrame(zData, columns=[well_id_col, new_col], index=pd.Index(zInd))
-
-    # Merge each unique well's data with all well intervals
-    wellZDF[well_id_col].astype(inputtype, copy=False)
-    points_df = points_df.merge(wellZDF, how='left', on=well_id_col)
-    #points_df[new_col] = zData#sampleDF[new_col]
-    return points_df
+    return modelGrid
 
 
-# Merge xyz dataframe into a metadata dataframe
-def xyz_metadata_merge(xyz, metadata, verbose=False, log=False):
-    """Add elevation to header data file.
+# Read study area shapefile (or other file) into geopandas
+def read_study_area(study_area=None, study_area_crs=None, output_crs='EPSG:5070', buffer=None, return_original=False, log=False, verbose=False, **read_file_kwargs):
+    """Read study area geospatial file into geopandas
 
     Parameters
     ----------
-    xyz : pandas.Dataframe
-        Contains elevation for the points
-    metadata : pandas dataframe
-        Header data file
+    study_area : str, pathlib.Path, geopandas.GeoDataFrame, or shapely.Geometry
+        Filepath to any geospatial file readable by geopandas. 
+        Polygon is best, but may work with other types if extent is correct.
+        If shapely.Geometry, the crs should also be specified using a valid input to gpd.GeoDataFrame(crs=<crs>).
+    study_area_crs : str, tuple, dict, optional
+        Not needed unless CRS must be read in manually (e.g, with a shapely.Geometry). CRS designation readable by geopandas/pyproj.
+    output_crs : str, tuple, dict, optional
+        CRS to transform study_area to before returning. CRS designation should be readable by geopandas/pyproj. By default, 'EPSG:5070'.
+    buffer : None or numeric, default=None
+        If None, no buffer created. If a numeric value is given (float or int, for example), a buffer will be created at that distance in the unit of the study_area_crs.
+    return_original : bool, default=False
+        Whether to return the (reprojected) study area as well as the (reprojected) buffered study area. Study area is only used for clipping data, so usually return_original=False is sufficient.
     log : bool, default = False
         Whether to log results to log file, by default False
+    verbose : bool, default=False
+        Whether to print status and results to terminal
 
     Returns
     -------
-    headerXYZData : pandas.Dataframe
-        Header dataset merged to get elevation values
-
+    studyAreaIN : geopandas dataframe
+        Geopandas dataframe with polygon geometry.
     """
+    
+    if study_area is None:
+        if verbose:
+            print("\tNo study_area specified, using the study area in the included sample data.")
+        study_area = w4h.get_resources()['study_area']
+
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
-        verbose_print(xyz_metadata_merge, locals(), exclude_params=['xyz'])
-    headerXYZData = metadata.merge(xyz, how='left', on='API_NUMBER')
-    headerXYZData.drop(['LATITUDE_x', 'LONGITUDE_x'], axis=1, inplace=True)
-    headerXYZData.rename({'LATITUDE_y':'LATITUDE', 'LONGITUDE_y':'LONGITUDE'}, axis=1, inplace=True)
-    return headerXYZData
+        verbose_print(read_study_area, locals())
+    
+    if isinstance(study_area, (gpd.GeoDataFrame, gpd.GeoSeries)):
+        studyAreaIN = study_area
+    elif isinstance(study_area, shapely.Geometry):
+        studyAreaIN = gpd.GeoDataFrame(index=[0], crs=study_area_crs, geometry=[study_area])
+    else:
+        studyAreaIN = gpd.read_file(study_area, **read_file_kwargs)
+    studyAreaIN.to_crs(output_crs, inplace=True)
+
+    # Create a buffered study area for clipping
+    if buffer is not None:
+        if return_original:
+            studyAreaNoBuffer = studyAreaIN
+        studyAreaIN = studyAreaIN.buffer(distance=buffer)
+        
+        if verbose:
+            print('\tBuffer applied.')
+    
+    if verbose:
+        print("\tStudy area read.")
+
+    if return_original:
+        return studyAreaIN, studyAreaNoBuffer
+    return studyAreaIN
 
 
 # Read wcsservice into rioxarray
@@ -549,403 +865,116 @@ def read_wms(study_area, layer_name='IL_Statewide_Lidar_DEM_WGS:None', wms_url=l
     return wmsData_rxr
 
 
-# Clip a grid to a study area
-def grid2study_area(study_area, grid, output_crs='EPSG:5070',verbose=False, log=False):
-    """Clips grid to study area.
+# Function to sample raster points to points specified in geodataframe
+def sample_raster_points(raster=None, points_df=None, 
+            well_id_col='API_NUMBER', xcol='LONGITUDE', ycol='LATITUDE', new_col='SAMPLED', 
+            verbose=False, log=False):  
+    """Sample raster values to points from geopandas geodataframe.
 
     Parameters
     ----------
-    study_area : geopandas.GeoDataFrame
-        inputs study area polygon
-    grid : xarray.DataArray
-        inputs grid array
-    output_crs : str, default='EPSG:5070'
-        inputs the coordinate reference system for the study area
+    raster : rioxarray data array
+        Raster containing values to be sampled.
+    points_df : geopandas.geodataframe
+        Geopandas dataframe with geometry column containing point values to sample.
+    well_id_col : str, default="API_NUMBER"
+        Column that uniquely identifies each well so multiple sampling points are not taken per well
+    xcol : str, default='LONGITUDE'
+        Column containing name for x-column, by default 'LONGITUDE.'
+        This is used to output (potentially) reprojected point coordinates so as not to overwrite the original.
+    ycol : str, default='LATITUDE'
+        Column containing name for y-column, by default 'LATITUDE.'
+        This is used to output (potentially) reprojected point coordinates so as not to overwrite the original.    new_col : str, optional
+    new_col : str, default='SAMPLED'
+        Name for name of new column containing points sampled from the raster, by default 'SAMPLED'.
+    verbose : bool, default=True
+        Whether to send to print() information about progress of function, by default True.
     log : bool, default = False
         Whether to log results to log file, by default False
 
     Returns
     -------
-    grid : xarray.DataArray
-        returns xarray containing grid clipped only to area within study area
-
+    points_df : geopandas.geodataframe
+        Same as points_df, but with sampled values and potentially with reprojected coordinates.
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+
+    if raster is None:
+        raster = w4h.get_resources()['surf_elev']
+    if points_df is None:
+        points_df = w4h.get_resources()['well_data']
+
     if verbose:
-        verbose_print(grid2study_area, locals(), exclude_params=['study_area', 'grid'])
-    
-    if output_crs=='':
-        output_crs=study_area.crs
+        verbose_print(sample_raster_points, locals(), exclude_params=['raster', 'points_df'])
+        print(f"\tSampling {new_col} grid for at all well locations.")
 
-    #Get input CRS's
-    grid_crs = pyproj.CRS.from_wkt(grid.rio.crs.to_wkt())
-    study_area_crs = study_area.crs
-    
-    # Reproject if needed
-    if output_crs != grid_crs:
-        grid = grid.rio.reproject(output_crs)
-    grid_crs = pyproj.CRS.from_wkt(grid.rio.crs.to_wkt())
-
-    if grid_crs != study_area_crs:
-        study_area = study_area.to_crs(grid_crs)   
-
-    # We'll just clip to outer bounds of study area
-    saExtent = study_area.total_bounds
-
-    if grid['y'][-1].values - grid['y'][0].values > 0:
-        miny=saExtent[1]
-        maxy=saExtent[3]
-    else:
-        miny=saExtent[3]
-        maxy=saExtent[1]        
-        
-    if grid['x'][-1].values - grid['x'][0].values > 0:
-        minx=saExtent[0]
-        maxx=saExtent[2]
-    else:
-        minx=saExtent[2]
-        maxx=saExtent[0]
-    
-    # "Clip" it
-    grid = grid.sel(x=slice(minx, maxx), y=slice(miny, maxy))
-    if 'band' in grid.dims:
-        grid = grid.sel(band=1)
-
-    return grid
-
-
-# Read the model grid into (rio)xarray
-def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_grid=True, node_byspace=True, grid_crs=None, output_crs='EPSG:5070', verbose=False, log=False):
-    """Reads in model grid to xarray data array
-
-    Parameters
-    ----------
-    grid_path : str
-        Path to model grid file
-    study_area : geopandas.GeoDataFrame, default=None
-        Dataframe containing study area polygon
-    no_data_val_grid : int, default=0
-        value assigned to areas with no data
-    readGrid : bool, default=True
-        Whether function to either read grid or create grid
-    node_byspace : bool, default=False
-        Denotes how to create grid
-    output_crs : str, default='EPSG:5070'
-        Inputs study area crs
-    grid_crs : str, default=None
-        Inputs grid crs
-    log : bool, default = False
-        Whether to log results to log file, by default False
-
-    Returns
-    -------
-    modelGrid : xarray.DataArray
-        Data array containing model grid
-    """
-    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-    if verbose:
-        verbose_print(read_model_grid, locals(), exclude_params='study_area')
-    
-    if read_grid and model_grid_path is not None:
-        modelGridIN = rxr.open_rasterio(model_grid_path)
-
-        if grid_crs is None:
-            try:
-                grid_crs=modelGridIN.spatial_ref.crs_wkt
-            except Exception:
-                iswsCRSPath = w4h.get_resources()['ISWS_CRS']
-                iswsCRS = w4h.read_dict(iswsCRSPath, keytype=None)
-                grid_crs = iswsCRS              
-                modelGridIN.rio.write_crs(grid_crs)
-        elif isinstance(grid_crs, str) and grid_crs.lower()=='isws':
-            iswsCRSPath = w4h.get_resources()['ISWS_CRS']
-            iswsCRS = w4h.read_dict(iswsCRSPath, keytype=None)            
-            grid_crs = iswsCRS              
-            modelGridIN.rio.write_crs(grid_crs)
-        elif isinstance(grid_crs, pathlib.PurePath) or (isinstance(grid_crs, str) and pathlib.Path(grid_crs).exists()):
-            iswsCRSPath = w4h.get_resources()['ISWS_CRS']
-            grid_crs = w4h.read_dict(iswsCRSPath, keytype=None)            
-            modelGridIN.rio.write_crs(grid_crs)
-        else:
-            warnings.warn(f'CRS Specification for grid is {grid_crs}, but this cannot be written to the grid')
-        
-        modelGridIN = modelGridIN.rio.reproject(output_crs) 
-           
-        if study_area is not None:                
-            study_area = study_area.to_crs(output_crs)
-            modelGrid = grid2study_area(study_area=study_area, grid=modelGridIN, output_crs=output_crs)
-        else:
-            modelGrid = modelGridIN
-
-        try:
-            noDataVal = float(modelGrid.attrs['_FillValue']) #Extract from dataset itsel
-        except:
-            noDataVal = no_data_val_grid
-
-        modelGrid = modelGrid.where(modelGrid != noDataVal, other=np.nan)   #Replace no data values with NaNs
-        modelGrid = modelGrid.where(modelGrid == np.nan, other=1) #Replace all other values with 1
-        modelGrid.rio.reproject(grid_crs, inplace=True)     
-    elif model_grid_path is None and study_area is None:
+    #Project points to raster CRS
+    rastercrsWKT=raster.spatial_ref.crs_wkt
+    if rastercrsWKT != points_df.crs:
         if verbose:
-            print("ERROR: Either model_grid_path or study_area must be defined.")
-    else:
-        spatRefDict = w4h.read_dict(iswsCRSPath, keytype=None)            
+            print("\tTemporarily reprojecting raster data to point data's CRS.")
+        pointCRS = points_df.crs.to_epsg()
+        if pointCRS is None:
+            pointCRS = points_df.crs.to_wkt()
 
-        saExtent = study_area.total_bounds
+        raster = raster.rio.reproject(pointCRS)
+        #points_df = points_df.to_crs(rastercrsWKT)
 
-        startX = saExtent[0] #Starting X Coordinate
-        startY = saExtent[1] #starting Y Coordinate
-        
-        endX = saExtent[2]
-        endY = saExtent[3]
-        
-        if node_byspace:
-            xSpacing = 625 #X Node spacing 
-            ySpacing = xSpacing #Y Node spacing  
-            
-            x = np.arange(startX, endX, xSpacing)
-            y = np.arange(startY, endY, ySpacing)
-        else:
-            xNodes = 100 #Number of X Nodes
-            yNodes = 100 #Number of Y Nodes
+    xCOLOUT = xcol+'_PROJ'
+    yCOLOUT = ycol+'_PROJ'
+    points_df[xCOLOUT] = points_df['geometry'].x
+    points_df[yCOLOUT] = points_df['geometry'].y
+    #xData = np.array(points_df[xCOLOUT].values)
+    #yData = np.array(points_df[yCOLOUT].values)
+    zData = []
+    zID = []
+    zInd = []
 
-            x = np.linspace(startX, endX, num=xNodes)
-            y = np.linspace(startY, endY, num=yNodes)        
-        
-        xx, yy = np.meshgrid(x, y)
-        zz = np.ones_like(xx).transpose()
-
-        yIn = np.flipud(y)
-
-        coords = {'x':x,'y':yIn, 'spatial_ref':0}
-        dims = {'x':x,'y':yIn}
-        
-        modelGrid = xr.DataArray(data=zz,coords=coords,attrs={'_FillValue':no_data_val_grid}, dims=dims)
-        modelGrid.spatial_ref.attrs['spatial_ref'] = {}
-        if grid_crs is None or grid_crs=='isws' or grid_crs=='ISWS':
-            for k in spatRefDict:
-                modelGrid.spatial_ref.attrs[k] = spatRefDict[k]
+    # Get unique well values to reduce sampling time
+    uniqueWells = points_df.drop_duplicates(subset=[well_id_col])
+    if verbose:
+        print(f"\t{uniqueWells.shape[0]} unique wells idenfied using {well_id_col} column")
     
-    # Remove extra "band" dimension if only a single band
-    if 'band' in modelGrid.sizes.keys() and modelGrid.sizes['band'] == 1:
-        modelGrid = modelGrid.isel(band=0)
+    # Loop over DataFrame rows
+    for i, row in uniqueWells.iterrows():
+        # Select data from DataArray at current coordinates and append to list
+        zInd.append(i)
+        zData.append([row[well_id_col], raster.sel(x=row[xCOLOUT], y=row[yCOLOUT], method='nearest').item()])
     
-    return modelGrid
+    inputtype = points_df.dtypes[well_id_col]
+    wellZDF = pd.DataFrame(zData, columns=[well_id_col, new_col], index=pd.Index(zInd))
+
+    # Merge each unique well's data with all well intervals
+    wellZDF[well_id_col].astype(inputtype, copy=False)
+    points_df = points_df.merge(wellZDF, how='left', on=well_id_col)
+    #points_df[new_col] = zData#sampleDF[new_col]
+    return points_df
 
 
-# Read a grid from a file in using rioxarray
-def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service=False, study_area=None,  grid_crs=None, output_crs='EPSG:5070', verbose=False, log=False, **kwargs):
-    """Reads in grid
+# Merge xyz dataframe into a metadata dataframe
+def xyz_metadata_merge(xyz, metadata, verbose=False, log=False):
+    """Add elevation to header data file.
 
     Parameters
     ----------
-    grid_path : str or pathlib.Path, default=None
-        Path to a grid file
-    grid_type : str, default='model'
-        Sets what type of grid to load in
-    no_data_val_grid : int, default=0
-        Sets the no data value of the grid
-    use_service : str, default=False
-        Sets which service the function uses
-    study_area : geopandas.GeoDataFrame, default=None
-        Dataframe containing study area polygon
-    grid_crs : str, default=None
-        Sets crs to use if clipping to study area
+    xyz : pandas.Dataframe
+        Contains elevation for the points
+    metadata : pandas dataframe
+        Header data file
     log : bool, default = False
         Whether to log results to log file, by default False
 
     Returns
     -------
-    gridIN : xarray.DataArray
-        Returns grid
-    
+    headerXYZData : pandas.Dataframe
+        Header dataset merged to get elevation values
+
     """
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
-        verbose_print(read_grid, locals(), exclude_params=['study_area'])
+        verbose_print(xyz_metadata_merge, locals(), exclude_params=['xyz'])
+    headerXYZData = metadata.merge(xyz, how='left', on='API_NUMBER')
+    headerXYZData.drop(['LATITUDE_x', 'LONGITUDE_x'], axis=1, inplace=True)
+    headerXYZData.rename({'LATITUDE_y':'LATITUDE', 'LONGITUDE_y':'LONGITUDE'}, axis=1, inplace=True)
+    return headerXYZData
 
-    # Get study area and study_areaa_crs situated first
-    if study_area is not None:
-        if not isinstance(study_area, gpd.GeoDataFrame):
-            if isinstance(study_area, (str, pathlib.Path)) or pathlib.Path(study_area).exists():
-                if verbose:
-                    print(f"\tThe study_area parameter is not a geopandas.GeoDataframe object. Attempting to read now.")
-                    
-                study_area_kwargs = {k: v for k, v in kwargs.items() if k in inspect.signature(read_study_area).parameters.keys()}
-                study_area = read_study_area(study_area=study_area, output_crs=output_crs, verbose=verbose, log=log, **study_area_kwargs)
-            else:
-                raise RuntimeError(f'\tstudy_area={study_area} was specified, but this is not a geopandas.GeoDataFrame and cannot be read by w4h.read_study_area()')
-        
-        study_area_crs = study_area.crs
-    
-        if study_area_crs is None:
-            study_area_crs = study_area.crs
-        study_area = study_area.to_crs(output_crs)
-        study_area_crs = study_area.crs
-        
-    if grid_type == 'model':
-        if 'read_grid' in list(kwargs.keys()):
-            rgrid = kwargs['read_grid']
-        else:
-            rgrid = True
-            
-        gridIN = read_model_grid(model_grid_path=grid_path, study_area=study_area,  no_data_val_grid=0, read_grid=rgrid, grid_crs=grid_crs, output_crs=output_crs, verbose=verbose)
-    else:
-        if str(use_service).lower() == 'wcs':
-            gridIN = read_wcs(study_area, wcs_url=lidarURL, **kwargs)
-        elif str(use_service).lower() == 'wms':
-            gridIN = read_wms(study_area, wcs_url=lidarURL, **kwargs)
-        elif use_service is True:
-            #Deafults to wms
-            gridIN = read_wms(study_area, wcs_url=lidarURL, **kwargs)
-        else:
-            gridIN = rxr.open_rasterio(grid_path)
-            
-        if study_area is not None:
-            if grid_crs is None:
-                try:
-                    grid_crs = pyproj.CRS.from_wkt(gridIN.rio.crs.to_wkt())
-                except Exception:
-                    if verbose:
-                        print(f"\t CRS could not be extracted from grid itself. Assuming sample CRS:\n\t {w4h.get_resources()['ISWS_CRS']}")
-                    iswsCRS = pyproj.CRS.from_json_dict(w4h.read_dict(w4h.get_resources()['ISWS_CRS']))
-                    gridIN.rio.write_crs(iswsCRS)
-            elif grid_crs.lower() == 'isws':
-                iswsCRS = pyproj.CRS.from_json_dict(w4h.read_dict(w4h.get_resources()['ISWS_CRS']))
-                gridIN.rio.write_crs(iswsCRS)
-                
-            gridIN = gridIN.rio.reproject(output_crs)
-            gridIN = grid2study_area(study_area=study_area, grid=gridIN, output_crs=output_crs,)
-        else:
-            gridIN = gridIN.rio.reproject(output_crs)
-            if 'band' in gridIN.dims:
-                gridIN = gridIN.sel(band=1)
-
-        try:
-            no_data_val_grid = gridIN.attrs['_FillValue'] #Extract from dataset itself
-        except:
-            pass
-                
-        gridIN = gridIN.where(gridIN != no_data_val_grid, other=np.nan)  #Replace no data values with NaNs
-    
-    # Remove extra "band" dimension if only a single band
-    if 'band' in gridIN.sizes.keys() and gridIN.sizes['band'] == 1:
-        gridIN = gridIN.isel(band=0)
-
-    if 'band' in gridIN.coords and gridIN.coords['band'].shape == ():
-        gridIN = gridIN.drop_vars('band')
-    
-    return gridIN
-
-
-# Align and coregister rasters
-def align_rasters(grids_unaligned=None, model_grid=None,
-                  no_data_val_grid=0, verbose=False, log=False):
-    """Reprojects two rasters and aligns their pixels
-
-    Parameters
-    ----------
-    grids_unaligned : list or xarray.DataArray
-        Contains a list of grids or one unaligned grid
-    model_grid : xarray.DataArray
-        Contains model grid
-    no_data_val_grid : int, default=0
-        Sets value of no data pixels
-    log : bool, default = False
-        Whether to log results to log file, by default False
-
-    Returns
-    -------
-    alignedGrids : list or xarray.DataArray
-        Contains aligned grids
-    """
-    
-    if grids_unaligned is None:
-        grids_unaligned = [w4h.get_resources()['surf_elev'], w4h.get_resources()['bedrock_elev']]
-    if model_grid is None:
-        model_grid = w4h.get_resources()['model_grid']
-
-    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-    if verbose:
-        verbose_print(align_rasters, locals(), exclude_params=['grids_unaligned', 'model_grid'])
-    if isinstance(grids_unaligned, (tuple, list)):
-        alignedGrids = []
-        for g in grids_unaligned:
-            alignedGrid = g.rio.reproject_match(model_grid)
-
-            try:
-                no_data_val_grid = alignedGrid.attrs['_FillValue'] #Extract from dataset itself
-            except:
-                pass
-            alignedGrid = alignedGrid.where(alignedGrid != no_data_val_grid)  #Replace no data values with NaNs
-            alignedGrids.append(alignedGrid)
-    else:
-        alignedGrid = grids_unaligned.rio.reproject_match(model_grid)
-
-        try:
-            noDataVal = alignedGrid.attrs['_FillValue'] #Extract from dataset itself
-        except:
-            pass
-
-        alignedGrids = alignedGrid.where(alignedGrid != noDataVal, other=np.nan)  #Replace no data values with NaNs
-        
-    return alignedGrids
-
-
-# Get drift and layer thickness, given a surface and bedrock grid
-def get_drift_thick(surface_elev=None, bedrock_elev=None, layers=9, plot=False, verbose=False, log=False):
-    """Finds the distance from surface_elev to bedrock_elev and then divides by number of layers to get layer thickness.
-
-    Parameters
-    ----------
-    surface_elev : rioxarray.DataArray
-        array holding surface elevation
-    bedrock_elev : rioxarray.DataArray
-        array holding bedrock elevation
-    layers : int, default=9
-        number of layers needed to calculate thickness for
-    plot : bool, default=False
-        tells function to either plot the data or not
-
-    Returns
-    -------
-    driftThick : rioxarray.DataArray
-        Contains data array containing depth to bedrock at each point
-    layerThick : rioxarray.DataArray
-        Contains data array with layer thickness at each point
-
-    """
-    
-    if surface_elev is None:
-        surface_elev = w4h.get_resources()['surf_elev']
-    if bedrock_elev is None:
-        bedrock_elev = w4h.get_resources()['bedrock_elev']
-    
-    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-    if verbose:
-        verbose_print(get_drift_thick, locals(), exclude_params=['surface_elev', 'bedrock_elev'])
-    xr.set_options(keep_attrs=True)
-
-    driftThick = surface_elev - bedrock_elev
-    driftThick = driftThick.clip(0,max=5000,keep_attrs=True)
-    if plot:
-        import matplotlib.pyplot as plt
-        fig, ax = plt.subplots()
-        maxThick = np.nanmax(driftThick)
-        if maxThick > 550:
-            maxThick = 550
-        dtPlot = driftThick.plot(vmin=0, vmax=maxThick, ax=ax)
-        ax.set_title("Drift Thickness")
-    try:
-        noDataVal = driftThick.attrs['_FillValue'] #Extract from dataset itself
-    except:
-        noDataVal = 100001
-    
-    driftThick = driftThick.where(driftThick <100000, other=np.nan)  #Replace no data values with NaNs
-    driftThick = driftThick.where(driftThick >-100000, other=np.nan)  #Replace no data values with NaNs
-
-    layerThick = driftThick/layers
-    
-    xr.set_options(keep_attrs='default')
-
-    return driftThick, layerThick

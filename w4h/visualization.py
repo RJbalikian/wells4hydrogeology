@@ -8,6 +8,7 @@ import matplotlib.patheffects as pe
 import pyproj
 import shapely
 
+
 def plot_cross_section(dataset, profile=None, profile_direction=None,
                        xcoord='x', ycoord='y',
                        mapped_variable='Bedrock_Depth',
@@ -68,7 +69,7 @@ def plot_cross_section(dataset, profile=None, profile_direction=None,
         If return_profile_dicts=True, then a list of dicts with information about the profiles is returned.
     """
     
-    
+    # Get profile(s) into list format
     if profile is None:
         firstX = dataset.coords[xcoord].values[0]
         midX = np.mean(dataset.coords[xcoord].values)
@@ -100,6 +101,7 @@ def plot_cross_section(dataset, profile=None, profile_direction=None,
         print(f"\tThe profile parameter must shapely Geometry or geopandas GeoDataFrame or a list of those objects")
         return 
     
+    # Figure out general direction of profile (longest axis)
     if profile_direction is None:
         profile_direction = []
         for p in profile:
@@ -121,11 +123,14 @@ def plot_cross_section(dataset, profile=None, profile_direction=None,
     elif type(profile_direction)==str:
         profile_direction = [profile_direction]
 
+    if verbose:
+        print(profile_direction)
+
     if len(profile_direction) != len(profile):
         print(f"\tprofile and profile_direction must be the same length, but len(profile)={len(profile)} and len(profile_direction)={len(profile_direction)}")
         return
 
-
+    # Get elevation in unit of interest
     if convert_elevation_to is not None:
         if elev_unit.lower() in ['feet', 'foot', 'ft', 'f']:
             if str(convert_elevation_to).lower() in ['meters', 'metres', 'meter', 'metre', 'mtr', 'm']:
@@ -159,14 +164,22 @@ def plot_cross_section(dataset, profile=None, profile_direction=None,
             if i == 0:
                 continue
             prevVertex = p.coords[i-1]
-
+            # Create accompanying component lists
+            # For each segment...
             segmentLineString = shapely.LineString([prevVertex, vertex])
+            
+            # Get x and Y coordinates
             segXCoords = dataset.sel(x=slice(prevVertex[0], vertex[0])).coords['x'].values
-            segYCoords = dataset.sel(x=slice(prevVertex[1], vertex[1])).coords['y'].values
+            segYCoords = dataset.sel(y=slice(prevVertex[1], vertex[1])).coords['y'].values
 
+            #print("SEG", i, segXCoords, segYCoords)
+
+            # Get distance between each coordinate
             segXCoordsDists = np.diff(segXCoords)
             segYCoordsDists = np.diff(segYCoords)
+            
             segLengths.append(segmentLineString.length)
+            #print("SEGLEN", i, segLengths)
 
             # Get distance of each segment
             y1 = vertex[1]
@@ -205,7 +218,7 @@ def plot_cross_section(dataset, profile=None, profile_direction=None,
             # For each segment, get each xy value as shapely point at each existing coordinate value
             subsegSamplePoints = []
             for i, segmentSegment in enumerate(segCoordsDists):
-                currSubsegDistance = np.sum(segCoordsDists[:i+1])
+                currSubsegDistance = abs(np.sum(segCoordsDists[:i+1]))
                 subsegSamplePoints.append(segmentLineString.line_interpolate_point(distance=currSubsegDistance))
             segSamplePoints.extend(subsegSamplePoints)
 
@@ -304,8 +317,8 @@ def plot_cross_section(dataset, profile=None, profile_direction=None,
 
         plt.rcParams['xtick.top'] = True
         plt.rcParams["xtick.labeltop"] = True
-        plt.rcParams["ytick.right"] = True
-        plt.rcParams["ytick.labelright"] = True
+        plt.rcParams["ytick.right"] = False
+        plt.rcParams["ytick.labelright"] = False
         ax[currSubP].ticklabel_format(style='plain')
 
         xArray, yArray = profile["XY"].xy
@@ -403,7 +416,9 @@ def plot_cross_section(dataset, profile=None, profile_direction=None,
         yHi = maxSurf + (yRange * 0.15) # Need more space on top for annotation
         yLo = (minBR-stopVal) - (yRange * 0.05)
         ax[currSubP].set_ylim([yLo, yHi])
+        ax[currSubP].set_xlim([coords[0], coords[-1]])
 
+        # Annotate profile direction(s)
         ax[currSubP].annotate(text=profile['ProfileName'],
                               xy=(0.01, 0.98),
                               xycoords='axes fraction',
@@ -411,6 +426,14 @@ def plot_cross_section(dataset, profile=None, profile_direction=None,
                               horizontalalignment='left',
                               path_effects=[pe.withStroke(linewidth=4,
                                                           foreground="w")])
+        ax[currSubP].annotate(text=profile['profile_direction'][0],
+                              xy=(0.01, 0.01),
+                              xycoords='axes fraction',
+                              verticalalignment='bottom',
+                              horizontalalignment='left',
+                              path_effects=[pe.withStroke(linewidth=4,
+                                                          foreground="w")])
+        
         
         ax[currSubP].annotate(text=profile['ProfileName']+"'",
                               xy=(0.99, 0.98),
@@ -419,10 +442,18 @@ def plot_cross_section(dataset, profile=None, profile_direction=None,
                               horizontalalignment='right',
                               path_effects=[pe.withStroke(linewidth=4,
                                                           foreground="w")])
-
+        ax[currSubP].annotate(text=profile['profile_direction'][1],
+                              xy=(0.99, 0.01),
+                              xycoords='axes fraction',
+                              verticalalignment='bottom',
+                              horizontalalignment='right',
+                              path_effects=[pe.withStroke(linewidth=4,
+                                                          foreground="w")])
+        
         ax[currSubP].set_xlabel(coordLabel)
         ax[currSubP].set_ylabel(f"Elevation [{profile['elev_unit']}]")
         
+    plt.tight_layout()
     plt.show()
 
     if return_profile_dicts:

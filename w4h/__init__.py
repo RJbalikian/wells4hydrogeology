@@ -5,7 +5,7 @@ This is the wells4hydrogeology package.
 It contains the functions needed to convert raw well descriptions into usable (hydro)geologic data.
 
 """
-__version__ = "0.1.2"
+__version__ = "0.2"
 
 
 from w4h.core import (logger_function,
@@ -38,6 +38,7 @@ from w4h.layers import (get_layer_depths,
                         merge_metadata,
                         layer_target_thick,
                         layer_interp,
+                        natural_neighbor_interp,
                         combine_dataset)
 
 from w4h.mapping import (read_study_area,
@@ -96,6 +97,7 @@ __all__ = ('logger_function', 'verbose_print', 'run', 'get_resources',
            'merge_metadata',
            'layer_target_thick',
            'layer_interp',
+           "natural_neighbor_interp",
            'combine_dataset',
            # Mapping
            'read_study_area',
@@ -127,6 +129,7 @@ __all__ = ('logger_function', 'verbose_print', 'run', 'get_resources',
            )
 
 # Update the w4h.run() help() return to actually be helpful
-run.__doc__ = core._run_docstring()
+from w4h.core import _run_docstring
+run.__doc__ =  _run_docstring()
 __author__ = 'Riley Balikian, \
               Joe Franke, Mike Krasowski, Allan Jones, Daniel Abrams'
