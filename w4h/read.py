@@ -3,10 +3,10 @@ as well as support functions to carry out this task
 """
 
 import datetime
+import importlib
 import inspect
 import json
 import os
-import pkg_resources
 import pathlib
 
 import geopandas as gpd
@@ -17,8 +17,7 @@ from w4h import logger_function, verbose_print
 import w4h
 
 repoDir = pathlib.Path(os.getcwd())
-
-resource_dir = pathlib.Path(pkg_resources.resource_filename(__name__, 'resources/resources_home.txt')).parent
+RESOURCE_DIR = pathlib.Path(str(importlib.resources.files('w4h'))).joinpath('resources')
 
 # Gets the current date for use with in code
 def get_current_date():
@@ -38,7 +37,7 @@ def get_current_date():
     return todayDate, dateSuffix
 
 #Function to get most recent file 
-def get_most_recent(dir=resource_dir, glob_pattern='*', verbose=False):
+def get_most_recent(dir=RESOURCE_DIR, glob_pattern='*', verbose=False):
     """Function to find the most recent file with the indicated pattern, using pathlib.glob function.
 
     Parameters

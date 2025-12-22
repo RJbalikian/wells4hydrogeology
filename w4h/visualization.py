@@ -159,7 +159,6 @@ def plot_cross_section(dataset, profile=None, profile_direction=None,
         layerElevs = []
         modelData = []
         
-        print(p)
         # Iterate through each segment/vertex of the profile
         for i, vertex in enumerate(p.coords):
             if i == 0:
@@ -216,7 +215,6 @@ def plot_cross_section(dataset, profile=None, profile_direction=None,
                 segCoords = segYCoords
                 segCoordsDists = segYCoordsDists 
 
-            print(i, segOrient)
             # For each segment, get each xy value as shapely point at each existing coordinate value
             subsegSamplePoints = []
             for i, segmentSegment in enumerate(segCoordsDists):

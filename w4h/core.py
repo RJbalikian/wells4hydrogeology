@@ -3,11 +3,11 @@ This includes the main run() function that allows rapid data analysis, a functio
 and functions that are used throughout the package for logging and printing verbose outputs."""
 
 import datetime
+import importlib
 import inspect
 import json
 import logging
 import pathlib
-import pkg_resources
 import zipfile
 
 import geopandas as gpd
@@ -24,6 +24,8 @@ import w4h
 
 log_filename = None  # initialize so variable exists but is None
 
+RESOURCE_DIR = pathlib.Path(str(importlib.resources.files('w4h'))).joinpath('resources')
+SAMPLE_DATA_DIR = RESOURCE_DIR.joinpath('sample_data')
 
 # Main function to run model all at once
 def run(well_data,
@@ -535,7 +537,7 @@ def verbose_print(func, local_variables, exclude_params=[]):
 
 
 # Get filepaths for package resources in dictionary format
-resource_dir = pathlib.Path(pkg_resources.resource_filename(__name__, 'resources/resources_home.txt')).parent
+
 def get_resources(resource_type='filepaths', scope='local', verbose=False):
     """Function to get filepaths for resources included with package
 
@@ -554,17 +556,16 @@ def get_resources(resource_type='filepaths', scope='local', verbose=False):
         Dictionary containing key, value pairs with filepaths to resources that may be of interest.
     """
     resources_dict = {}
-    sample_data_dir = resource_dir.joinpath('sample_data')
 
     #Get sample data
     #Get lithology dictionaries' filepaths
-    sample_dictionary_dir = sample_data_dir.joinpath('DictionaryTerms')
+    sample_dictionary_dir = SAMPLE_DATA_DIR.joinpath('DictionaryTerms')
     resources_dict['LithologyDict_Exact'] = w4h.get_most_recent(dir=sample_dictionary_dir, glob_pattern='*DICTIONARY_SearchTerms*', verbose=verbose)
     resources_dict['LithologyDict_Start'] = w4h.get_most_recent(dir=sample_dictionary_dir, glob_pattern='*SearchTerms-Start*', verbose=verbose)
     resources_dict['LithologyDict_Wildcard'] = w4h.get_most_recent(dir=sample_dictionary_dir, glob_pattern='*SearchTerms-Wildcard*', verbose=verbose)
 
     #Get Lithology Interpretation filepaths
-    lith_interp_dir = sample_data_dir.joinpath('LithologyInterpretations')
+    lith_interp_dir = SAMPLE_DATA_DIR.joinpath('LithologyInterpretations')
     resources_dict['LithInterps_FineCoarse'] = w4h.get_most_recent(dir=lith_interp_dir, glob_pattern='*FineCoarse*', verbose=verbose)
     resources_dict['LithInterps_Clay'] = w4h.get_most_recent(dir=lith_interp_dir, glob_pattern='*Clay*', verbose=verbose)
     resources_dict['LithInterps_Silt'] = w4h.get_most_recent(dir=lith_interp_dir, glob_pattern='*Silt*', verbose=verbose)    
@@ -572,14 +573,14 @@ def get_resources(resource_type='filepaths', scope='local', verbose=False):
     resources_dict['LithInterps_Gravel'] = w4h.get_most_recent(dir=lith_interp_dir, glob_pattern='*Gravel*', verbose=verbose)    
 
     #Get other resource filepaths
-    resources_dict['well_data_dtypes'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='*downholeDataTypes*', verbose=verbose)
-    resources_dict['metadata_dtypes'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='*headerDataTypes*', verbose=verbose)
-    resources_dict['ISWS_CRS'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='isws_crs.json', verbose=verbose)
-    resources_dict['xyz_dtypes'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='xyzDataTypes.json', verbose=verbose)
+    resources_dict['well_data_dtypes'] = w4h.get_most_recent(dir=SAMPLE_DATA_DIR, glob_pattern='*downholeDataTypes*', verbose=verbose)
+    resources_dict['metadata_dtypes'] = w4h.get_most_recent(dir=SAMPLE_DATA_DIR, glob_pattern='*headerDataTypes*', verbose=verbose)
+    resources_dict['ISWS_CRS'] = w4h.get_most_recent(dir=SAMPLE_DATA_DIR, glob_pattern='isws_crs.json', verbose=verbose)
+    resources_dict['xyz_dtypes'] = w4h.get_most_recent(dir=SAMPLE_DATA_DIR, glob_pattern='xyzDataTypes.json', verbose=verbose)
 
-    resources_dict['model_grid'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='grid_625_raster.tif', verbose=verbose)
+    resources_dict['model_grid'] = w4h.get_most_recent(dir=SAMPLE_DATA_DIR, glob_pattern='grid_625_raster.tif', verbose=verbose)
 
-    statewideSampleDir = sample_data_dir.joinpath('statewide_sample_data')
+    statewideSampleDir = SAMPLE_DATA_DIR.joinpath('statewide_sample_data')
     statewideList = ['statewide', 'state', 'regional', 'region', 's', 'r']
     if scope.lower() in statewideList:
         resources_dict['well_data'] = statewideSampleDir.joinpath("IL_Statewide_WellData_XYz_2023-07-20_cleaned.zip")
@@ -588,11 +589,11 @@ def get_resources(resource_type='filepaths', scope='local', verbose=False):
         resources_dict['bedrock_elev'] = w4h.get_most_recent(dir=statewideSampleDir, glob_pattern='*IL_Statewide_Bedrock_Elev_2023_ft_625ft_Lambert_GridAlign*', verbose=verbose)
         resources_dict['study_area'] = w4h.get_most_recent(dir=statewideSampleDir, glob_pattern='*IL_Statewide_boundary*', verbose=verbose)
     else:
-        resources_dict['study_area'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='*sample_studyArea*', verbose=verbose)
-        resources_dict['surf_elev'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='*sample_surface_bedrock_lidarresampled100ft*', verbose=verbose)
-        resources_dict['bedrock_elev'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='*LocalSample_Bedrock_elev_EStLGrimleyPhillips*', verbose=verbose)
+        resources_dict['study_area'] = w4h.get_most_recent(dir=SAMPLE_DATA_DIR, glob_pattern='*sample_studyArea*', verbose=verbose)
+        resources_dict['surf_elev'] = w4h.get_most_recent(dir=SAMPLE_DATA_DIR, glob_pattern='*sample_surface_bedrock_lidarresampled100ft*', verbose=verbose)
+        resources_dict['bedrock_elev'] = w4h.get_most_recent(dir=SAMPLE_DATA_DIR, glob_pattern='*LocalSample_Bedrock_elev_EStLGrimleyPhillips*', verbose=verbose)
 
-        resources_dict['well_data'] = w4h.get_most_recent(dir=sample_data_dir, glob_pattern='sample_well_data*', verbose=verbose)
+        resources_dict['well_data'] = w4h.get_most_recent(dir=SAMPLE_DATA_DIR, glob_pattern='sample_well_data*', verbose=verbose)
 
     # Get data objects if specified
     dataObjList = ['data', 'objects', 'do', 'data objects', 'dataobjects']

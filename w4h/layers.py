@@ -676,6 +676,8 @@ def layer_interp(points, model_grid, layers=None, interp_kind='nearest',
 
     return interp_data
 
+
+# Implementation of natural neighbor interpolation algorithm
 def natural_neighbor_interp(points, model_grid, layers=None, ):
     return Voronoi(points=points)
 

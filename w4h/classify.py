@@ -37,51 +37,18 @@ try:
 except Exception:
     pass
 
-def preprocess_nlp(df, description_col="FORMATION",
-                   nlp_model_size='small',
-                   remove_puncuation=True, **kwargs):
 
-    nlpSmallList = ['small', 's']
-    nlpMedList = ['medium', 'med', 'md', 'm']
-    nlpLargeList = ['large', 'lg', 'l']
-    nlpTransList = ['transformer', 'trans', 'tr', 't']
-
-    replace_str = ""
-    if remove_puncuation:
-        replace_str = r"[^\w\s]"
-        
-    df[f"PREPROCESSED_{description_col}"] = df[description_col].str.lower().str.replace(replace_str, '')
-    
-
-    return df
-
-
-def tokenize():
-    return
-
-def lemmatize():
-    return
-
-def tag_parts_of_speech():
+# Not active, in progress
+def _analyze_complexity():
     return
 
 
-def named_entity_recognition():
+# Not active, in progress
+def _classify_description_type():
     return
 
 
-def analyze_complexity():
-    return
-
-
-def classify_description_type():
-    return
-
-
-def evaluate_classification():
-    return
-
-#Define well intervals by depth
+# Define well intervals by depth
 def depth_define(df, top_col='TOP', thresh=550.0, parallel_processing=False, verbose=False, log=False):
     """Function to define all intervals lower than thresh as bedrock
 
@@ -141,7 +108,195 @@ def depth_define(df, top_col='TOP', thresh=550.0, parallel_processing=False, ver
     return df
 
 
-#Define records with full search term
+# Output data that still needs to be defined
+def export_undefined(df, outdir):
+    """Function to export terms that still need to be defined.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe containing at least some unclassified data
+    outdir : str or pathlib.Path
+        Directory to save file. Filename will be generated automatically based on today's date.
+
+    Returns
+    -------
+    stillNeededDF : pandas.DataFrame
+        Dataframe containing only unclassified terms, and the number of times they occur
+    """
+    import pathlib
+    
+    
+    if isinstance(outdir, pathlib.PurePath):
+        if not outdir.is_dir() or not outdir.exists():
+            print('Please specify a valid directory for export. Filename is generated automatically.')
+            return
+        outdir = outdir.as_posix()
+    else:
+        outdir.replace('\\','/')
+        outdir.replace('\\'[-1], '/')
+
+    #Get directory path correct        
+    if outdir[-1] != '/':
+        outdir = outdir+'/'
+
+    todayDate = datetime.date.today()
+    todayDateStr = str(todayDate)
+    searchDF = df[df['CLASS_FLAG'].isna()]
+    
+    stillNeededDF=searchDF['FORMATION'].value_counts()
+    stillNeededDF.to_csv(outdir+'Undefined_'+todayDateStr+'.csv')
+    return stillNeededDF
+
+
+# Fill in unclassified rows' flags with 0
+def fill_unclassified(df, classification_col='CLASS_FLAG'):
+    """Fills unclassified rows in 'CLASS_FLAG' column with np.nan
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe on which to perform operation
+
+    Returns
+    -------
+    df : pandas.DataFrame
+        Dataframe on which operation has been performed
+    """
+    df[classification_col] = df[classification_col].fillna(0)
+    return df
+
+
+# not active, in progress
+def _evaluate_classification():
+    return
+
+
+# Function to get unique wells
+def get_unique_wells(df, wellid_col='API_NUMBER', verbose=False, log=False):
+    """Gets unique wells as a dataframe based on a given column name.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe containing all wells and/or well intervals of interest
+    wellid_col : str, default="API_NUMBER"
+        Name of column in df containing a unique identifier for each well,
+        by default 'API_NUMBER'. .unique() will be run on this column
+        to get the unique values.
+    log : bool, default = False
+        Whether to log results to log file
+
+    Returns
+    -------
+    wellsDF
+        DataFrame containing only the unique well IDs
+    """
+    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
+    if verbose:
+        verbose_print(get_unique_wells, locals(), exclude_params=['df'])
+    #Get Unique well APIs
+    uniqueWells = df[wellid_col].unique()
+    wellsDF = pd.DataFrame(uniqueWells)
+    if verbose:
+        print('Number of unique wells: '+str(wellsDF.shape[0]))
+    wellsDF.columns = ['UNIQUE_ID']
+    
+    return wellsDF
+
+
+# Not active, in progress
+def _lemmatize():
+    return
+
+
+# Merge lithologies to main df based on classifications
+def merge_lithologies(well_data_df, targinterps_df, interp_col='INTERPRETATION', target_col='TARGET', target_class='bool'):
+    """Function to merge lithologies and target booleans based on classifications
+    
+    Parameters
+    ----------
+    well_data_df : pandas.DataFrame
+        Dataframe containing classified well data
+    targinterps_df : pandas.DataFrame
+        Dataframe containing lithologies and their target interpretations, depending on what the target is for this analysis (often, coarse materials=1, fine=0)
+    target_col : str, default = 'TARGET'
+        Name of column in targinterps_df containing the target interpretations
+    target_class, default = 'bool'
+        Whether the input column is using boolean values as its target indicator
+        
+    Returns
+    -------
+    df_targ : pandas.DataFrame
+        Dataframe containing merged lithologies/targets
+    
+    """    
+    
+    #by default, use the boolean input 
+    if target_class=='bool':
+        targinterps_df[target_col] = targinterps_df[target_col].where(targinterps_df[target_col] == '1', other='0').astype(int)
+        targinterps_df[target_col] = targinterps_df[target_col].fillna(value=0)
+    else:
+        targinterps_df[target_col] = targinterps_df[target_col].replace('DoNotUse', value=-1)
+        targinterps_df[target_col] = targinterps_df[target_col].fillna(value=-2)
+        targinterps_df[target_col].astype(np.int8)
+
+    df_targ = well_data_df.merge(right=targinterps_df.set_index(interp_col), right_on=interp_col, left_on="LITHOLOGY", how='left')
+    #df_targ = pd.merge(well_data_df, targinterps_df.set_index(interp_col), right_on=interp_col, left_on='LITHOLOGY', how='left')
+    
+    return df_targ
+
+
+# Not active, in progress
+def _named_entity_recognition():
+    return
+
+
+# Not active, in progress
+def _preprocess_nlp(df, description_col="FORMATION",
+                   nlp_model_size='small',
+                   remove_puncuation=True, **kwargs):
+
+    nlpSmallList = ['small', 's']
+    nlpMedList = ['medium', 'med', 'md', 'm']
+    nlpLargeList = ['large', 'lg', 'l']
+    nlpTransList = ['transformer', 'trans', 'tr', 't']
+
+    replace_str = ""
+    if remove_puncuation:
+        replace_str = r"[^\w\s]"
+        
+    df[f"PREPROCESSED_{description_col}"] = df[description_col].str.lower().str.replace(replace_str, '')
+    
+
+    return df
+
+
+# Merge data back together
+def remerge_data(classifieddf, searchdf, parallel_processing=False):
+    """Function to merge newly-classified (or not) and previously classified data
+
+    Parameters
+    ----------
+    classifieddf : pandas.DataFrame
+        Dataframe that had already been classified previously
+    searchdf : pandas.DataFrame
+        Dataframe with new classifications
+
+    Returns
+    -------
+    remergeDF : pandas.DataFrame
+        Dataframe containing all the data, merged back together
+    """
+    if parallel_processing:
+        remergeDF = dask.dataframe.concat([classifieddf,searchdf], join='inner').reset_index()
+    else:
+        remergeDF = pd.concat([classifieddf,searchdf], join='inner').sort_index()
+
+    return remergeDF
+
+
+# Define records with full search term
 def specific_define(df, terms_df, description_col='FORMATION', terms_col='DESCRIPTION', parallel_processing=False, verbose=False, log=False):
     """Function to classify terms that have been specifically defined in the terms_df.
 
@@ -187,12 +342,7 @@ def specific_define(df, terms_df, description_col='FORMATION', terms_col='DESCRI
     #df_Interps = pd.merge(left=df, right=terms_df.set_index(terms_col), on=description_col, how='left')
     df_Interps = df_Interps.rename(columns={description_col:'FORMATION'})
     df_Interps['BEDROCK_FLAG'] = df_Interps['LITHOLOGY'] == 'BEDROCK'
-    
-    print("PRINGINT YAYAYAYAY")
-    print('dfinterp', df_Interps.columns)
-    print('df', df.columns)
-    print('termsdf', terms_df.columns)
-    
+        
     if verbose:
         totRecords = df_Interps.shape[0]
         if parallel_processing:
@@ -211,6 +361,7 @@ def specific_define(df, terms_df, description_col='FORMATION', terms_col='DESCRI
     return df_Interps
 
 
+# Split dataframe into records that have been defined v those that have not
 def split_defined(df, classification_col='CLASS_FLAG', verbose=False, log=False):
     """Function to split dataframe with well descriptions into two dataframes based on whether a row has been classified.
 
@@ -238,7 +389,33 @@ def split_defined(df, classification_col='CLASS_FLAG', verbose=False, log=False)
     return classifedDF, searchDF
 
 
-#Classify downhole data by the initial substring
+#Quickly sort dataframe
+def sort_dataframe(df, sort_cols=['API_NUMBER', 'TOP'], remove_nans=True):
+    """Function to sort dataframe by one or more columns.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe to be sorted
+    sort_cols : str or list of str, default = ['API_NUMBER','TOP']
+        Name(s) of columns by which to sort dataframe, by default ['API_NUMBER','TOP']
+    remove_nans : bool, default = True
+        Whether or not to remove nans in the process, by default True
+
+    Returns
+    -------
+    df_sorted : pandas.DataFrame
+        Sorted dataframe
+    """
+    #Sort columns for better processing later
+    df_sorted = df.sort_values(sort_cols)
+    df_sorted.reset_index(inplace=True, drop=True)
+    if remove_nans:
+        df_sorted = df_sorted[pd.notna(df_sorted["LITHOLOGY"])]
+    return df_sorted
+
+
+# Classify downhole data by the initial substring
 def start_define(df, terms_df, description_col='FORMATION', terms_col='DESCRIPTION', parallel_processing=False, verbose=False, log=False):
     """Function to classify descriptions according to starting substring. 
 
@@ -294,7 +471,17 @@ def start_define(df, terms_df, description_col='FORMATION', terms_col='DESCRIPTI
     return df
 
 
-#Classify downhole data by any substring
+# Not active, in progress
+def _tag_parts_of_speech():
+    return
+
+
+# Not active, in progress
+def _tokenize():
+    return
+
+
+# Classify downhole data by any substring
 def wildcard_define(df, terms_df, description_col='FORMATION', terms_col='DESCRIPTION', verbose=False, log=False):
     """Function to classify descriptions according to any substring. 
 
@@ -344,182 +531,3 @@ def wildcard_define(df, terms_df, description_col='FORMATION', terms_col='DESCRI
         print("\t\t{} records classified using any substring match ({}% of unclassified  data)".format(numRecsClass, percRecsClass))
         print(f'\t\t{recsRemainig} records remain unclassified ({100-percRecsClass}% of unclassified  data).')
     return df
-
-
-#Merge data back together
-def remerge_data(classifieddf, searchdf, parallel_processing=False):
-    """Function to merge newly-classified (or not) and previously classified data
-
-    Parameters
-    ----------
-    classifieddf : pandas.DataFrame
-        Dataframe that had already been classified previously
-    searchdf : pandas.DataFrame
-        Dataframe with new classifications
-
-    Returns
-    -------
-    remergeDF : pandas.DataFrame
-        Dataframe containing all the data, merged back together
-    """
-    if parallel_processing:
-        remergeDF = dask.dataframe.concat([classifieddf,searchdf], join='inner').reset_index()
-    else:
-        remergeDF = pd.concat([classifieddf,searchdf], join='inner').sort_index()
-
-    return remergeDF
-
-
-#Output data that still needs to be defined
-def export_undefined(df, outdir):
-    """Function to export terms that still need to be defined.
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Dataframe containing at least some unclassified data
-    outdir : str or pathlib.Path
-        Directory to save file. Filename will be generated automatically based on today's date.
-
-    Returns
-    -------
-    stillNeededDF : pandas.DataFrame
-        Dataframe containing only unclassified terms, and the number of times they occur
-    """
-    import pathlib
-    
-    
-    if isinstance(outdir, pathlib.PurePath):
-        if not outdir.is_dir() or not outdir.exists():
-            print('Please specify a valid directory for export. Filename is generated automatically.')
-            return
-        outdir = outdir.as_posix()
-    else:
-        outdir.replace('\\','/')
-        outdir.replace('\\'[-1], '/')
-
-    #Get directory path correct        
-    if outdir[-1] != '/':
-        outdir = outdir+'/'
-
-    todayDate = datetime.date.today()
-    todayDateStr = str(todayDate)
-    searchDF = df[df['CLASS_FLAG'].isna()]
-    
-    stillNeededDF=searchDF['FORMATION'].value_counts()
-    stillNeededDF.to_csv(outdir+'Undefined_'+todayDateStr+'.csv')
-    return stillNeededDF
-
-
-#Fill in unclassified rows' flags with 0
-def fill_unclassified(df, classification_col='CLASS_FLAG'):
-    """Fills unclassified rows in 'CLASS_FLAG' column with np.nan
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Dataframe on which to perform operation
-
-    Returns
-    -------
-    df : pandas.DataFrame
-        Dataframe on which operation has been performed
-    """
-    df[classification_col] = df[classification_col].fillna(0)
-    return df
-
-
-#Merge lithologies to main df based on classifications
-def merge_lithologies(well_data_df, targinterps_df, interp_col='INTERPRETATION', target_col='TARGET', target_class='bool'):
-    """Function to merge lithologies and target booleans based on classifications
-    
-    Parameters
-    ----------
-    well_data_df : pandas.DataFrame
-        Dataframe containing classified well data
-    targinterps_df : pandas.DataFrame
-        Dataframe containing lithologies and their target interpretations, depending on what the target is for this analysis (often, coarse materials=1, fine=0)
-    target_col : str, default = 'TARGET'
-        Name of column in targinterps_df containing the target interpretations
-    target_class, default = 'bool'
-        Whether the input column is using boolean values as its target indicator
-        
-    Returns
-    -------
-    df_targ : pandas.DataFrame
-        Dataframe containing merged lithologies/targets
-    
-    """    
-    
-    #by default, use the boolean input 
-    if target_class=='bool':
-        targinterps_df[target_col] = targinterps_df[target_col].where(targinterps_df[target_col] == '1', other='0').astype(int)
-        targinterps_df[target_col] = targinterps_df[target_col].fillna(value=0)
-    else:
-        targinterps_df[target_col] = targinterps_df[target_col].replace('DoNotUse', value=-1)
-        targinterps_df[target_col] = targinterps_df[target_col].fillna(value=-2)
-        targinterps_df[target_col].astype(np.int8)
-
-    df_targ = well_data_df.merge(right=targinterps_df.set_index(interp_col), right_on=interp_col, left_on="LITHOLOGY", how='left')
-    #df_targ = pd.merge(well_data_df, targinterps_df.set_index(interp_col), right_on=interp_col, left_on='LITHOLOGY', how='left')
-    
-    return df_targ
-
-
-# Function to get unique wells
-def get_unique_wells(df, wellid_col='API_NUMBER', verbose=False, log=False):
-    """Gets unique wells as a dataframe based on a given column name.
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Dataframe containing all wells and/or well intervals of interest
-    wellid_col : str, default="API_NUMBER"
-        Name of column in df containing a unique identifier for each well,
-        by default 'API_NUMBER'. .unique() will be run on this column
-        to get the unique values.
-    log : bool, default = False
-        Whether to log results to log file
-
-    Returns
-    -------
-    wellsDF
-        DataFrame containing only the unique well IDs
-    """
-    logger_function(log, locals(), inspect.currentframe().f_code.co_name)
-    if verbose:
-        verbose_print(get_unique_wells, locals(), exclude_params=['df'])
-    #Get Unique well APIs
-    uniqueWells = df[wellid_col].unique()
-    wellsDF = pd.DataFrame(uniqueWells)
-    if verbose:
-        print('Number of unique wells: '+str(wellsDF.shape[0]))
-    wellsDF.columns = ['UNIQUE_ID']
-    
-    return wellsDF
-
-
-#Quickly sort dataframe
-def sort_dataframe(df, sort_cols=['API_NUMBER', 'TOP'], remove_nans=True):
-    """Function to sort dataframe by one or more columns.
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Dataframe to be sorted
-    sort_cols : str or list of str, default = ['API_NUMBER','TOP']
-        Name(s) of columns by which to sort dataframe, by default ['API_NUMBER','TOP']
-    remove_nans : bool, default = True
-        Whether or not to remove nans in the process, by default True
-
-    Returns
-    -------
-    df_sorted : pandas.DataFrame
-        Sorted dataframe
-    """
-    #Sort columns for better processing later
-    df_sorted = df.sort_values(sort_cols)
-    df_sorted.reset_index(inplace=True, drop=True)
-    if remove_nans:
-        df_sorted = df_sorted[pd.notna(df_sorted["LITHOLOGY"])]
-    return df_sorted
