@@ -1,0 +1,583 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>w4h.w4h_gui &mdash; w4h 0.0.22-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/documentation_options.js?v=7d709ffc"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            w4h
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.html">w4h package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.classify.html">w4h.classify module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.clean.html">w4h.clean module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.core.html">w4h.core module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.export.html">w4h.export module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.layers.html">w4h.layers module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.mapping.html">w4h.mapping module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.read.html">w4h.read module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">w4h</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">w4h.w4h_gui</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for w4h.w4h_gui</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pathlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">geopandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gpd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">owslib.wms</span><span class="w"> </span><span class="kn">import</span> <span class="n">WebMapService</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyproj</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">rioxarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">rxr</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">streamlit</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">st</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">w4h</span>
+    <span class="c1">#from w4h import sprit_hvsr</span>
+    <span class="c1">#from w4h import sprit_plot</span>
+<span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+    <span class="n">parent_dir</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">parent_dir</span><span class="p">)</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">w4h</span>
+
+    
+
+<span class="n">CRS_LIST</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">query_crs_info</span><span class="p">()</span>
+<span class="n">CRS_STR_LIST</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">crs</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">crs</span><span class="o">.</span><span class="n">auth_name</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">crs</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">)&quot;</span> <span class="k">for</span> <span class="n">crs</span> <span class="ow">in</span> <span class="n">CRS_LIST</span><span class="p">]</span>
+<span class="n">CRS_DICT</span> <span class="o">=</span> <span class="p">{</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">crs</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">crs</span><span class="o">.</span><span class="n">auth_name</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">crs</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">:</span> <span class="n">crs</span> <span class="k">for</span> <span class="n">crs</span> <span class="ow">in</span> <span class="n">CRS_LIST</span><span class="p">}</span>
+<span class="n">IL_LIDAR_URL</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;https://data.isgs.illinois.edu/arcgis/services/Elevation/IL_Statewide_Lidar_DEM_WGS/ImageServer/WMSServer?request=GetCapabilities&amp;service=WMS&quot;</span>
+<span class="n">GMRT_BASE_URL</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;https://www.gmrt.org:443/services/GridServer?minlongitude&amp;maxlongitude%2C%20&amp;minlatitude&amp;maxlatitude&amp;format=geotiff&amp;resolution=default&amp;layer=topo&quot;</span>
+
+<span class="n">DEFAULT_POINTS_CRS</span> <span class="o">=</span> <span class="s2">&quot;WGS 84 (EPSG:4326)&quot;</span>
+<span class="n">DEFAULT_POINTS_CRS_INDEX</span> <span class="o">=</span> <span class="n">CRS_STR_LIST</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">DEFAULT_POINTS_CRS</span><span class="p">)</span>
+
+<span class="n">RESOURCES</span> <span class="o">=</span> <span class="n">w4h</span><span class="o">.</span><span class="n">get_resources</span><span class="p">(</span><span class="n">scope</span><span class="o">=</span><span class="s1">&#39;local&#39;</span><span class="p">)</span>
+
+<span class="n">VERBOSE</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="get_defaults">
+<a class="viewcode-back" href="../../w4h.w4h_gui.html#w4h.w4h_gui.get_defaults">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_defaults</span><span class="p">():</span>
+    <span class="n">w4h_funs</span> <span class="o">=</span> <span class="p">[</span><span class="n">w4h</span><span class="o">.</span><span class="n">file_setup</span><span class="p">,</span> <span class="n">w4h</span><span class="o">.</span><span class="n">read_raw_csv</span><span class="p">,</span> <span class="n">w4h</span><span class="o">.</span><span class="n">define_dtypes</span><span class="p">,</span> <span class="n">w4h</span><span class="o">.</span><span class="n">merge_metadata</span><span class="p">,</span> <span class="n">w4h</span><span class="o">.</span><span class="n">coords2geometry</span><span class="p">,</span>
+                <span class="n">w4h</span><span class="o">.</span><span class="n">read_study_area</span><span class="p">,</span> <span class="n">w4h</span><span class="o">.</span><span class="n">clip_gdf2study_area</span><span class="p">,</span> <span class="n">w4h</span><span class="o">.</span><span class="n">read_grid</span><span class="p">,</span> <span class="n">w4h</span><span class="o">.</span><span class="n">add_control_points</span><span class="p">,</span>
+                <span class="n">w4h</span><span class="o">.</span><span class="n">remove_nonlocated</span><span class="p">,</span> <span class="n">w4h</span><span class="o">.</span><span class="n">remove_no_topo</span><span class="p">,</span> <span class="n">w4h</span><span class="o">.</span><span class="n">remove_no_depth</span><span class="p">,</span> <span class="n">w4h</span><span class="o">.</span><span class="n">remove_bad_depth</span><span class="p">,</span> <span class="n">w4h</span><span class="o">.</span><span class="n">remove_no_description</span><span class="p">,</span>
+                <span class="n">w4h</span><span class="o">.</span><span class="n">get_search_terms</span><span class="p">,</span> <span class="n">w4h</span><span class="o">.</span><span class="n">read_dictionary_terms</span><span class="p">,</span> <span class="n">w4h</span><span class="o">.</span><span class="n">specific_define</span><span class="p">,</span> 
+                <span class="n">w4h</span><span class="o">.</span><span class="n">split_defined</span><span class="p">,</span> <span class="n">w4h</span><span class="o">.</span><span class="n">start_define</span><span class="p">,</span> <span class="n">w4h</span><span class="o">.</span><span class="n">wildcard_define</span><span class="p">,</span> <span class="n">w4h</span><span class="o">.</span><span class="n">remerge_data</span><span class="p">,</span> <span class="n">w4h</span><span class="o">.</span><span class="n">fill_unclassified</span><span class="p">,</span>
+                <span class="n">w4h</span><span class="o">.</span><span class="n">read_lithologies</span><span class="p">,</span> <span class="n">w4h</span><span class="o">.</span><span class="n">merge_lithologies</span><span class="p">,</span> 
+                <span class="n">w4h</span><span class="o">.</span><span class="n">align_rasters</span><span class="p">,</span> <span class="n">w4h</span><span class="o">.</span><span class="n">get_drift_thick</span><span class="p">,</span> <span class="n">w4h</span><span class="o">.</span><span class="n">sample_raster_points</span><span class="p">,</span> <span class="n">w4h</span><span class="o">.</span><span class="n">get_layer_depths</span><span class="p">,</span> <span class="n">w4h</span><span class="o">.</span><span class="n">layer_target_thick</span><span class="p">,</span>
+                <span class="n">w4h</span><span class="o">.</span><span class="n">layer_interp</span><span class="p">,</span> <span class="n">w4h</span><span class="o">.</span><span class="n">export_grids</span><span class="p">]</span>
+    
+    <span class="n">fullParamList</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">fullDefaultList</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">paramDefaultDict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">func</span> <span class="ow">in</span> <span class="n">w4h_funs</span><span class="p">:</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">func</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span>
+        <span class="n">defaults</span> <span class="o">=</span> <span class="p">[</span><span class="n">param</span><span class="o">.</span><span class="n">default</span> <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">()))[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">()))[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">fullParamList</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
+        <span class="n">fullDefaultList</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">defaults</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">parameters</span><span class="p">):</span>
+            <span class="n">paramDefaultDict</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaults</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">paramDefaultDict</span></div>
+
+
+<span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">param_defaults</span> <span class="o">=</span> <span class="n">param_defs</span> <span class="o">=</span> <span class="n">get_defaults</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="on_point_file_upload">
+<a class="viewcode-back" href="../../w4h.w4h_gui.html#w4h.w4h_gui.on_point_file_upload">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">on_point_file_upload</span><span class="p">():</span>
+    <span class="n">file</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">point_file_ul</span>
+    <span class="n">temp_dir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">temp_dir</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">well_data</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="demo_checked">
+<a class="viewcode-back" href="../../w4h.w4h_gui.html#w4h.w4h_gui.demo_checked">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">demo_checked</span><span class="p">():</span>
+    <span class="n">doDemo</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">demo_check</span>
+
+
+    <span class="n">well_data_file</span> <span class="o">=</span> <span class="n">RESOURCES</span><span class="p">[</span><span class="s1">&#39;well_data&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">doDemo</span><span class="p">:</span>
+        <span class="c1"># Well data</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">well_data</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">well_data_file</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+
+        <span class="c1"># Surface raster</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_raster_type</span> <span class="o">=</span> <span class="s1">&#39;Web Service&#39;</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">pre_service</span> <span class="o">=</span> <span class="s1">&#39;ISGS Lidar&#39;</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_raster_source</span> <span class="o">=</span> <span class="n">IL_LIDAR_URL</span>
+
+        <span class="c1"># Bedrock raster</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">lower_rast_TEXT</span> <span class="o">=</span> <span class="n">RESOURCES</span><span class="p">[</span><span class="s1">&#39;bedrock_elev&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+
+        <span class="c1"># Model grid</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="s1">&#39;Raster Upload&#39;</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">model_grid_TEXT</span> <span class="o">=</span> <span class="n">RESOURCES</span><span class="p">[</span><span class="s1">&#39;model_grid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+
+        <span class="c1"># Study area</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">study_area_TEXT</span> <span class="o">=</span> <span class="n">RESOURCES</span><span class="p">[</span><span class="s1">&#39;study_area&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="surf_raster_type_changed">
+<a class="viewcode-back" href="../../w4h.w4h_gui.html#w4h.w4h_gui.surf_raster_type_changed">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">surf_raster_type_changed</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_raster_type</span> <span class="o">!=</span> <span class="s2">&quot;File&quot;</span><span class="p">:</span>
+        <span class="n">surf_raster_source_uploaded</span><span class="p">()</span>
+        <span class="n">service_changed</span><span class="p">()</span>
+    
+    <span class="k">else</span><span class="p">:</span> <span class="c1"># st.session_state.surf_raster_type == &quot;File&quot;:</span>
+        <span class="n">surf_raster_source_uploaded</span><span class="p">()</span>
+        <span class="n">service_changed</span><span class="p">()</span>
+
+        <span class="c1"># Save service state</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">,</span> <span class="s1">&#39;pre_service&#39;</span><span class="p">):</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">preCServ</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">pre_service</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">,</span> <span class="s1">&#39;surf_rast_ul_obj_name&#39;</span><span class="p">):</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_raster_source</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_rast_ul_obj_name</span></div>
+
+
+
+<div class="viewcode-block" id="service_changed">
+<a class="viewcode-back" href="../../w4h.w4h_gui.html#w4h.w4h_gui.service_changed">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">service_changed</span><span class="p">():</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">,</span> <span class="s1">&#39;preCServ&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">,</span> <span class="s1">&#39;pre_service&#39;</span><span class="p">):</span>
+        <span class="n">srserve</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">preCServ</span>
+        <span class="k">if</span> <span class="s1">&#39;ISGS&#39;</span> <span class="ow">in</span> <span class="n">srserve</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_raster_source</span> <span class="o">=</span> <span class="n">IL_LIDAR_URL</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_raster_CRS</span> <span class="o">=</span> <span class="s2">&quot;WGS 84 / Pseudo-Mercator (EPSG:3857)&quot;</span>
+        <span class="k">elif</span> <span class="s2">&quot;GMRT&quot;</span> <span class="ow">in</span> <span class="n">srserve</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_raster_source</span> <span class="o">=</span> <span class="n">GMRT_BASE_URL</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_raster_CRS</span> <span class="o">=</span> <span class="s2">&quot;WGS 84 (EPSG:4326)&quot;</span>
+    <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">,</span> <span class="s1">&#39;pre_service&#39;</span><span class="p">):</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">preCServ</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">pre_service</span>
+        <span class="n">srserve</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">preCServ</span>
+        <span class="k">if</span> <span class="s1">&#39;ISGS&#39;</span> <span class="ow">in</span> <span class="n">srserve</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_raster_source</span> <span class="o">=</span> <span class="n">IL_LIDAR_URL</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_raster_CRS</span> <span class="o">=</span> <span class="s2">&quot;WGS 84 / Pseudo-Mercator (EPSG:3857)&quot;</span>
+        <span class="k">elif</span> <span class="s2">&quot;GMRT&quot;</span> <span class="ow">in</span> <span class="n">srserve</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_raster_source</span> <span class="o">=</span> <span class="n">GMRT_BASE_URL</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_raster_CRS</span> <span class="o">=</span> <span class="s2">&quot;WGS 84 (EPSG:4326)&quot;</span>
+    
+    <span class="n">on_surf_raster_source_change</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="surf_raster_source_uploaded">
+<a class="viewcode-back" href="../../w4h.w4h_gui.html#w4h.w4h_gui.surf_raster_source_uploaded">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">surf_raster_source_uploaded</span><span class="p">():</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">,</span> <span class="s1">&#39;surf_rast_ul&#39;</span><span class="p">):</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_rast_ul_obj</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_rast_ul</span><span class="p">)</span>
+    <span class="n">on_surf_raster_source_change</span><span class="p">()</span></div>
+
+ 
+    
+<div class="viewcode-block" id="on_surf_raster_source_change">
+<a class="viewcode-back" href="../../w4h.w4h_gui.html#w4h.w4h_gui.on_surf_raster_source_change">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">on_surf_raster_source_change</span><span class="p">():</span>
+    <span class="n">rType</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_raster_type</span>
+    <span class="n">rsource</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_raster_source</span>
+
+    <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;ON SURF RAST SOURCE CHAGNE&quot;</span><span class="p">)</span>
+    <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_raster_type</span><span class="p">)</span>
+
+
+    <span class="k">if</span> <span class="n">rType</span> <span class="o">==</span> <span class="s2">&quot;File&quot;</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;FILE&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">,</span> <span class="s1">&#39;surf_rast_ul&#39;</span><span class="p">)</span> <span class="ow">and</span>  <span class="nb">hasattr</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">,</span> <span class="s1">&#39;surf_rast_ul_name&#39;</span><span class="p">):</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_raster_source</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_rast_ul_name</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">,</span> <span class="s1">&#39;surf_rast_ul&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_rast_ul</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_rast_ul</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">())</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_raster_source</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_rast_ul</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">,</span> <span class="s1">&#39;surf_rast_ul_name&#39;</span><span class="p">):</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_raster_source</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_rast_ul_name</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_raster_source</span> <span class="o">=</span> <span class="s1">&#39;None&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">,</span> <span class="s1">&#39;surf_rast_ul&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_rast_ul</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_rast_ul_name</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_rast_ul</span><span class="o">.</span><span class="n">name</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">,</span> <span class="s1">&#39;pre_service&#39;</span><span class="p">):</span>
+            <span class="n">srserve</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">pre_service</span>
+            <span class="k">if</span> <span class="s1">&#39;ISGS&#39;</span> <span class="ow">in</span> <span class="n">srserve</span><span class="p">:</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">pre_service</span> <span class="o">=</span> <span class="s1">&#39;ISGS Lidar&#39;</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_raster_CRS</span> <span class="o">=</span> <span class="s2">&quot;WGS 84 / Pseudo-Mercator (EPSG:3857)&quot;</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_raster_source</span> <span class="o">=</span> <span class="n">IL_LIDAR_URL</span>
+            <span class="k">elif</span> <span class="s2">&quot;GMRT&quot;</span> <span class="ow">in</span> <span class="n">srserve</span><span class="p">:</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">pre_service</span> <span class="o">=</span> <span class="s1">&#39;GMRT&#39;</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_raster_source</span> <span class="o">=</span> <span class="n">GMRT_BASE_URL</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_raster_CRS</span> <span class="o">=</span> <span class="s2">&quot;WGS 84 (EPSG:4326)&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="w4hrun">
+<a class="viewcode-back" href="../../w4h.w4h_gui.html#w4h.w4h_gui.w4hrun">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">w4hrun</span><span class="p">():</span>
+    <span class="n">stss</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span>
+    <span class="n">st</span><span class="o">.</span><span class="n">toast</span><span class="p">(</span><span class="s1">&#39;Processing&#39;</span><span class="p">)</span>
+
+    <span class="n">specified_params_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;well_data&#39;</span><span class="p">:</span><span class="s1">&#39;well_data&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;surf_elev_grid&#39;</span><span class="p">:</span><span class="s1">&#39;surf_raster_source&#39;</span><span class="p">,</span> 
+                        <span class="s1">&#39;bedrock_elev_grid&#39;</span><span class="p">:</span><span class="s1">&#39;lower_rast_TEXT&#39;</span><span class="p">,</span> 
+                        <span class="s1">&#39;model_grid&#39;</span><span class="p">:</span><span class="s1">&#39;model_grid_TEXT&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;study_area&#39;</span><span class="p">:</span><span class="s1">&#39;study_area_TEXT&#39;</span><span class="p">}</span>
+    <span class="c1"># Code to read in well_data file</span>
+    <span class="c1"># FIX THIS</span>
+
+    <span class="c1">#if st.session_state.demo_check:</span>
+    <span class="c1">#    RESOURCES = w4h.get_resources(scope=&#39;local&#39;)</span>
+    <span class="c1">#    st.session_state.well_data = RESOURCES[&#39;well_data&#39;].as_posix()</span>
+
+
+    <span class="n">surf_elev</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">stss</span><span class="o">.</span><span class="n">surf_raster_type</span> <span class="o">==</span> <span class="s1">&#39;File&#39;</span><span class="p">:</span>
+        <span class="k">pass</span>
+        <span class="c1"># Code to read in file</span>
+        <span class="n">stss</span><span class="o">.</span><span class="n">surf_elev_grid</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Code to read in service</span>
+        <span class="k">if</span> <span class="s1">&#39;ISGS&#39;</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">pre_service</span><span class="p">:</span>
+            <span class="n">elevation_source</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_raster_source</span>
+            <span class="n">wms</span> <span class="o">=</span> <span class="n">WebMapService</span><span class="p">(</span><span class="n">elevation_source</span><span class="p">)</span>
+
+            <span class="n">bboxFile</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">RESOURCES</span><span class="p">[</span><span class="s1">&#39;study_area&#39;</span><span class="p">])</span>
+            <span class="n">bboxFile</span> <span class="o">=</span> <span class="n">bboxFile</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="s1">&#39;EPSG:4326&#39;</span><span class="p">)</span>
+            <span class="n">bboxFile</span> <span class="o">=</span> <span class="n">bboxFile</span><span class="o">.</span><span class="n">bounds</span>
+            <span class="n">bbox</span> <span class="o">=</span> <span class="n">bboxFile</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="n">img</span> <span class="o">=</span> <span class="n">wms</span><span class="o">.</span><span class="n">getmap</span><span class="p">(</span>
+                <span class="n">layers</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;IL_Statewide_Lidar_DEM_WGS:None&#39;</span><span class="p">],</span>
+                <span class="n">srs</span><span class="o">=</span><span class="s1">&#39;EPSG:4326&#39;</span><span class="p">,</span>
+                <span class="n">bbox</span><span class="o">=</span><span class="n">bbox</span><span class="p">,</span>
+                <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span>
+                <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;image/tiff&#39;</span><span class="p">,</span>
+                <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span>
+                <span class="p">)</span>
+
+            <span class="n">bio</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+            <span class="n">elevData_rxr</span> <span class="o">=</span> <span class="n">rxr</span><span class="o">.</span><span class="n">open_rasterio</span><span class="p">(</span><span class="n">bio</span><span class="p">)</span>
+            <span class="n">elevData_rxr</span> <span class="o">=</span> <span class="n">elevData_rxr</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_crs</span><span class="p">(</span><span class="s1">&#39;EPSG:4326&#39;</span><span class="p">)</span>
+            <span class="c1">#elevData_rxr = elevData_rxr.isel(band=0)</span>
+
+            <span class="n">output_crs</span> <span class="o">=</span> <span class="s2">&quot;EPSG:4326&quot;</span>
+            <span class="n">surf_elev</span> <span class="o">=</span> <span class="n">elevData_rxr</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">reproject</span><span class="p">(</span><span class="n">output_crs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">surf_elev</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Code to read in lower surface elevation</span>
+    <span class="c1"># Fix this to get it working with actual file, not just text</span>
+    <span class="n">br_elev</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="s1">&#39;.tif&#39;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">stss</span><span class="o">.</span><span class="n">lower_rast_TEXT</span><span class="p">):</span>
+        <span class="n">stss</span><span class="o">.</span><span class="n">lower_rast_TEXT</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">stss</span><span class="o">.</span><span class="n">lower_rast_TEXT</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s1">&#39;.TIF&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+        <span class="n">br_elev</span> <span class="o">=</span> <span class="n">rxr</span><span class="o">.</span><span class="n">open_rasterio</span><span class="p">(</span><span class="n">stss</span><span class="o">.</span><span class="n">lower_rast_TEXT</span><span class="p">)</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">reproject</span><span class="p">(</span><span class="s1">&#39;EPSG:4326&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">&#39;.tif&#39;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">stss</span><span class="o">.</span><span class="n">model_grid_TEXT</span><span class="p">):</span>
+        <span class="n">stss</span><span class="o">.</span><span class="n">model_grid_TEXT</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">stss</span><span class="o">.</span><span class="n">model_grid_TEXT</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s1">&#39;.TIF&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+
+
+    <span class="c1"># Get model grid</span>
+    <span class="k">if</span> <span class="s1">&#39;node&#39;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">stss</span><span class="o">.</span><span class="n">model_type</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+        <span class="c1"># FIX code to generate model grid from node spacing or number</span>
+        <span class="k">pass</span>
+    <span class="k">elif</span> <span class="n">stss</span><span class="o">.</span><span class="n">model_type</span> <span class="o">==</span> <span class="s1">&#39;Surface Elevation&#39;</span><span class="p">:</span>
+        <span class="c1"># CODE TO copy SURFACE ELEVATION grid</span>
+        <span class="k">pass</span>
+    <span class="k">elif</span> <span class="n">stss</span><span class="o">.</span><span class="n">model_type</span> <span class="o">==</span> <span class="s1">&#39;Lower Surface&#39;</span><span class="p">:</span>
+        <span class="c1"># CODE TO copy SURFACE ELEVATION grid</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Code to read raster</span>
+        <span class="c1"># FIX THIS</span>
+        <span class="n">stss</span><span class="o">.</span><span class="n">model_grid</span> <span class="o">=</span> <span class="n">rxr</span><span class="o">.</span><span class="n">open_rasterio</span><span class="p">(</span><span class="n">stss</span><span class="o">.</span><span class="n">model_grid_TEXT</span><span class="p">)</span>
+    
+    <span class="c1"># Add non-default params to kwargs</span>
+    <span class="n">w4hrun_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">paramName</span><span class="p">,</span> <span class="n">defaultVal</span> <span class="ow">in</span> <span class="n">stss</span><span class="o">.</span><span class="n">param_defaults</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">paramName</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">specified_params_dict</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">,</span> <span class="n">paramName</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">stss</span><span class="p">[</span><span class="n">paramName</span><span class="p">]</span> <span class="o">!=</span> <span class="n">defaultVal</span><span class="p">:</span>
+                    <span class="n">w4hrun_kwargs</span><span class="p">[</span><span class="n">paramName</span><span class="p">]</span> <span class="o">=</span> <span class="n">stss</span><span class="p">[</span><span class="n">paramName</span><span class="p">]</span>
+    
+    <span class="c1"># (Eventually) Code to print out what is not default value</span>
+
+    <span class="c1"># Specify unmodifiable kwargs</span>
+    <span class="k">if</span> <span class="n">surf_elev</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">del</span> <span class="n">specified_params_dict</span><span class="p">[</span><span class="s1">&#39;surf_elev_grid&#39;</span><span class="p">]</span>
+        <span class="n">w4hrun_kwargs</span><span class="p">[</span><span class="s1">&#39;surf_elev_grid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">surf_elev</span>
+        <span class="c1">#st.write(surf_elev[&#39;spatial_ref&#39;])</span>
+    <span class="k">if</span> <span class="n">br_elev</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">del</span> <span class="n">specified_params_dict</span><span class="p">[</span><span class="s1">&#39;bedrock_elev_grid&#39;</span><span class="p">]</span>
+        <span class="n">w4hrun_kwargs</span><span class="p">[</span><span class="s1">&#39;bedrock_elev_grid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">br_elev</span>
+
+    <span class="k">for</span> <span class="n">kw</span><span class="p">,</span> <span class="n">stsskw</span> <span class="ow">in</span> <span class="n">specified_params_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">w4hrun_kwargs</span><span class="p">[</span><span class="n">kw</span><span class="p">]</span> <span class="o">=</span> <span class="n">stss</span><span class="p">[</span><span class="n">stsskw</span><span class="p">]</span>
+    <span class="n">w4hrun_kwargs</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># Run the processing</span>
+    <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">spinner</span><span class="p">(</span><span class="s1">&#39;Processing data&#39;</span><span class="p">,</span> <span class="n">show_time</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="c1">#st.write(w4hrun_kwargs)</span>
+        <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="s1">&#39;Running&#39;</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="n">w4h</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="o">**</span><span class="n">w4hrun_kwargs</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">st</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s1">&#39;Processing complete&#39;</span><span class="p">)</span>
+    <span class="c1">#st.write(st.session_state.results)</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;Model_Layers&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>    
+    <span class="n">st</span><span class="o">.</span><span class="n">pyplot</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../../w4h.w4h_gui.html#w4h.w4h_gui.main">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+
+    <span class="n">st</span><span class="o">.</span><span class="n">set_page_config</span><span class="p">(</span><span class="n">page_title</span><span class="o">=</span><span class="s1">&#39;W4H WebApp&#39;</span><span class="p">,</span>
+                       <span class="n">page_icon</span><span class="o">=</span><span class="s2">&quot;:material/globe_book:&quot;</span><span class="p">,</span>
+                       <span class="n">layout</span><span class="o">=</span><span class="s1">&#39;wide&#39;</span><span class="p">,</span>
+                       <span class="n">initial_sidebar_state</span><span class="o">=</span><span class="s1">&#39;expanded&#39;</span><span class="p">,</span>
+                       <span class="n">menu_items</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;Get Help&quot;</span><span class="p">:</span><span class="s1">&#39;https://github.com/RJbalikian/wells4hydrogeology/wiki&#39;</span><span class="p">,</span>
+                                    <span class="s2">&quot;Report a bug&quot;</span><span class="p">:</span><span class="s2">&quot;https://github.com/RJbalikian/wells4hydrogeology/issues&quot;</span><span class="p">,</span>
+                                    <span class="s1">&#39;About&#39;</span><span class="p">:</span><span class="s2">&quot;W4H is a collaboration between the Illinois State Water Survey and the Illinois State Geological Survey&quot;</span><span class="p">})</span>
+    <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="p">:</span>
+        <span class="n">sampleCol</span><span class="p">,</span> <span class="n">headerCol</span>  <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">],</span> <span class="n">vertical_alignment</span><span class="o">=</span><span class="s1">&#39;top&#39;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">headerCol</span><span class="o">.</span><span class="n">container</span><span class="p">(</span><span class="n">horizontal_alignment</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">):</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s1">&#39;Run Analysis&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s1">&#39;primary&#39;</span><span class="p">,</span> <span class="n">on_click</span><span class="o">=</span><span class="n">w4hrun</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;run_button&#39;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">sampleCol</span><span class="o">.</span><span class="n">container</span><span class="p">(</span><span class="n">horizontal_alignment</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">):</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">checkbox</span><span class="p">(</span><span class="s1">&#39;Demo run&#39;</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;demo_check&#39;</span><span class="p">,</span> 
+                        <span class="n">on_change</span><span class="o">=</span><span class="n">demo_checked</span><span class="p">)</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">&quot;Specify Input Data&quot;</span><span class="p">,</span> <span class="n">divider</span><span class="o">=</span><span class="s1">&#39;rainbow&#39;</span><span class="p">)</span>
+        
+
+        <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Well Data&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="n">wdval</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">,</span> <span class="s1">&#39;point_file_ul&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">point_file_ul</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">wdval</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">point_file_ul</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">text_input</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Well data file&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">wdval</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;well_data&#39;</span><span class="p">)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">file_uploader</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Upload Point File&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;point_file_ul&#39;</span><span class="p">,</span>
+                            <span class="n">on_change</span><span class="o">=</span><span class="n">on_point_file_upload</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Raster Data&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s1">&#39;Raster Data&#39;</span><span class="p">)</span>
+            <span class="n">surfTab</span><span class="p">,</span> <span class="n">brtab</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">tabs</span><span class="p">([</span><span class="s2">&quot;Surface Raster&quot;</span><span class="p">,</span> <span class="s2">&quot;Lower Raster&quot;</span><span class="p">])</span>
+            <span class="n">surfTab</span><span class="o">.</span><span class="n">segmented_control</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Select Raster Type&#39;</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;File&#39;</span><span class="p">,</span> <span class="s1">&#39;Web Service&#39;</span><span class="p">],</span> 
+                                      <span class="n">key</span><span class="o">=</span><span class="s1">&#39;surf_raster_type&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;Web Service&#39;</span><span class="p">,</span>
+                                      <span class="n">on_change</span><span class="o">=</span><span class="n">surf_raster_type_changed</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_raster_type</span> <span class="o">==</span> <span class="s1">&#39;File&#39;</span><span class="p">:</span>
+                <span class="n">srval</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">,</span> <span class="s1">&#39;surf_rast_ul&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_rast_ul</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">srval</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_rast_ul</span><span class="o">.</span><span class="n">name</span>
+                <span class="n">surfTab</span><span class="o">.</span><span class="n">text_input</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Surface Raster file&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">srval</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;surf_raster_source&#39;</span><span class="p">,</span>
+                                    <span class="n">on_change</span><span class="o">=</span><span class="n">on_surf_raster_source_change</span><span class="p">)</span>
+                <span class="n">surfTab</span><span class="o">.</span><span class="n">file_uploader</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Upload Surface Elevation Raster&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;surf_rast_ul&#39;</span><span class="p">,</span>
+                                        <span class="n">on_change</span><span class="o">=</span><span class="n">surf_raster_source_uploaded</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">srsInd</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">,</span> <span class="s1">&#39;preCServ&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">,</span> <span class="s1">&#39;pre_service&#39;</span><span class="p">):</span>
+                    <span class="n">srserve</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">preCServ</span>
+                    <span class="k">if</span> <span class="s1">&#39;ISGS&#39;</span> <span class="ow">in</span> <span class="n">srserve</span><span class="p">:</span>
+                        <span class="n">srsInd</span> <span class="o">=</span> <span class="mi">1</span>
+                    <span class="k">elif</span> <span class="s2">&quot;Custom&quot;</span> <span class="ow">in</span> <span class="n">srserve</span><span class="p">:</span>
+                        <span class="n">srsInd</span> <span class="o">=</span> <span class="mi">2</span>
+
+                <span class="n">surfTab</span><span class="o">.</span><span class="n">radio</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Surface Raster Services&#39;</span><span class="p">,</span> 
+                            <span class="n">options</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;GMRT&#39;</span><span class="p">,</span> <span class="s1">&#39;ISGS Lidar&#39;</span><span class="p">,</span> <span class="s2">&quot;Custom&quot;</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">srsInd</span><span class="p">,</span>
+                            <span class="n">horizontal</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+                            <span class="n">key</span><span class="o">=</span><span class="s1">&#39;pre_service&#39;</span><span class="p">,</span> <span class="n">on_change</span><span class="o">=</span><span class="n">service_changed</span><span class="p">)</span>
+                <span class="n">servTextDisabled</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">pre_service</span> <span class="o">!=</span> <span class="s1">&#39;Custom&#39;</span><span class="p">:</span>
+                    <span class="n">servTextDisabled</span> <span class="o">=</span> <span class="kc">True</span>
+                
+                <span class="n">srval</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">if</span> <span class="s2">&quot;ISGS&quot;</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">pre_service</span><span class="p">:</span>
+                    <span class="n">srval</span> <span class="o">=</span> <span class="n">IL_LIDAR_URL</span>
+                <span class="k">elif</span> <span class="s2">&quot;GMRT&quot;</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">pre_service</span><span class="p">:</span>
+                    <span class="n">srval</span> <span class="o">=</span> <span class="n">GMRT_BASE_URL</span>
+
+                <span class="n">surfTab</span><span class="o">.</span><span class="n">text_input</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Specify Surface Raster Service URL (Currently only WMS supported)&#39;</span><span class="p">,</span>
+                                   <span class="n">value</span><span class="o">=</span><span class="n">srval</span><span class="p">,</span>
+                                   <span class="n">key</span><span class="o">=</span><span class="s1">&#39;surf_raster_source&#39;</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">,</span> <span class="s2">&quot;surf_service_url&quot;</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">pre_service</span> <span class="o">==</span> <span class="s2">&quot;GMRT&quot;</span><span class="p">:</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_service_url</span> <span class="o">=</span> <span class="n">GMRT_BASE_URL</span>
+                    <span class="k">elif</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">pre_service</span> <span class="o">==</span> <span class="s2">&quot;ISGS Lidar&quot;</span><span class="p">:</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">surf_service_url</span> <span class="o">=</span> <span class="n">IL_LIDAR_URL</span>
+
+
+
+            <span class="n">specSurfRastCol</span><span class="p">,</span> <span class="n">surfRastCRSCol</span> <span class="o">=</span> <span class="n">surfTab</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">])</span>
+            <span class="n">specSurfRastCol</span><span class="o">.</span><span class="n">toggle</span><span class="p">(</span><span class="s1">&#39;Specify Surface Raster CRS&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;specify_surfrast_crs&#39;</span><span class="p">)</span>
+
+            <span class="n">surfRastCRSDisabled</span> <span class="o">=</span>  <span class="ow">not</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">specify_surfrast_crs</span>
+            <span class="n">surfRastCRSCol</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span><span class="s2">&quot;Surface Raster CRS&quot;</span><span class="p">,</span> <span class="n">disabled</span> <span class="o">=</span> <span class="n">surfRastCRSDisabled</span><span class="p">,</span>
+                              <span class="n">options</span><span class="o">=</span><span class="n">CRS_STR_LIST</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">DEFAULT_POINTS_CRS_INDEX</span><span class="p">,</span> 
+                              <span class="n">key</span><span class="o">=</span><span class="s1">&#39;surf_raster_CRS&#39;</span><span class="p">)</span>
+
+            <span class="c1"># Bedrock raster</span>
+            <span class="n">brval</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">,</span> <span class="s1">&#39;lower_rast_UL&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">lower_rast_UL</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">brval</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">lower_rast_UL</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">,</span> <span class="s1">&#39;lower_rast_TEXT&#39;</span><span class="p">):</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">lower_rast_TEXT</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">lower_rast_TEXT</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+                <span class="n">brval</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">lower_rast_TEXT</span>
+            <span class="n">brtab</span><span class="o">.</span><span class="n">text_input</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Lower Raster File&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">brval</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;lower_rast_TEXT&#39;</span><span class="p">)</span>
+            <span class="n">brtab</span><span class="o">.</span><span class="n">file_uploader</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Upload Lower Elevation Raster&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;lower_rast_UL&#39;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Extent and Resolution&quot;</span><span class="p">):</span>
+            <span class="n">saval</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">,</span> <span class="s1">&#39;study_area_ul&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">lower_rast_UL</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">saval</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">study_area_ul</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">text_input</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Study Area File&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">saval</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;study_area_TEXT&#39;</span><span class="p">)</span>            
+            <span class="n">st</span><span class="o">.</span><span class="n">file_uploader</span><span class="p">(</span><span class="s1">&#39;Upload Study Area File&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;study_area_ul&#39;</span><span class="p">)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s1">&#39;Model Grid&#39;</span><span class="p">)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span><span class="s2">&quot;Model Grid Source&quot;</span><span class="p">,</span> 
+                         <span class="n">options</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Lower Surface&quot;</span><span class="p">,</span> <span class="s2">&quot;Surface Elevation&quot;</span><span class="p">,</span>
+                                  <span class="s2">&quot;Raster Upload&quot;</span><span class="p">,</span> <span class="s2">&quot;# Nodes&quot;</span><span class="p">,</span> <span class="s2">&quot;Node Size&quot;</span><span class="p">],</span>
+                         <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;model_type&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;node&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">model_type</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">model_type</span> <span class="o">==</span> <span class="s1">&#39;Raster Upload&#39;</span><span class="p">:</span>
+                    <span class="n">mgval</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">,</span> <span class="s1">&#39;model_grid_UL&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">model_grid_UL</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">mgval</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">model_grid_UL</span><span class="o">.</span><span class="n">name</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">text_input</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Model Grid File&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">mgval</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;model_grid_TEXT&#39;</span><span class="p">)</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">file_uploader</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;ModelGrid&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;model_grid_UL&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">xnodecol</span><span class="p">,</span> <span class="n">ynodecol</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
+                <span class="n">xnodeLabel</span> <span class="o">=</span> <span class="s1">&#39;No. X Nodes&#39;</span>
+                <span class="n">ynodeLabel</span> <span class="o">=</span> <span class="s1">&#39;No. Y Nodes&#39;</span>
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">model_type</span> <span class="o">==</span> <span class="s1">&#39;Node Size&#39;</span><span class="p">:</span>
+                    <span class="n">xnodeLabel</span> <span class="o">=</span> <span class="s1">&#39;X Node Size&#39;</span>
+                    <span class="n">ynodeLabel</span> <span class="o">=</span> <span class="s1">&#39;Y Node Size&#39;</span>
+
+                <span class="n">xnodecol</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span><span class="n">xnodeLabel</span><span class="p">,</span> <span class="n">min_value</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">max_value</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
+                                      <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;x_node_step&#39;</span><span class="p">)</span>
+                <span class="n">ynodecol</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span><span class="n">ynodeLabel</span><span class="p">,</span> <span class="n">min_value</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">max_value</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
+                                      <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;y_node_step&#39;</span><span class="p">)</span>
+        
+        <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Data Mapping&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="n">widcol</span><span class="p">,</span> <span class="n">descol</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
+            <span class="n">widcol</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Well ID Column&quot;</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;API_NUMBER&#39;</span><span class="p">],</span> 
+                            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Select name of column from point file containing unique well ID&#39;s&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;well_id_col&#39;</span><span class="p">)</span>
+            <span class="n">descol</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Description Column&quot;</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FORMATION&#39;</span><span class="p">],</span> 
+                            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Select name of column from point file containing lithologic descriptions&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;description_col&#39;</span><span class="p">)</span>
+
+            <span class="n">xcol</span><span class="p">,</span> <span class="n">ycol</span><span class="p">,</span> <span class="n">zcol</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">])</span>
+            <span class="n">xcol</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;X Coord Column&quot;</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">])</span>
+            <span class="n">ycol</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Y Coord Column&quot;</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">])</span>
+            <span class="n">zcol</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Elevation Column&quot;</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;SURFACE_ELEV&#39;</span><span class="p">])</span>
+
+            <span class="n">tcol</span><span class="p">,</span> <span class="n">bcol</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
+            <span class="n">tcol</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Top Column&quot;</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;TOP&#39;</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">])</span>
+            <span class="n">bcol</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Bottom Column&quot;</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;BOTTOM&#39;</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">])</span>
+
+        <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Additional Settings&quot;</span><span class="p">):</span>
+            <span class="n">wellSetTab</span><span class="p">,</span> <span class="n">surfElevSetTab</span><span class="p">,</span> <span class="n">botSetTab</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">tabs</span><span class="p">([</span><span class="s2">&quot;WellData&quot;</span><span class="p">,</span> <span class="s2">&quot;Surface Elevation&quot;</span><span class="p">,</span> <span class="s2">&quot;Bottom Layer&quot;</span><span class="p">])</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

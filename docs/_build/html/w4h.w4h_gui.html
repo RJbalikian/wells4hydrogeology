@@ -6,19 +6,18 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>w4h.export module &mdash; w4h 0.0.22-dev documentation</title>
-      <link rel="stylesheet" type="text/css" href="pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="theme.css?v=e59714d7" />
+  <title>w4h.w4h_gui module &mdash; w4h 0.0.22-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
-      <script src="documentation_options.js?v=7d709ffc"></script>
-      <script src="doctools.js?v=9bcbadda"></script>
-      <script src="sphinx_highlight.js?v=dc90522c"></script>
-    <script src="theme.js"></script>
+      <script src="_static/documentation_options.js?v=7d709ffc"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="w4h.layers module" href="w4h.layers.html" />
-    <link rel="prev" title="w4h.core module" href="w4h.core.html" /> 
+    <link rel="prev" title="w4h.visualization module" href="w4h.visualization.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -99,16 +98,23 @@
 <li class="toctree-l3"><a class="reference internal" href="w4h.classify.html">w4h.classify module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="w4h.clean.html">w4h.clean module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="w4h.core.html">w4h.core module</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">w4h.export module</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#w4h.export.export_dataframe"><code class="docutils literal notranslate"><span class="pre">export_dataframe()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#w4h.export.export_grids"><code class="docutils literal notranslate"><span class="pre">export_grids()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="w4h.export.html">w4h.export module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="w4h.layers.html">w4h.layers module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="w4h.mapping.html">w4h.mapping module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="w4h.read.html">w4h.read module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="w4h.visualization.html">w4h.visualization module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="w4h.w4h_gui.html">w4h.w4h_gui module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">w4h.w4h_gui module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#w4h.w4h_gui.demo_checked"><code class="docutils literal notranslate"><span class="pre">demo_checked()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#w4h.w4h_gui.get_defaults"><code class="docutils literal notranslate"><span class="pre">get_defaults()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#w4h.w4h_gui.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#w4h.w4h_gui.on_point_file_upload"><code class="docutils literal notranslate"><span class="pre">on_point_file_upload()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#w4h.w4h_gui.on_surf_raster_source_change"><code class="docutils literal notranslate"><span class="pre">on_surf_raster_source_change()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#w4h.w4h_gui.service_changed"><code class="docutils literal notranslate"><span class="pre">service_changed()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#w4h.w4h_gui.surf_raster_source_uploaded"><code class="docutils literal notranslate"><span class="pre">surf_raster_source_uploaded()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#w4h.w4h_gui.surf_raster_type_changed"><code class="docutils literal notranslate"><span class="pre">surf_raster_type_changed()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#w4h.w4h_gui.w4hrun"><code class="docutils literal notranslate"><span class="pre">w4hrun()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -116,11 +122,7 @@
 <li class="toctree-l1"><a class="reference internal" href="w4h.classify.html">w4h.classify module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="w4h.clean.html">w4h.clean module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="w4h.core.html">w4h.core module</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">w4h.export module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#w4h.export.export_dataframe"><code class="docutils literal notranslate"><span class="pre">export_dataframe()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#w4h.export.export_grids"><code class="docutils literal notranslate"><span class="pre">export_grids()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="w4h.export.html">w4h.export module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="w4h.layers.html">w4h.layers module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="w4h.mapping.html">w4h.mapping module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="w4h.read.html">w4h.read module</a></li>
@@ -141,9 +143,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="w4h.html">w4h package</a></li>
-      <li class="breadcrumb-item active">w4h.export module</li>
+      <li class="breadcrumb-item active">w4h.w4h_gui module</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="_sources/w4h.export.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/w4h.w4h_gui.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -151,56 +153,52 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-w4h.export">
-<span id="w4h-export-module"></span><h1>w4h.export module<a class="headerlink" href="#module-w4h.export" title="Link to this heading">¶</a></h1>
-<p>The Export module contains functions for exporting processed data.</p>
+  <section id="module-w4h.w4h_gui">
+<span id="w4h-w4h-gui-module"></span><h1>w4h.w4h_gui module<a class="headerlink" href="#module-w4h.w4h_gui" title="Link to this heading">¶</a></h1>
 <dl class="py function">
-<dt class="sig sig-object py" id="w4h.export.export_dataframe">
-<span class="sig-prename descclassname"><span class="pre">w4h.export.</span></span><span class="sig-name descname"><span class="pre">export_dataframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date_stamp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/export.html#export_dataframe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.export.export_dataframe" title="Link to this definition">¶</a></dt>
-<dd><p>Function to export dataframes</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>df</strong><span class="classifier">pandas dataframe, or list of pandas dataframes</span></dt><dd><p>Data frame or list of dataframes to be exported</p>
-</dd>
-<dt><strong>out_dir</strong><span class="classifier">string or pathlib.Path object</span></dt><dd><p>Directory to which to export dataframe object(s) as .csv</p>
-</dd>
-<dt><strong>filename</strong><span class="classifier">str or list of strings</span></dt><dd><p>Filename(s) of output files</p>
-</dd>
-<dt><strong>date_stamp</strong><span class="classifier">bool, default=True</span></dt><dd><p>Whether to include a datestamp in the filename. If true, file ends with _yyyy-mm-dd.csv of current date, by default True.</p>
-</dd>
-<dt><strong>log</strong><span class="classifier">bool, default = True</span></dt><dd><p>Whether to log inputs and outputs to log file.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
+<dt class="sig sig-object py" id="w4h.w4h_gui.demo_checked">
+<span class="sig-prename descclassname"><span class="pre">w4h.w4h_gui.</span></span><span class="sig-name descname"><span class="pre">demo_checked</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/w4h_gui.html#demo_checked"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.w4h_gui.demo_checked" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="w4h.export.export_grids">
-<span class="sig-prename descclassname"><span class="pre">w4h.export.</span></span><span class="sig-name descname"><span class="pre">export_grids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filetype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tif'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date_stamp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/export.html#export_grids"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.export.export_grids" title="Link to this definition">¶</a></dt>
-<dd><p>Function to export grids to files.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>grid_data</strong><span class="classifier">xarray DataArray or xarray Dataset</span></dt><dd><p>Dataset or dataarray to be exported</p>
-</dd>
-<dt><strong>out_path</strong><span class="classifier">str or pathlib.Path object</span></dt><dd><p>Output location for data export. If variable_sep=True, this should be a directory. Otherwise, this should also include the filename. The file extension should not be included here.</p>
-</dd>
-<dt><strong>file_id</strong><span class="classifier">str, optional</span></dt><dd><p>If specified, will add this after ‘LayerXX’ or ‘AllLayers’ in the filename, just before datestamp, if used. Example filename for file_id=’Coarse’: Layer1_Coarse_2023-04-18.tif.</p>
-</dd>
-<dt><strong>filetype</strong><span class="classifier">str, optional</span></dt><dd><p>Output filetype. Can either be pickle or any file extension supported by rioxarray.rio.to_raster(). Can either include period or not., by default ‘tif’</p>
-</dd>
-<dt><strong>variable_sep</strong><span class="classifier">bool, optional</span></dt><dd><p>If grid_data is an xarray Dataset, this will export each variable in the dataset as a separate file, including the variable name in the filename, by default False</p>
-</dd>
-<dt><strong>date_stamp</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to include a date stamp in the file name., by default True</p>
-</dd>
-<dt><strong>log</strong><span class="classifier">bool, default = True</span></dt><dd><p>Whether to log inputs and outputs to log file.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
+<dt class="sig sig-object py" id="w4h.w4h_gui.get_defaults">
+<span class="sig-prename descclassname"><span class="pre">w4h.w4h_gui.</span></span><span class="sig-name descname"><span class="pre">get_defaults</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/w4h_gui.html#get_defaults"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.w4h_gui.get_defaults" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="w4h.w4h_gui.main">
+<span class="sig-prename descclassname"><span class="pre">w4h.w4h_gui.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/w4h_gui.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.w4h_gui.main" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="w4h.w4h_gui.on_point_file_upload">
+<span class="sig-prename descclassname"><span class="pre">w4h.w4h_gui.</span></span><span class="sig-name descname"><span class="pre">on_point_file_upload</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/w4h_gui.html#on_point_file_upload"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.w4h_gui.on_point_file_upload" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="w4h.w4h_gui.on_surf_raster_source_change">
+<span class="sig-prename descclassname"><span class="pre">w4h.w4h_gui.</span></span><span class="sig-name descname"><span class="pre">on_surf_raster_source_change</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/w4h_gui.html#on_surf_raster_source_change"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.w4h_gui.on_surf_raster_source_change" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="w4h.w4h_gui.service_changed">
+<span class="sig-prename descclassname"><span class="pre">w4h.w4h_gui.</span></span><span class="sig-name descname"><span class="pre">service_changed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/w4h_gui.html#service_changed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.w4h_gui.service_changed" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="w4h.w4h_gui.surf_raster_source_uploaded">
+<span class="sig-prename descclassname"><span class="pre">w4h.w4h_gui.</span></span><span class="sig-name descname"><span class="pre">surf_raster_source_uploaded</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/w4h_gui.html#surf_raster_source_uploaded"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.w4h_gui.surf_raster_source_uploaded" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="w4h.w4h_gui.surf_raster_type_changed">
+<span class="sig-prename descclassname"><span class="pre">w4h.w4h_gui.</span></span><span class="sig-name descname"><span class="pre">surf_raster_type_changed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/w4h_gui.html#surf_raster_type_changed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.w4h_gui.surf_raster_type_changed" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="w4h.w4h_gui.w4hrun">
+<span class="sig-prename descclassname"><span class="pre">w4h.w4h_gui.</span></span><span class="sig-name descname"><span class="pre">w4hrun</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/w4h_gui.html#w4hrun"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.w4h_gui.w4hrun" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </section>
 
@@ -208,8 +206,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="w4h.core.html" class="btn btn-neutral float-left" title="w4h.core module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="w4h.layers.html" class="btn btn-neutral float-right" title="w4h.layers module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="w4h.visualization.html" class="btn btn-neutral float-left" title="w4h.visualization module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

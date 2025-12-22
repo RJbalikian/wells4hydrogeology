@@ -139,6 +139,7 @@
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">grids_unaligned</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
         <span class="n">alignedGrids</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">grids_unaligned</span><span class="p">:</span>
+
             <span class="n">alignedGrid</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">reproject_match</span><span class="p">(</span><span class="n">model_grid</span><span class="p">)</span>
 
             <span class="k">try</span><span class="p">:</span>
@@ -156,9 +157,8 @@
             <span class="k">pass</span>
 
         <span class="n">alignedGrids</span> <span class="o">=</span> <span class="n">alignedGrid</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">alignedGrid</span> <span class="o">!=</span> <span class="n">noDataVal</span><span class="p">,</span> <span class="n">other</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>  <span class="c1">#Replace no data values with NaNs</span>
-        
+    
     <span class="k">return</span> <span class="n">alignedGrids</span></div>
-
 
 
 <span class="c1"># Convert coords in columns to geometry in geopandas dataframe</span>
@@ -389,7 +389,7 @@
     <span class="c1"># &quot;Clip&quot; it</span>
     <span class="n">grid</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="n">minx</span><span class="p">,</span> <span class="n">maxx</span><span class="p">),</span> <span class="n">y</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="n">miny</span><span class="p">,</span> <span class="n">maxy</span><span class="p">))</span>
     <span class="k">if</span> <span class="s1">&#39;band&#39;</span> <span class="ow">in</span> <span class="n">grid</span><span class="o">.</span><span class="n">dims</span><span class="p">:</span>
-        <span class="n">grid</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">band</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="n">band</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">grid</span></div>
 
@@ -474,14 +474,16 @@
             <span class="n">gridIN</span> <span class="o">=</span> <span class="n">gridIN</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">reproject</span><span class="p">(</span><span class="n">output_crs</span><span class="p">)</span>
             <span class="k">if</span> <span class="s1">&#39;band&#39;</span> <span class="ow">in</span> <span class="n">gridIN</span><span class="o">.</span><span class="n">dims</span><span class="p">:</span>
                 <span class="n">gridIN</span> <span class="o">=</span> <span class="n">gridIN</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">band</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-
     <span class="k">elif</span> <span class="n">grid_type</span> <span class="o">==</span> <span class="s1">&#39;model&#39;</span><span class="p">:</span>
         <span class="k">if</span> <span class="s1">&#39;read_grid&#39;</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
             <span class="n">rgrid</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;read_grid&#39;</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">rgrid</span> <span class="o">=</span> <span class="kc">True</span>
-            
-        <span class="n">gridIN</span> <span class="o">=</span> <span class="n">read_model_grid</span><span class="p">(</span><span class="n">model_grid_path</span><span class="o">=</span><span class="n">grid_path</span><span class="p">,</span> <span class="n">study_area</span><span class="o">=</span><span class="n">study_area</span><span class="p">,</span>  <span class="n">no_data_val_grid</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">read_grid</span><span class="o">=</span><span class="n">rgrid</span><span class="p">,</span> <span class="n">grid_crs</span><span class="o">=</span><span class="n">grid_crs</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="n">output_crs</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">gridIN</span> <span class="o">=</span> <span class="n">read_model_grid</span><span class="p">(</span><span class="n">model_grid_path</span><span class="o">=</span><span class="n">grid_path</span><span class="p">,</span> <span class="n">study_area</span><span class="o">=</span><span class="n">study_area</span><span class="p">,</span>  <span class="n">no_data_val_grid</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">read_grid</span><span class="o">=</span><span class="n">rgrid</span><span class="p">,</span> <span class="n">grid_crs</span><span class="o">=</span><span class="n">grid_crs</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="n">output_crs</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR reading in model grid&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">use_service</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;wcs&#39;</span><span class="p">:</span>
             <span class="n">gridIN</span> <span class="o">=</span> <span class="n">read_wcs</span><span class="p">(</span><span class="n">study_area</span><span class="p">,</span> <span class="n">wcs_url</span><span class="o">=</span><span class="n">lidarURL</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>

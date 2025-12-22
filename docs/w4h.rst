@@ -20,3 +20,4 @@ Submodules
    w4h.mapping
    w4h.read
    w4h.visualization
+   w4h.w4h_gui
