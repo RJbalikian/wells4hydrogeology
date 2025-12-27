@@ -23,7 +23,6 @@ except Exception:
     sys.path.insert(0, parent_dir)
     import w4h
 
-    
 
 CRS_LIST = pyproj.database.query_crs_info()
 CRS_STR_LIST = [f"{crs.name} ({crs.auth_name}:{crs.code})" for crs in CRS_LIST]
@@ -150,9 +149,8 @@ def on_surf_raster_source_change():
     rType = st.session_state.surf_raster_type
     rsource = st.session_state.surf_raster_source
 
-    st.write("ON SURF RAST SOURCE CHAGNE")
-    st.write(st.session_state.surf_raster_type)
-
+    #st.write("ON SURF RAST SOURCE CHAGNE")
+    #st.write(st.session_state.surf_raster_type)
 
     if rType == "File":
         print("FILE")
@@ -283,6 +281,9 @@ def w4hrun():
         w4hrun_kwargs[kw] = stss[stsskw]
     w4hrun_kwargs['verbose'] = True
 
+    if 'output_crs' in w4hrun_kwargs.keys():
+        w4hrun_kwargs['output_crs'] = 'EPSG'+w4hrun_kwargs['output_crs'].split('EPSG')[1][:-1]
+
     # Run the processing
     with st.spinner('Processing data', show_time=True):
         #st.write(w4hrun_kwargs)
@@ -294,9 +295,30 @@ def w4hrun():
                 print(e)
                 st.session_state.results = None
     st.success('Processing complete')
+
+    resDS = st.session_state.results[1]
+    if resDS.coords['x'][0] > resDS.coords['x'][-1]:
+        resDS = resDS.sel(x=resDS.x[::-1])
+
+    if resDS.coords['y'][0] > resDS.coords['y'][-1]:
+        resDS = resDS.sel(y=resDS.y[::-1])
+    
+    #st.session_state.results[1] = resDS
     #st.write(st.session_state.results)
-    fig, ax = plt.subplots(figsize=(10,10))
-    st.session_state.results[1]['Model_Layers'][0].plot(ax=ax)    
+    fig, ax = plt.subplots(figsize=(10, 10))
+    #st.session_state.results[1]['Model_Layers'][0].plot(ax=ax)
+
+    if stss['study_area_TEXT'] is not None:
+        studyArea = gpd.read_file(stss['study_area_TEXT'])
+        studyArea = studyArea.to_crs(w4hrun_kwargs['output_crs'])
+        plotDA = resDS['Model_Layers'].sum(axis=0)
+
+        plotDARP = plotDA.rio.reproject(w4hrun_kwargs['output_crs'])
+        plotDARP = plotDARP.rio.clip(studyArea.geometry, studyArea.crs)
+
+        plotDARP.plot(ax=ax)
+        studyArea.plot(ax=ax, facecolor="#00000000", edgecolor='k')
+
     st.pyplot(fig)
 
 
@@ -397,6 +419,10 @@ def main():
             brtab.file_uploader(label='Upload Lower Elevation Raster', key='lower_rast_UL')
 
         with st.expander("Extent and Resolution"):
+            st.selectbox('Output CRS', options=CRS_STR_LIST, 
+                         index=DEFAULT_POINTS_CRS_INDEX,
+                         key='output_crs')
+
             saval = None
             if hasattr(st.session_state, 'study_area_ul') and st.session_state.lower_rast_UL is not None:
                 saval = st.session_state.study_area_ul.name
