@@ -293,7 +293,7 @@ def layer_interp(points, model_grid, layers=None, interp_kind='nearest',
                 return
         else:
             dataX = pts[xcol]
-        
+
         # Get x coordinates for each well point
         if ycol is None:
             if 'geometry' in pts.columns:
@@ -330,6 +330,7 @@ def layer_interp(points, model_grid, layers=None, interp_kind='nearest',
             interp = interpolate.NearestNDInterpolator(dataPoints, interpVal,
                                                        **kwargs)
             Z = interp(X, Y)
+            del interp
 
         # Linear
         elif interp_kind.lower() in linList:
@@ -339,6 +340,7 @@ def layer_interp(points, model_grid, layers=None, interp_kind='nearest',
                                                       **kwargs)
             X, Y = np.meshgrid(X, Y, sparse=True)  # 2D Grid for interpolation
             Z = interp(X, Y)
+            del interp
 
         # Clough-toucher (cubic)
         elif interp_kind.lower() in ctList:
@@ -348,6 +350,7 @@ def layer_interp(points, model_grid, layers=None, interp_kind='nearest',
                 kwargs['tol'] = 1e10
             interp = interpolate.CloughTocher2DInterpolator(list(zip(dataX, dataY)), interpVal, **kwargs)
             Z = interp(X, Y)
+            del interp
 
         # Radial basis function
         elif interp_kind.lower() in rbfList:
@@ -356,6 +359,7 @@ def layer_interp(points, model_grid, layers=None, interp_kind='nearest',
             interp = interpolate.RBFInterpolator(dataXY, interpVal, **kwargs)
             print("Radial Basis Function does not work well with many well-based datasets. Consider instead specifying 'nearest', 'linear', 'spline', or 'clough tocher' for interpolation interp_kind.")
             Z = interp(np.column_stack((X.ravel(), Y.ravel()))).reshape(X.shape)
+            del interp
 
         # Spline
         elif interp_kind.lower() in splineList:
@@ -364,7 +368,7 @@ def layer_interp(points, model_grid, layers=None, interp_kind='nearest',
 
         elif interp_kind.lower() in natneighborList:
             interpType = 'Natural Neighbor'
-            Z = natural_neighbor_interp(points, model_grid=model_grid)
+            Z = natural_neighbor_interp(points=pts, model_grid=model_grid)
         # Nearest neighbor by default if otherwise not specified
         else:
             if verbose:
@@ -376,6 +380,7 @@ def layer_interp(points, model_grid, layers=None, interp_kind='nearest',
             interp = interpolate.NearestNDInterpolator(list(zip(dataX, dataY)),
                                                        interpVal, **kwargs)
             Z = interp(X, Y)
+            del interp
 
         # Create new datarray with new data values, else same as model_grid
         interp_grid = xr.DataArray(
@@ -400,7 +405,6 @@ def layer_interp(points, model_grid, layers=None, interp_kind='nearest',
         del dataX
         del dataY
         del interpVal
-        del interp
 
         zFillDigs = len(str(layers))
         daDict['Layer'+str(lyr).zfill(zFillDigs)] = interp_grid
@@ -685,11 +689,12 @@ def layer_target_thick(gdf, layers=9, well_id_col='API_NUMBER',
 
 # Implementatino of natural neighbor interpolation
 def natural_neighbor_interp(points, model_grid=None, parallelize=False,
-                            well_id='API_NUMBER', interp_value='ELEVATION',
-                            xcoord='LONGITUDE', ycoord='LATITUDE', elev="ELEVATION",
+                            well_id='API_NUMBER', interp_value='TARG_THICK_PER',
+                            xcoord='LONGITUDE_PROJ', ycoord='LATITUDE_PROJ', elev="SURFACE_ELEV",
+                            point_crs='EPSG:5070', model_crs='EPSG:5070', output_crs='EPSG:5070',
                             show_points=False, sparsity_factor=10,
                             show_plot=False, show_adjacent_regions=False, show_voronoi=False,
-                            time_segments=False):
+                            time_segments=False, verbose=False):
     """Implementation of natural neighbor algorithm, with sparse interpolation.
     This interpolation algorithm takes a very long time.
 
@@ -726,6 +731,8 @@ def natural_neighbor_interp(points, model_grid=None, parallelize=False,
         Whether to show the voronoi polygons, by default False
     time_segments : bool, optional
         Whether to time each segment of the analysis, by default False
+    verbose : bool, optional
+        Whether to print additional results or parameters to the terminal
 
     Returns
     -------
@@ -733,25 +740,38 @@ def natural_neighbor_interp(points, model_grid=None, parallelize=False,
         _description_
     """
     time0 = datetime.datetime.now()
-    model_grid_IN = rxr.open_rasterio(model_grid)
-    
-    interp_grid = model_grid_IN[:, ::sparsity_factor, ::sparsity_factor]
-    interp_grid = interp_grid.rio.reproject(4326)
 
-    uniqueWellDF = points.drop_duplicates(subset=well_id)[[well_id, xcoord, ycoord, elev, 'geometry']].reset_index(drop=True)
-    
-    uniqueWellDF['geometry'] = uniqueWellDF['geometry'].apply(wkt.loads)
-    uniqueWellDF = gpd.GeoDataFrame(uniqueWellDF, geometry='geometry', crs=4326)
-    
+    # Get model grid in standardized format/crs
+    if pathlib.Path(str(model_grid)).exists() and pathlib.Path(str(model_grid)).is_file():
+        model_grid_IN = rxr.open_rasterio(model_grid)
+    else:
+        model_grid_IN = model_grid
+    model_grid_IN = model_grid_IN.rio.reproject(output_crs)
+
+    original_coords = model_grid_IN.coords
+    if sparsity_factor is not None:
+        if isinstance(model_grid_IN, xr.Dataset):
+            interp_grid = model_grid_IN[:, ::sparsity_factor, ::sparsity_factor]
+        else:
+            interp_grid = model_grid_IN[::sparsity_factor, ::sparsity_factor]
+    else:
+        interp_grid = model_grid_IN
+
+    uniqueWellDF = points.drop_duplicates(subset=well_id)[[well_id, xcoord, ycoord, elev, interp_value, 'geometry']].reset_index(drop=True)
+
+    if not isinstance(uniqueWellDF, gpd.GeoDataFrame):
+        uniqueWellDF['geometry'] = uniqueWellDF['geometry'].apply(wkt.loads)
+        uniqueWellDF = gpd.GeoDataFrame(uniqueWellDF, geometry='geometry', crs=point_crs)
+    uniqueWellDF = uniqueWellDF.to_crs(output_crs)
+
     minx, miny, maxx, maxy = uniqueWellDF.total_bounds
     interp_grid = interp_grid.rio.clip_box(minx=minx, miny=miny, maxx=maxx, maxy=maxy)
     
     wellPtList = []
     wellValueList = []
-    valueField = 'ELEVATION'
     for i, well in uniqueWellDF.iterrows():
-        wellPtList.append([well['LONGITUDE'], well["LATITUDE"]])
-        wellValueList.append(float(well[valueField]))
+        wellPtList.append([well.geometry.x, well.geometry.y])
+        wellValueList.append(float(well[interp_value]))
     wellPtArr = np.array(wellPtList)
 
     if show_points:
@@ -780,7 +800,7 @@ def natural_neighbor_interp(points, model_grid=None, parallelize=False,
     # CODE HERE FOR ITERATING THROUGH COORDS?
     #newPoint = Point([-90.1, 38.7])
     
-    def _vectorized_nat_neighbor(x, y, time_segments=time_segments):
+    def _vectorized_nat_neighbor(x, y, time_segments=time_segments, verbose=False):
         newPoint = Point([x, y])
         lastTime = datetime.datetime.now()
         
@@ -807,7 +827,10 @@ def natural_neighbor_interp(points, model_grid=None, parallelize=False,
             polyRegInd.append(i)
 
         if containingRegion is None:
-            #print("Polygon is invalid or no overlapping polygons with point")
+            if time_segments:
+                thisTime = datetime.datetime.now()
+                print(f"Polygon is invalid or no overlapping polygons with point, returning nan:  {thisTime-lastTime}")
+                lastTime = datetime.datetime.now()                
             return np.nan
 
         if time_segments:
@@ -849,7 +872,7 @@ def natural_neighbor_interp(points, model_grid=None, parallelize=False,
         for ind in regionIndices:
             nearValues.append(wellValueList[vPR.index(ind)])
             nearPoints.append(vClass.points[vPR.index(ind)].tolist())
-        regGS = gpd.GeoDataFrame(zip(regionIndices, regionAndAdjacents), columns=['RegionIndices', 'geometry'], crs=4326)
+        regGS = gpd.GeoDataFrame(zip(regionIndices, regionAndAdjacents), columns=['RegionIndices', 'geometry'], crs=output_crs)
 
         if time_segments:
             thisTime = datetime.datetime.now()
@@ -921,7 +944,7 @@ def natural_neighbor_interp(points, model_grid=None, parallelize=False,
             regGS.plot(facecolor="#00000000", edgecolor='k', ax=ax3)
             x, y = zip(*nearPoints)
             ax3.scatter(x, y)
-            gpd.GeoSeries([polyOfInterest], crs=4326).plot(facecolor="#00000000", 
+            gpd.GeoSeries([polyOfInterest], crs=output_crs).plot(facecolor="#00000000", 
                                                         edgecolor='r', linewidths=5, ax=ax3)
             if time_segments:
                 thisTime = datetime.datetime.now()
@@ -948,7 +971,7 @@ def natural_neighbor_interp(points, model_grid=None, parallelize=False,
         # Calculate and return natural neighbor interpolated value
         return res
 
-    if parallelize: 
+    if parallelize:
         x = interp_grid["x"].values
         y = interp_grid["y"].values
 
@@ -975,17 +998,26 @@ def natural_neighbor_interp(points, model_grid=None, parallelize=False,
     else:
         print("Starting interpolation at all grid points: ", len(interp_grid['x'].values), 'x', len(interp_grid['y'].values), len(interp_grid['y'].values)*len(interp_grid['x'].values))
         resultList = []
+        dataPoints = []
         for x in interp_grid['x'].values:
             innerList = []
             for y in interp_grid['y'].values:
-                interpVal = _vectorized_nat_neighbor(x, y, time_segments=time_segments)
+                interpVal = _vectorized_nat_neighbor(x, y, time_segments=time_segments, verbose=verbose)
                 innerList.append(interpVal)
-            resultList.append(innerList)
-    
-    
-        print("Final Size:", np.array(resultList).shape)
-        return xr.DataArray(np.array(resultList).T,
-                            coords={"y": interp_grid.y, "x": interp_grid.x},
+                dataPoints.append((x, y))
+            resultList.extend(innerList) #???????
+
+        if verbose:
+            print('\t\t Natural neighbor completed, reinterpolating to model grid')
+            print("\t\tFinal Size of interpolation:", np.array(resultList).shape)
+
+        interp = interpolate.NearestNDInterpolator(dataPoints, resultList)
+
+        X, Y = np.meshgrid(original_coords['x'], original_coords['y'], sparse=True)  # 2D Grid for interpolation
+        Z = interp(X, Y)
+
+        return xr.DataArray(Z,
+                            coords={"y": original_coords['y'], "x": original_coords['x']},
                             dims=("y", "x"))
 
 # Optional, combine dataset
