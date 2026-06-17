@@ -1,46 +1,126 @@
-
-
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" data-content_root="./">
-<head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>w4h.visualization module &mdash; w4h 0.0.22-dev documentation</title>
-      <link rel="stylesheet" type="text/css" href="pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="theme.css?v=e59714d7" />
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  
-      <script src="documentation_options.js?v=7d709ffc"></script>
-      <script src="doctools.js?v=9bcbadda"></script>
-      <script src="sphinx_highlight.js?v=dc90522c"></script>
-    <script src="theme.js"></script>
+    <title>w4h.visualization module &#8212; w4h  documentation</title>
+    <link rel="stylesheet" type="text/css" href="pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="alabaster.css?v=27fed22d" />
+    <script src="documentation_options.js?v=7d709ffc"></script>
+    <script src="doctools.js?v=9bcbadda"></script>
+    <script src="sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="w4h.w4h_gui module" href="w4h.w4h_gui.html" />
-    <link rel="prev" title="w4h.read module" href="w4h.read.html" /> 
-</head>
+    <link rel="prev" title="w4h.read module" href="w4h.read.html" />
+   
+  <link rel="stylesheet" href="custom.css" type="text/css" />
+  
 
-<body class="wy-body-for-nav"> 
-  <div class="wy-grid-for-nav">
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
+  
+  
 
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
           
+
+          <div class="body" role="main">
+            
+  <section id="module-w4h.visualization">
+<span id="w4h-visualization-module"></span><h1>w4h.visualization module<a class="headerlink" href="#module-w4h.visualization" title="Link to this heading">¶</a></h1>
+<p>The visualization module contains functions for creating plots and data vizualizations from outputs from w4h.run()</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="w4h.visualization.plot_cross_section">
+<span class="sig-prename descclassname"><span class="pre">w4h.visualization.</span></span><span class="sig-name descname"><span class="pre">plot_cross_section</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile_direction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xcoord</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'x'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ycoord</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'y'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapped_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Bedrock_Depth'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross_section_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Model_Layers'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surface_elevation_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Surface_Elevation'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bedrock_elevation_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Bedrock_Elevation'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_elevation_coordinate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'layer_elevs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_profile_dicts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elev_unit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'feet'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convert_elevation_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/visualization.html#plot_cross_section"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.visualization.plot_cross_section" title="Link to this definition">¶</a></dt>
+<dd><p>Function to plot cross section profiles for datasets with properly configured coordinates and variables.
+This is intended to work “out of the box” with the xarray.Datasets output from w4h.run()</p>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>dataset<span class="classifier">xarray.Dataset</span></dt><dd><p>The xarray.Dataset with the proper data variables. Works “out of the box” with outputs from w4h.run().</p>
+</dd>
+<dt>profile<span class="classifier">None, shapely.Linestring, list of coordinates, or geopandas.GeoDataFrame, optional</span></dt><dd><p>The profile(s) for which to create the cross sections.
+If None, by default creates one X profile and one Y profile in the middle of each dimension, by default None</p>
+</dd>
+<dt>profile_direction<span class="classifier">list of str, optional</span></dt><dd><p>List of strings (list is same length as profile) indicating the direction to use for the profile. 
+If None, will be [‘WE’, ‘SN’] to fit with profile=None defaults, by default None</p>
+</dd>
+<dt>xcoord<span class="classifier">str, optional</span></dt><dd><p>Name of x coordinate, by default ‘x’</p>
+</dd>
+<dt>ycoord<span class="classifier">str, optional</span></dt><dd><p>Name of y coordinate, by default ‘y’</p>
+</dd>
+<dt>mapped_variable<span class="classifier">str, optional</span></dt><dd><p>Name of variable to show in main map, by default ‘Depth_to_Bedrock’</p>
+</dd>
+<dt>cross_section_variable<span class="classifier">str, optional</span></dt><dd><p>Name of variable to use for cross section profiles, by default ‘Model_Layers’</p>
+</dd>
+<dt>surface_elevation_variable<span class="classifier">str, optional</span></dt><dd><p>Variable to use for the surface elevation, by default ‘Surface_Elevation’</p>
+</dd>
+<dt>bedrock_elevation_variable<span class="classifier">str, optional</span></dt><dd><p>Variable to use for the bedrock elevation, by default ‘Bedrock_Elevation’</p>
+</dd>
+<dt>layer_elevation_coordinate<span class="classifier">str, optional</span></dt><dd><p>Coordinate name to use for the layer elevations. 
+This should be a non-indexed coordinate with the shape of the x, y, and layer coordinates, by default ‘layer_elevs’</p>
+</dd>
+<dt>show_layers<span class="classifier">bool, optional</span></dt><dd><p>Whether to plot the layer boundaries on the cross section, by default True</p>
+</dd>
+<dt>return_profile_dicts<span class="classifier">bool, optional</span></dt><dd><p>Whether to return the profile dictionaries, rather than the matplotlib.Figure, by default False</p>
+</dd>
+<dt>elev_unit<span class="classifier">str, optional</span></dt><dd><p>Unit of elevation for the elevation data, by default ‘feet’</p>
+</dd>
+<dt>convert_elevation_to<span class="classifier">str, optional</span></dt><dd><p>If None (default), does not convert elevation. Otherwise, will convert elevation to specified unit.
+Only conversion between ‘ft’ and ‘meters’ supported.</p>
+</dd>
+<dt>title<span class="classifier">str, optional</span></dt><dd><p>Title to use for the output figure. If None, will be derived from variable names, by default None</p>
+</dd>
+<dt>verbose<span class="classifier">bool, optional</span></dt><dd><p>Whether to print information about process to terminal, by default False</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>matplotlib.Figure</dt><dd><p>Matplotlib.Figure instance is returned, unles return_profile_dicts is True.
+If return_profile_dicts=True, then a list of dicts with information about the profiles is returned.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</section>
+
+
+          </div>
           
-          <a href="index.html" class="icon icon-home">
-            w4h
-          </a>
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">w4h</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="w4h.html">w4h package</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.add_control_points"><code class="docutils literal notranslate"><span class="pre">add_control_points()</span></code></a></li>
@@ -63,6 +143,7 @@
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.get_search_terms"><code class="docutils literal notranslate"><span class="pre">get_search_terms()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.get_unique_wells"><code class="docutils literal notranslate"><span class="pre">get_unique_wells()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.grid2study_area"><code class="docutils literal notranslate"><span class="pre">grid2study_area()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.gui"><code class="docutils literal notranslate"><span class="pre">gui()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.layer_interp"><code class="docutils literal notranslate"><span class="pre">layer_interp()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.layer_target_thick"><code class="docutils literal notranslate"><span class="pre">layer_target_thick()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.logger_function"><code class="docutils literal notranslate"><span class="pre">logger_function()</span></code></a></li>
@@ -112,130 +193,45 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="w4h.classify.html">w4h.classify module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="w4h.clean.html">w4h.clean module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="w4h.core.html">w4h.core module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="w4h.export.html">w4h.export module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="w4h.layers.html">w4h.layers module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="w4h.mapping.html">w4h.mapping module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="w4h.read.html">w4h.read module</a></li>
 </ul>
 
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="w4h.html">w4h package</a><ul>
+      <li>Previous: <a href="w4h.read.html" title="previous chapter">w4h.read module</a></li>
+      <li>Next: <a href="w4h.w4h_gui.html" title="next chapter">w4h.w4h_gui module</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
         </div>
       </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">w4h</a>
-      </nav>
-
-      <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="Page navigation">
-  <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="w4h.html">w4h package</a></li>
-      <li class="breadcrumb-item active">w4h.visualization module</li>
-      <li class="wy-breadcrumbs-aside">
-            <a href="_sources/w4h.visualization.rst.txt" rel="nofollow"> View page source</a>
-      </li>
-  </ul>
-  <hr/>
-</div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-             
-  <section id="module-w4h.visualization">
-<span id="w4h-visualization-module"></span><h1>w4h.visualization module<a class="headerlink" href="#module-w4h.visualization" title="Link to this heading">¶</a></h1>
-<p>The visualization module contains functions for creating plots and data vizualizations from outputs from w4h.run()</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="w4h.visualization.plot_cross_section">
-<span class="sig-prename descclassname"><span class="pre">w4h.visualization.</span></span><span class="sig-name descname"><span class="pre">plot_cross_section</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile_direction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xcoord</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'x'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ycoord</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'y'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapped_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Bedrock_Depth'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross_section_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Model_Layers'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surface_elevation_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Surface_Elevation'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bedrock_elevation_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Bedrock_Elevation'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_elevation_coordinate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'layer_elevs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_profile_dicts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elev_unit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'feet'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convert_elevation_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/visualization.html#plot_cross_section"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.visualization.plot_cross_section" title="Link to this definition">¶</a></dt>
-<dd><p>Function to plot cross section profiles for datasets with properly configured coordinates and variables.
-This is intended to work “out of the box” with the xarray.Datasets output from w4h.run()</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>dataset</strong><span class="classifier">xarray.Dataset</span></dt><dd><p>The xarray.Dataset with the proper data variables. Works “out of the box” with outputs from w4h.run().</p>
-</dd>
-<dt><strong>profile</strong><span class="classifier">None, shapely.Linestring, list of coordinates, or geopandas.GeoDataFrame, optional</span></dt><dd><p>The profile(s) for which to create the cross sections.
-If None, by default creates one X profile and one Y profile in the middle of each dimension, by default None</p>
-</dd>
-<dt><strong>profile_direction</strong><span class="classifier">list of str, optional</span></dt><dd><p>List of strings (list is same length as profile) indicating the direction to use for the profile. 
-If None, will be [‘WE’, ‘SN’] to fit with profile=None defaults, by default None</p>
-</dd>
-<dt><strong>xcoord</strong><span class="classifier">str, optional</span></dt><dd><p>Name of x coordinate, by default ‘x’</p>
-</dd>
-<dt><strong>ycoord</strong><span class="classifier">str, optional</span></dt><dd><p>Name of y coordinate, by default ‘y’</p>
-</dd>
-<dt><strong>mapped_variable</strong><span class="classifier">str, optional</span></dt><dd><p>Name of variable to show in main map, by default ‘Depth_to_Bedrock’</p>
-</dd>
-<dt><strong>cross_section_variable</strong><span class="classifier">str, optional</span></dt><dd><p>Name of variable to use for cross section profiles, by default ‘Model_Layers’</p>
-</dd>
-<dt><strong>surface_elevation_variable</strong><span class="classifier">str, optional</span></dt><dd><p>Variable to use for the surface elevation, by default ‘Surface_Elevation’</p>
-</dd>
-<dt><strong>bedrock_elevation_variable</strong><span class="classifier">str, optional</span></dt><dd><p>Variable to use for the bedrock elevation, by default ‘Bedrock_Elevation’</p>
-</dd>
-<dt><strong>layer_elevation_coordinate</strong><span class="classifier">str, optional</span></dt><dd><p>Coordinate name to use for the layer elevations. 
-This should be a non-indexed coordinate with the shape of the x, y, and layer coordinates, by default ‘layer_elevs’</p>
-</dd>
-<dt><strong>show_layers</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to plot the layer boundaries on the cross section, by default True</p>
-</dd>
-<dt><strong>return_profile_dicts</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to return the profile dictionaries, rather than the matplotlib.Figure, by default False</p>
-</dd>
-<dt><strong>elev_unit</strong><span class="classifier">str, optional</span></dt><dd><p>Unit of elevation for the elevation data, by default ‘feet’</p>
-</dd>
-<dt><strong>convert_elevation_to</strong><span class="classifier">str, optional</span></dt><dd><p>If None (default), does not convert elevation. Otherwise, will convert elevation to specified unit.
-Only conversion between ‘ft’ and ‘meters’ supported.</p>
-</dd>
-<dt><strong>title</strong><span class="classifier">str, optional</span></dt><dd><p>Title to use for the output figure. If None, will be derived from variable names, by default None</p>
-</dd>
-<dt><strong>verbose</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to print information about process to terminal, by default False</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>matplotlib.Figure</dt><dd><p>Matplotlib.Figure instance is returned, unles return_profile_dicts is True.
-If return_profile_dicts=True, then a list of dicts with information about the profiles is returned.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
-
-
-           </div>
-          </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="w4h.read.html" class="btn btn-neutral float-left" title="w4h.read module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="w4h.w4h_gui.html" class="btn btn-neutral float-right" title="w4h.w4h_gui module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2026, Author.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/w4h.visualization.rst.txt"
+          rel="nofollow">Page source</a>
     </div>
 
-  <hr/>
+    
 
-  <div role="contentinfo">
-    <p>&#169; Copyright 2024, Author.</p>
-  </div>
-
-  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
-
-</footer>
-        </div>
-      </div>
-    </section>
-  </div>
-  <script>
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script> 
-
-</body>
+    
+  </body>
 </html>

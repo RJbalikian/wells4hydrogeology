@@ -937,12 +937,21 @@ def sample_raster_points(raster=None, points_df=None,
     if verbose:
         print(f"\t{uniqueWells.shape[0]} unique wells idenfied using {well_id_col} column")
     
-    # Loop over DataFrame rows
-    for i, row in uniqueWells.iterrows():
-        # Select data from DataArray at current coordinates and append to list
-        zInd.append(i)
-        zData.append([row[well_id_col], raster.sel(x=row[xCOLOUT], y=row[yCOLOUT], method='nearest').item()])
+    # Potential update: use xarray indexing to sample data values
+    xs = xr.DataArray(uniqueWells[xCOLOUT].values, dims="points")
+    ys = xr.DataArray(uniqueWells[yCOLOUT].values, dims="points")
+
+    zData = raster.sel(x=xs, y=ys, method="nearest").values
+    zInd = np.arange(uniqueWells.shape[0])
+    zData = zip(uniqueWells[well_id_col], zData)
     
+    # Loop over DataFrame rows
+    # print("LOOP ITERATION")
+    #for i, row in uniqueWells.iterrows():
+        # Select data from DataArray at current coordinates and append to list
+    #    zInd.append(i)
+    #    zData.append([row[well_id_col], raster.sel(x=row[xCOLOUT], y=row[yCOLOUT], method='nearest').item()])
+
     inputtype = points_df.dtypes[well_id_col]
     wellZDF = pd.DataFrame(zData, columns=[well_id_col, new_col], index=pd.Index(zInd))
 

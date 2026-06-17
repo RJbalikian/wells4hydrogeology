@@ -1,46 +1,354 @@
-
-
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" data-content_root="./">
-<head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>w4h.layers module &mdash; w4h 0.0.22-dev documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  
-      <script src="_static/documentation_options.js?v=7d709ffc"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
-      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="_static/js/theme.js"></script>
+    <title>w4h.layers module &#8212; w4h  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <script src="_static/documentation_options.js?v=7d709ffc"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="w4h.mapping module" href="w4h.mapping.html" />
-    <link rel="prev" title="w4h.export module" href="w4h.export.html" /> 
-</head>
+    <link rel="prev" title="w4h.export module" href="w4h.export.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
 
-<body class="wy-body-for-nav"> 
-  <div class="wy-grid-for-nav">
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
+  
+  
 
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
           
+
+          <div class="body" role="main">
+            
+  <section id="module-w4h.layers">
+<span id="w4h-layers-module"></span><h1>w4h.layers module<a class="headerlink" href="#module-w4h.layers" title="Link to this heading">¶</a></h1>
+<p>The Layers module contains functions for splitting data into a layered model
+and for interpolating data within the layers</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="w4h.layers.combine_dataset">
+<span class="sig-prename descclassname"><span class="pre">w4h.layers.</span></span><span class="sig-name descname"><span class="pre">combine_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surface_elev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bedrock_elev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_thick</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/layers.html#combine_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.layers.combine_dataset" title="Link to this definition">¶</a></dt>
+<dd><p>Function to combine xarray datasets or datarrays into
+a single xarray.Dataset.
+Useful to add surface, bedrock, layer thick, and layer datasets
+all into one variable, for pickling or netcdf export, for example.</p>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>layer_dataset<span class="classifier">xr.DataArray</span></dt><dd><p>DataArray contining all the interpolated layer information.</p>
+</dd>
+<dt>surface_elev<span class="classifier">xr.DataArray</span></dt><dd><p>DataArray containing surface elevation data</p>
+</dd>
+<dt>bedrock_elev<span class="classifier">xr.DataArray</span></dt><dd><p>DataArray containing bedrock elevation data</p>
+</dd>
+<dt>layer_thick<span class="classifier">xr.DataArray</span></dt><dd><p>DataArray containing layer thickness at each point in the model grid</p>
+</dd>
+<dt>log<span class="classifier">bool, default = False</span></dt><dd><p>Whether to log inputs and outputs to log file.</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>xarray.Dataset or xarray.DataArray</dt><dd><p>Dataset with all arrays set to different variables within dataset.
+Or simply DataArray, if specified.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="w4h.layers.get_layer_depths">
+<span class="sig-prename descclassname"><span class="pre">w4h.layers.</span></span><span class="sig-name descname"><span class="pre">get_layer_depths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df_with_depths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surface_elev_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'SURFACE_ELEV'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_thick_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'LAYER_THICK'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/layers.html#get_layer_depths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.layers.get_layer_depths" title="Link to this definition">¶</a></dt>
+<dd><p>Function to calculate depths and elevations of each model layer
+at each well based on surface elevation, bedrock elevation,
+and number of layers/layer thickness</p>
+<section id="id1">
+<h2>Parameters<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>df_with_depths<span class="classifier">pandas.DataFrame</span></dt><dd><p>DataFrame containing well metdata</p>
+</dd>
+<dt>layers<span class="classifier">int, default=9</span></dt><dd><p>Number of layers. This should correlate with
+get_drift_thick() input parameter, if drift thickness was calculated
+using that function, by default 9.</p>
+</dd>
+<dt>log<span class="classifier">bool, default = False</span></dt><dd><p>Whether to log inputs and outputs to log file.</p>
+</dd>
+</dl>
+</section>
+<section id="id2">
+<h2>Returns<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>pandas.DataFrame</dt><dd><p>DataFrame containing new columns for depth to/elevation of layers.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="w4h.layers.layer_interp">
+<span class="sig-prename descclassname"><span class="pre">w4h.layers.</span></span><span class="sig-name descname"><span class="pre">layer_interp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interp_kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nearest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surface_grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bedrock_grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_thick_grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drift_thick_grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dataset'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TARG_THICK_PER'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'LAYER'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xcol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ycol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xcoord</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'x'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ycoord</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'y'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/layers.html#layer_interp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.layers.layer_interp" title="Link to this definition">¶</a></dt>
+<dd><p>Function to interpolate results (by default TARG_THICK_PER,
+or Target thickness percent per layer).
+Converts dataframe points to gridded data.
+Results are saved to Model_Layer variable
+in output xarray.Dataset, by default</p>
+<p>This function uses the scipy.interpolate module for interpolation.</p>
+<blockquote>
+<div><p>Different interpolation methods may be used by specifying <cite>interp_kind=</cite>:
+* <cite>‘Nearest’</cite>: Nearest neighbor (fastest).
+Uses scipy.interpolate.NearestNDInterpolator()
+* <cite>‘Linear’</cite>: Linear interpolation
+Uses scipy.interpolate.LinearNDInterpolator()
+* <cite>‘Inter2d’</cite>: Spline interpolation
+Uses scipy.interpolate.bisplrep()
+* <cite>‘CloughTocher</cite>’: Cubic interpolation using clough-tocher method
+Uses scipy.interpolate.CloughTocher2DInterpolator()
+* <cite>‘Radial basis function’</cite>: Radial basis function
+Uses scipy.interpolate.RBFInterpolator()</p>
+</div></blockquote>
+<section id="id3">
+<h2>Parameters<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>points<span class="classifier">list</span></dt><dd><p>List containing pandas dataframes or geopandas geoadataframes containing the point data. Should be resDF_list output from layer_target_thick().</p>
+</dd>
+<dt>model_grid<span class="classifier">xr.DataArray or xr.Dataset</span></dt><dd><p>Xarray DataArray or DataSet with the coordinates/spatial reference of the output model_grid to interpolate to</p>
+</dd>
+<dt>layers<span class="classifier">int, default=None</span></dt><dd><p>Number of layers for interpolation. If None, uses the length ofthe points list to determine number of layers. By default None.</p>
+</dd>
+<dt>interp_kind<span class="classifier">str, {‘nearest’, ‘interp2d’,’linear’, ‘cloughtocher’, ‘radial basis function’}</span></dt><dd><p>Type of interpolation to use. See scipy.interpolate N-D scattered. Values can be any of the following (also shown in “kind” column of N-D scattered section of table here: <a class="reference external" href="https://docs.scipy.org/doc/scipy/tutorial/interpolate.html">https://docs.scipy.org/doc/scipy/tutorial/interpolate.html</a>). By default ‘nearest’</p>
+</dd>
+<dt>return_type<span class="classifier">str, {‘dataset’, ‘dataarray’}</span></dt><dd><p>Type of xarray object to return, either xr.DataArray or xr.Dataset, by default ‘dataset.’</p>
+</dd>
+<dt>export_dir<span class="classifier">str or pathlib.Path, default=None</span></dt><dd><p>Export directory for interpolated grids, using w4h.export_grids(). If None, does not export, by default None.</p>
+</dd>
+<dt>target_col<span class="classifier">str, default = ‘TARG_THICK_PER’</span></dt><dd><p>Name of column in points containing data to be interpolated, by default ‘TARG_THICK_PER’.</p>
+</dd>
+<dt>layer_col<span class="classifier">str, default = ‘Layer’</span></dt><dd><p>Name of column containing layer number. Not currently used, by default ‘LAYER’</p>
+</dd>
+<dt>xcol<span class="classifier">str, default = ‘None’</span></dt><dd><p>Name of column containing x coordinates. If None, will look for ‘geometry’ column, as in a geopandas.GeoDataframe. By default None</p>
+</dd>
+<dt>ycol<span class="classifier">str, default = ‘None’</span></dt><dd><p>Name of column containing y coordinates. If None, will look for ‘geometry’ column, as in a geopandas.GeoDataframe. By default None</p>
+</dd>
+<dt>xcoord<span class="classifier">str, default=’x’</span></dt><dd><p>Name of x coordinate in model_grid, used to extract x values of model_grid, by default ‘x’</p>
+</dd>
+<dt>ycoord<span class="classifier">str, default=’y’</span></dt><dd><p>Name of y coordinate in model_grid, used to extract x values of model_grid, by default ‘y’</p>
+</dd>
+<dt>log<span class="classifier">bool, default = True</span></dt><dd><p>Whether to log inputs and outputs to log file.</p>
+</dd>
+<dt><a href="#id4"><span class="problematic" id="id5">**</span></a>kwargs</dt><dd><p>Keyword arguments to be read directly into whichever scipy.interpolate function is designated by the interp_kind parameter.</p>
+</dd>
+</dl>
+</section>
+<section id="id6">
+<h2>Returns<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>interp_data<span class="classifier">xr.DataArray or xr.Dataset, depending on return_type</span></dt><dd><p>By default, returns an xr.DataArray object with the layers added as a new dimension called Layer. Can also specify return_type=’dataset’ to return an xr.Dataset with each layer as a separate variable.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="w4h.layers.layer_target_thick">
+<span class="sig-prename descclassname"><span class="pre">w4h.layers.</span></span><span class="sig-name descname"><span class="pre">layer_target_thick</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gdf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">well_id_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'API_NUMBER'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_all</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outfile_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth_top_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TOP'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth_bot_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BOTTOM'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/layers.html#layer_target_thick"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.layers.layer_target_thick" title="Link to this definition">¶</a></dt>
+<dd><dl>
+<dt>Function to calculate thickness of target material</dt><dd><p>in each layer at each well point.
+This function loops through each model layer and divides up
+the well intervals from the input GeoDataFrame into 4 categories:
+* 1) Intervals that pierce top of model layer but end within it
+* 2) Intervals contained entirely within model layer
+* 3) Intervals that begin within the model layer but pierce the bottom
+* 4) Intervals that begin above and end below the model layer</p>
+<p>For each category, the amount/thickness of the target material
+within each layer is calculated. These records are then
+“truth-checked” to ensure there are not duplicates and combined.
+The percent thickness (target thickness/layer thickness) is calculated,
+before data is returned and/or exported.</p>
+</dd>
+</dl>
+<section id="id7">
+<h2>Parameters<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>gdf<span class="classifier">geopandas.GeoDataFrame</span></dt><dd><p>Geodataframe containing classified data, surface elevation,
+bedrock elevation, layer depths, geometry.</p>
+</dd>
+<dt>layers<span class="classifier">int, default=9</span></dt><dd><p>Number of layers in model, by default 9</p>
+</dd>
+<dt>well_id_col<span class="classifier">str, default=”API_NUMBER”</span></dt><dd><p>The name of the column that is used for uniquely identifying each well</p>
+</dd>
+<dt>return_all<span class="classifier">bool, default=False</span></dt><dd><p>If True, return list of original GeoDataFrames with extra column
+added for target thick for each layer.
+If False, return list of geopandas.GeoDataFrames with only
+essential information for each layer.</p>
+</dd>
+<dt>export_dir<span class="classifier">str or pathlib.Path, default=None</span></dt><dd><p>If str or pathlib.Path, should be directory to which
+to export dataframes built in function.</p>
+</dd>
+<dt>outfile_prefix<span class="classifier">str, default=None</span></dt><dd><p>Only used if export_dir is set.
+Will be used at the start of the exported filenames.</p>
+</dd>
+<dt>depth_top_col<span class="classifier">str, default=’TOP’</span></dt><dd><p>Name of column containing data for depth
+to top of described well intervals.</p>
+</dd>
+<dt>depth_bot_col<span class="classifier">str, default=’BOTTOM’</span></dt><dd><p>Name of column containing data for depth
+to bottom of described well intervals.</p>
+</dd>
+<dt>log<span class="classifier">bool, default = True</span></dt><dd><p>Whether to log inputs and outputs to log file.</p>
+</dd>
+</dl>
+</section>
+<section id="id8">
+<h2>Returns<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>res_df and/or res<span class="classifier">list</span></dt><dd><p>A list of Geopandas GeoDataFrames containing only important information
+needed for next stage of analysis. If <cite>return_all=True</cite>, the input data
+with the actual descriptions will be returned
+as a separate list of GeoDataFrames.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="w4h.layers.merge_metadata">
+<span class="sig-prename descclassname"><span class="pre">w4h.layers.</span></span><span class="sig-name descname"><span class="pre">merge_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">well_id_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'API_NUMBER'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_cols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header_cols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_pick_cols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_duplicate_cols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/layers.html#merge_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.layers.merge_metadata" title="Link to this definition">¶</a></dt>
+<dd><p>Function to merge tables, intended for merging metadata and data tables</p>
+<section id="id9">
+<h2>Parameters<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>data_df<span class="classifier">pandas.DataFrame</span></dt><dd><p>“Left” dataframe, intended for this purpose to be
+dataframe with main data, but can be anything</p>
+</dd>
+<dt>header_df<span class="classifier">pandas.DataFrame</span></dt><dd><p>“Right” dataframe, intended for this purpose to be
+dataframe with metadata, but can be anything</p>
+</dd>
+<dt>data_cols<span class="classifier">list, optional</span></dt><dd><p>List of strings of column names, for columns
+to be included after join from “left” table (data table).
+If None, all columns are kept, by default None</p>
+</dd>
+<dt>header_cols<span class="classifier">list, optional</span></dt><dd><p>List of strings of columns names, for columns to be included
+in merged table after merge from “right” table (metadata).
+If None, all columns are kept, by default None</p>
+</dd>
+<dt>auto_pick_cols<span class="classifier">bool, default = False</span></dt><dd><p>Whether to autopick the columns from the metadata table.
+If True, the following column names are kept:
+[<cite>well_id_col</cite>, ‘LATITUDE’, ‘LONGITUDE’, ‘BEDROCK_ELEV’,
+‘SURFACE_ELEV’, ‘BEDROCK_DEPTH’, ‘LAYER_THICK’], by default False.</p>
+</dd>
+<dt>drop_duplicate_cols<span class="classifier">bool, optional</span></dt><dd><p>If True, drops duplicate columns from the tables so that
+columns do not get renamed upon merge, by default True.</p>
+</dd>
+<dt>log<span class="classifier">bool, default = False</span></dt><dd><p>Whether to log inputs and outputs to log file.</p>
+</dd>
+<dt><a href="#id10"><span class="problematic" id="id11">**</span></a>kwargs</dt><dd><p>kwargs that are passed directly to pd.merge().
+By default, the ‘on’ and ‘how’ parameters are defined as
+on=`well_id_col` and how=’inner’.</p>
+</dd>
+</dl>
+</section>
+<section id="id12">
+<h2>Returns<a class="headerlink" href="#id12" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>mergedTable<span class="classifier">pandas.DataFrame</span></dt><dd><p>Merged dataframe</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="w4h.layers.natural_neighbor_interp">
+<span class="sig-prename descclassname"><span class="pre">w4h.layers.</span></span><span class="sig-name descname"><span class="pre">natural_neighbor_interp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallelize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">well_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'API_NUMBER'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interp_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TARG_THICK_PER'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xcoord</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'LONGITUDE_PROJ'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ycoord</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'LATITUDE_PROJ'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'SURFACE_ELEV'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">point_crs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'EPSG:5070'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_crs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'EPSG:5070'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_crs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'EPSG:5070'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sparsity_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_adjacent_regions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_voronoi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_segments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/layers.html#natural_neighbor_interp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.layers.natural_neighbor_interp" title="Link to this definition">¶</a></dt>
+<dd><p>Implementation of natural neighbor algorithm, with sparse interpolation.
+This interpolation algorithm takes a very long time.</p>
+<section id="id13">
+<h2>Parameters<a class="headerlink" href="#id13" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>points<span class="classifier">{pd.DataFrame, gpd.GeoDataFrame}</span></dt><dd><p>DataFrame with point data</p>
+</dd>
+<dt>model_grid<span class="classifier">{xr.DataArray, xr.Dataset}, optional</span></dt><dd><p>xarray object with coordinates at grid for interpolation, by default None</p>
+</dd>
+<dt>parallelize<span class="classifier">bool, optional</span></dt><dd><p>Whether to use parallelization. Currently in beta/not supported, by default False</p>
+</dd>
+<dt>well_id<span class="classifier">str, optional</span></dt><dd><p>String with column name of Well ID, by default ‘API_NUMBER’</p>
+</dd>
+<dt>interp_value<span class="classifier">str, optional</span></dt><dd><p>Column name in points df to use for interpolation, by default ‘ELEVATION’</p>
+</dd>
+<dt>xcoord<span class="classifier">str, optional</span></dt><dd><p>X coordinate column name, by default ‘LONGITUDE’</p>
+</dd>
+<dt>ycoord<span class="classifier">str, optional</span></dt><dd><p>Y coordinate column name, by default ‘LATITUDE’</p>
+</dd>
+<dt>elev<span class="classifier">str, optional</span></dt><dd><p>Elevation column name, by default “ELEVATION”</p>
+</dd>
+<dt>show_points<span class="classifier">bool, optional</span></dt><dd><p>Whether to show well points, by default False</p>
+</dd>
+<dt>sparsity_factor<span class="classifier">int, optional</span></dt><dd><p>Factor by which to “decimate” the coordinates for Natural Neighbor analysis.
+These points are then interpolated linearly to the model grid.
+Using sparse coordinates saves computation time, by default 10</p>
+</dd>
+<dt>show_plot<span class="classifier">bool, optional</span></dt><dd><p>Whether to show a plot of nearby points of interest for each point, 
+and overlap of new Voronoi and old, by default False</p>
+</dd>
+<dt>show_adjacent_regions<span class="classifier">bool, optional</span></dt><dd><p>Whether to show the plot of the adjacent regions for each point, by default False</p>
+</dd>
+<dt>show_voronoi<span class="classifier">bool, optional</span></dt><dd><p>Whether to show the voronoi polygons, by default False</p>
+</dd>
+<dt>time_segments<span class="classifier">bool, optional</span></dt><dd><p>Whether to time each segment of the analysis, by default False</p>
+</dd>
+<dt>verbose<span class="classifier">bool, optional</span></dt><dd><p>Whether to print additional results or parameters to the terminal</p>
+</dd>
+</dl>
+</section>
+<section id="id14">
+<h2>Returns<a class="headerlink" href="#id14" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>_type_</dt><dd><p>_description_</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</section>
+
+
+          </div>
           
-          <a href="index.html" class="icon icon-home">
-            w4h
-          </a>
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">w4h</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="w4h.html">w4h package</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.add_control_points"><code class="docutils literal notranslate"><span class="pre">add_control_points()</span></code></a></li>
@@ -63,6 +371,7 @@
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.get_search_terms"><code class="docutils literal notranslate"><span class="pre">get_search_terms()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.get_unique_wells"><code class="docutils literal notranslate"><span class="pre">get_unique_wells()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.grid2study_area"><code class="docutils literal notranslate"><span class="pre">grid2study_area()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.gui"><code class="docutils literal notranslate"><span class="pre">gui()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.layer_interp"><code class="docutils literal notranslate"><span class="pre">layer_interp()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.layer_target_thick"><code class="docutils literal notranslate"><span class="pre">layer_target_thick()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.logger_function"><code class="docutils literal notranslate"><span class="pre">logger_function()</span></code></a></li>
@@ -117,364 +426,45 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="w4h.classify.html">w4h.classify module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="w4h.clean.html">w4h.clean module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="w4h.core.html">w4h.core module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="w4h.export.html">w4h.export module</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">w4h.layers module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#w4h.layers.combine_dataset"><code class="docutils literal notranslate"><span class="pre">combine_dataset()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#w4h.layers.get_layer_depths"><code class="docutils literal notranslate"><span class="pre">get_layer_depths()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#w4h.layers.layer_interp"><code class="docutils literal notranslate"><span class="pre">layer_interp()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#w4h.layers.layer_target_thick"><code class="docutils literal notranslate"><span class="pre">layer_target_thick()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#w4h.layers.merge_metadata"><code class="docutils literal notranslate"><span class="pre">merge_metadata()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#w4h.layers.natural_neighbor_interp"><code class="docutils literal notranslate"><span class="pre">natural_neighbor_interp()</span></code></a></li>
 </ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="w4h.mapping.html">w4h.mapping module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="w4h.read.html">w4h.read module</a></li>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="w4h.html">w4h package</a><ul>
+      <li>Previous: <a href="w4h.export.html" title="previous chapter">w4h.export module</a></li>
+      <li>Next: <a href="w4h.mapping.html" title="next chapter">w4h.mapping module</a></li>
+  </ul></li>
+  </ul></li>
 </ul>
+</div>
+
+
+
+
+
+
+
 
         </div>
       </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">w4h</a>
-      </nav>
-
-      <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="Page navigation">
-  <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="w4h.html">w4h package</a></li>
-      <li class="breadcrumb-item active">w4h.layers module</li>
-      <li class="wy-breadcrumbs-aside">
-            <a href="_sources/w4h.layers.rst.txt" rel="nofollow"> View page source</a>
-      </li>
-  </ul>
-  <hr/>
-</div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-             
-  <section id="module-w4h.layers">
-<span id="w4h-layers-module"></span><h1>w4h.layers module<a class="headerlink" href="#module-w4h.layers" title="Link to this heading">¶</a></h1>
-<p>The Layers module contains functions for splitting data into a layered model
-and for interpolating data within the layers</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="w4h.layers.combine_dataset">
-<span class="sig-prename descclassname"><span class="pre">w4h.layers.</span></span><span class="sig-name descname"><span class="pre">combine_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surface_elev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bedrock_elev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_thick</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/layers.html#combine_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.layers.combine_dataset" title="Link to this definition">¶</a></dt>
-<dd><p>Function to combine xarray datasets or datarrays into
-a single xarray.Dataset.
-Useful to add surface, bedrock, layer thick, and layer datasets
-all into one variable, for pickling or netcdf export, for example.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>layer_dataset</strong><span class="classifier">xr.DataArray</span></dt><dd><p>DataArray contining all the interpolated layer information.</p>
-</dd>
-<dt><strong>surface_elev</strong><span class="classifier">xr.DataArray</span></dt><dd><p>DataArray containing surface elevation data</p>
-</dd>
-<dt><strong>bedrock_elev</strong><span class="classifier">xr.DataArray</span></dt><dd><p>DataArray containing bedrock elevation data</p>
-</dd>
-<dt><strong>layer_thick</strong><span class="classifier">xr.DataArray</span></dt><dd><p>DataArray containing layer thickness at each point in the model grid</p>
-</dd>
-<dt><strong>log</strong><span class="classifier">bool, default = False</span></dt><dd><p>Whether to log inputs and outputs to log file.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>xarray.Dataset or xarray.DataArray</dt><dd><p>Dataset with all arrays set to different variables within dataset.
-Or simply DataArray, if specified.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="w4h.layers.get_layer_depths">
-<span class="sig-prename descclassname"><span class="pre">w4h.layers.</span></span><span class="sig-name descname"><span class="pre">get_layer_depths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df_with_depths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surface_elev_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'SURFACE_ELEV'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_thick_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'LAYER_THICK'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/layers.html#get_layer_depths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.layers.get_layer_depths" title="Link to this definition">¶</a></dt>
-<dd><p>Function to calculate depths and elevations of each model layer
-at each well based on surface elevation, bedrock elevation,
-and number of layers/layer thickness</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>df_with_depths</strong><span class="classifier">pandas.DataFrame</span></dt><dd><p>DataFrame containing well metdata</p>
-</dd>
-<dt><strong>layers</strong><span class="classifier">int, default=9</span></dt><dd><p>Number of layers. This should correlate with
-get_drift_thick() input parameter, if drift thickness was calculated
-using that function, by default 9.</p>
-</dd>
-<dt><strong>log</strong><span class="classifier">bool, default = False</span></dt><dd><p>Whether to log inputs and outputs to log file.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>pandas.DataFrame</dt><dd><p>DataFrame containing new columns for depth to/elevation of layers.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="w4h.layers.layer_interp">
-<span class="sig-prename descclassname"><span class="pre">w4h.layers.</span></span><span class="sig-name descname"><span class="pre">layer_interp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interp_kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nearest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surface_grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bedrock_grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_thick_grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drift_thick_grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dataset'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TARG_THICK_PER'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'LAYER'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xcol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ycol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xcoord</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'x'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ycoord</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'y'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/layers.html#layer_interp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.layers.layer_interp" title="Link to this definition">¶</a></dt>
-<dd><p>Function to interpolate results (by default TARG_THICK_PER,
-or Target thickness percent per layer).
-Converts dataframe points to gridded data.
-Results are saved to Model_Layer variable
-in output xarray.Dataset, by default</p>
-<p>This function uses the scipy.interpolate module for interpolation.</p>
-<blockquote>
-<div><p>Different interpolation methods may be used by specifying <cite>interp_kind=</cite>:
-* <cite>‘Nearest’</cite>: Nearest neighbor (fastest).
-Uses scipy.interpolate.NearestNDInterpolator()
-* <cite>‘Linear’</cite>: Linear interpolation
-Uses scipy.interpolate.LinearNDInterpolator()
-* <cite>‘Inter2d’</cite>: Spline interpolation
-Uses scipy.interpolate.bisplrep()
-* <cite>‘CloughTocher</cite>’: Cubic interpolation using clough-tocher method
-Uses scipy.interpolate.CloughTocher2DInterpolator()
-* <cite>‘Radial basis function’</cite>: Radial basis function
-Uses scipy.interpolate.RBFInterpolator()</p>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>points</strong><span class="classifier">list</span></dt><dd><p>List containing pandas dataframes or geopandas geoadataframes containing the point data. Should be resDF_list output from layer_target_thick().</p>
-</dd>
-<dt><strong>model_grid</strong><span class="classifier">xr.DataArray or xr.Dataset</span></dt><dd><p>Xarray DataArray or DataSet with the coordinates/spatial reference of the output model_grid to interpolate to</p>
-</dd>
-<dt><strong>layers</strong><span class="classifier">int, default=None</span></dt><dd><p>Number of layers for interpolation. If None, uses the length ofthe points list to determine number of layers. By default None.</p>
-</dd>
-<dt><strong>interp_kind</strong><span class="classifier">str, {‘nearest’, ‘interp2d’,’linear’, ‘cloughtocher’, ‘radial basis function’}</span></dt><dd><p>Type of interpolation to use. See scipy.interpolate N-D scattered. Values can be any of the following (also shown in “kind” column of N-D scattered section of table here: <a class="reference external" href="https://docs.scipy.org/doc/scipy/tutorial/interpolate.html">https://docs.scipy.org/doc/scipy/tutorial/interpolate.html</a>). By default ‘nearest’</p>
-</dd>
-<dt><strong>return_type</strong><span class="classifier">str, {‘dataset’, ‘dataarray’}</span></dt><dd><p>Type of xarray object to return, either xr.DataArray or xr.Dataset, by default ‘dataset.’</p>
-</dd>
-<dt><strong>export_dir</strong><span class="classifier">str or pathlib.Path, default=None</span></dt><dd><p>Export directory for interpolated grids, using w4h.export_grids(). If None, does not export, by default None.</p>
-</dd>
-<dt><strong>target_col</strong><span class="classifier">str, default = ‘TARG_THICK_PER’</span></dt><dd><p>Name of column in points containing data to be interpolated, by default ‘TARG_THICK_PER’.</p>
-</dd>
-<dt><strong>layer_col</strong><span class="classifier">str, default = ‘Layer’</span></dt><dd><p>Name of column containing layer number. Not currently used, by default ‘LAYER’</p>
-</dd>
-<dt><strong>xcol</strong><span class="classifier">str, default = ‘None’</span></dt><dd><p>Name of column containing x coordinates. If None, will look for ‘geometry’ column, as in a geopandas.GeoDataframe. By default None</p>
-</dd>
-<dt><strong>ycol</strong><span class="classifier">str, default = ‘None’</span></dt><dd><p>Name of column containing y coordinates. If None, will look for ‘geometry’ column, as in a geopandas.GeoDataframe. By default None</p>
-</dd>
-<dt><strong>xcoord</strong><span class="classifier">str, default=’x’</span></dt><dd><p>Name of x coordinate in model_grid, used to extract x values of model_grid, by default ‘x’</p>
-</dd>
-<dt><strong>ycoord</strong><span class="classifier">str, default=’y’</span></dt><dd><p>Name of y coordinate in model_grid, used to extract x values of model_grid, by default ‘y’</p>
-</dd>
-<dt><strong>log</strong><span class="classifier">bool, default = True</span></dt><dd><p>Whether to log inputs and outputs to log file.</p>
-</dd>
-<dt><strong>**kwargs</strong></dt><dd><p>Keyword arguments to be read directly into whichever scipy.interpolate function is designated by the interp_kind parameter.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt><strong>interp_data</strong><span class="classifier">xr.DataArray or xr.Dataset, depending on return_type</span></dt><dd><p>By default, returns an xr.DataArray object with the layers added as a new dimension called Layer. Can also specify return_type=’dataset’ to return an xr.Dataset with each layer as a separate variable.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="w4h.layers.layer_target_thick">
-<span class="sig-prename descclassname"><span class="pre">w4h.layers.</span></span><span class="sig-name descname"><span class="pre">layer_target_thick</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gdf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">well_id_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'API_NUMBER'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_all</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outfile_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth_top_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TOP'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth_bot_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BOTTOM'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/layers.html#layer_target_thick"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.layers.layer_target_thick" title="Link to this definition">¶</a></dt>
-<dd><dl>
-<dt>Function to calculate thickness of target material</dt><dd><p>in each layer at each well point.
-This function loops through each model layer and divides up
-the well intervals from the input GeoDataFrame into 4 categories:
-* 1) Intervals that pierce top of model layer but end within it
-* 2) Intervals contained entirely within model layer
-* 3) Intervals that begin within the model layer but pierce the bottom
-* 4) Intervals that begin above and end below the model layer</p>
-<p>For each category, the amount/thickness of the target material
-within each layer is calculated. These records are then
-“truth-checked” to ensure there are not duplicates and combined.
-The percent thickness (target thickness/layer thickness) is calculated,
-before data is returned and/or exported.</p>
-</dd>
-</dl>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>gdf</strong><span class="classifier">geopandas.GeoDataFrame</span></dt><dd><p>Geodataframe containing classified data, surface elevation,
-bedrock elevation, layer depths, geometry.</p>
-</dd>
-<dt><strong>layers</strong><span class="classifier">int, default=9</span></dt><dd><p>Number of layers in model, by default 9</p>
-</dd>
-<dt><strong>well_id_col</strong><span class="classifier">str, default=”API_NUMBER”</span></dt><dd><p>The name of the column that is used for uniquely identifying each well</p>
-</dd>
-<dt><strong>return_all</strong><span class="classifier">bool, default=False</span></dt><dd><p>If True, return list of original GeoDataFrames with extra column
-added for target thick for each layer.
-If False, return list of geopandas.GeoDataFrames with only
-essential information for each layer.</p>
-</dd>
-<dt><strong>export_dir</strong><span class="classifier">str or pathlib.Path, default=None</span></dt><dd><p>If str or pathlib.Path, should be directory to which
-to export dataframes built in function.</p>
-</dd>
-<dt><strong>outfile_prefix</strong><span class="classifier">str, default=None</span></dt><dd><p>Only used if export_dir is set.
-Will be used at the start of the exported filenames.</p>
-</dd>
-<dt><strong>depth_top_col</strong><span class="classifier">str, default=’TOP’</span></dt><dd><p>Name of column containing data for depth
-to top of described well intervals.</p>
-</dd>
-<dt><strong>depth_bot_col</strong><span class="classifier">str, default=’BOTTOM’</span></dt><dd><p>Name of column containing data for depth
-to bottom of described well intervals.</p>
-</dd>
-<dt><strong>log</strong><span class="classifier">bool, default = True</span></dt><dd><p>Whether to log inputs and outputs to log file.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt><strong>res_df and/or res</strong><span class="classifier">list</span></dt><dd><p>A list of Geopandas GeoDataFrames containing only important information
-needed for next stage of analysis. If <cite>return_all=True</cite>, the input data
-with the actual descriptions will be returned
-as a separate list of GeoDataFrames.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="w4h.layers.merge_metadata">
-<span class="sig-prename descclassname"><span class="pre">w4h.layers.</span></span><span class="sig-name descname"><span class="pre">merge_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">well_id_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'API_NUMBER'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_cols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header_cols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_pick_cols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_duplicate_cols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/layers.html#merge_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.layers.merge_metadata" title="Link to this definition">¶</a></dt>
-<dd><p>Function to merge tables, intended for merging metadata and data tables</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>data_df</strong><span class="classifier">pandas.DataFrame</span></dt><dd><p>“Left” dataframe, intended for this purpose to be
-dataframe with main data, but can be anything</p>
-</dd>
-<dt><strong>header_df</strong><span class="classifier">pandas.DataFrame</span></dt><dd><p>“Right” dataframe, intended for this purpose to be
-dataframe with metadata, but can be anything</p>
-</dd>
-<dt><strong>data_cols</strong><span class="classifier">list, optional</span></dt><dd><p>List of strings of column names, for columns
-to be included after join from “left” table (data table).
-If None, all columns are kept, by default None</p>
-</dd>
-<dt><strong>header_cols</strong><span class="classifier">list, optional</span></dt><dd><p>List of strings of columns names, for columns to be included
-in merged table after merge from “right” table (metadata).
-If None, all columns are kept, by default None</p>
-</dd>
-<dt><strong>auto_pick_cols</strong><span class="classifier">bool, default = False</span></dt><dd><p>Whether to autopick the columns from the metadata table.
-If True, the following column names are kept:
-[<cite>well_id_col</cite>, ‘LATITUDE’, ‘LONGITUDE’, ‘BEDROCK_ELEV’,
-‘SURFACE_ELEV’, ‘BEDROCK_DEPTH’, ‘LAYER_THICK’], by default False.</p>
-</dd>
-<dt><strong>drop_duplicate_cols</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, drops duplicate columns from the tables so that
-columns do not get renamed upon merge, by default True.</p>
-</dd>
-<dt><strong>log</strong><span class="classifier">bool, default = False</span></dt><dd><p>Whether to log inputs and outputs to log file.</p>
-</dd>
-<dt><strong>**kwargs</strong></dt><dd><p>kwargs that are passed directly to pd.merge().
-By default, the ‘on’ and ‘how’ parameters are defined as
-on=`well_id_col` and how=’inner’.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt><strong>mergedTable</strong><span class="classifier">pandas.DataFrame</span></dt><dd><p>Merged dataframe</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="w4h.layers.natural_neighbor_interp">
-<span class="sig-prename descclassname"><span class="pre">w4h.layers.</span></span><span class="sig-name descname"><span class="pre">natural_neighbor_interp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallelize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">well_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'API_NUMBER'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interp_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ELEVATION'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xcoord</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'LONGITUDE'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ycoord</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'LATITUDE'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ELEVATION'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sparsity_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_adjacent_regions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_voronoi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_segments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/layers.html#natural_neighbor_interp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.layers.natural_neighbor_interp" title="Link to this definition">¶</a></dt>
-<dd><p>Implementation of natural neighbor algorithm, with sparse interpolation.
-This interpolation algorithm takes a very long time.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>points</strong><span class="classifier">{pd.DataFrame, gpd.GeoDataFrame}</span></dt><dd><p>DataFrame with point data</p>
-</dd>
-<dt><strong>model_grid</strong><span class="classifier">{xr.DataArray, xr.Dataset}, optional</span></dt><dd><p>xarray object with coordinates at grid for interpolation, by default None</p>
-</dd>
-<dt><strong>parallelize</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to use parallelization. Currently in beta/not supported, by default False</p>
-</dd>
-<dt><strong>well_id</strong><span class="classifier">str, optional</span></dt><dd><p>String with column name of Well ID, by default ‘API_NUMBER’</p>
-</dd>
-<dt><strong>interp_value</strong><span class="classifier">str, optional</span></dt><dd><p>Column name in points df to use for interpolation, by default ‘ELEVATION’</p>
-</dd>
-<dt><strong>xcoord</strong><span class="classifier">str, optional</span></dt><dd><p>X coordinate column name, by default ‘LONGITUDE’</p>
-</dd>
-<dt><strong>ycoord</strong><span class="classifier">str, optional</span></dt><dd><p>Y coordinate column name, by default ‘LATITUDE’</p>
-</dd>
-<dt><strong>elev</strong><span class="classifier">str, optional</span></dt><dd><p>Elevation column name, by default “ELEVATION”</p>
-</dd>
-<dt><strong>show_points</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to show well points, by default False</p>
-</dd>
-<dt><strong>sparsity_factor</strong><span class="classifier">int, optional</span></dt><dd><p>Factor by which to “decimate” the coordinates for Natural Neighbor analysis.
-These points are then interpolated linearly to the model grid.
-Using sparse coordinates saves computation time, by default 10</p>
-</dd>
-<dt><strong>show_plot</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to show a plot of nearby points of interest for each point, 
-and overlap of new Voronoi and old, by default False</p>
-</dd>
-<dt><strong>show_adjacent_regions</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to show the plot of the adjacent regions for each point, by default False</p>
-</dd>
-<dt><strong>show_voronoi</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to show the voronoi polygons, by default False</p>
-</dd>
-<dt><strong>time_segments</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to time each segment of the analysis, by default False</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>_type_</dt><dd><p>_description_</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
-
-
-           </div>
-          </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="w4h.export.html" class="btn btn-neutral float-left" title="w4h.export module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="w4h.mapping.html" class="btn btn-neutral float-right" title="w4h.mapping module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2026, Author.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/w4h.layers.rst.txt"
+          rel="nofollow">Page source</a>
     </div>
 
-  <hr/>
+    
 
-  <div role="contentinfo">
-    <p>&#169; Copyright 2024, Author.</p>
-  </div>
-
-  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
-
-</footer>
-        </div>
-      </div>
-    </section>
-  </div>
-  <script>
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script> 
-
-</body>
+    
+  </body>
 </html>

@@ -1,20 +1,3 @@
-import sphinx_rtd_theme
-import numpydoc
-import w4h
-
-import sys
-import os
-import pathlib
-confPath = pathlib.Path(__file__)
-docsDir = confPath.parent
-repoDir = docsDir.parent
-w4hDir = repoDir.joinpath('w4h')
-
-#Location of Sphinx files
-sys.path.insert(0, os.path.abspath(w4hDir.as_posix()))
-
-html_theme = "sphinx_rtd_theme"
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # Configuration file for the Sphinx documentation builder.
 #
 # For the full list of built-in configuration values, see the documentation:
@@ -24,9 +7,8 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'w4h'
-copyright = '2024, Author'
+copyright = '2026, Author'
 author = 'Author'
-release = '0.0.22-dev'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -35,8 +17,6 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
     'sphinx.ext.todo',
-    'numpydoc'
-
 ]
 
 templates_path = ['_templates']
@@ -47,8 +27,8 @@ language = 'en'
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "sphinx_rtd_theme"
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+html_theme = 'alabaster'
+html_static_path = ['_static']
 
 # -- Options for todo extension ----------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/extensions/todo.html#configuration

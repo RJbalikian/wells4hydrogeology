@@ -1,160 +1,38 @@
-
-
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" data-content_root="./">
-<head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>w4h.core module &mdash; w4h 0.0.22-dev documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  
-      <script src="_static/documentation_options.js?v=7d709ffc"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
-      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="_static/js/theme.js"></script>
+    <title>w4h.core module &#8212; w4h  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <script src="_static/documentation_options.js?v=7d709ffc"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="w4h.export module" href="w4h.export.html" />
-    <link rel="prev" title="w4h.clean module" href="w4h.clean.html" /> 
-</head>
+    <link rel="prev" title="w4h.clean module" href="w4h.clean.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
 
-<body class="wy-body-for-nav"> 
-  <div class="wy-grid-for-nav">
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
+  
+  
 
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
           
-          
-          <a href="index.html" class="icon icon-home">
-            w4h
-          </a>
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="w4h.html">w4h package</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.add_control_points"><code class="docutils literal notranslate"><span class="pre">add_control_points()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.align_rasters"><code class="docutils literal notranslate"><span class="pre">align_rasters()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.clip_gdf2study_area"><code class="docutils literal notranslate"><span class="pre">clip_gdf2study_area()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.combine_dataset"><code class="docutils literal notranslate"><span class="pre">combine_dataset()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.coords2geometry"><code class="docutils literal notranslate"><span class="pre">coords2geometry()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.define_dtypes"><code class="docutils literal notranslate"><span class="pre">define_dtypes()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.depth_define"><code class="docutils literal notranslate"><span class="pre">depth_define()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.export_dataframe"><code class="docutils literal notranslate"><span class="pre">export_dataframe()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.export_grids"><code class="docutils literal notranslate"><span class="pre">export_grids()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.export_undefined"><code class="docutils literal notranslate"><span class="pre">export_undefined()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.file_setup"><code class="docutils literal notranslate"><span class="pre">file_setup()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.fill_unclassified"><code class="docutils literal notranslate"><span class="pre">fill_unclassified()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.get_current_date"><code class="docutils literal notranslate"><span class="pre">get_current_date()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.get_drift_thick"><code class="docutils literal notranslate"><span class="pre">get_drift_thick()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.get_layer_depths"><code class="docutils literal notranslate"><span class="pre">get_layer_depths()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.get_most_recent"><code class="docutils literal notranslate"><span class="pre">get_most_recent()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.get_resources"><code class="docutils literal notranslate"><span class="pre">get_resources()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.get_search_terms"><code class="docutils literal notranslate"><span class="pre">get_search_terms()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.get_unique_wells"><code class="docutils literal notranslate"><span class="pre">get_unique_wells()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.grid2study_area"><code class="docutils literal notranslate"><span class="pre">grid2study_area()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.layer_interp"><code class="docutils literal notranslate"><span class="pre">layer_interp()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.layer_target_thick"><code class="docutils literal notranslate"><span class="pre">layer_target_thick()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.logger_function"><code class="docutils literal notranslate"><span class="pre">logger_function()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.merge_lithologies"><code class="docutils literal notranslate"><span class="pre">merge_lithologies()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.merge_metadata"><code class="docutils literal notranslate"><span class="pre">merge_metadata()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.natural_neighbor_interp"><code class="docutils literal notranslate"><span class="pre">natural_neighbor_interp()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.plot_cross_section"><code class="docutils literal notranslate"><span class="pre">plot_cross_section()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_dict"><code class="docutils literal notranslate"><span class="pre">read_dict()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_dictionary_terms"><code class="docutils literal notranslate"><span class="pre">read_dictionary_terms()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_grid"><code class="docutils literal notranslate"><span class="pre">read_grid()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_lithologies"><code class="docutils literal notranslate"><span class="pre">read_lithologies()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_model_grid"><code class="docutils literal notranslate"><span class="pre">read_model_grid()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_raw_csv"><code class="docutils literal notranslate"><span class="pre">read_raw_csv()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_study_area"><code class="docutils literal notranslate"><span class="pre">read_study_area()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_wcs"><code class="docutils literal notranslate"><span class="pre">read_wcs()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_wms"><code class="docutils literal notranslate"><span class="pre">read_wms()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_xyz"><code class="docutils literal notranslate"><span class="pre">read_xyz()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.remerge_data"><code class="docutils literal notranslate"><span class="pre">remerge_data()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.remove_bad_depth"><code class="docutils literal notranslate"><span class="pre">remove_bad_depth()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.remove_no_depth"><code class="docutils literal notranslate"><span class="pre">remove_no_depth()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.remove_no_description"><code class="docutils literal notranslate"><span class="pre">remove_no_description()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.remove_no_topo"><code class="docutils literal notranslate"><span class="pre">remove_no_topo()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.remove_nonlocated"><code class="docutils literal notranslate"><span class="pre">remove_nonlocated()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.run"><code class="docutils literal notranslate"><span class="pre">run()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.sample_raster_points"><code class="docutils literal notranslate"><span class="pre">sample_raster_points()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.sort_dataframe"><code class="docutils literal notranslate"><span class="pre">sort_dataframe()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.specific_define"><code class="docutils literal notranslate"><span class="pre">specific_define()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.split_defined"><code class="docutils literal notranslate"><span class="pre">split_defined()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.start_define"><code class="docutils literal notranslate"><span class="pre">start_define()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.verbose_print"><code class="docutils literal notranslate"><span class="pre">verbose_print()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.wildcard_define"><code class="docutils literal notranslate"><span class="pre">wildcard_define()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.xyz_metadata_merge"><code class="docutils literal notranslate"><span class="pre">xyz_metadata_merge()</span></code></a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="w4h.html#submodules">Submodules</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="w4h.classify.html">w4h.classify module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="w4h.clean.html">w4h.clean module</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">w4h.core module</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#w4h.core.get_resources"><code class="docutils literal notranslate"><span class="pre">get_resources()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#w4h.core.logger_function"><code class="docutils literal notranslate"><span class="pre">logger_function()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#w4h.core.run"><code class="docutils literal notranslate"><span class="pre">run()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#w4h.core.verbose_print"><code class="docutils literal notranslate"><span class="pre">verbose_print()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="w4h.export.html">w4h.export module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="w4h.layers.html">w4h.layers module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="w4h.mapping.html">w4h.mapping module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="w4h.read.html">w4h.read module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="w4h.visualization.html">w4h.visualization module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="w4h.w4h_gui.html">w4h.w4h_gui module</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="w4h.classify.html">w4h.classify module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="w4h.clean.html">w4h.clean module</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">w4h.core module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#w4h.core.get_resources"><code class="docutils literal notranslate"><span class="pre">get_resources()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#w4h.core.logger_function"><code class="docutils literal notranslate"><span class="pre">logger_function()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#w4h.core.run"><code class="docutils literal notranslate"><span class="pre">run()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#w4h.core.verbose_print"><code class="docutils literal notranslate"><span class="pre">verbose_print()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="w4h.export.html">w4h.export module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="w4h.layers.html">w4h.layers module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="w4h.mapping.html">w4h.mapping module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="w4h.read.html">w4h.read module</a></li>
-</ul>
 
-        </div>
-      </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">w4h</a>
-      </nav>
-
-      <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="Page navigation">
-  <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="w4h.html">w4h package</a></li>
-      <li class="breadcrumb-item active">w4h.core module</li>
-      <li class="wy-breadcrumbs-aside">
-            <a href="_sources/w4h.core.rst.txt" rel="nofollow"> View page source</a>
-      </li>
-  </ul>
-  <hr/>
-</div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-             
+          <div class="body" role="main">
+            
   <section id="module-w4h.core">
 <span id="w4h-core-module"></span><h1>w4h.core module<a class="headerlink" href="#module-w4h.core" title="Link to this heading">¶</a></h1>
 <p>The Core module contains core functions of the package used in other modules or as primary functions in the package. 
@@ -164,42 +42,46 @@ and functions that are used throughout the package for logging and printing verb
 <dt class="sig sig-object py" id="w4h.core.get_resources">
 <span class="sig-prename descclassname"><span class="pre">w4h.core.</span></span><span class="sig-name descname"><span class="pre">get_resources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resource_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'filepaths'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'local'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/core.html#get_resources"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.core.get_resources" title="Link to this definition">¶</a></dt>
 <dd><p>Function to get filepaths for resources included with package</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>resource_type</strong><span class="classifier">str, {‘filepaths’, ‘data’}</span></dt><dd><p>If filepaths, will return dictionary with filepaths to sample data. If data, returns dictionary with data objects.</p>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>resource_type<span class="classifier">str, {‘filepaths’, ‘data’}</span></dt><dd><p>If filepaths, will return dictionary with filepaths to sample data. If data, returns dictionary with data objects.</p>
 </dd>
-<dt><strong>scope</strong><span class="classifier">str, {‘local’, ‘statewide’}</span></dt><dd><p>If ‘local’, will read in sample data for a local (around county sized) project. If ‘state’, will read in sample data for a statewide project (Illinois)</p>
+<dt>scope<span class="classifier">str, {‘local’, ‘statewide’}</span></dt><dd><p>If ‘local’, will read in sample data for a local (around county sized) project. If ‘state’, will read in sample data for a statewide project (Illinois)</p>
 </dd>
-<dt><strong>verbose</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to print results to terminal, by default False</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt><strong>resources_dict</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing key, value pairs with filepaths to resources that may be of interest.</p>
+<dt>verbose<span class="classifier">bool, optional</span></dt><dd><p>Whether to print results to terminal, by default False</p>
 </dd>
 </dl>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>resources_dict<span class="classifier">dict</span></dt><dd><p>Dictionary containing key, value pairs with filepaths to resources that may be of interest.</p>
 </dd>
 </dl>
+</section>
 </dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="w4h.core.gui">
+<span class="sig-prename descclassname"><span class="pre">w4h.core.</span></span><span class="sig-name descname"><span class="pre">gui</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/core.html#gui"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.core.gui" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="w4h.core.logger_function">
 <span class="sig-prename descclassname"><span class="pre">w4h.core.</span></span><span class="sig-name descname"><span class="pre">logger_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logtocommence</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/w4h/core.html#logger_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#w4h.core.logger_function" title="Link to this definition">¶</a></dt>
 <dd><p>Function to log other functions, to be called from within other functions</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>logtocommence</strong><span class="classifier">bool</span></dt><dd><p>Whether to perform logging steps</p>
+<section id="id1">
+<h2>Parameters<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>logtocommence<span class="classifier">bool</span></dt><dd><p>Whether to perform logging steps</p>
 </dd>
-<dt><strong>parameters</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing parameters and their values, from function</p>
+<dt>parameters<span class="classifier">dict</span></dt><dd><p>Dictionary containing parameters and their values, from function</p>
 </dd>
-<dt><strong>func_name</strong><span class="classifier">str</span></dt><dd><p>Name of function within which this is called</p>
-</dd>
-</dl>
+<dt>func_name<span class="classifier">str</span></dt><dd><p>Name of function within which this is called</p>
 </dd>
 </dl>
+</section>
 </dd></dl>
 
 <dl class="py function">
@@ -362,12 +244,12 @@ See the documentation for the each of the individual functions for more informat
 </div></blockquote>
 <p><strong>get_search_terms</strong></p>
 <blockquote>
-<div><p>spec_path             | default = ‘C:UsersrileyLocalDatareposwells4hydrogeologydocs/resources/’</p>
+<div><p>spec_path             | default = ‘C:UsersbalikianLocalDataCodesScriptsGithubwells4hydrogeologydocs/resources/’</p>
 <p>spec_glob_pattern     | default = ‘<em>SearchTerms-Specific</em>’</p>
 <p>start_path            | default = None</p>
 <p>start_glob_pattern    | default = ‘<em>SearchTerms-Start</em>’</p>
 <p>wildcard_path         | default = None</p>
-<p>wildcard_glob_pattern | default = ‘<a href="#id1"><span class="problematic" id="id2">*</span></a>SearchTerms-Wildcard’</p>
+<p>wildcard_glob_pattern | default = ‘<a href="#id2"><span class="problematic" id="id3">*</span></a>SearchTerms-Wildcard’</p>
 <p>use_tokens            | default = False</p>
 <p>verbose               | default = False</p>
 <p>log                   | default = False</p>
@@ -541,34 +423,147 @@ See the documentation for the each of the individual functions for more informat
 </section>
 
 
-           </div>
           </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="w4h.clean.html" class="btn btn-neutral float-left" title="w4h.clean module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="w4h.export.html" class="btn btn-neutral float-right" title="w4h.export module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-    </div>
-
-  <hr/>
-
-  <div role="contentinfo">
-    <p>&#169; Copyright 2024, Author.</p>
-  </div>
-
-  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
-
-</footer>
+          
         </div>
       </div>
-    </section>
-  </div>
-  <script>
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script> 
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">w4h</a></h1>
 
-</body>
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="w4h.html">w4h package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.add_control_points"><code class="docutils literal notranslate"><span class="pre">add_control_points()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.align_rasters"><code class="docutils literal notranslate"><span class="pre">align_rasters()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.clip_gdf2study_area"><code class="docutils literal notranslate"><span class="pre">clip_gdf2study_area()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.combine_dataset"><code class="docutils literal notranslate"><span class="pre">combine_dataset()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.coords2geometry"><code class="docutils literal notranslate"><span class="pre">coords2geometry()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.define_dtypes"><code class="docutils literal notranslate"><span class="pre">define_dtypes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.depth_define"><code class="docutils literal notranslate"><span class="pre">depth_define()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.export_dataframe"><code class="docutils literal notranslate"><span class="pre">export_dataframe()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.export_grids"><code class="docutils literal notranslate"><span class="pre">export_grids()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.export_undefined"><code class="docutils literal notranslate"><span class="pre">export_undefined()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.file_setup"><code class="docutils literal notranslate"><span class="pre">file_setup()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.fill_unclassified"><code class="docutils literal notranslate"><span class="pre">fill_unclassified()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.get_current_date"><code class="docutils literal notranslate"><span class="pre">get_current_date()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.get_drift_thick"><code class="docutils literal notranslate"><span class="pre">get_drift_thick()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.get_layer_depths"><code class="docutils literal notranslate"><span class="pre">get_layer_depths()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.get_most_recent"><code class="docutils literal notranslate"><span class="pre">get_most_recent()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.get_resources"><code class="docutils literal notranslate"><span class="pre">get_resources()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.get_search_terms"><code class="docutils literal notranslate"><span class="pre">get_search_terms()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.get_unique_wells"><code class="docutils literal notranslate"><span class="pre">get_unique_wells()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.grid2study_area"><code class="docutils literal notranslate"><span class="pre">grid2study_area()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.gui"><code class="docutils literal notranslate"><span class="pre">gui()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.layer_interp"><code class="docutils literal notranslate"><span class="pre">layer_interp()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.layer_target_thick"><code class="docutils literal notranslate"><span class="pre">layer_target_thick()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.logger_function"><code class="docutils literal notranslate"><span class="pre">logger_function()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.merge_lithologies"><code class="docutils literal notranslate"><span class="pre">merge_lithologies()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.merge_metadata"><code class="docutils literal notranslate"><span class="pre">merge_metadata()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.natural_neighbor_interp"><code class="docutils literal notranslate"><span class="pre">natural_neighbor_interp()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.plot_cross_section"><code class="docutils literal notranslate"><span class="pre">plot_cross_section()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_dict"><code class="docutils literal notranslate"><span class="pre">read_dict()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_dictionary_terms"><code class="docutils literal notranslate"><span class="pre">read_dictionary_terms()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_grid"><code class="docutils literal notranslate"><span class="pre">read_grid()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_lithologies"><code class="docutils literal notranslate"><span class="pre">read_lithologies()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_model_grid"><code class="docutils literal notranslate"><span class="pre">read_model_grid()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_raw_csv"><code class="docutils literal notranslate"><span class="pre">read_raw_csv()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_study_area"><code class="docutils literal notranslate"><span class="pre">read_study_area()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_wcs"><code class="docutils literal notranslate"><span class="pre">read_wcs()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_wms"><code class="docutils literal notranslate"><span class="pre">read_wms()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.read_xyz"><code class="docutils literal notranslate"><span class="pre">read_xyz()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.remerge_data"><code class="docutils literal notranslate"><span class="pre">remerge_data()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.remove_bad_depth"><code class="docutils literal notranslate"><span class="pre">remove_bad_depth()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.remove_no_depth"><code class="docutils literal notranslate"><span class="pre">remove_no_depth()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.remove_no_description"><code class="docutils literal notranslate"><span class="pre">remove_no_description()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.remove_no_topo"><code class="docutils literal notranslate"><span class="pre">remove_no_topo()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.remove_nonlocated"><code class="docutils literal notranslate"><span class="pre">remove_nonlocated()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.run"><code class="docutils literal notranslate"><span class="pre">run()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.sample_raster_points"><code class="docutils literal notranslate"><span class="pre">sample_raster_points()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.sort_dataframe"><code class="docutils literal notranslate"><span class="pre">sort_dataframe()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.specific_define"><code class="docutils literal notranslate"><span class="pre">specific_define()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.split_defined"><code class="docutils literal notranslate"><span class="pre">split_defined()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.start_define"><code class="docutils literal notranslate"><span class="pre">start_define()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.verbose_print"><code class="docutils literal notranslate"><span class="pre">verbose_print()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.wildcard_define"><code class="docutils literal notranslate"><span class="pre">wildcard_define()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="w4h.html#w4h.xyz_metadata_merge"><code class="docutils literal notranslate"><span class="pre">xyz_metadata_merge()</span></code></a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="w4h.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="w4h.classify.html">w4h.classify module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="w4h.clean.html">w4h.clean module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">w4h.core module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#w4h.core.get_resources"><code class="docutils literal notranslate"><span class="pre">get_resources()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#w4h.core.gui"><code class="docutils literal notranslate"><span class="pre">gui()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#w4h.core.logger_function"><code class="docutils literal notranslate"><span class="pre">logger_function()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#w4h.core.run"><code class="docutils literal notranslate"><span class="pre">run()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#w4h.core.verbose_print"><code class="docutils literal notranslate"><span class="pre">verbose_print()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="w4h.export.html">w4h.export module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="w4h.layers.html">w4h.layers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="w4h.mapping.html">w4h.mapping module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="w4h.read.html">w4h.read module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="w4h.visualization.html">w4h.visualization module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="w4h.w4h_gui.html">w4h.w4h_gui module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="w4h.html">w4h package</a><ul>
+      <li>Previous: <a href="w4h.clean.html" title="previous chapter">w4h.clean module</a></li>
+      <li>Next: <a href="w4h.export.html" title="next chapter">w4h.export module</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2026, Author.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/w4h.core.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
 </html>

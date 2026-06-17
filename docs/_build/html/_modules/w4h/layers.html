@@ -1,78 +1,35 @@
-
-
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" data-content_root="../../">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>w4h.layers &mdash; w4h 0.0.22-dev documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>w4h.layers &#8212; w4h  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <script src="../../_static/documentation_options.js?v=7d709ffc"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
 
   
-      <script src="../../_static/documentation_options.js?v=7d709ffc"></script>
-      <script src="../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../../_static/js/theme.js"></script>
-    <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" /> 
-</head>
+  
 
-<body class="wy-body-for-nav"> 
-  <div class="wy-grid-for-nav">
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
+  </head><body>
+  
 
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
           
-          
-          <a href="../../index.html" class="icon icon-home">
-            w4h
-          </a>
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../w4h.html">w4h package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../w4h.classify.html">w4h.classify module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../w4h.clean.html">w4h.clean module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../w4h.core.html">w4h.core module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../w4h.export.html">w4h.export module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../w4h.layers.html">w4h.layers module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../w4h.mapping.html">w4h.mapping module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../w4h.read.html">w4h.read module</a></li>
-</ul>
 
-        </div>
-      </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../index.html">w4h</a>
-      </nav>
-
-      <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="Page navigation">
-  <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
-      <li class="breadcrumb-item active">w4h.layers</li>
-      <li class="wy-breadcrumbs-aside">
-      </li>
-  </ul>
-  <hr/>
-</div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-             
+          <div class="body" role="main">
+            
   <h1>Source code for w4h.layers</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;The Layers module contains functions for splitting data into a layered model</span>
 <span class="sd">and for interpolating data within the layers</span>
@@ -377,7 +334,7 @@
                 <span class="k">return</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">dataX</span> <span class="o">=</span> <span class="n">pts</span><span class="p">[</span><span class="n">xcol</span><span class="p">]</span>
-        
+
         <span class="c1"># Get x coordinates for each well point</span>
         <span class="k">if</span> <span class="n">ycol</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="s1">&#39;geometry&#39;</span> <span class="ow">in</span> <span class="n">pts</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
@@ -414,6 +371,7 @@
             <span class="n">interp</span> <span class="o">=</span> <span class="n">interpolate</span><span class="o">.</span><span class="n">NearestNDInterpolator</span><span class="p">(</span><span class="n">dataPoints</span><span class="p">,</span> <span class="n">interpVal</span><span class="p">,</span>
                                                        <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="n">Z</span> <span class="o">=</span> <span class="n">interp</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+            <span class="k">del</span> <span class="n">interp</span>
 
         <span class="c1"># Linear</span>
         <span class="k">elif</span> <span class="n">interp_kind</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">linList</span><span class="p">:</span>
@@ -423,6 +381,7 @@
                                                       <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">sparse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># 2D Grid for interpolation</span>
             <span class="n">Z</span> <span class="o">=</span> <span class="n">interp</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+            <span class="k">del</span> <span class="n">interp</span>
 
         <span class="c1"># Clough-toucher (cubic)</span>
         <span class="k">elif</span> <span class="n">interp_kind</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">ctList</span><span class="p">:</span>
@@ -432,6 +391,7 @@
                 <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;tol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e10</span>
             <span class="n">interp</span> <span class="o">=</span> <span class="n">interpolate</span><span class="o">.</span><span class="n">CloughTocher2DInterpolator</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">dataX</span><span class="p">,</span> <span class="n">dataY</span><span class="p">)),</span> <span class="n">interpVal</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="n">Z</span> <span class="o">=</span> <span class="n">interp</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+            <span class="k">del</span> <span class="n">interp</span>
 
         <span class="c1"># Radial basis function</span>
         <span class="k">elif</span> <span class="n">interp_kind</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">rbfList</span><span class="p">:</span>
@@ -440,6 +400,7 @@
             <span class="n">interp</span> <span class="o">=</span> <span class="n">interpolate</span><span class="o">.</span><span class="n">RBFInterpolator</span><span class="p">(</span><span class="n">dataXY</span><span class="p">,</span> <span class="n">interpVal</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Radial Basis Function does not work well with many well-based datasets. Consider instead specifying &#39;nearest&#39;, &#39;linear&#39;, &#39;spline&#39;, or &#39;clough tocher&#39; for interpolation interp_kind.&quot;</span><span class="p">)</span>
             <span class="n">Z</span> <span class="o">=</span> <span class="n">interp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">X</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">Y</span><span class="o">.</span><span class="n">ravel</span><span class="p">())))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="k">del</span> <span class="n">interp</span>
 
         <span class="c1"># Spline</span>
         <span class="k">elif</span> <span class="n">interp_kind</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">splineList</span><span class="p">:</span>
@@ -448,7 +409,7 @@
 
         <span class="k">elif</span> <span class="n">interp_kind</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">natneighborList</span><span class="p">:</span>
             <span class="n">interpType</span> <span class="o">=</span> <span class="s1">&#39;Natural Neighbor&#39;</span>
-            <span class="n">Z</span> <span class="o">=</span> <span class="n">natural_neighbor_interp</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">model_grid</span><span class="o">=</span><span class="n">model_grid</span><span class="p">)</span>
+            <span class="n">Z</span> <span class="o">=</span> <span class="n">natural_neighbor_interp</span><span class="p">(</span><span class="n">points</span><span class="o">=</span><span class="n">pts</span><span class="p">,</span> <span class="n">model_grid</span><span class="o">=</span><span class="n">model_grid</span><span class="p">)</span>
         <span class="c1"># Nearest neighbor by default if otherwise not specified</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
@@ -460,6 +421,7 @@
             <span class="n">interp</span> <span class="o">=</span> <span class="n">interpolate</span><span class="o">.</span><span class="n">NearestNDInterpolator</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">dataX</span><span class="p">,</span> <span class="n">dataY</span><span class="p">)),</span>
                                                        <span class="n">interpVal</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="n">Z</span> <span class="o">=</span> <span class="n">interp</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+            <span class="k">del</span> <span class="n">interp</span>
 
         <span class="c1"># Create new datarray with new data values, else same as model_grid</span>
         <span class="n">interp_grid</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span>
@@ -484,7 +446,6 @@
         <span class="k">del</span> <span class="n">dataX</span>
         <span class="k">del</span> <span class="n">dataY</span>
         <span class="k">del</span> <span class="n">interpVal</span>
-        <span class="k">del</span> <span class="n">interp</span>
 
         <span class="n">zFillDigs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">layers</span><span class="p">))</span>
         <span class="n">daDict</span><span class="p">[</span><span class="s1">&#39;Layer&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">lyr</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="n">zFillDigs</span><span class="p">)]</span> <span class="o">=</span> <span class="n">interp_grid</span>
@@ -775,11 +736,12 @@
 <div class="viewcode-block" id="natural_neighbor_interp">
 <a class="viewcode-back" href="../../w4h.layers.html#w4h.natural_neighbor_interp">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">natural_neighbor_interp</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">model_grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parallelize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                            <span class="n">well_id</span><span class="o">=</span><span class="s1">&#39;API_NUMBER&#39;</span><span class="p">,</span> <span class="n">interp_value</span><span class="o">=</span><span class="s1">&#39;ELEVATION&#39;</span><span class="p">,</span>
-                            <span class="n">xcoord</span><span class="o">=</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="n">ycoord</span><span class="o">=</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="n">elev</span><span class="o">=</span><span class="s2">&quot;ELEVATION&quot;</span><span class="p">,</span>
+                            <span class="n">well_id</span><span class="o">=</span><span class="s1">&#39;API_NUMBER&#39;</span><span class="p">,</span> <span class="n">interp_value</span><span class="o">=</span><span class="s1">&#39;TARG_THICK_PER&#39;</span><span class="p">,</span>
+                            <span class="n">xcoord</span><span class="o">=</span><span class="s1">&#39;LONGITUDE_PROJ&#39;</span><span class="p">,</span> <span class="n">ycoord</span><span class="o">=</span><span class="s1">&#39;LATITUDE_PROJ&#39;</span><span class="p">,</span> <span class="n">elev</span><span class="o">=</span><span class="s2">&quot;SURFACE_ELEV&quot;</span><span class="p">,</span>
+                            <span class="n">point_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:5070&#39;</span><span class="p">,</span> <span class="n">model_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:5070&#39;</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:5070&#39;</span><span class="p">,</span>
                             <span class="n">show_points</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sparsity_factor</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
                             <span class="n">show_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">show_adjacent_regions</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">show_voronoi</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                            <span class="n">time_segments</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                            <span class="n">time_segments</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Implementation of natural neighbor algorithm, with sparse interpolation.</span>
 <span class="sd">    This interpolation algorithm takes a very long time.</span>
 
@@ -816,6 +778,8 @@
 <span class="sd">        Whether to show the voronoi polygons, by default False</span>
 <span class="sd">    time_segments : bool, optional</span>
 <span class="sd">        Whether to time each segment of the analysis, by default False</span>
+<span class="sd">    verbose : bool, optional</span>
+<span class="sd">        Whether to print additional results or parameters to the terminal</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -823,25 +787,38 @@
 <span class="sd">        _description_</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">time0</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
-    <span class="n">model_grid_IN</span> <span class="o">=</span> <span class="n">rxr</span><span class="o">.</span><span class="n">open_rasterio</span><span class="p">(</span><span class="n">model_grid</span><span class="p">)</span>
-    
-    <span class="n">interp_grid</span> <span class="o">=</span> <span class="n">model_grid_IN</span><span class="p">[:,</span> <span class="p">::</span><span class="n">sparsity_factor</span><span class="p">,</span> <span class="p">::</span><span class="n">sparsity_factor</span><span class="p">]</span>
-    <span class="n">interp_grid</span> <span class="o">=</span> <span class="n">interp_grid</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">reproject</span><span class="p">(</span><span class="mi">4326</span><span class="p">)</span>
 
-    <span class="n">uniqueWellDF</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="n">well_id</span><span class="p">)[[</span><span class="n">well_id</span><span class="p">,</span> <span class="n">xcoord</span><span class="p">,</span> <span class="n">ycoord</span><span class="p">,</span> <span class="n">elev</span><span class="p">,</span> <span class="s1">&#39;geometry&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    
-    <span class="n">uniqueWellDF</span><span class="p">[</span><span class="s1">&#39;geometry&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">uniqueWellDF</span><span class="p">[</span><span class="s1">&#39;geometry&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">wkt</span><span class="o">.</span><span class="n">loads</span><span class="p">)</span>
-    <span class="n">uniqueWellDF</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="n">uniqueWellDF</span><span class="p">,</span> <span class="n">geometry</span><span class="o">=</span><span class="s1">&#39;geometry&#39;</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="mi">4326</span><span class="p">)</span>
-    
+    <span class="c1"># Get model grid in standardized format/crs</span>
+    <span class="k">if</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">model_grid</span><span class="p">))</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">model_grid</span><span class="p">))</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="n">model_grid_IN</span> <span class="o">=</span> <span class="n">rxr</span><span class="o">.</span><span class="n">open_rasterio</span><span class="p">(</span><span class="n">model_grid</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">model_grid_IN</span> <span class="o">=</span> <span class="n">model_grid</span>
+    <span class="n">model_grid_IN</span> <span class="o">=</span> <span class="n">model_grid_IN</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">reproject</span><span class="p">(</span><span class="n">output_crs</span><span class="p">)</span>
+
+    <span class="n">original_coords</span> <span class="o">=</span> <span class="n">model_grid_IN</span><span class="o">.</span><span class="n">coords</span>
+    <span class="k">if</span> <span class="n">sparsity_factor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model_grid_IN</span><span class="p">,</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+            <span class="n">interp_grid</span> <span class="o">=</span> <span class="n">model_grid_IN</span><span class="p">[:,</span> <span class="p">::</span><span class="n">sparsity_factor</span><span class="p">,</span> <span class="p">::</span><span class="n">sparsity_factor</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">interp_grid</span> <span class="o">=</span> <span class="n">model_grid_IN</span><span class="p">[::</span><span class="n">sparsity_factor</span><span class="p">,</span> <span class="p">::</span><span class="n">sparsity_factor</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">interp_grid</span> <span class="o">=</span> <span class="n">model_grid_IN</span>
+
+    <span class="n">uniqueWellDF</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="n">well_id</span><span class="p">)[[</span><span class="n">well_id</span><span class="p">,</span> <span class="n">xcoord</span><span class="p">,</span> <span class="n">ycoord</span><span class="p">,</span> <span class="n">elev</span><span class="p">,</span> <span class="n">interp_value</span><span class="p">,</span> <span class="s1">&#39;geometry&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">uniqueWellDF</span><span class="p">,</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">):</span>
+        <span class="n">uniqueWellDF</span><span class="p">[</span><span class="s1">&#39;geometry&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">uniqueWellDF</span><span class="p">[</span><span class="s1">&#39;geometry&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">wkt</span><span class="o">.</span><span class="n">loads</span><span class="p">)</span>
+        <span class="n">uniqueWellDF</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="n">uniqueWellDF</span><span class="p">,</span> <span class="n">geometry</span><span class="o">=</span><span class="s1">&#39;geometry&#39;</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="n">point_crs</span><span class="p">)</span>
+    <span class="n">uniqueWellDF</span> <span class="o">=</span> <span class="n">uniqueWellDF</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">output_crs</span><span class="p">)</span>
+
     <span class="n">minx</span><span class="p">,</span> <span class="n">miny</span><span class="p">,</span> <span class="n">maxx</span><span class="p">,</span> <span class="n">maxy</span> <span class="o">=</span> <span class="n">uniqueWellDF</span><span class="o">.</span><span class="n">total_bounds</span>
     <span class="n">interp_grid</span> <span class="o">=</span> <span class="n">interp_grid</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">clip_box</span><span class="p">(</span><span class="n">minx</span><span class="o">=</span><span class="n">minx</span><span class="p">,</span> <span class="n">miny</span><span class="o">=</span><span class="n">miny</span><span class="p">,</span> <span class="n">maxx</span><span class="o">=</span><span class="n">maxx</span><span class="p">,</span> <span class="n">maxy</span><span class="o">=</span><span class="n">maxy</span><span class="p">)</span>
     
     <span class="n">wellPtList</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">wellValueList</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">valueField</span> <span class="o">=</span> <span class="s1">&#39;ELEVATION&#39;</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">well</span> <span class="ow">in</span> <span class="n">uniqueWellDF</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
-        <span class="n">wellPtList</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">well</span><span class="p">[</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">],</span> <span class="n">well</span><span class="p">[</span><span class="s2">&quot;LATITUDE&quot;</span><span class="p">]])</span>
-        <span class="n">wellValueList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">well</span><span class="p">[</span><span class="n">valueField</span><span class="p">]))</span>
+        <span class="n">wellPtList</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">well</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">well</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">y</span><span class="p">])</span>
+        <span class="n">wellValueList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">well</span><span class="p">[</span><span class="n">interp_value</span><span class="p">]))</span>
     <span class="n">wellPtArr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">wellPtList</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">show_points</span><span class="p">:</span>
@@ -870,7 +847,7 @@
     <span class="c1"># CODE HERE FOR ITERATING THROUGH COORDS?</span>
     <span class="c1">#newPoint = Point([-90.1, 38.7])</span>
     
-    <span class="k">def</span><span class="w"> </span><span class="nf">_vectorized_nat_neighbor</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">time_segments</span><span class="o">=</span><span class="n">time_segments</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_vectorized_nat_neighbor</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">time_segments</span><span class="o">=</span><span class="n">time_segments</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="n">newPoint</span> <span class="o">=</span> <span class="n">Point</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span>
         <span class="n">lastTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
         
@@ -897,7 +874,10 @@
             <span class="n">polyRegInd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">containingRegion</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1">#print(&quot;Polygon is invalid or no overlapping polygons with point&quot;)</span>
+            <span class="k">if</span> <span class="n">time_segments</span><span class="p">:</span>
+                <span class="n">thisTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Polygon is invalid or no overlapping polygons with point, returning nan:  </span><span class="si">{</span><span class="n">thisTime</span><span class="o">-</span><span class="n">lastTime</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">lastTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>                
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
 
         <span class="k">if</span> <span class="n">time_segments</span><span class="p">:</span>
@@ -939,7 +919,7 @@
         <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">regionIndices</span><span class="p">:</span>
             <span class="n">nearValues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">wellValueList</span><span class="p">[</span><span class="n">vPR</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">ind</span><span class="p">)])</span>
             <span class="n">nearPoints</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vClass</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">vPR</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">ind</span><span class="p">)]</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
-        <span class="n">regGS</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">regionIndices</span><span class="p">,</span> <span class="n">regionAndAdjacents</span><span class="p">),</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;RegionIndices&#39;</span><span class="p">,</span> <span class="s1">&#39;geometry&#39;</span><span class="p">],</span> <span class="n">crs</span><span class="o">=</span><span class="mi">4326</span><span class="p">)</span>
+        <span class="n">regGS</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">regionIndices</span><span class="p">,</span> <span class="n">regionAndAdjacents</span><span class="p">),</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;RegionIndices&#39;</span><span class="p">,</span> <span class="s1">&#39;geometry&#39;</span><span class="p">],</span> <span class="n">crs</span><span class="o">=</span><span class="n">output_crs</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">time_segments</span><span class="p">:</span>
             <span class="n">thisTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
@@ -1011,7 +991,7 @@
             <span class="n">regGS</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;#00000000&quot;</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax3</span><span class="p">)</span>
             <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">nearPoints</span><span class="p">)</span>
             <span class="n">ax3</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-            <span class="n">gpd</span><span class="o">.</span><span class="n">GeoSeries</span><span class="p">([</span><span class="n">polyOfInterest</span><span class="p">],</span> <span class="n">crs</span><span class="o">=</span><span class="mi">4326</span><span class="p">)</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;#00000000&quot;</span><span class="p">,</span> 
+            <span class="n">gpd</span><span class="o">.</span><span class="n">GeoSeries</span><span class="p">([</span><span class="n">polyOfInterest</span><span class="p">],</span> <span class="n">crs</span><span class="o">=</span><span class="n">output_crs</span><span class="p">)</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;#00000000&quot;</span><span class="p">,</span> 
                                                         <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">linewidths</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax3</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">time_segments</span><span class="p">:</span>
                 <span class="n">thisTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
@@ -1038,7 +1018,7 @@
         <span class="c1"># Calculate and return natural neighbor interpolated value</span>
         <span class="k">return</span> <span class="n">res</span>
 
-    <span class="k">if</span> <span class="n">parallelize</span><span class="p">:</span> 
+    <span class="k">if</span> <span class="n">parallelize</span><span class="p">:</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">interp_grid</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">interp_grid</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
 
@@ -1065,17 +1045,26 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Starting interpolation at all grid points: &quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">interp_grid</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">),</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">interp_grid</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">interp_grid</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">interp_grid</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">))</span>
         <span class="n">resultList</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">dataPoints</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">interp_grid</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
             <span class="n">innerList</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">interp_grid</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
-                <span class="n">interpVal</span> <span class="o">=</span> <span class="n">_vectorized_nat_neighbor</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">time_segments</span><span class="o">=</span><span class="n">time_segments</span><span class="p">)</span>
+                <span class="n">interpVal</span> <span class="o">=</span> <span class="n">_vectorized_nat_neighbor</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">time_segments</span><span class="o">=</span><span class="n">time_segments</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
                 <span class="n">innerList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">interpVal</span><span class="p">)</span>
-            <span class="n">resultList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">innerList</span><span class="p">)</span>
-    
-    
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Final Size:&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">resultList</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">resultList</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
-                            <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">interp_grid</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">interp_grid</span><span class="o">.</span><span class="n">x</span><span class="p">},</span>
+                <span class="n">dataPoints</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+            <span class="n">resultList</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">innerList</span><span class="p">)</span> <span class="c1">#???????</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t\t</span><span class="s1"> Natural neighbor completed, reinterpolating to model grid&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="s2">Final Size of interpolation:&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">resultList</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="n">interp</span> <span class="o">=</span> <span class="n">interpolate</span><span class="o">.</span><span class="n">NearestNDInterpolator</span><span class="p">(</span><span class="n">dataPoints</span><span class="p">,</span> <span class="n">resultList</span><span class="p">)</span>
+
+        <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">original_coords</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">],</span> <span class="n">original_coords</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span> <span class="n">sparse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># 2D Grid for interpolation</span>
+        <span class="n">Z</span> <span class="o">=</span> <span class="n">interp</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span>
+                            <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">original_coords</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span> <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">original_coords</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]},</span>
                             <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">))</span></div>
 
 
@@ -1121,31 +1110,68 @@
 
 </pre></div>
 
-           </div>
           </div>
-          <footer>
-
-  <hr/>
-
-  <div role="contentinfo">
-    <p>&#169; Copyright 2024, Author.</p>
-  </div>
-
-  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
-
-</footer>
+          
         </div>
       </div>
-    </section>
-  </div>
-  <script>
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script> 
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">w4h</a></h1>
 
-</body>
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../w4h.html">w4h package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2026, Author.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
 </html>
