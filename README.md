@@ -39,7 +39,7 @@ The package is organized by module, but all functions can be accessed directly u
 - read: functions for reading in various files
 
 # Intended workflow
-Diagram for workflow available <a href="https://github.com/RJbalikian/wells4hydrogeology/wiki/Intended-Workflow-%5BDRAFT%5D">here</a>.
+Diagram for workflow available <a href="https://github.com/RJbalikian/wells4hydrogeology/wiki/w4h.run()-Conceptual-Diagram">here</a>.
 
 # Disclaimers
 wells4hydrogeology is a python tool developed jointly by the Illinois State Water Survey and the Illinois State Geological Survey, both part of the Prairie Research Institute at the University of Illinois. By using this repository, you agree to the Terms of Use contained in the <a href="https://isgs.illinois.edu/terms-of-use/">Data Use License Agreement</a>.
