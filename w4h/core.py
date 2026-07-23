@@ -43,6 +43,7 @@ def run(well_data,
         lith_dict=None, lith_dict_start=None, lith_dict_wildcard=None, use_tokens=False,
         target_dict=None,
         target_name='',
+        breakpoint=None,
         include_elevation_grids=True,
         include_elevation_coordinates=True,
         export_dir=None,
@@ -95,8 +96,16 @@ def run(well_data,
         Whether to tokenize the data for classification
     target_dict : str or pathlib.Path object, or pandas.DataFrame
         _description_
-    target_name : str, default = 'CoarseFine'
+    target_name : str, default = ''
         Name of target of interest, to be used on exported files
+    breakpoint : {None, str}, defaul = None
+        Option to break processing at specific locations in workflow. 
+        Use one of (case independent): 
+        * drift (thickness): after calculation of drift thickness
+        * sample(ing): after sampling elevations from surfaces
+        * clean(ing): after the cleaning steps
+        * classification: after the classification steps
+        * None (default): carry out entire workflow
     include_elevation_grid : bool, default = True
         Whether to include the elevation grids (surface, bedrock, and derived total "drift" thickness and layer thickness)
     include_elevation_coordinates : bool, default = True
@@ -211,7 +220,7 @@ def run(well_data,
 
     clip_gdf2study_area_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.clip_gdf2study_area).parameters.keys()}
     well_data_xyz = w4h.clip_gdf2study_area(study_area=studyAreaIN, gdf=well_data_xyz,  verbose=verbose, log=log,**clip_gdf2study_area_kwargs)
-    
+
     # Get surfaces and grid(s)
     read_grid_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.read_grid).parameters.keys()}
 
@@ -240,6 +249,8 @@ def run(well_data,
     # Analyze Surface(s) and grid(s)
     bedrockGrid, surfaceGrid = w4h.align_rasters(grids_unaligned=[bedrockElevGridIN, surfaceElevGridIN], model_grid=modelGrid, no_data_val_grid=0, log=log)
     driftThickGrid, layerThickGrid = w4h.get_drift_thick(surface_elev=surfaceGrid, bedrock_elev=bedrockGrid, layers=layers, plot=verbose, log=log)
+    if 'drift' in str(breakpoint).lower():
+        return driftThickGrid
 
     well_data_xyz = w4h.sample_raster_points(raster=bedrockGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col='BEDROCK_ELEV', verbose=verbose, log=log)
     well_data_xyz = w4h.sample_raster_points(raster=surfaceGrid, points_df=well_data_xyz, xcol=xcol, ycol=ycol, new_col='SURFACE_ELEV', verbose=verbose, log=log)
@@ -247,6 +258,8 @@ def run(well_data,
     well_data_xyz['LAYER_THICK'] = well_data_xyz['BEDROCK_DEPTH'] / layers
 
     well_data_xyz = w4h.get_layer_depths(df_with_depths=well_data_xyz, layers=layers, log=log)
+    if 'sampl' in str(breakpoint).lower():
+        return well_data_xyz
 
     # Clean up data
     well_data_xyz = w4h.remove_nonlocated(df_with_locations=well_data_xyz, log=log, verbose=verbose)
@@ -260,6 +273,8 @@ def run(well_data,
 
     remove_no_formation_kwargs = {k: v for k, v in locals()['kw_params'].items() if k in inspect.signature(w4h.remove_no_description).parameters.keys()}
     well_data_xyz = w4h.remove_no_description(well_data_xyz, description_col=description_col, verbose=verbose, log=log, **remove_no_formation_kwargs)
+    if 'clean' in str(breakpoint).lower():
+        return well_data_xyz
 
     # CLASSIFICATION
     # Read dictionary definitions and classify
@@ -330,6 +345,8 @@ def run(well_data,
     # well_data_xyz = w4h.sort_dataframe(df=well_data_xyz, sort_cols=['API_NUMBER','TOP'], remove_nans=True)
     well_data_xyz = well_data_xyz.sort_values(by=[well_id_col, top_col])
     well_data_xyz = well_data_xyz.reset_index(drop=True)
+    if 'class' in str(breakpoint).lower():
+        return well_data_xyz
 
     # UPDATE: Option to remove nans?
     well_data_xyz = well_data_xyz[well_data_xyz["LITHOLOGY"].notnull()]
