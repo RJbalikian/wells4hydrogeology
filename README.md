@@ -25,7 +25,7 @@ API Documentation <a href="https://rjbalikian.github.io/wells4hydrogeology/index
 
 # Inputs
 ## Required Inputs
-Required inputs include are shown <a href="https://github.com/RJbalikian/wells4hydrogeology/">here</a>wiki
+Required inputs include are shown <a href="https://github.com/RJbalikian/wells4hydrogeology/wiki">here</a>
 
 # Organization
 ## Modules
