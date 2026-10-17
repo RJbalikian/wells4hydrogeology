@@ -962,7 +962,7 @@ def sample_raster_points(raster=None, points_df=None,
     wellZDF = pd.DataFrame(zData, columns=[well_id_col, new_col], index=pd.Index(zInd))
 
     # Merge each unique well's data with all well intervals
-    wellZDF[well_id_col].astype(inputtype, copy=False)
+    wellZDF[well_id_col].astype(inputtype)
     points_df = points_df.merge(wellZDF, how='left', on=well_id_col)
     #points_df[new_col] = zData#sampleDF[new_col]
     return points_df

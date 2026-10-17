@@ -31,9 +31,9 @@
           <div class="body" role="main">
             
   <h1>Source code for w4h.layers</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;The Layers module contains functions for splitting data into a layered model</span>
+<span></span><span class="sd">"""The Layers module contains functions for splitting data into a layered model</span>
 <span class="sd">and for interpolating data within the layers</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
@@ -59,10 +59,10 @@
 <span class="c1"># Get layer depths of each layer, based on precalculated layer thickness</span>
 <div class="viewcode-block" id="get_layer_depths">
 <a class="viewcode-back" href="../../w4h.layers.html#w4h.get_layer_depths">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">get_layer_depths</span><span class="p">(</span><span class="n">df_with_depths</span><span class="p">,</span> <span class="n">surface_elev_col</span><span class="o">=</span><span class="s1">&#39;SURFACE_ELEV&#39;</span><span class="p">,</span>
-                     <span class="n">layer_thick_col</span><span class="o">=</span><span class="s1">&#39;LAYER_THICK&#39;</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_layer_depths</span><span class="p">(</span><span class="n">df_with_depths</span><span class="p">,</span> <span class="n">surface_elev_col</span><span class="o">=</span><span class="s1">'SURFACE_ELEV'</span><span class="p">,</span>
+                     <span class="n">layer_thick_col</span><span class="o">=</span><span class="s1">'LAYER_THICK'</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to calculate depths and elevations of each model layer</span>
+<span class="w">    </span><span class="sd">"""Function to calculate depths and elevations of each model layer</span>
 <span class="sd">    at each well based on surface elevation, bedrock elevation,</span>
 <span class="sd">    and number of layers/layer thickness</span>
 
@@ -81,19 +81,19 @@
 <span class="sd">    -------</span>
 <span class="sd">    pandas.DataFrame</span>
 <span class="sd">        DataFrame containing new columns for depth to/elevation of layers.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">layers</span><span class="p">):</span>  <span class="c1"># For each layer</span>
         <span class="c1"># Make column names</span>
-        <span class="n">depthColName</span> <span class="o">=</span> <span class="s1">&#39;DEPTH_LAYER&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">layer</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">depthColName</span> <span class="o">=</span> <span class="s1">'DEPTH_LAYER'</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">layer</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="c1"># Calculate depth to each layer at each well, in feet and meters</span>
         <span class="n">df_with_depths</span><span class="p">[</span><span class="n">depthColName</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_with_depths</span><span class="p">[</span><span class="n">layer_thick_col</span><span class="p">]</span> <span class="o">*</span> <span class="n">layer</span>
 
     <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">layers</span><span class="p">):</span>  <span class="c1"># For each layer</span>
-        <span class="n">elevColName</span> <span class="o">=</span> <span class="s1">&#39;ELEV_LAYER&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">layer</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
-        <span class="c1"># elevMColName = &#39;ELEV_M_LAYER&#39;+str(layer)</span>
+        <span class="n">elevColName</span> <span class="o">=</span> <span class="s1">'ELEV_LAYER'</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">layer</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># elevMColName = 'ELEV_M_LAYER'+str(layer)</span>
 
         <span class="n">df_with_depths</span><span class="p">[</span><span class="n">elevColName</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_with_depths</span><span class="p">[</span><span class="n">surface_elev_col</span><span class="p">]</span> <span class="o">-</span> <span class="n">df_with_depths</span><span class="p">[</span><span class="n">layer_thick_col</span><span class="p">]</span> <span class="o">*</span> <span class="n">layer</span>
 
@@ -105,34 +105,34 @@
 <div class="viewcode-block" id="merge_metadata">
 <a class="viewcode-back" href="../../w4h.layers.html#w4h.merge_metadata">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">merge_metadata</span><span class="p">(</span><span class="n">data_df</span><span class="p">,</span> <span class="n">header_df</span><span class="p">,</span>
-                   <span class="n">well_id_col</span><span class="o">=</span><span class="s1">&#39;API_NUMBER&#39;</span><span class="p">,</span> <span class="n">data_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">well_id_col</span><span class="o">=</span><span class="s1">'API_NUMBER'</span><span class="p">,</span> <span class="n">data_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                    <span class="n">header_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">auto_pick_cols</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                    <span class="n">drop_duplicate_cols</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                    <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to merge tables, intended for merging metadata and data tables</span>
+<span class="w">    </span><span class="sd">"""Function to merge tables, intended for merging metadata and data tables</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    data_df : pandas.DataFrame</span>
-<span class="sd">        &quot;Left&quot; dataframe, intended for this purpose to be</span>
+<span class="sd">        "Left" dataframe, intended for this purpose to be</span>
 <span class="sd">        dataframe with main data, but can be anything</span>
 <span class="sd">    header_df : pandas.DataFrame</span>
-<span class="sd">        &quot;Right&quot; dataframe, intended for this purpose to be</span>
+<span class="sd">        "Right" dataframe, intended for this purpose to be</span>
 <span class="sd">        dataframe with metadata, but can be anything</span>
 <span class="sd">    data_cols : list, optional</span>
 <span class="sd">        List of strings of column names, for columns</span>
-<span class="sd">        to be included after join from &quot;left&quot; table (data table).</span>
+<span class="sd">        to be included after join from "left" table (data table).</span>
 <span class="sd">        If None, all columns are kept, by default None</span>
 <span class="sd">    header_cols : list, optional</span>
 <span class="sd">        List of strings of columns names, for columns to be included</span>
-<span class="sd">        in merged table after merge from &quot;right&quot; table (metadata).</span>
+<span class="sd">        in merged table after merge from "right" table (metadata).</span>
 <span class="sd">        If None, all columns are kept, by default None</span>
 <span class="sd">    auto_pick_cols : bool, default = False</span>
 <span class="sd">        Whether to autopick the columns from the metadata table.</span>
 <span class="sd">        If True, the following column names are kept:</span>
-<span class="sd">        [`well_id_col`, &#39;LATITUDE&#39;, &#39;LONGITUDE&#39;, &#39;BEDROCK_ELEV&#39;,</span>
-<span class="sd">        &#39;SURFACE_ELEV&#39;, &#39;BEDROCK_DEPTH&#39;, &#39;LAYER_THICK&#39;], by default False.</span>
+<span class="sd">        [`well_id_col`, 'LATITUDE', 'LONGITUDE', 'BEDROCK_ELEV',</span>
+<span class="sd">        'SURFACE_ELEV', 'BEDROCK_DEPTH', 'LAYER_THICK'], by default False.</span>
 <span class="sd">    drop_duplicate_cols : bool, optional</span>
 <span class="sd">        If True, drops duplicate columns from the tables so that</span>
 <span class="sd">        columns do not get renamed upon merge, by default True.</span>
@@ -140,18 +140,18 @@
 <span class="sd">        Whether to log inputs and outputs to log file.</span>
 <span class="sd">    **kwargs</span>
 <span class="sd">        kwargs that are passed directly to pd.merge().</span>
-<span class="sd">        By default, the &#39;on&#39; and &#39;how&#39; parameters are defined as</span>
-<span class="sd">        on=`well_id_col` and how=&#39;inner&#39;.</span>
+<span class="sd">        By default, the 'on' and 'how' parameters are defined as</span>
+<span class="sd">        on=`well_id_col` and how='inner'.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    mergedTable : pandas.DataFrame</span>
 <span class="sd">        Merged dataframe</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="n">verbose_print</span><span class="p">(</span><span class="n">merge_metadata</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;data_df&#39;</span><span class="p">,</span>
-                                                                <span class="s1">&#39;header_df&#39;</span><span class="p">])</span>
+        <span class="n">verbose_print</span><span class="p">(</span><span class="n">merge_metadata</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s1">'data_df'</span><span class="p">,</span>
+                                                                <span class="s1">'header_df'</span><span class="p">])</span>
     <span class="k">if</span> <span class="n">header_df</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># Figure out which columns to include</span>
         <span class="k">if</span> <span class="n">data_cols</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -166,16 +166,16 @@
         <span class="n">mergedTable</span> <span class="o">=</span> <span class="n">data_df</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">auto_pick_cols</span><span class="p">:</span>
-            <span class="n">header_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">well_id_col</span><span class="p">,</span> <span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span>
-                           <span class="s1">&#39;BEDROCK_ELEV&#39;</span><span class="p">,</span> <span class="s1">&#39;SURFACE_ELEV&#39;</span><span class="p">,</span> <span class="s1">&#39;BEDROCK_DEPTH&#39;</span><span class="p">,</span>
-                           <span class="s1">&#39;LAYER_THICK&#39;</span><span class="p">]</span>
+            <span class="n">header_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">well_id_col</span><span class="p">,</span> <span class="s1">'LATITUDE'</span><span class="p">,</span> <span class="s1">'LONGITUDE'</span><span class="p">,</span>
+                           <span class="s1">'BEDROCK_ELEV'</span><span class="p">,</span> <span class="s1">'SURFACE_ELEV'</span><span class="p">,</span> <span class="s1">'BEDROCK_DEPTH'</span><span class="p">,</span>
+                           <span class="s1">'LAYER_THICK'</span><span class="p">]</span>
 
             <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">header_df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;ELEV_&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">c</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'ELEV_'</span><span class="p">)</span> <span class="ow">or</span> <span class="n">c</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'DEPTH'</span><span class="p">):</span>
                     <span class="n">header_cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
-                <span class="k">if</span> <span class="s1">&#39;_PROJ&#39;</span> <span class="ow">in</span> <span class="n">c</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s1">'_PROJ'</span> <span class="ow">in</span> <span class="n">c</span><span class="p">:</span>
                     <span class="n">header_cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
-            <span class="n">header_cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;geometry&#39;</span><span class="p">)</span>
+            <span class="n">header_cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">'geometry'</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">header_cols</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">header_cols</span> <span class="o">=</span> <span class="n">header_df</span><span class="o">.</span><span class="n">columns</span>
         <span class="k">else</span><span class="p">:</span>
@@ -186,20 +186,20 @@
             <span class="n">data_cols</span> <span class="o">=</span> <span class="n">data_df</span><span class="o">.</span><span class="n">columns</span>
 
         <span class="c1"># Defults for on and how</span>
-        <span class="k">if</span> <span class="s1">&#39;on&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;on&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">well_id_col</span>
+        <span class="k">if</span> <span class="s1">'on'</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">'on'</span><span class="p">]</span> <span class="o">=</span> <span class="n">well_id_col</span>
 
-        <span class="k">if</span> <span class="s1">&#39;how&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;how&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;inner&#39;</span>
+        <span class="k">if</span> <span class="s1">'how'</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">'how'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'inner'</span>
 
         <span class="c1"># Drop duplicate columns</span>
         <span class="k">if</span> <span class="n">drop_duplicate_cols</span><span class="p">:</span>
             <span class="n">header_colCopy</span> <span class="o">=</span> <span class="n">header_cols</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="n">remCount</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">header_colCopy</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">data_cols</span> <span class="ow">and</span> <span class="n">c</span> <span class="o">!=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;on&#39;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">data_cols</span> <span class="ow">and</span> <span class="n">c</span> <span class="o">!=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">'on'</span><span class="p">]:</span>
                     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Removing </span><span class="si">{}</span><span class="s1"> (duplicate columns) from data.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">header_cols</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="n">remCount</span><span class="p">]))</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s1">'Removing </span><span class="si">{}</span><span class="s1"> (duplicate columns) from data.'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">header_cols</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="n">remCount</span><span class="p">]))</span>
                     <span class="n">header_cols</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="n">remCount</span><span class="p">)</span>
                     <span class="n">remCount</span> <span class="o">+=</span> <span class="mi">1</span>
 
@@ -215,15 +215,15 @@
 <span class="c1"># Interpolate layers to model model_grid</span>
 <div class="viewcode-block" id="layer_interp">
 <a class="viewcode-back" href="../../w4h.layers.html#w4h.layer_interp">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">layer_interp</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">model_grid</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interp_kind</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">layer_interp</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">model_grid</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interp_kind</span><span class="o">=</span><span class="s1">'nearest'</span><span class="p">,</span>
                  <span class="n">surface_grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bedrock_grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">layer_thick_grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">drift_thick_grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">return_type</span><span class="o">=</span><span class="s1">&#39;dataset&#39;</span><span class="p">,</span> <span class="n">export_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">target_col</span><span class="o">=</span><span class="s1">&#39;TARG_THICK_PER&#39;</span><span class="p">,</span> <span class="n">layer_col</span><span class="o">=</span><span class="s1">&#39;LAYER&#39;</span><span class="p">,</span>
-                 <span class="n">xcol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xcoord</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">ycoord</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span>
+                 <span class="n">return_type</span><span class="o">=</span><span class="s1">'dataset'</span><span class="p">,</span> <span class="n">export_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">target_col</span><span class="o">=</span><span class="s1">'TARG_THICK_PER'</span><span class="p">,</span> <span class="n">layer_col</span><span class="o">=</span><span class="s1">'LAYER'</span><span class="p">,</span>
+                 <span class="n">xcol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xcoord</span><span class="o">=</span><span class="s1">'x'</span><span class="p">,</span> <span class="n">ycoord</span><span class="o">=</span><span class="s1">'y'</span><span class="p">,</span>
                  <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to interpolate results (by default TARG_THICK_PER,</span>
+<span class="w">    </span><span class="sd">"""Function to interpolate results (by default TARG_THICK_PER,</span>
 <span class="sd">    or Target thickness percent per layer).</span>
 <span class="sd">    Converts dataframe points to gridded data.</span>
 <span class="sd">    Results are saved to Model_Layer variable</span>
@@ -232,15 +232,15 @@
 <span class="sd">    This function uses the scipy.interpolate module for interpolation.</span>
 
 <span class="sd">     Different interpolation methods may be used by specifying `interp_kind=`:</span>
-<span class="sd">     * `&#39;Nearest&#39;`: Nearest neighbor (fastest).</span>
+<span class="sd">     * `'Nearest'`: Nearest neighbor (fastest).</span>
 <span class="sd">     Uses scipy.interpolate.NearestNDInterpolator()</span>
-<span class="sd">     * `&#39;Linear&#39;`: Linear interpolation</span>
+<span class="sd">     * `'Linear'`: Linear interpolation</span>
 <span class="sd">     Uses scipy.interpolate.LinearNDInterpolator()</span>
-<span class="sd">     * `&#39;Inter2d&#39;`: Spline interpolation</span>
+<span class="sd">     * `'Inter2d'`: Spline interpolation</span>
 <span class="sd">     Uses scipy.interpolate.bisplrep()</span>
-<span class="sd">     * `&#39;CloughTocher`&#39;: Cubic interpolation using clough-tocher method</span>
+<span class="sd">     * `'CloughTocher`': Cubic interpolation using clough-tocher method</span>
 <span class="sd">     Uses scipy.interpolate.CloughTocher2DInterpolator()</span>
-<span class="sd">     * `&#39;Radial basis function&#39;`: Radial basis function</span>
+<span class="sd">     * `'Radial basis function'`: Radial basis function</span>
 <span class="sd">     Uses scipy.interpolate.RBFInterpolator()</span>
 
 <span class="sd">    Parameters</span>
@@ -251,24 +251,24 @@
 <span class="sd">        Xarray DataArray or DataSet with the coordinates/spatial reference of the output model_grid to interpolate to</span>
 <span class="sd">    layers : int, default=None</span>
 <span class="sd">        Number of layers for interpolation. If None, uses the length ofthe points list to determine number of layers. By default None.</span>
-<span class="sd">    interp_kind : str, {&#39;nearest&#39;, &#39;interp2d&#39;,&#39;linear&#39;, &#39;cloughtocher&#39;, &#39;radial basis function&#39;}</span>
-<span class="sd">        Type of interpolation to use. See scipy.interpolate N-D scattered. Values can be any of the following (also shown in &quot;kind&quot; column of N-D scattered section of table here: https://docs.scipy.org/doc/scipy/tutorial/interpolate.html). By default &#39;nearest&#39;</span>
-<span class="sd">    return_type : str, {&#39;dataset&#39;, &#39;dataarray&#39;}</span>
-<span class="sd">        Type of xarray object to return, either xr.DataArray or xr.Dataset, by default &#39;dataset.&#39;</span>
+<span class="sd">    interp_kind : str, {'nearest', 'interp2d','linear', 'cloughtocher', 'radial basis function'}</span>
+<span class="sd">        Type of interpolation to use. See scipy.interpolate N-D scattered. Values can be any of the following (also shown in "kind" column of N-D scattered section of table here: https://docs.scipy.org/doc/scipy/tutorial/interpolate.html). By default 'nearest'</span>
+<span class="sd">    return_type : str, {'dataset', 'dataarray'}</span>
+<span class="sd">        Type of xarray object to return, either xr.DataArray or xr.Dataset, by default 'dataset.'</span>
 <span class="sd">    export_dir : str or pathlib.Path, default=None</span>
 <span class="sd">        Export directory for interpolated grids, using w4h.export_grids(). If None, does not export, by default None.</span>
-<span class="sd">    target_col : str, default = &#39;TARG_THICK_PER&#39;</span>
-<span class="sd">        Name of column in points containing data to be interpolated, by default &#39;TARG_THICK_PER&#39;.</span>
-<span class="sd">    layer_col : str, default = &#39;Layer&#39;</span>
-<span class="sd">        Name of column containing layer number. Not currently used, by default &#39;LAYER&#39;</span>
-<span class="sd">    xcol : str, default = &#39;None&#39;</span>
-<span class="sd">        Name of column containing x coordinates. If None, will look for &#39;geometry&#39; column, as in a geopandas.GeoDataframe. By default None</span>
-<span class="sd">    ycol : str, default = &#39;None&#39;</span>
-<span class="sd">        Name of column containing y coordinates. If None, will look for &#39;geometry&#39; column, as in a geopandas.GeoDataframe. By default None</span>
-<span class="sd">    xcoord : str, default=&#39;x&#39;</span>
-<span class="sd">        Name of x coordinate in model_grid, used to extract x values of model_grid, by default &#39;x&#39;</span>
-<span class="sd">    ycoord : str, default=&#39;y&#39;</span>
-<span class="sd">        Name of y coordinate in model_grid, used to extract x values of model_grid, by default &#39;y&#39;</span>
+<span class="sd">    target_col : str, default = 'TARG_THICK_PER'</span>
+<span class="sd">        Name of column in points containing data to be interpolated, by default 'TARG_THICK_PER'.</span>
+<span class="sd">    layer_col : str, default = 'Layer'</span>
+<span class="sd">        Name of column containing layer number. Not currently used, by default 'LAYER'</span>
+<span class="sd">    xcol : str, default = 'None'</span>
+<span class="sd">        Name of column containing x coordinates. If None, will look for 'geometry' column, as in a geopandas.GeoDataframe. By default None</span>
+<span class="sd">    ycol : str, default = 'None'</span>
+<span class="sd">        Name of column containing y coordinates. If None, will look for 'geometry' column, as in a geopandas.GeoDataframe. By default None</span>
+<span class="sd">    xcoord : str, default='x'</span>
+<span class="sd">        Name of x coordinate in model_grid, used to extract x values of model_grid, by default 'x'</span>
+<span class="sd">    ycoord : str, default='y'</span>
+<span class="sd">        Name of y coordinate in model_grid, used to extract x values of model_grid, by default 'y'</span>
 <span class="sd">    log : bool, default = True</span>
 <span class="sd">        Whether to log inputs and outputs to log file.</span>
 <span class="sd">    **kwargs</span>
@@ -277,20 +277,20 @@
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    interp_data : xr.DataArray or xr.Dataset, depending on return_type</span>
-<span class="sd">        By default, returns an xr.DataArray object with the layers added as a new dimension called Layer. Can also specify return_type=&#39;dataset&#39; to return an xr.Dataset with each layer as a separate variable.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">        By default, returns an xr.DataArray object with the layers added as a new dimension called Layer. Can also specify return_type='dataset' to return an xr.Dataset with each layer as a separate variable.</span>
+<span class="sd">    """</span>
     <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="n">verbose_print</span><span class="p">(</span><span class="n">layer_interp</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">,</span> <span class="s1">&#39;model_grid&#39;</span><span class="p">])</span>
+        <span class="n">verbose_print</span><span class="p">(</span><span class="n">layer_interp</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s1">'points'</span><span class="p">,</span> <span class="s1">'model_grid'</span><span class="p">])</span>
 
     <span class="c1"># Possible inputs (casefolded) for different interp methods</span>
-    <span class="n">nnList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;nearest&#39;</span><span class="p">,</span> <span class="s1">&#39;nearest neighbor&#39;</span><span class="p">,</span> <span class="s1">&#39;nearestneighbor&#39;</span><span class="p">,</span> <span class="s1">&#39;near&#39;</span><span class="p">,</span> <span class="s1">&#39;n&#39;</span><span class="p">]</span>
-    <span class="n">splineList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;interp2d&#39;</span><span class="p">,</span> <span class="s1">&#39;interp2&#39;</span><span class="p">,</span> <span class="s1">&#39;interp&#39;</span><span class="p">,</span> <span class="s1">&#39;spline&#39;</span><span class="p">,</span> <span class="s1">&#39;spl&#39;</span><span class="p">,</span> <span class="s1">&#39;sp&#39;</span><span class="p">,</span> <span class="s1">&#39;s&#39;</span><span class="p">]</span>
-    <span class="n">linList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span> <span class="s1">&#39;lin&#39;</span><span class="p">,</span> <span class="s1">&#39;l&#39;</span><span class="p">]</span>
-    <span class="n">ctList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clough tocher&#39;</span><span class="p">,</span> <span class="s1">&#39;clough&#39;</span><span class="p">,</span> <span class="s1">&#39;cloughtocher&#39;</span><span class="p">,</span> <span class="s1">&#39;ct&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">]</span>
-    <span class="n">rbfList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;rbf&#39;</span><span class="p">,</span> <span class="s1">&#39;radial basis&#39;</span><span class="p">,</span> <span class="s1">&#39;radial basis function&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;radial&#39;</span><span class="p">]</span>
-    <span class="n">natneighborList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;natural&#39;</span><span class="p">,</span> <span class="s1">&#39;natural neighbor&#39;</span><span class="p">,</span> <span class="s1">&#39;naturalneighbor&#39;</span><span class="p">,</span> <span class="s1">&#39;nat&#39;</span><span class="p">,</span> <span class="s1">&#39;natn&#39;</span><span class="p">]</span>
+    <span class="n">nnList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'nearest'</span><span class="p">,</span> <span class="s1">'nearest neighbor'</span><span class="p">,</span> <span class="s1">'nearestneighbor'</span><span class="p">,</span> <span class="s1">'near'</span><span class="p">,</span> <span class="s1">'n'</span><span class="p">]</span>
+    <span class="n">splineList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'interp2d'</span><span class="p">,</span> <span class="s1">'interp2'</span><span class="p">,</span> <span class="s1">'interp'</span><span class="p">,</span> <span class="s1">'spline'</span><span class="p">,</span> <span class="s1">'spl'</span><span class="p">,</span> <span class="s1">'sp'</span><span class="p">,</span> <span class="s1">'s'</span><span class="p">]</span>
+    <span class="n">linList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'linear'</span><span class="p">,</span> <span class="s1">'lin'</span><span class="p">,</span> <span class="s1">'l'</span><span class="p">]</span>
+    <span class="n">ctList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'clough tocher'</span><span class="p">,</span> <span class="s1">'clough'</span><span class="p">,</span> <span class="s1">'cloughtocher'</span><span class="p">,</span> <span class="s1">'ct'</span><span class="p">,</span> <span class="s1">'c'</span><span class="p">]</span>
+    <span class="n">rbfList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'rbf'</span><span class="p">,</span> <span class="s1">'radial basis'</span><span class="p">,</span> <span class="s1">'radial basis function'</span><span class="p">,</span> <span class="s1">'r'</span><span class="p">,</span> <span class="s1">'radial'</span><span class="p">]</span>
+    <span class="n">natneighborList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'natural'</span><span class="p">,</span> <span class="s1">'natural neighbor'</span><span class="p">,</span> <span class="s1">'naturalneighbor'</span><span class="p">,</span> <span class="s1">'nat'</span><span class="p">,</span> <span class="s1">'natn'</span><span class="p">]</span>
     <span class="c1"># Potential future additions:</span>
     <span class="c1">#   k-nearest neighbors from scikit-learn?</span>
     <span class="c1">#   kriging? (from pykrige or maybe also from scikit-learn)</span>
@@ -310,10 +310,10 @@
         <span class="n">layers</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span> <span class="o">!=</span> <span class="n">layers</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;You have specified a different number of layers than what is iterable in the points argument. This may not work properly.&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">'You have specified a different number of layers than what is iterable in the points argument. This may not work properly.'</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">Interpolating target lithology at each layer:&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">'</span><span class="se">\t</span><span class="s1">Interpolating target lithology at each layer:'</span><span class="p">)</span>
 
     <span class="c1"># Loop through each layer and interpolate (2d interpolation within layer)</span>
     <span class="n">daDict</span> <span class="o">=</span> <span class="p">{}</span>
@@ -327,25 +327,25 @@
 
         <span class="c1"># Get x coordinates for each well point</span>
         <span class="k">if</span> <span class="n">xcol</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="s1">&#39;geometry&#39;</span> <span class="ow">in</span> <span class="n">pts</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-                <span class="n">dataX</span> <span class="o">=</span> <span class="n">pts</span><span class="p">[</span><span class="s1">&#39;geometry&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">x</span>
+            <span class="k">if</span> <span class="s1">'geometry'</span> <span class="ow">in</span> <span class="n">pts</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="n">dataX</span> <span class="o">=</span> <span class="n">pts</span><span class="p">[</span><span class="s1">'geometry'</span><span class="p">]</span><span class="o">.</span><span class="n">x</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;xcol not specified and geometry column not detected (points is not/does not contain geopandas.GeoDataFrame)&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">'xcol not specified and geometry column not detected (points is not/does not contain geopandas.GeoDataFrame)'</span><span class="p">)</span>
                 <span class="k">return</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">dataX</span> <span class="o">=</span> <span class="n">pts</span><span class="p">[</span><span class="n">xcol</span><span class="p">]</span>
 
         <span class="c1"># Get x coordinates for each well point</span>
         <span class="k">if</span> <span class="n">ycol</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="s1">&#39;geometry&#39;</span> <span class="ow">in</span> <span class="n">pts</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-                <span class="n">dataY</span> <span class="o">=</span> <span class="n">pts</span><span class="p">[</span><span class="s1">&#39;geometry&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">y</span>
+            <span class="k">if</span> <span class="s1">'geometry'</span> <span class="ow">in</span> <span class="n">pts</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="n">dataY</span> <span class="o">=</span> <span class="n">pts</span><span class="p">[</span><span class="s1">'geometry'</span><span class="p">]</span><span class="o">.</span><span class="n">y</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;ycol not specified and geometry column not detected (points is not/does not contain geopandas.GeoDataFrame)&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">'ycol not specified and geometry column not detected (points is not/does not contain geopandas.GeoDataFrame)'</span><span class="p">)</span>
                 <span class="k">return</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">dataY</span> <span class="o">=</span> <span class="n">pts</span><span class="p">[</span><span class="n">ycol</span><span class="p">]</span>
 
-        <span class="c1"># Get &#39;z&#39; coordinates (interpolated value) for each well point</span>
+        <span class="c1"># Get 'z' coordinates (interpolated value) for each well point</span>
         <span class="n">interpVal</span> <span class="o">=</span> <span class="n">pts</span><span class="p">[</span><span class="n">target_col</span><span class="p">]</span>
 
         <span class="c1"># Drop points without x, y, or z data (and maintain consistency)</span>
@@ -365,7 +365,7 @@
         <span class="c1"># Carry out interpolation</span>
         <span class="c1"># Nearest neighbor</span>
         <span class="k">if</span> <span class="n">interp_kind</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">nnList</span><span class="p">:</span>
-            <span class="n">interpType</span> <span class="o">=</span> <span class="s1">&#39;Nearest Neighbor&#39;</span>
+            <span class="n">interpType</span> <span class="o">=</span> <span class="s1">'Nearest Neighbor'</span>
             <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">sparse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># 2D Grid for interpolation</span>
             <span class="n">dataPoints</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">dataX</span><span class="p">,</span> <span class="n">dataY</span><span class="p">)))</span>
             <span class="n">interp</span> <span class="o">=</span> <span class="n">interpolate</span><span class="o">.</span><span class="n">NearestNDInterpolator</span><span class="p">(</span><span class="n">dataPoints</span><span class="p">,</span> <span class="n">interpVal</span><span class="p">,</span>
@@ -375,7 +375,7 @@
 
         <span class="c1"># Linear</span>
         <span class="k">elif</span> <span class="n">interp_kind</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">linList</span><span class="p">:</span>
-            <span class="n">interpType</span> <span class="o">=</span> <span class="s1">&#39;Linear&#39;</span>
+            <span class="n">interpType</span> <span class="o">=</span> <span class="s1">'Linear'</span>
             <span class="n">dataPoints</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">dataX</span><span class="p">,</span> <span class="n">dataY</span><span class="p">)))</span>
             <span class="n">interp</span> <span class="o">=</span> <span class="n">interpolate</span><span class="o">.</span><span class="n">LinearNDInterpolator</span><span class="p">(</span><span class="n">dataPoints</span><span class="p">,</span> <span class="n">interpVal</span><span class="p">,</span>
                                                       <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -385,38 +385,38 @@
 
         <span class="c1"># Clough-toucher (cubic)</span>
         <span class="k">elif</span> <span class="n">interp_kind</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">ctList</span><span class="p">:</span>
-            <span class="n">interpType</span> <span class="o">=</span> <span class="s1">&#39;Clough-Toucher&#39;</span>
+            <span class="n">interpType</span> <span class="o">=</span> <span class="s1">'Clough-Toucher'</span>
             <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">sparse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># 2D Grid for interpolation</span>
-            <span class="k">if</span> <span class="s1">&#39;tol&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
-                <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;tol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e10</span>
+            <span class="k">if</span> <span class="s1">'tol'</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s1">'tol'</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e10</span>
             <span class="n">interp</span> <span class="o">=</span> <span class="n">interpolate</span><span class="o">.</span><span class="n">CloughTocher2DInterpolator</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">dataX</span><span class="p">,</span> <span class="n">dataY</span><span class="p">)),</span> <span class="n">interpVal</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="n">Z</span> <span class="o">=</span> <span class="n">interp</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
             <span class="k">del</span> <span class="n">interp</span>
 
         <span class="c1"># Radial basis function</span>
         <span class="k">elif</span> <span class="n">interp_kind</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">rbfList</span><span class="p">:</span>
-            <span class="n">interpType</span> <span class="o">=</span> <span class="s1">&#39;Radial Basis&#39;</span>
+            <span class="n">interpType</span> <span class="o">=</span> <span class="s1">'Radial Basis'</span>
             <span class="n">dataXY</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">dataX</span><span class="p">,</span> <span class="n">dataY</span><span class="p">))</span>
             <span class="n">interp</span> <span class="o">=</span> <span class="n">interpolate</span><span class="o">.</span><span class="n">RBFInterpolator</span><span class="p">(</span><span class="n">dataXY</span><span class="p">,</span> <span class="n">interpVal</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Radial Basis Function does not work well with many well-based datasets. Consider instead specifying &#39;nearest&#39;, &#39;linear&#39;, &#39;spline&#39;, or &#39;clough tocher&#39; for interpolation interp_kind.&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">"Radial Basis Function does not work well with many well-based datasets. Consider instead specifying 'nearest', 'linear', 'spline', or 'clough tocher' for interpolation interp_kind."</span><span class="p">)</span>
             <span class="n">Z</span> <span class="o">=</span> <span class="n">interp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">X</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">Y</span><span class="o">.</span><span class="n">ravel</span><span class="p">())))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
             <span class="k">del</span> <span class="n">interp</span>
 
         <span class="c1"># Spline</span>
         <span class="k">elif</span> <span class="n">interp_kind</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">splineList</span><span class="p">:</span>
-            <span class="n">interpType</span> <span class="o">=</span> <span class="s1">&#39;Spline Interpolation&#39;</span>
+            <span class="n">interpType</span> <span class="o">=</span> <span class="s1">'Spline Interpolation'</span>
             <span class="n">Z</span> <span class="o">=</span> <span class="n">interpolate</span><span class="o">.</span><span class="n">bisplrep</span><span class="p">(</span><span class="n">dataX</span><span class="p">,</span> <span class="n">dataY</span><span class="p">,</span> <span class="n">interpVal</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="k">elif</span> <span class="n">interp_kind</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">natneighborList</span><span class="p">:</span>
-            <span class="n">interpType</span> <span class="o">=</span> <span class="s1">&#39;Natural Neighbor&#39;</span>
+            <span class="n">interpType</span> <span class="o">=</span> <span class="s1">'Natural Neighbor'</span>
             <span class="n">Z</span> <span class="o">=</span> <span class="n">natural_neighbor_interp</span><span class="p">(</span><span class="n">points</span><span class="o">=</span><span class="n">pts</span><span class="p">,</span> <span class="n">model_grid</span><span class="o">=</span><span class="n">model_grid</span><span class="p">)</span>
         <span class="c1"># Nearest neighbor by default if otherwise not specified</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Specified interpolation (interp_kind=</span><span class="si">{</span><span class="n">interp_kind</span><span class="si">}</span><span class="s1">) not recognized, using nearest neighbor.&#39;</span><span class="p">)</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">interp_kind should be one of: &#39;nearest&#39;, &#39;linear&#39;, &#39;interp2d&#39;, &#39;cloughtocher&#39;, or &#39;spline&#39;&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Specified interpolation (interp_kind=</span><span class="si">{</span><span class="n">interp_kind</span><span class="si">}</span><span class="s1">) not recognized, using nearest neighbor.'</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\t</span><span class="s2">interp_kind should be one of: 'nearest', 'linear', 'interp2d', 'cloughtocher', or 'spline'"</span><span class="p">)</span>
 
-            <span class="n">interpType</span> <span class="o">=</span> <span class="s1">&#39;Nearest Neighbor&#39;</span>
+            <span class="n">interpType</span> <span class="o">=</span> <span class="s1">'Nearest Neighbor'</span>
             <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">sparse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># 2D Grid for interpolation</span>
             <span class="n">interp</span> <span class="o">=</span> <span class="n">interpolate</span><span class="o">.</span><span class="n">NearestNDInterpolator</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">dataX</span><span class="p">,</span> <span class="n">dataY</span><span class="p">)),</span>
                                                        <span class="n">interpVal</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -429,16 +429,16 @@
                     <span class="n">dims</span><span class="o">=</span><span class="n">model_grid</span><span class="o">.</span><span class="n">dims</span><span class="p">,</span>
                     <span class="n">coords</span><span class="o">=</span><span class="n">model_grid</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
 
-        <span class="c1"># Drop if only a single coordinate in &quot;band&quot; dimension</span>
-        <span class="k">if</span> <span class="s1">&#39;band&#39;</span> <span class="ow">in</span> <span class="n">interp_grid</span><span class="o">.</span><span class="n">coords</span><span class="p">:</span>
-            <span class="n">interp_grid</span> <span class="o">=</span> <span class="n">interp_grid</span><span class="o">.</span><span class="n">drop_vars</span><span class="p">(</span><span class="s1">&#39;band&#39;</span><span class="p">)</span>
+        <span class="c1"># Drop if only a single coordinate in "band" dimension</span>
+        <span class="k">if</span> <span class="s1">'band'</span> <span class="ow">in</span> <span class="n">interp_grid</span><span class="o">.</span><span class="n">coords</span><span class="p">:</span>
+            <span class="n">interp_grid</span> <span class="o">=</span> <span class="n">interp_grid</span><span class="o">.</span><span class="n">drop_vars</span><span class="p">(</span><span class="s1">'band'</span><span class="p">)</span>
 
         <span class="c1"># Clip to 0-1 if percentage</span>
-        <span class="k">if</span> <span class="n">target_col</span> <span class="o">==</span> <span class="s1">&#39;TARG_THICK_PER&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">target_col</span> <span class="o">==</span> <span class="s1">'TARG_THICK_PER'</span><span class="p">:</span>
             <span class="n">interp_grid</span> <span class="o">=</span> <span class="n">interp_grid</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keep_attrs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="c1"># Add coordinate in layer dimension for current layer</span>
-        <span class="n">interp_grid</span> <span class="o">=</span> <span class="n">interp_grid</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="s1">&#39;Layer&#39;</span><span class="p">)</span>
+        <span class="n">interp_grid</span> <span class="o">=</span> <span class="n">interp_grid</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="s1">'Layer'</span><span class="p">)</span>
         <span class="n">interp_grid</span> <span class="o">=</span> <span class="n">interp_grid</span><span class="o">.</span><span class="n">assign_coords</span><span class="p">(</span><span class="n">Layer</span><span class="o">=</span><span class="p">[</span><span class="n">lyr</span><span class="p">])</span>
 
         <span class="c1"># Delete to reduce memory usage (?)</span>
@@ -448,29 +448,29 @@
         <span class="k">del</span> <span class="n">interpVal</span>
 
         <span class="n">zFillDigs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">layers</span><span class="p">))</span>
-        <span class="n">daDict</span><span class="p">[</span><span class="s1">&#39;Layer&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">lyr</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="n">zFillDigs</span><span class="p">)]</span> <span class="o">=</span> <span class="n">interp_grid</span>
+        <span class="n">daDict</span><span class="p">[</span><span class="s1">'Layer'</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">lyr</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="n">zFillDigs</span><span class="p">)]</span> <span class="o">=</span> <span class="n">interp_grid</span>
         <span class="k">del</span> <span class="n">interp_grid</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t\t</span><span class="s1">Completed </span><span class="si">{}</span><span class="s1"> interpolation for Layer </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">interpType</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="nb">str</span><span class="p">(</span><span class="n">lyr</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="n">zFillDigs</span><span class="p">)))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">'</span><span class="se">\t\t</span><span class="s1">Completed </span><span class="si">{}</span><span class="s1"> interpolation for Layer </span><span class="si">{}</span><span class="s1">'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">interpType</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="nb">str</span><span class="p">(</span><span class="n">lyr</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="n">zFillDigs</span><span class="p">)))</span>
 
     <span class="c1"># Determine whether to export xarray DataArray or Dataset</span>
-    <span class="n">dataArrayList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;dataarray&#39;</span><span class="p">,</span> <span class="s1">&#39;da&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;array&#39;</span><span class="p">]</span>
-    <span class="n">dataSetList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;dataset&#39;</span><span class="p">,</span> <span class="s1">&#39;ds&#39;</span><span class="p">,</span> <span class="s1">&#39;set&#39;</span><span class="p">]</span>
+    <span class="n">dataArrayList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'dataarray'</span><span class="p">,</span> <span class="s1">'da'</span><span class="p">,</span> <span class="s1">'a'</span><span class="p">,</span> <span class="s1">'array'</span><span class="p">]</span>
+    <span class="n">dataSetList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'dataset'</span><span class="p">,</span> <span class="s1">'ds'</span><span class="p">,</span> <span class="s1">'set'</span><span class="p">]</span>
 
-    <span class="n">interp_data</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">daDict</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">dim</span><span class="o">=</span><span class="s1">&#39;Layer&#39;</span><span class="p">)</span>
+    <span class="n">interp_data</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">daDict</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">dim</span><span class="o">=</span><span class="s1">'Layer'</span><span class="p">)</span>
     <span class="n">interp_data</span> <span class="o">=</span> <span class="n">interp_data</span><span class="o">.</span><span class="n">assign_coords</span><span class="p">(</span><span class="n">Layer</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">layers</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
 
     <span class="k">if</span> <span class="n">return_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">dataArrayList</span><span class="p">:</span>
         <span class="k">pass</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">return_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dataSetList</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">return_type</span><span class="si">}</span><span class="s2"> is not a valid input for return_type. Please set return_type to either &#39;dataarray&#39; or &#39;dataset&#39;&quot;</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Using dataset by default&quot;</span><span class="p">)</span>            
-        <span class="n">interp_data</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">data_vars</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Model_Layers&#39;</span><span class="p">:</span> <span class="n">interp_data</span><span class="p">})</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">return_type</span><span class="si">}</span><span class="s2"> is not a valid input for return_type. Please set return_type to either 'dataarray' or 'dataset'"</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">"Using dataset by default"</span><span class="p">)</span>            
+        <span class="n">interp_data</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">data_vars</span><span class="o">=</span><span class="p">{</span><span class="s1">'Model_Layers'</span><span class="p">:</span> <span class="n">interp_data</span><span class="p">})</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Done with interpolation, getting additional layers and attributes&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">'Done with interpolation, getting additional layers and attributes'</span><span class="p">)</span>
 
-        <span class="c1"># Get common attributes from all layers to use as &quot;global&quot; attributes</span>
+        <span class="c1"># Get common attributes from all layers to use as "global" attributes</span>
         <span class="n">common_attrs</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">data_array</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">interp_data</span><span class="o">.</span><span class="n">data_vars</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
             <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -487,8 +487,8 @@
     <span class="k">if</span> <span class="n">export_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">pass</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">w4h</span><span class="o">.</span><span class="n">export_grids</span><span class="p">(</span><span class="n">grid_data</span><span class="o">=</span><span class="n">interp_data</span><span class="p">,</span> <span class="n">out_path</span><span class="o">=</span><span class="n">export_dir</span><span class="p">,</span> <span class="n">file_id</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">filetype</span><span class="o">=</span><span class="s1">&#39;tif&#39;</span><span class="p">,</span> <span class="n">variable_sep</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">date_stamp</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Exported to </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">export_dir</span><span class="p">))</span>
+        <span class="n">w4h</span><span class="o">.</span><span class="n">export_grids</span><span class="p">(</span><span class="n">grid_data</span><span class="o">=</span><span class="n">interp_data</span><span class="p">,</span> <span class="n">out_path</span><span class="o">=</span><span class="n">export_dir</span><span class="p">,</span> <span class="n">file_id</span><span class="o">=</span><span class="s1">''</span><span class="p">,</span> <span class="n">filetype</span><span class="o">=</span><span class="s1">'tif'</span><span class="p">,</span> <span class="n">variable_sep</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">date_stamp</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">'Exported to </span><span class="si">{}</span><span class="s1">'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">export_dir</span><span class="p">))</span>
 
     <span class="k">return</span> <span class="n">interp_data</span></div>
 
@@ -497,12 +497,12 @@
 <span class="c1"># Function to export the result of thickness of target sediments in each layer</span>
 <div class="viewcode-block" id="layer_target_thick">
 <a class="viewcode-back" href="../../w4h.layers.html#w4h.layer_target_thick">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">layer_target_thick</span><span class="p">(</span><span class="n">gdf</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">well_id_col</span><span class="o">=</span><span class="s1">&#39;API_NUMBER&#39;</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">layer_target_thick</span><span class="p">(</span><span class="n">gdf</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">well_id_col</span><span class="o">=</span><span class="s1">'API_NUMBER'</span><span class="p">,</span>
                        <span class="n">return_all</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">export_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">outfile_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                       <span class="n">depth_top_col</span><span class="o">=</span><span class="s1">&#39;TOP&#39;</span><span class="p">,</span> <span class="n">depth_bot_col</span><span class="o">=</span><span class="s1">&#39;BOTTOM&#39;</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                       <span class="n">depth_top_col</span><span class="o">=</span><span class="s1">'TOP'</span><span class="p">,</span> <span class="n">depth_bot_col</span><span class="o">=</span><span class="s1">'BOTTOM'</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                        <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to calculate thickness of target material</span>
+<span class="w">    </span><span class="sd">"""Function to calculate thickness of target material</span>
 <span class="sd">       in each layer at each well point.</span>
 <span class="sd">       This function loops through each model layer and divides up</span>
 <span class="sd">       the well intervals from the input GeoDataFrame into 4 categories:</span>
@@ -513,7 +513,7 @@
 
 <span class="sd">       For each category, the amount/thickness of the target material</span>
 <span class="sd">       within each layer is calculated. These records are then</span>
-<span class="sd">       &quot;truth-checked&quot; to ensure there are not duplicates and combined.</span>
+<span class="sd">       "truth-checked" to ensure there are not duplicates and combined.</span>
 <span class="sd">       The percent thickness (target thickness/layer thickness) is calculated,</span>
 <span class="sd">       before data is returned and/or exported.</span>
 
@@ -524,7 +524,7 @@
 <span class="sd">        bedrock elevation, layer depths, geometry.</span>
 <span class="sd">    layers : int, default=9</span>
 <span class="sd">        Number of layers in model, by default 9</span>
-<span class="sd">    well_id_col : str, default=&quot;API_NUMBER&quot;</span>
+<span class="sd">    well_id_col : str, default="API_NUMBER"</span>
 <span class="sd">        The name of the column that is used for uniquely identifying each well</span>
 <span class="sd">    return_all : bool, default=False</span>
 <span class="sd">        If True, return list of original GeoDataFrames with extra column</span>
@@ -537,10 +537,10 @@
 <span class="sd">    outfile_prefix : str, default=None</span>
 <span class="sd">        Only used if export_dir is set.</span>
 <span class="sd">        Will be used at the start of the exported filenames.</span>
-<span class="sd">    depth_top_col : str, default=&#39;TOP&#39;</span>
+<span class="sd">    depth_top_col : str, default='TOP'</span>
 <span class="sd">        Name of column containing data for depth</span>
 <span class="sd">        to top of described well intervals.</span>
-<span class="sd">    depth_bot_col : str, default=&#39;BOTTOM&#39;</span>
+<span class="sd">    depth_bot_col : str, default='BOTTOM'</span>
 <span class="sd">        Name of column containing data for depth</span>
 <span class="sd">        to bottom of described well intervals.</span>
 <span class="sd">    log : bool, default = True</span>
@@ -553,10 +553,10 @@
 <span class="sd">        needed for next stage of analysis. If `return_all=True`, the input data</span>
 <span class="sd">        with the actual descriptions will be returned</span>
 <span class="sd">        as a separate list of GeoDataFrames.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
-    <span class="n">gdf</span><span class="p">[</span><span class="s1">&#39;TOP_ELEV&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gdf</span><span class="p">[</span><span class="s1">&#39;SURFACE_ELEV&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">gdf</span><span class="p">[</span><span class="n">depth_top_col</span><span class="p">]</span>
-    <span class="n">gdf</span><span class="p">[</span><span class="s1">&#39;BOT_ELEV&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gdf</span><span class="p">[</span><span class="s1">&#39;SURFACE_ELEV&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">gdf</span><span class="p">[</span><span class="n">depth_bot_col</span><span class="p">]</span>
+    <span class="n">gdf</span><span class="p">[</span><span class="s1">'TOP_ELEV'</span><span class="p">]</span> <span class="o">=</span> <span class="n">gdf</span><span class="p">[</span><span class="s1">'SURFACE_ELEV'</span><span class="p">]</span> <span class="o">-</span> <span class="n">gdf</span><span class="p">[</span><span class="n">depth_top_col</span><span class="p">]</span>
+    <span class="n">gdf</span><span class="p">[</span><span class="s1">'BOT_ELEV'</span><span class="p">]</span> <span class="o">=</span> <span class="n">gdf</span><span class="p">[</span><span class="s1">'SURFACE_ELEV'</span><span class="p">]</span> <span class="o">-</span> <span class="n">gdf</span><span class="p">[</span><span class="n">depth_bot_col</span><span class="p">]</span>
 
     <span class="n">layerList</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">layers</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">res_list</span> <span class="o">=</span> <span class="p">[]</span>
@@ -564,14 +564,14 @@
 
     <span class="c1"># Generate Column names based on (looped) integers</span>
     <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layerList</span><span class="p">:</span>
-        <span class="n">zStr</span> <span class="o">=</span> <span class="s1">&#39;ELEV&#39;</span>
-        <span class="n">wellIntTop_col</span> <span class="o">=</span> <span class="s1">&#39;TOP_ELEV&#39;</span>
-        <span class="n">wellIntBot_col</span> <span class="o">=</span> <span class="s1">&#39;BOT_ELEV&#39;</span>
-        <span class="n">modelLyrTop_Col</span> <span class="o">=</span> <span class="n">zStr</span><span class="o">+</span><span class="s1">&#39;_LAYER&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">layer</span> <span class="o">!=</span> <span class="mi">9</span><span class="p">:</span>  <span class="c1"># For all layers except the bottom layer....</span>
-            <span class="n">modelLyrBot_col</span> <span class="o">=</span> <span class="n">zStr</span><span class="o">+</span><span class="s1">&#39;_LAYER&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">layer</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># use the layer below</span>
+        <span class="n">zStr</span> <span class="o">=</span> <span class="s1">'ELEV'</span>
+        <span class="n">wellIntTop_col</span> <span class="o">=</span> <span class="s1">'TOP_ELEV'</span>
+        <span class="n">wellIntBot_col</span> <span class="o">=</span> <span class="s1">'BOT_ELEV'</span>
+        <span class="n">modelLyrTop_Col</span> <span class="o">=</span> <span class="n">zStr</span><span class="o">+</span><span class="s1">'_LAYER'</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">layer</span> <span class="o">!=</span> <span class="n">layers</span><span class="p">:</span>  <span class="c1"># For all layers except the bottom layer....</span>
+            <span class="n">modelLyrBot_col</span> <span class="o">=</span> <span class="n">zStr</span><span class="o">+</span><span class="s1">'_LAYER'</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">layer</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># use the layer below</span>
         <span class="k">else</span><span class="p">:</span>  <span class="c1"># Otherwise, ...</span>
-            <span class="n">modelLyrBot_col</span> <span class="o">=</span> <span class="s2">&quot;BEDROCK_&quot;</span><span class="o">+</span><span class="n">zStr</span>  <span class="c1"># Use (corrected) brock depth</span>
+            <span class="n">modelLyrBot_col</span> <span class="o">=</span> <span class="s2">"BEDROCK_"</span><span class="o">+</span><span class="n">zStr</span>  <span class="c1"># Use (corrected) brock depth</span>
 
         <span class="c1"># Divide records into 4 categories for ease of calculation:</span>
             <span class="c1"># 1: Well interval starts above layer top, ends within model layer</span>
@@ -585,43 +585,43 @@
         <span class="n">records1</span> <span class="o">=</span> <span class="n">gdf</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">gdf</span><span class="p">[</span><span class="n">wellIntTop_col</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">gdf</span><span class="p">[</span><span class="n">modelLyrTop_Col</span><span class="p">])</span> <span class="o">&amp;</span>  <span class="c1"># Top of the well interval is above or equal to the top of the layer</span>
                            <span class="p">(</span><span class="n">gdf</span><span class="p">[</span><span class="n">wellIntBot_col</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">gdf</span><span class="p">[</span><span class="n">modelLyrTop_Col</span><span class="p">])</span> <span class="o">&amp;</span>  <span class="c1"># Bottom is below the top of the layer</span>
                            <span class="p">(</span><span class="n">gdf</span><span class="p">[</span><span class="n">wellIntBot_col</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">gdf</span><span class="p">[</span><span class="n">wellIntTop_col</span><span class="p">])]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Bottom is deeper than top (should already be the case)</span>
-        <span class="n">records1</span><span class="p">[</span><span class="s1">&#39;TARG_THICK&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">((</span><span class="n">records1</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">modelLyrTop_Col</span><span class="p">]</span> <span class="o">-</span> <span class="n">records1</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">wellIntBot_col</span><span class="p">])</span> <span class="o">*</span> <span class="n">records1</span><span class="p">[</span><span class="s1">&#39;TARGET&#39;</span><span class="p">],</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">records1</span><span class="p">[</span><span class="s1">'TARG_THICK'</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">((</span><span class="n">records1</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">modelLyrTop_Col</span><span class="p">]</span> <span class="o">-</span> <span class="n">records1</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">wellIntBot_col</span><span class="p">])</span> <span class="o">*</span> <span class="n">records1</span><span class="p">[</span><span class="s1">'TARGET'</span><span class="p">],</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
         <span class="c1"># records2 = entire interval is within layer</span>
         <span class="n">records2</span> <span class="o">=</span> <span class="n">gdf</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">gdf</span><span class="p">[</span><span class="n">wellIntTop_col</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">gdf</span><span class="p">[</span><span class="n">modelLyrTop_Col</span><span class="p">])</span> <span class="o">&amp;</span>  <span class="c1"># Top of the well is lower than top of the layer</span>
                            <span class="p">(</span><span class="n">gdf</span><span class="p">[</span><span class="n">wellIntBot_col</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">gdf</span><span class="p">[</span><span class="n">modelLyrBot_col</span><span class="p">])</span> <span class="o">&amp;</span>  <span class="c1"># Bottom of the well is above bottom of the layer</span>
                            <span class="p">(</span><span class="n">gdf</span><span class="p">[</span><span class="n">wellIntBot_col</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">gdf</span><span class="p">[</span><span class="n">wellIntTop_col</span><span class="p">])]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Bottom ofthe well is deeper than or equal to top (should already be the case)</span>
-        <span class="n">records2</span><span class="p">[</span><span class="s1">&#39;TARG_THICK&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">((</span><span class="n">records2</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">wellIntTop_col</span><span class="p">]</span> <span class="o">-</span> <span class="n">records2</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">wellIntBot_col</span><span class="p">])</span> <span class="o">*</span> <span class="n">records2</span><span class="p">[</span><span class="s1">&#39;TARGET&#39;</span><span class="p">],</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">records2</span><span class="p">[</span><span class="s1">'TARG_THICK'</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">((</span><span class="n">records2</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">wellIntTop_col</span><span class="p">]</span> <span class="o">-</span> <span class="n">records2</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">wellIntBot_col</span><span class="p">])</span> <span class="o">*</span> <span class="n">records2</span><span class="p">[</span><span class="s1">'TARGET'</span><span class="p">],</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
         <span class="c1"># records3 = intervals with top within layer and bottom of interval going through bottom of layer</span>
         <span class="n">records3</span> <span class="o">=</span> <span class="n">gdf</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">gdf</span><span class="p">[</span><span class="n">wellIntTop_col</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">gdf</span><span class="p">[</span><span class="n">modelLyrBot_col</span><span class="p">])</span> <span class="o">&amp;</span>  <span class="c1"># Top of the well is above bottom of layer</span>
                            <span class="p">(</span><span class="n">gdf</span><span class="p">[</span><span class="n">wellIntTop_col</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">gdf</span><span class="p">[</span><span class="n">modelLyrTop_Col</span><span class="p">])</span> <span class="o">&amp;</span>  <span class="c1"># Top of well is below top of layer</span>
                            <span class="p">(</span><span class="n">gdf</span><span class="p">[</span><span class="n">wellIntBot_col</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">gdf</span><span class="p">[</span><span class="n">modelLyrBot_col</span><span class="p">])</span> <span class="o">&amp;</span>  <span class="c1"># Bottom of the well is below bottom of layer</span>
                            <span class="p">(</span><span class="n">gdf</span><span class="p">[</span><span class="n">wellIntBot_col</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">gdf</span><span class="p">[</span><span class="n">wellIntTop_col</span><span class="p">])]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Bottom is deeper than top (should already be the case)</span>
-        <span class="n">records3</span><span class="p">[</span><span class="s1">&#39;TARG_THICK&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">((</span><span class="n">records3</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">wellIntTop_col</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="n">records3</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">modelLyrBot_col</span><span class="p">]))</span> <span class="o">*</span> <span class="n">records3</span><span class="p">[</span><span class="s1">&#39;TARGET&#39;</span><span class="p">],</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">records3</span><span class="p">[</span><span class="s1">'TARG_THICK'</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">((</span><span class="n">records3</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">wellIntTop_col</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="n">records3</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">modelLyrBot_col</span><span class="p">]))</span> <span class="o">*</span> <span class="n">records3</span><span class="p">[</span><span class="s1">'TARGET'</span><span class="p">],</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
         <span class="c1"># records4 = interval goes through entire layer</span>
         <span class="n">records4</span> <span class="o">=</span> <span class="n">gdf</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">gdf</span><span class="p">[</span><span class="n">wellIntTop_col</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">gdf</span><span class="p">[</span><span class="n">modelLyrTop_Col</span><span class="p">])</span> <span class="o">&amp;</span>  <span class="c1"># Top of well is above top of layer</span>
                            <span class="p">(</span><span class="n">gdf</span><span class="p">[</span><span class="n">wellIntBot_col</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">gdf</span><span class="p">[</span><span class="n">modelLyrBot_col</span><span class="p">])</span> <span class="o">&amp;</span>  <span class="c1"># Bottom of well is below bottom of layer</span>
                            <span class="p">(</span><span class="n">gdf</span><span class="p">[</span><span class="n">wellIntBot_col</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">gdf</span><span class="p">[</span><span class="n">wellIntTop_col</span><span class="p">])]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Bottom of well is below top of well</span>
-        <span class="n">records4</span><span class="p">[</span><span class="s1">&#39;TARG_THICK&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">((</span><span class="n">records4</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">modelLyrTop_Col</span><span class="p">]</span> <span class="o">-</span> <span class="n">records4</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">modelLyrBot_col</span><span class="p">])</span> <span class="o">*</span> <span class="n">records4</span><span class="p">[</span><span class="s1">&#39;TARGET&#39;</span><span class="p">],</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">records4</span><span class="p">[</span><span class="s1">'TARG_THICK'</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">((</span><span class="n">records4</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">modelLyrTop_Col</span><span class="p">]</span> <span class="o">-</span> <span class="n">records4</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">modelLyrBot_col</span><span class="p">])</span> <span class="o">*</span> <span class="n">records4</span><span class="p">[</span><span class="s1">'TARGET'</span><span class="p">],</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
         <span class="c1"># Truth check: ensure only well data is not being duplicated</span>
-        <span class="c1"># Do the &quot;partial&quot; records first (the records that don&#39;t go through the entire layer)</span>
+        <span class="c1"># Do the "partial" records first (the records that don't go through the entire layer)</span>
         <span class="n">inputRecordList</span> <span class="o">=</span> <span class="p">[</span><span class="n">records1</span><span class="p">,</span> <span class="n">records3</span><span class="p">,</span> <span class="n">records4</span><span class="p">]</span>
         <span class="n">truthCheckedRecords</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># initialize output list for merging later</span>
-        <span class="n">subSetCols</span> <span class="o">=</span> <span class="p">[</span><span class="n">well_id_col</span><span class="p">,</span> <span class="s1">&#39;TOP&#39;</span><span class="p">,</span> <span class="s2">&quot;BOTTOM&quot;</span><span class="p">]</span>
+        <span class="n">subSetCols</span> <span class="o">=</span> <span class="p">[</span><span class="n">well_id_col</span><span class="p">,</span> <span class="s1">'TOP'</span><span class="p">,</span> <span class="s2">"BOTTOM"</span><span class="p">]</span>
         
         <span class="c1"># Go through each set of records, and remove duplicate well intervals</span>
         <span class="k">for</span> <span class="n">recDF</span> <span class="ow">in</span> <span class="n">inputRecordList</span><span class="p">:</span>
             <span class="c1"># First sort by target thickness (if duplicates, keep largest)</span>
-            <span class="n">recDFSorted</span> <span class="o">=</span> <span class="n">recDF</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s1">&#39;TARG_THICK&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">recDFSorted</span> <span class="o">=</span> <span class="n">recDF</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s1">'TARG_THICK'</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
             <span class="c1"># Drop duplicates and keep largest</span>
             <span class="n">recDFSorted</span> <span class="o">=</span> <span class="n">recDFSorted</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="n">subSetCols</span><span class="p">,</span>
-                                                      <span class="n">keep</span><span class="o">=</span><span class="s1">&#39;first&#39;</span><span class="p">)</span>
+                                                      <span class="n">keep</span><span class="o">=</span><span class="s1">'first'</span><span class="p">)</span>
             
-            <span class="c1"># Re-sort by the well id column for consistency&#39;s sake</span>
+            <span class="c1"># Re-sort by the well id column for consistency's sake</span>
             <span class="n">recDF</span> <span class="o">=</span> <span class="n">recDFSorted</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">well_id_col</span><span class="p">)</span>
 
             <span class="c1"># Append this category to list for later merging</span>
@@ -629,13 +629,13 @@
 
         <span class="c1"># Truth check records category 2, which may have multiples</span>
         <span class="c1"># First sort by target thickness (if duplicates, keep largest)</span>
-        <span class="n">rec2Sorted</span> <span class="o">=</span> <span class="n">records2</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s1">&#39;TARG_THICK&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">rec2Sorted</span> <span class="o">=</span> <span class="n">records2</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s1">'TARG_THICK'</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         
         <span class="c1"># Drop duplicates and keep largest</span>
         <span class="n">records2</span> <span class="o">=</span> <span class="n">rec2Sorted</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="n">subSetCols</span><span class="p">,</span>
-                                              <span class="n">keep</span><span class="o">=</span><span class="s1">&#39;first&#39;</span><span class="p">)</span>
+                                              <span class="n">keep</span><span class="o">=</span><span class="s1">'first'</span><span class="p">)</span>
         
-        <span class="c1"># Re-sort by the well id column for consistency&#39;s sake</span>
+        <span class="c1"># Re-sort by the well id column for consistency's sake</span>
         <span class="n">records2</span> <span class="o">=</span> <span class="n">records2</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">well_id_col</span><span class="p">)</span>
 
         <span class="c1"># Insert this category to list for merging</span>
@@ -643,15 +643,15 @@
 
         <span class="c1"># Merge four record categories back into single (geo)dataframe</span>
         <span class="n">res</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">truthCheckedRecords</span><span class="p">),</span>
-                               <span class="n">geometry</span><span class="o">=</span><span class="s1">&#39;geometry&#39;</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="n">gdf</span><span class="o">.</span><span class="n">crs</span><span class="p">)</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">well_id_col</span><span class="p">)</span>
+                               <span class="n">geometry</span><span class="o">=</span><span class="s1">'geometry'</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="n">gdf</span><span class="o">.</span><span class="n">crs</span><span class="p">)</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">well_id_col</span><span class="p">)</span>
 
         <span class="c1"># The sign may be reversed if using depth rather than elevation</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;TARG_THICK&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
-            <span class="n">res</span><span class="p">[</span><span class="s1">&#39;TARG_THICK&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;TARG_THICK&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="s1">'TARG_THICK'</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+            <span class="n">res</span><span class="p">[</span><span class="s1">'TARG_THICK'</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">'TARG_THICK'</span><span class="p">]</span> <span class="o">*</span> <span class="o">-</span><span class="mi">1</span>
         
         <span class="c1"># Cannot have negative thicknesses</span>
-        <span class="n">res</span><span class="p">[</span><span class="s1">&#39;TARG_THICK&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;TARG_THICK&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">lower</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="n">res</span><span class="p">[</span><span class="s1">&#39;LAYER_THICK&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;LAYER_THICK&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">lower</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">res</span><span class="p">[</span><span class="s1">'TARG_THICK'</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">'TARG_THICK'</span><span class="p">]</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">lower</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">res</span><span class="p">[</span><span class="s1">'LAYER_THICK'</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">'LAYER_THICK'</span><span class="p">]</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">lower</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
         <span class="n">res</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         
@@ -660,34 +660,34 @@
         <span class="c1">#   (e.g., if there are two well intervals from same well in one model layer)</span>
 
         <span class="c1"># Group by well id column and location, and sum TARG_THICK for each entry</span>
-        <span class="n">res_df</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="n">well_id_col</span><span class="p">,</span> <span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="s1">&#39;LONGITUDE&#39;</span><span class="p">],</span>
-                             <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="s1">&#39;TARG_THICK&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="n">res_df</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="n">well_id_col</span><span class="p">,</span> <span class="s1">'LATITUDE'</span><span class="p">,</span> <span class="s1">'LONGITUDE'</span><span class="p">],</span>
+                             <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="s1">'TARG_THICK'</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
 
         <span class="c1"># Remove the columns so they are not repeated after merge</span>
-        <span class="n">mergeRes</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="s2">&quot;LONGITUDE&quot;</span><span class="p">,</span> <span class="s2">&quot;TARG_THICK&quot;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">mergeRes</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s1">'LATITUDE'</span><span class="p">,</span> <span class="s2">"LONGITUDE"</span><span class="p">,</span> <span class="s2">"TARG_THICK"</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         
         <span class="c1"># Merge the grouped/summed dataframe with the main dataframe</span>
         <span class="n">res_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="n">res_df</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="n">mergeRes</span><span class="p">,</span>
-                          <span class="n">how</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="n">well_id_col</span><span class="p">)</span>
+                          <span class="n">how</span><span class="o">=</span><span class="s1">'left'</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="n">well_id_col</span><span class="p">)</span>
 
         <span class="c1"># Calculate thickness as % of total layer thickness (and clip to 1)</span>
-        <span class="n">res_df</span><span class="p">[</span><span class="s1">&#39;TARG_THICK_PER&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">res_df</span><span class="p">[</span><span class="s1">&#39;TARG_THICK&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">res_df</span><span class="p">[</span><span class="s1">&#39;LAYER_THICK&#39;</span><span class="p">],</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">upper</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">res_df</span><span class="p">[</span><span class="s1">'TARG_THICK_PER'</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">res_df</span><span class="p">[</span><span class="s1">'TARG_THICK'</span><span class="p">]</span><span class="o">/</span><span class="n">res_df</span><span class="p">[</span><span class="s1">'LAYER_THICK'</span><span class="p">],</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">upper</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         
         <span class="c1"># Replace np.inf and np.nans with 0 (to ease interpolation)</span>
-        <span class="n">res_df</span><span class="p">[</span><span class="s1">&#39;TARG_THICK_PER&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_df</span><span class="p">[</span><span class="s1">&#39;TARG_THICK_PER&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">res_df</span><span class="p">[</span><span class="s1">&#39;TARG_THICK_PER&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">other</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="n">res_df</span><span class="p">[</span><span class="s1">&#39;TARG_THICK_PER&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_df</span><span class="p">[</span><span class="s1">&#39;TARG_THICK_PER&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">res_df</span><span class="p">[</span><span class="s1">&#39;TARG_THICK_PER&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">other</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">res_df</span><span class="p">[</span><span class="s1">'TARG_THICK_PER'</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_df</span><span class="p">[</span><span class="s1">'TARG_THICK_PER'</span><span class="p">]</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">res_df</span><span class="p">[</span><span class="s1">'TARG_THICK_PER'</span><span class="p">]</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">other</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">res_df</span><span class="p">[</span><span class="s1">'TARG_THICK_PER'</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_df</span><span class="p">[</span><span class="s1">'TARG_THICK_PER'</span><span class="p">]</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">res_df</span><span class="p">[</span><span class="s1">'TARG_THICK_PER'</span><span class="p">]</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">other</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-        <span class="n">res_df</span><span class="p">[</span><span class="s2">&quot;LAYER&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">layer</span>  <span class="c1"># Include the layer # as a separate gdf column</span>
-        <span class="n">res_df</span> <span class="o">=</span> <span class="n">res_df</span><span class="p">[[</span><span class="n">well_id_col</span><span class="p">,</span> <span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="s1">&#39;LATITUDE_PROJ&#39;</span><span class="p">,</span>
-                         <span class="s1">&#39;LONGITUDE_PROJ&#39;</span><span class="p">,</span> <span class="s1">&#39;TOP&#39;</span><span class="p">,</span> <span class="s1">&#39;BOTTOM&#39;</span><span class="p">,</span> <span class="s1">&#39;TOP_ELEV&#39;</span><span class="p">,</span>
-                         <span class="s1">&#39;BOT_ELEV&#39;</span><span class="p">,</span> <span class="s1">&#39;SURFACE_ELEV&#39;</span><span class="p">,</span> <span class="n">modelLyrTop_Col</span><span class="p">,</span>
-                         <span class="n">modelLyrBot_col</span><span class="p">,</span> <span class="s1">&#39;LAYER_THICK&#39;</span><span class="p">,</span>
-                         <span class="s1">&#39;TARG_THICK&#39;</span><span class="p">,</span> <span class="s1">&#39;TARG_THICK_PER&#39;</span><span class="p">,</span> <span class="s1">&#39;LAYER&#39;</span><span class="p">,</span>
-                         <span class="s1">&#39;geometry&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">res_df</span><span class="p">[</span><span class="s2">"LAYER"</span><span class="p">]</span> <span class="o">=</span> <span class="n">layer</span>  <span class="c1"># Include the layer # as a separate gdf column</span>
+        <span class="n">res_df</span> <span class="o">=</span> <span class="n">res_df</span><span class="p">[[</span><span class="n">well_id_col</span><span class="p">,</span> <span class="s1">'LATITUDE'</span><span class="p">,</span> <span class="s1">'LONGITUDE'</span><span class="p">,</span> <span class="s1">'LATITUDE_PROJ'</span><span class="p">,</span>
+                         <span class="s1">'LONGITUDE_PROJ'</span><span class="p">,</span> <span class="s1">'TOP'</span><span class="p">,</span> <span class="s1">'BOTTOM'</span><span class="p">,</span> <span class="s1">'TOP_ELEV'</span><span class="p">,</span>
+                         <span class="s1">'BOT_ELEV'</span><span class="p">,</span> <span class="s1">'SURFACE_ELEV'</span><span class="p">,</span> <span class="n">modelLyrTop_Col</span><span class="p">,</span>
+                         <span class="n">modelLyrBot_col</span><span class="p">,</span> <span class="s1">'LAYER_THICK'</span><span class="p">,</span>
+                         <span class="s1">'TARG_THICK'</span><span class="p">,</span> <span class="s1">'TARG_THICK_PER'</span><span class="p">,</span> <span class="s1">'LAYER'</span><span class="p">,</span>
+                         <span class="s1">'geometry'</span><span class="p">]]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         
         <span class="c1"># Convert back to GeoDataFrame</span>
         <span class="n">res_df</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="n">res_df</span><span class="p">,</span>
-                                  <span class="n">geometry</span><span class="o">=</span><span class="s1">&#39;geometry&#39;</span><span class="p">,</span>
+                                  <span class="n">geometry</span><span class="o">=</span><span class="s1">'geometry'</span><span class="p">,</span>
                                   <span class="n">crs</span><span class="o">=</span><span class="n">gdf</span><span class="o">.</span><span class="n">crs</span><span class="p">)</span>
 
         <span class="c1"># Add layer outputs to list to be returned</span>
@@ -703,27 +703,27 @@
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">export_dir</span><span class="p">)</span>
                 <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Specified export directory does not exist and cannot be created. Function will continue to run, but data will not be exported.&#39;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">'Specified export directory does not exist and cannot be created. Function will continue to run, but data will not be exported.'</span><span class="p">)</span>
 
             <span class="c1"># Format and build export filepath</span>
             <span class="n">zFillDigs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">layerList</span><span class="p">)))</span>
-            <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">outfile_prefix</span><span class="p">)</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">outfile_prefix</span><span class="p">)</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">'_'</span><span class="p">):</span>
                 <span class="n">outfile_prefix</span> <span class="o">=</span> <span class="n">outfile_prefix</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
             <span class="k">elif</span> <span class="n">outfile_prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">outfile_prefix</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+                <span class="n">outfile_prefix</span> <span class="o">=</span> <span class="s1">''</span>
 
-            <span class="n">nowStr</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">date</span><span class="p">())</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">hour</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;-&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">minute</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;-&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">second</span><span class="p">)</span>
-            <span class="n">outPath</span> <span class="o">=</span> <span class="n">export_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">outfile_prefix</span><span class="o">+</span><span class="s1">&#39;_Lyr&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="n">zFillDigs</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">nowStr</span><span class="o">+</span><span class="s1">&#39;.csv&#39;</span><span class="p">)</span>
+            <span class="n">nowStr</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">date</span><span class="p">())</span><span class="o">+</span><span class="s1">'_'</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">hour</span><span class="p">)</span><span class="o">+</span><span class="s1">'-'</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">minute</span><span class="p">)</span><span class="o">+</span><span class="s1">'-'</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">second</span><span class="p">)</span>
+            <span class="n">outPath</span> <span class="o">=</span> <span class="n">export_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">outfile_prefix</span><span class="o">+</span><span class="s1">'_Lyr'</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="n">zFillDigs</span><span class="p">)</span><span class="o">+</span><span class="s1">'_'</span><span class="o">+</span><span class="n">nowStr</span><span class="o">+</span><span class="s1">'.csv'</span><span class="p">)</span>
             <span class="n">outPathStr</span> <span class="o">=</span> <span class="n">outPath</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
             
             <span class="k">if</span> <span class="n">return_all</span><span class="p">:</span>
-                <span class="n">res</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">outPathStr</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">,</span>
-                           <span class="n">na_rep</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">index_label</span><span class="o">=</span><span class="s1">&#39;ID&#39;</span><span class="p">)</span>
-                <span class="n">res_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">outPathStr</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">,</span>
-                              <span class="n">na_rep</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">index_label</span><span class="o">=</span><span class="s1">&#39;ID&#39;</span><span class="p">)</span>
+                <span class="n">res</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">outPathStr</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">','</span><span class="p">,</span>
+                           <span class="n">na_rep</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">index_label</span><span class="o">=</span><span class="s1">'ID'</span><span class="p">)</span>
+                <span class="n">res_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">outPathStr</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">','</span><span class="p">,</span>
+                              <span class="n">na_rep</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">index_label</span><span class="o">=</span><span class="s1">'ID'</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">res_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">outPathStr</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">,</span>
-                              <span class="n">na_rep</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">index_label</span><span class="o">=</span><span class="s1">&#39;ID&#39;</span><span class="p">)</span>
+                <span class="n">res_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">outPathStr</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">','</span><span class="p">,</span>
+                              <span class="n">na_rep</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">index_label</span><span class="o">=</span><span class="s1">'ID'</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">return_all</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">res_list</span><span class="p">,</span> <span class="n">resdf_list</span>
@@ -736,13 +736,13 @@
 <div class="viewcode-block" id="natural_neighbor_interp">
 <a class="viewcode-back" href="../../w4h.layers.html#w4h.natural_neighbor_interp">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">natural_neighbor_interp</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">model_grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parallelize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                            <span class="n">well_id</span><span class="o">=</span><span class="s1">&#39;API_NUMBER&#39;</span><span class="p">,</span> <span class="n">interp_value</span><span class="o">=</span><span class="s1">&#39;TARG_THICK_PER&#39;</span><span class="p">,</span>
-                            <span class="n">xcoord</span><span class="o">=</span><span class="s1">&#39;LONGITUDE_PROJ&#39;</span><span class="p">,</span> <span class="n">ycoord</span><span class="o">=</span><span class="s1">&#39;LATITUDE_PROJ&#39;</span><span class="p">,</span> <span class="n">elev</span><span class="o">=</span><span class="s2">&quot;SURFACE_ELEV&quot;</span><span class="p">,</span>
-                            <span class="n">point_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:5070&#39;</span><span class="p">,</span> <span class="n">model_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:5070&#39;</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:5070&#39;</span><span class="p">,</span>
+                            <span class="n">well_id</span><span class="o">=</span><span class="s1">'API_NUMBER'</span><span class="p">,</span> <span class="n">interp_value</span><span class="o">=</span><span class="s1">'TARG_THICK_PER'</span><span class="p">,</span>
+                            <span class="n">xcoord</span><span class="o">=</span><span class="s1">'LONGITUDE_PROJ'</span><span class="p">,</span> <span class="n">ycoord</span><span class="o">=</span><span class="s1">'LATITUDE_PROJ'</span><span class="p">,</span> <span class="n">elev</span><span class="o">=</span><span class="s2">"SURFACE_ELEV"</span><span class="p">,</span>
+                            <span class="n">point_crs</span><span class="o">=</span><span class="s1">'EPSG:5070'</span><span class="p">,</span> <span class="n">model_crs</span><span class="o">=</span><span class="s1">'EPSG:5070'</span><span class="p">,</span> <span class="n">output_crs</span><span class="o">=</span><span class="s1">'EPSG:5070'</span><span class="p">,</span>
                             <span class="n">show_points</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sparsity_factor</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
                             <span class="n">show_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">show_adjacent_regions</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">show_voronoi</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                             <span class="n">time_segments</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Implementation of natural neighbor algorithm, with sparse interpolation.</span>
+<span class="w">    </span><span class="sd">"""Implementation of natural neighbor algorithm, with sparse interpolation.</span>
 <span class="sd">    This interpolation algorithm takes a very long time.</span>
 
 <span class="sd">    Parameters</span>
@@ -754,19 +754,19 @@
 <span class="sd">    parallelize : bool, optional</span>
 <span class="sd">        Whether to use parallelization. Currently in beta/not supported, by default False</span>
 <span class="sd">    well_id : str, optional</span>
-<span class="sd">        String with column name of Well ID, by default &#39;API_NUMBER&#39;</span>
+<span class="sd">        String with column name of Well ID, by default 'API_NUMBER'</span>
 <span class="sd">    interp_value : str, optional</span>
-<span class="sd">        Column name in points df to use for interpolation, by default &#39;ELEVATION&#39;</span>
+<span class="sd">        Column name in points df to use for interpolation, by default 'ELEVATION'</span>
 <span class="sd">    xcoord : str, optional</span>
-<span class="sd">        X coordinate column name, by default &#39;LONGITUDE&#39;</span>
+<span class="sd">        X coordinate column name, by default 'LONGITUDE'</span>
 <span class="sd">    ycoord : str, optional</span>
-<span class="sd">        Y coordinate column name, by default &#39;LATITUDE&#39;</span>
+<span class="sd">        Y coordinate column name, by default 'LATITUDE'</span>
 <span class="sd">    elev : str, optional</span>
-<span class="sd">        Elevation column name, by default &quot;ELEVATION&quot;</span>
+<span class="sd">        Elevation column name, by default "ELEVATION"</span>
 <span class="sd">    show_points : bool, optional</span>
 <span class="sd">        Whether to show well points, by default False</span>
 <span class="sd">    sparsity_factor : int, optional</span>
-<span class="sd">        Factor by which to &quot;decimate&quot; the coordinates for Natural Neighbor analysis.</span>
+<span class="sd">        Factor by which to "decimate" the coordinates for Natural Neighbor analysis.</span>
 <span class="sd">        These points are then interpolated linearly to the model grid.</span>
 <span class="sd">        Using sparse coordinates saves computation time, by default 10</span>
 <span class="sd">    show_plot : bool, optional</span>
@@ -785,7 +785,7 @@
 <span class="sd">    -------</span>
 <span class="sd">    _type_</span>
 <span class="sd">        _description_</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">time0</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
 
     <span class="c1"># Get model grid in standardized format/crs</span>
@@ -804,11 +804,11 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">interp_grid</span> <span class="o">=</span> <span class="n">model_grid_IN</span>
 
-    <span class="n">uniqueWellDF</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="n">well_id</span><span class="p">)[[</span><span class="n">well_id</span><span class="p">,</span> <span class="n">xcoord</span><span class="p">,</span> <span class="n">ycoord</span><span class="p">,</span> <span class="n">elev</span><span class="p">,</span> <span class="n">interp_value</span><span class="p">,</span> <span class="s1">&#39;geometry&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">uniqueWellDF</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="n">well_id</span><span class="p">)[[</span><span class="n">well_id</span><span class="p">,</span> <span class="n">xcoord</span><span class="p">,</span> <span class="n">ycoord</span><span class="p">,</span> <span class="n">elev</span><span class="p">,</span> <span class="n">interp_value</span><span class="p">,</span> <span class="s1">'geometry'</span><span class="p">]]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">uniqueWellDF</span><span class="p">,</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">):</span>
-        <span class="n">uniqueWellDF</span><span class="p">[</span><span class="s1">&#39;geometry&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">uniqueWellDF</span><span class="p">[</span><span class="s1">&#39;geometry&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">wkt</span><span class="o">.</span><span class="n">loads</span><span class="p">)</span>
-        <span class="n">uniqueWellDF</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="n">uniqueWellDF</span><span class="p">,</span> <span class="n">geometry</span><span class="o">=</span><span class="s1">&#39;geometry&#39;</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="n">point_crs</span><span class="p">)</span>
+        <span class="n">uniqueWellDF</span><span class="p">[</span><span class="s1">'geometry'</span><span class="p">]</span> <span class="o">=</span> <span class="n">uniqueWellDF</span><span class="p">[</span><span class="s1">'geometry'</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">wkt</span><span class="o">.</span><span class="n">loads</span><span class="p">)</span>
+        <span class="n">uniqueWellDF</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="n">uniqueWellDF</span><span class="p">,</span> <span class="n">geometry</span><span class="o">=</span><span class="s1">'geometry'</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="n">point_crs</span><span class="p">)</span>
     <span class="n">uniqueWellDF</span> <span class="o">=</span> <span class="n">uniqueWellDF</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">output_crs</span><span class="p">)</span>
 
     <span class="n">minx</span><span class="p">,</span> <span class="n">miny</span><span class="p">,</span> <span class="n">maxx</span><span class="p">,</span> <span class="n">maxy</span> <span class="o">=</span> <span class="n">uniqueWellDF</span><span class="o">.</span><span class="n">total_bounds</span>
@@ -822,7 +822,7 @@
     <span class="n">wellPtArr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">wellPtList</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">show_points</span><span class="p">:</span>
-        <span class="n">uniqueWellDF</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">c</span><span class="o">=</span><span class="n">uniqueWellDF</span><span class="p">[</span><span class="n">interp_value</span><span class="p">],</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">600</span><span class="p">)</span><span class="c1">#xcoord, ycoord, kind=&#39;scatter&#39;)</span>
+        <span class="n">uniqueWellDF</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">c</span><span class="o">=</span><span class="n">uniqueWellDF</span><span class="p">[</span><span class="n">interp_value</span><span class="p">],</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">600</span><span class="p">)</span><span class="c1">#xcoord, ycoord, kind='scatter')</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
     <span class="n">wellPtList</span> <span class="o">=</span> <span class="p">[]</span>
@@ -834,7 +834,7 @@
     <span class="n">vClass</span> <span class="o">=</span> <span class="n">Voronoi</span><span class="p">(</span><span class="n">points</span><span class="o">=</span><span class="n">wellPtArr</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">time_segments</span><span class="p">:</span>
         <span class="n">thisTime</span> <span class="o">=</span> <span class="n">lastTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Voronoi time:  </span><span class="si">{</span><span class="n">thisTime</span><span class="o">-</span><span class="n">time0</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Voronoi time:  </span><span class="si">{</span><span class="n">thisTime</span><span class="o">-</span><span class="n">time0</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">show_voronoi</span><span class="p">:</span>
         <span class="n">voronoi_plot_2d</span><span class="p">(</span><span class="n">vClass</span><span class="p">)</span>
@@ -851,7 +851,7 @@
         <span class="n">newPoint</span> <span class="o">=</span> <span class="n">Point</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span>
         <span class="n">lastTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
         
-        <span class="c1"># Find region containing the &quot;newPoint&quot; (point for interpolation)</span>
+        <span class="c1"># Find region containing the "newPoint" (point for interpolation)</span>
         <span class="n">polygonList</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">polyRegInd</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">containingRegion</span> <span class="o">=</span> <span class="kc">None</span>
@@ -876,13 +876,13 @@
         <span class="k">if</span> <span class="n">containingRegion</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">time_segments</span><span class="p">:</span>
                 <span class="n">thisTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Polygon is invalid or no overlapping polygons with point, returning nan:  </span><span class="si">{</span><span class="n">thisTime</span><span class="o">-</span><span class="n">lastTime</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Polygon is invalid or no overlapping polygons with point, returning nan:  </span><span class="si">{</span><span class="n">thisTime</span><span class="o">-</span><span class="n">lastTime</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
                 <span class="n">lastTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>                
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
 
         <span class="k">if</span> <span class="n">time_segments</span><span class="p">:</span>
             <span class="n">thisTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Make Initial Polygons time:  </span><span class="si">{</span><span class="n">thisTime</span><span class="o">-</span><span class="n">lastTime</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Make Initial Polygons time:  </span><span class="si">{</span><span class="n">thisTime</span><span class="o">-</span><span class="n">lastTime</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
             <span class="n">lastTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
 
         <span class="c1"># Get all regions that touch containing region</span>
@@ -909,7 +909,7 @@
 
         <span class="k">if</span> <span class="n">time_segments</span><span class="p">:</span>
             <span class="n">thisTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Get all adjacent and semi-adjacent Polygons:  </span><span class="si">{</span><span class="n">thisTime</span><span class="o">-</span><span class="n">lastTime</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Get all adjacent and semi-adjacent Polygons:  </span><span class="si">{</span><span class="n">thisTime</span><span class="o">-</span><span class="n">lastTime</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
             <span class="n">lastTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
 
         <span class="c1"># Get points and values for interpolation</span>
@@ -919,11 +919,11 @@
         <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">regionIndices</span><span class="p">:</span>
             <span class="n">nearValues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">wellValueList</span><span class="p">[</span><span class="n">vPR</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">ind</span><span class="p">)])</span>
             <span class="n">nearPoints</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vClass</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">vPR</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">ind</span><span class="p">)]</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
-        <span class="n">regGS</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">regionIndices</span><span class="p">,</span> <span class="n">regionAndAdjacents</span><span class="p">),</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;RegionIndices&#39;</span><span class="p">,</span> <span class="s1">&#39;geometry&#39;</span><span class="p">],</span> <span class="n">crs</span><span class="o">=</span><span class="n">output_crs</span><span class="p">)</span>
+        <span class="n">regGS</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">regionIndices</span><span class="p">,</span> <span class="n">regionAndAdjacents</span><span class="p">),</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">'RegionIndices'</span><span class="p">,</span> <span class="s1">'geometry'</span><span class="p">],</span> <span class="n">crs</span><span class="o">=</span><span class="n">output_crs</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">time_segments</span><span class="p">:</span>
             <span class="n">thisTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Extract points for interpolation:  </span><span class="si">{</span><span class="n">thisTime</span><span class="o">-</span><span class="n">lastTime</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Extract points for interpolation:  </span><span class="si">{</span><span class="n">thisTime</span><span class="o">-</span><span class="n">lastTime</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
             <span class="n">lastTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
 
         <span class="c1"># Plot regions and points</span>
@@ -932,20 +932,20 @@
             <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">nearValues</span><span class="p">)</span>
 
-            <span class="n">regGS</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s1">&#39;#00000000&#39;</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">newPoint</span><span class="o">.</span><span class="n">xy</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">y</span><span class="o">=</span><span class="n">newPoint</span><span class="o">.</span><span class="n">xy</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">)</span>
-            <span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">s</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">nv</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">nv</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">nearValues</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span><span class="o">!=</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">regGS</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s1">'#00000000'</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">'k'</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">newPoint</span><span class="o">.</span><span class="n">xy</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">y</span><span class="o">=</span><span class="n">newPoint</span><span class="o">.</span><span class="n">xy</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">'k'</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">'+'</span><span class="p">)</span>
+            <span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">s</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">nv</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">nv</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">nearValues</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span><span class="o">!=</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">time_segments</span><span class="p">:</span>
                 <span class="n">thisTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Plot adjacent regions:  </span><span class="si">{</span><span class="n">thisTime</span><span class="o">-</span><span class="n">lastTime</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Plot adjacent regions:  </span><span class="si">{</span><span class="n">thisTime</span><span class="o">-</span><span class="n">lastTime</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
                 <span class="n">lastTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
 
         <span class="c1"># Create new voronoi only with points with regions nearby to new point (to reduce computational cost)</span>
         <span class="n">nearbyVor</span> <span class="o">=</span> <span class="n">Voronoi</span><span class="p">(</span><span class="n">points</span><span class="o">=</span><span class="n">nearPoints</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">time_segments</span><span class="p">:</span>
             <span class="n">thisTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Generate near voronoi:  </span><span class="si">{</span><span class="n">thisTime</span><span class="o">-</span><span class="n">lastTime</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Generate near voronoi:  </span><span class="si">{</span><span class="n">thisTime</span><span class="o">-</span><span class="n">lastTime</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
             <span class="n">lastTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
 
         <span class="c1"># Go through just the nearby regions, check validitiy, and get info</span>
@@ -972,30 +972,30 @@
 
         <span class="k">if</span> <span class="n">time_segments</span><span class="p">:</span>
             <span class="n">thisTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Get nearby polygons:  </span><span class="si">{</span><span class="n">thisTime</span><span class="o">-</span><span class="n">lastTime</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Get nearby polygons:  </span><span class="si">{</span><span class="n">thisTime</span><span class="o">-</span><span class="n">lastTime</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
             <span class="n">lastTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
 
-        <span class="c1"># Get the &quot;New&quot; polygon (the one created for the interpolation point of interest)</span>
+        <span class="c1"># Get the "New" polygon (the one created for the interpolation point of interest)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">polyOfInterest</span> <span class="o">=</span> <span class="n">Polygon</span><span class="p">([</span><span class="n">nearbyVor</span><span class="o">.</span><span class="n">vertices</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nearbyVor</span><span class="o">.</span><span class="n">regions</span><span class="p">[</span><span class="n">nearbyVor</span><span class="o">.</span><span class="n">point_region</span><span class="p">[</span><span class="mi">0</span><span class="p">]]])</span>
         <span class="k">except</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
         
         <span class="k">if</span> <span class="ow">not</span> <span class="n">polyOfInterest</span><span class="o">.</span><span class="n">is_valid</span><span class="p">:</span>
-            <span class="c1">#print(&#39;Polygon of interest is not valid&#39;)</span>
+            <span class="c1">#print('Polygon of interest is not valid')</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
 
         <span class="c1"># Plot regions nearby point of interest, and overlap of new Voronoi and old</span>
         <span class="k">if</span> <span class="n">show_plot</span><span class="p">:</span>
             <span class="n">fig3</span><span class="p">,</span> <span class="n">ax3</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
-            <span class="n">regGS</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;#00000000&quot;</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax3</span><span class="p">)</span>
+            <span class="n">regGS</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">facecolor</span><span class="o">=</span><span class="s2">"#00000000"</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">'k'</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax3</span><span class="p">)</span>
             <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">nearPoints</span><span class="p">)</span>
             <span class="n">ax3</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-            <span class="n">gpd</span><span class="o">.</span><span class="n">GeoSeries</span><span class="p">([</span><span class="n">polyOfInterest</span><span class="p">],</span> <span class="n">crs</span><span class="o">=</span><span class="n">output_crs</span><span class="p">)</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;#00000000&quot;</span><span class="p">,</span> 
-                                                        <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">linewidths</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax3</span><span class="p">)</span>
+            <span class="n">gpd</span><span class="o">.</span><span class="n">GeoSeries</span><span class="p">([</span><span class="n">polyOfInterest</span><span class="p">],</span> <span class="n">crs</span><span class="o">=</span><span class="n">output_crs</span><span class="p">)</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">facecolor</span><span class="o">=</span><span class="s2">"#00000000"</span><span class="p">,</span> 
+                                                        <span class="n">edgecolor</span><span class="o">=</span><span class="s1">'r'</span><span class="p">,</span> <span class="n">linewidths</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax3</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">time_segments</span><span class="p">:</span>
                 <span class="n">thisTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Plot nearby polys and overlap:  </span><span class="si">{</span><span class="n">thisTime</span><span class="o">-</span><span class="n">lastTime</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Plot nearby polys and overlap:  </span><span class="si">{</span><span class="n">thisTime</span><span class="o">-</span><span class="n">lastTime</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
                 <span class="n">lastTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
             
@@ -1003,15 +1003,15 @@
         <span class="n">intersectionAreas</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">intersectionValues</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">row</span><span class="p">,</span> <span class="n">reg</span> <span class="ow">in</span> <span class="n">regGS</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">reg</span><span class="p">[</span><span class="s1">&#39;geometry&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">intersects</span><span class="p">(</span><span class="n">polyOfInterest</span><span class="p">):</span>
-                <span class="n">intersectionAreas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">polyOfInterest</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">reg</span><span class="p">[</span><span class="s1">&#39;geometry&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">area</span><span class="p">)</span>
-                <span class="n">intersectionValues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">wellValueList</span><span class="p">[</span><span class="n">vPR</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">reg</span><span class="p">[</span><span class="s1">&#39;RegionIndices&#39;</span><span class="p">])]))</span>            
+            <span class="k">if</span> <span class="n">reg</span><span class="p">[</span><span class="s1">'geometry'</span><span class="p">]</span><span class="o">.</span><span class="n">intersects</span><span class="p">(</span><span class="n">polyOfInterest</span><span class="p">):</span>
+                <span class="n">intersectionAreas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">polyOfInterest</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">reg</span><span class="p">[</span><span class="s1">'geometry'</span><span class="p">])</span><span class="o">.</span><span class="n">area</span><span class="p">)</span>
+                <span class="n">intersectionValues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">wellValueList</span><span class="p">[</span><span class="n">vPR</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">reg</span><span class="p">[</span><span class="s1">'RegionIndices'</span><span class="p">])]))</span>            
 
         <span class="c1"># Calculate weights</span>
         <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">intersectionAreas</span><span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">intersectionAreas</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">time_segments</span><span class="p">:</span>
             <span class="n">thisTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Calculate weights:  </span><span class="si">{</span><span class="n">thisTime</span><span class="o">-</span><span class="n">lastTime</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Calculate weights:  </span><span class="si">{</span><span class="n">thisTime</span><span class="o">-</span><span class="n">lastTime</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
             <span class="n">lastTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
 
         <span class="n">res</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">weights</span> <span class="o">*</span> <span class="n">intersectionValues</span><span class="p">))</span>
@@ -1019,11 +1019,11 @@
         <span class="k">return</span> <span class="n">res</span>
 
     <span class="k">if</span> <span class="n">parallelize</span><span class="p">:</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">interp_grid</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="n">interp_grid</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">interp_grid</span><span class="p">[</span><span class="s2">"x"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">interp_grid</span><span class="p">[</span><span class="s2">"y"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
 
-        <span class="n">da_x</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">x</span><span class="p">})</span>
-        <span class="n">da_y</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">y</span><span class="p">})</span>
+        <span class="n">da_x</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="s2">"x"</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s2">"x"</span><span class="p">:</span> <span class="n">x</span><span class="p">})</span>
+        <span class="n">da_y</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="s2">"y"</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s2">"y"</span><span class="p">:</span> <span class="n">y</span><span class="p">})</span>
 
         <span class="c1"># Broadcast to full grid</span>
         <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="n">da_x</span><span class="p">,</span> <span class="n">da_y</span><span class="p">)</span>
@@ -1032,7 +1032,7 @@
         <span class="n">result_vec</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">apply_ufunc</span><span class="p">(</span>
             <span class="n">_vectorized_nat_neighbor</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span>
             <span class="n">vectorize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="c1">#dask=&quot;parallelized&quot;, # optional if using dask</span>
+            <span class="c1">#dask="parallelized", # optional if using dask</span>
             <span class="n">output_dtypes</span><span class="o">=</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>        
             <span class="p">)</span>
 
@@ -1040,39 +1040,39 @@
         <span class="nb">print</span><span class="p">(</span><span class="n">result_vec</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">result_vec</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
-                            <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">interp_grid</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">interp_grid</span><span class="o">.</span><span class="n">x</span><span class="p">},</span>
-                            <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">))</span>
+                            <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s2">"y"</span><span class="p">:</span> <span class="n">interp_grid</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">:</span> <span class="n">interp_grid</span><span class="o">.</span><span class="n">x</span><span class="p">},</span>
+                            <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s2">"y"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Starting interpolation at all grid points: &quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">interp_grid</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">),</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">interp_grid</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">interp_grid</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">interp_grid</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"Starting interpolation at all grid points: "</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">interp_grid</span><span class="p">[</span><span class="s1">'x'</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">),</span> <span class="s1">'x'</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">interp_grid</span><span class="p">[</span><span class="s1">'y'</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">interp_grid</span><span class="p">[</span><span class="s1">'y'</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">interp_grid</span><span class="p">[</span><span class="s1">'x'</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">))</span>
         <span class="n">resultList</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">dataPoints</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">interp_grid</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">interp_grid</span><span class="p">[</span><span class="s1">'x'</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
             <span class="n">innerList</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">interp_grid</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">interp_grid</span><span class="p">[</span><span class="s1">'y'</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
                 <span class="n">interpVal</span> <span class="o">=</span> <span class="n">_vectorized_nat_neighbor</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">time_segments</span><span class="o">=</span><span class="n">time_segments</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
                 <span class="n">innerList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">interpVal</span><span class="p">)</span>
                 <span class="n">dataPoints</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
             <span class="n">resultList</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">innerList</span><span class="p">)</span> <span class="c1">#???????</span>
 
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t\t</span><span class="s1"> Natural neighbor completed, reinterpolating to model grid&#39;</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="s2">Final Size of interpolation:&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">resultList</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">'</span><span class="se">\t\t</span><span class="s1"> Natural neighbor completed, reinterpolating to model grid'</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\t\t</span><span class="s2">Final Size of interpolation:"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">resultList</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 
         <span class="n">interp</span> <span class="o">=</span> <span class="n">interpolate</span><span class="o">.</span><span class="n">NearestNDInterpolator</span><span class="p">(</span><span class="n">dataPoints</span><span class="p">,</span> <span class="n">resultList</span><span class="p">)</span>
 
-        <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">original_coords</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">],</span> <span class="n">original_coords</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span> <span class="n">sparse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># 2D Grid for interpolation</span>
+        <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">original_coords</span><span class="p">[</span><span class="s1">'x'</span><span class="p">],</span> <span class="n">original_coords</span><span class="p">[</span><span class="s1">'y'</span><span class="p">],</span> <span class="n">sparse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># 2D Grid for interpolation</span>
         <span class="n">Z</span> <span class="o">=</span> <span class="n">interp</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span>
-                            <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">original_coords</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span> <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">original_coords</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]},</span>
-                            <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">))</span></div>
+                            <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s2">"y"</span><span class="p">:</span> <span class="n">original_coords</span><span class="p">[</span><span class="s1">'y'</span><span class="p">],</span> <span class="s2">"x"</span><span class="p">:</span> <span class="n">original_coords</span><span class="p">[</span><span class="s1">'x'</span><span class="p">]},</span>
+                            <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s2">"y"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">))</span></div>
 
 
 <span class="c1"># Optional, combine dataset</span>
 <div class="viewcode-block" id="combine_dataset">
 <a class="viewcode-back" href="../../w4h.layers.html#w4h.combine_dataset">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">combine_dataset</span><span class="p">(</span><span class="n">layer_dataset</span><span class="p">,</span> <span class="n">surface_elev</span><span class="p">,</span> <span class="n">bedrock_elev</span><span class="p">,</span> <span class="n">layer_thick</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to combine xarray datasets or datarrays into</span>
+<span class="w">    </span><span class="sd">"""Function to combine xarray datasets or datarrays into</span>
 <span class="sd">    a single xarray.Dataset.</span>
 <span class="sd">    Useful to add surface, bedrock, layer thick, and layer datasets</span>
 <span class="sd">    all into one variable, for pickling or netcdf export, for example.</span>
@@ -1095,14 +1095,14 @@
 <span class="sd">    xarray.Dataset or xarray.DataArray</span>
 <span class="sd">        Dataset with all arrays set to different variables within dataset.</span>
 <span class="sd">        Or simply DataArray, if specified.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">logger_function</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
 
     <span class="n">daDict</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">daDict</span><span class="p">[</span><span class="s1">&#39;Layers&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">layer_dataset</span>
-    <span class="n">daDict</span><span class="p">[</span><span class="s1">&#39;Surface_Elev&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">surface_elev</span>
-    <span class="n">daDict</span><span class="p">[</span><span class="s1">&#39;Bedrock_Elev&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bedrock_elev</span>
-    <span class="n">daDict</span><span class="p">[</span><span class="s1">&#39;Layer_Thickness&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">layer_thick</span>
+    <span class="n">daDict</span><span class="p">[</span><span class="s1">'Layers'</span><span class="p">]</span> <span class="o">=</span> <span class="n">layer_dataset</span>
+    <span class="n">daDict</span><span class="p">[</span><span class="s1">'Surface_Elev'</span><span class="p">]</span> <span class="o">=</span> <span class="n">surface_elev</span>
+    <span class="n">daDict</span><span class="p">[</span><span class="s1">'Bedrock_Elev'</span><span class="p">]</span> <span class="o">=</span> <span class="n">bedrock_elev</span>
+    <span class="n">daDict</span><span class="p">[</span><span class="s1">'Layer_Thickness'</span><span class="p">]</span> <span class="o">=</span> <span class="n">layer_thick</span>
 
     <span class="n">combined_dataset</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">daDict</span><span class="p">)</span>
 
