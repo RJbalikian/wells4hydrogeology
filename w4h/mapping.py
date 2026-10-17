@@ -58,6 +58,7 @@ def align_rasters(grids_unaligned=None, model_grid=None,
     logger_function(log, locals(), inspect.currentframe().f_code.co_name)
     if verbose:
         verbose_print(align_rasters, locals(), exclude_params=['grids_unaligned', 'model_grid'])
+    
     if isinstance(grids_unaligned, (tuple, list)):
         alignedGrids = []
         for g in grids_unaligned:
@@ -264,22 +265,25 @@ def grid2study_area(study_area, grid, output_crs='EPSG:5070',verbose=False, log=
     if verbose:
         verbose_print(grid2study_area, locals(), exclude_params=['study_area', 'grid'])
     
-    if output_crs=='':
+    if output_crs == '':
         output_crs=study_area.crs
 
-    #Get input CRS's
+    # Get input CRS's
     grid_crs = pyproj.CRS.from_wkt(grid.rio.crs.to_wkt())
     study_area_crs = study_area.crs
-    
+
     # Reproject if needed
     if output_crs != grid_crs:
         grid = grid.rio.reproject(output_crs)
-    grid_crs = pyproj.CRS.from_wkt(grid.rio.crs.to_wkt())
+        grid_crs = output_crs
 
     if grid_crs != study_area_crs:
-        study_area = study_area.to_crs(grid_crs)   
+        study_area = study_area.to_crs(grid_crs)
+        study_area_crs = grid_crs
 
     # We'll just clip to outer bounds of study area
+    # This makes things simpler, especially with custom CRS
+    # May be able to update/fix this later to actually use clipping function
     saExtent = study_area.total_bounds
 
     if grid['y'][-1].values - grid['y'][0].values > 0:
@@ -288,19 +292,21 @@ def grid2study_area(study_area, grid, output_crs='EPSG:5070',verbose=False, log=
     else:
         miny=saExtent[3]
         maxy=saExtent[1]        
-        
+
     if grid['x'][-1].values - grid['x'][0].values > 0:
         minx=saExtent[0]
         maxx=saExtent[2]
     else:
         minx=saExtent[2]
         maxx=saExtent[0]
+
+    # "Clip" it study area bounding box
+    # Put coordinates in the correct order first
     
-    # "Clip" it
     grid = grid.sel(x=slice(minx, maxx), y=slice(miny, maxy))
     if 'band' in grid.dims:
         grid = grid.isel(band=0)
-
+    
     return grid
 
 
@@ -389,6 +395,8 @@ def read_grid(grid_path=None, grid_type='model', no_data_val_grid=0, use_service
         try:
             gridIN = read_model_grid(model_grid_path=grid_path, study_area=study_area,  no_data_val_grid=0, read_grid=rgrid, grid_crs=grid_crs, output_crs=output_crs, verbose=verbose)
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             print("ERROR reading in model grid")
             print(e)
     else:
@@ -476,7 +484,7 @@ def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_g
 
         if grid_crs is None:
             try:
-                grid_crs=modelGridIN.spatial_ref.crs_wkt
+                grid_crs = pyproj.CRS.from_wkt(modelGridIN.spatial_ref.crs_wkt)
             except Exception:
                 iswsCRSPath = w4h.get_resources()['ISWS_CRS']
                 iswsCRS = w4h.read_dict(iswsCRSPath, keytype=None)
@@ -493,23 +501,21 @@ def read_model_grid(model_grid_path, study_area=None, no_data_val_grid=0, read_g
             modelGridIN.rio.write_crs(grid_crs)
         else:
             warnings.warn(f'CRS Specification for grid is {grid_crs}, but this cannot be written to the grid')
-        
-        modelGridIN = modelGridIN.rio.reproject(output_crs) 
-           
-        if study_area is not None:                
+
+        if study_area is not None:
             study_area = study_area.to_crs(output_crs)
             modelGrid = grid2study_area(study_area=study_area, grid=modelGridIN, output_crs=output_crs)
         else:
-            modelGrid = modelGridIN
+            modelGrid = modelGridIN.rio.reproject(output_crs)
 
         try:
-            noDataVal = float(modelGrid.attrs['_FillValue']) #Extract from dataset itsel
+            noDataVal = float(modelGrid.attrs['_FillValue'])  # Extract from dataset itsel
         except:
             noDataVal = no_data_val_grid
 
-        modelGrid = modelGrid.where(modelGrid != noDataVal, other=np.nan)   #Replace no data values with NaNs
-        modelGrid = modelGrid.where(modelGrid == np.nan, other=1) #Replace all other values with 1
-        modelGrid.rio.reproject(grid_crs, inplace=True)     
+        modelGrid = modelGrid.where(modelGrid != noDataVal, other=np.nan)  # Replace no data values with NaNs
+        modelGrid = modelGrid.where(modelGrid == np.nan, other=1)  # Replace all other values with 1
+
     elif model_grid_path is None and study_area is None:
         if verbose:
             print("ERROR: Either model_grid_path or study_area must be defined.")
